@@ -6,8 +6,6 @@
 
 LibreGrid adds AG Grid Enterprise-equivalent features to **stock, unmodified [`ag-grid-community`](https://www.npmjs.com/package/ag-grid-community)** by registering into its module system.
 
-**MIT licensed — permissive, not copyleft**, despite the `Libre` name.
-
 > LibreGrid is an independent open-source project. It is not affiliated with, endorsed by, or sponsored by AG Grid Ltd. "AG Grid" is a trademark of AG Grid Ltd.
 
 ---
