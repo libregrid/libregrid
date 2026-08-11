@@ -28,7 +28,7 @@ jobs:
         run: npm run check:contamination
       - name: Guard is proven to fire
         # A guard never observed failing is not a guard.
-        run: npx vitest run tools/check-contamination --reporter=basic
+        run: npx vitest run tools/check-contamination --reporter=dot
 
   verify:
     name: Lint, test & build
@@ -44,7 +44,7 @@ jobs:
       - name: Version drift & core singleton
         run: npm run check:versions
       - name: Test
-        run: npx vitest run --coverage --reporter=basic
+        run: npx vitest run --coverage --reporter=dot
       - name: Build
         run: npm run build
       - name: Fail if generated files drifted
@@ -71,4 +71,4 @@ jobs:
         run: npm install --no-save ag-grid-community@${{ matrix.ag-grid }}
       - run: npm run gen:version
       - name: Seam verification
-        run: npx vitest run packages/core --reporter=basic
+        run: npx vitest run packages/core --reporter=dot

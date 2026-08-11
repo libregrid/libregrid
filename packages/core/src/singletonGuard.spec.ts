@@ -33,4 +33,29 @@ describe('assertSingleCoreInstance (package-architecture.md §7)', () => {
   it('uses a cross-realm Symbol.for key so duplicates are actually detectable', () => {
     expect(_CORE_INSTANCE_KEY).toBe(Symbol.for('libregrid.core.instance'));
   });
+
+  it('falls back to console.warn when no warn function is supplied', () => {
+    // The default reporter is what actually runs in production — every other
+    // test injects a spy and would never exercise it.
+    const scope = freshScope();
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      assertSingleCoreInstance('0.1.0', scope);
+      expect(assertSingleCoreInstance('0.9.9', scope)).toBe(false);
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy.mock.calls[0]![0]).toContain('Two copies of @libregrid/core');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('defaults to globalThis when no scope is supplied', () => {
+    // The real cross-module detection path.
+    try {
+      expect(assertSingleCoreInstance('7.7.7')).toBe(true);
+      expect((globalThis as Record<symbol, unknown>)[_CORE_INSTANCE_KEY]).toBe('7.7.7');
+    } finally {
+      delete (globalThis as Record<symbol, unknown>)[_CORE_INSTANCE_KEY];
+    }
+  });
 });
