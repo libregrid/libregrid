@@ -1,0 +1,13 @@
+// DELIBERATE GUARDRAIL FIXTURE — NOT REAL CODE.
+//
+// This file exists so the G1 contamination guard can be PROVEN to fire.
+// A guard that has never been observed failing is not a guard.
+//
+// Stored as .txt and inside __fixtures__ so the real scan skips it; the
+// test copies it into a temp directory and asserts the scanner reports it.
+//
+// See docs/reference/guardrails.md (G1) and phase-00 Task 0.5.
+
+import { RowGroupingModule } from 'ag-grid-enterprise';
+
+export const contaminated = RowGroupingModule;

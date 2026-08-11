@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+.nx/
+*.tsbuildinfo
+.DS_Store
+*.log
+
+# Never commit — guardrail G1 (see docs/reference/guardrails.md)
+**/ag-grid-enterprise/

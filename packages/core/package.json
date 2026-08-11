@@ -1,0 +1,25 @@
+{
+  "name": "@libregrid/core",
+  "version": "0.1.0",
+  "description": "Shared infrastructure for LibreGrid — enterprise-grade features for AG Grid Community",
+  "keywords": ["libregrid", "ag-grid", "data-grid"],
+  "homepage": "https://github.com/libregrid/libregrid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libregrid/libregrid.git",
+    "directory": "packages/core"
+  },
+  "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
+  "files": ["dist", "NOTICE", "README.md"],
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./testing": { "types": "./dist/testing/index.d.ts", "import": "./dist/testing/index.js" }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json"
+  }
+}
