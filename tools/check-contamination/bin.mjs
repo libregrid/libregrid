@@ -49,7 +49,28 @@ const SELF = new Set([
   '.gitignore',
 ]);
 
-const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'coverage', '.nx', '.remember', '__fixtures__']);
+/**
+ * Build artifacts and caches are skipped.
+ *
+ * Not laziness — necessity. `ag-grid-community`'s OWN bundled code contains the
+ * string "ag-grid-enterprise" in its validation messages ("you need to register
+ * the ag-grid-enterprise module…"). Any bundler cache or build output that
+ * inlines Community will therefore contain it, through no fault of ours.
+ *
+ * What matters is our *source* and our *manifests*, which are still scanned.
+ */
+const SKIP_DIRS = new Set([
+  'node_modules',
+  '.git',
+  'dist',
+  'out-tsc',
+  'coverage',
+  '.nx',
+  '.angular', // Angular/Vite build cache — inlines ag-grid-community
+  '.cache',
+  '.remember',
+  '__fixtures__',
+]);
 const TEXT_EXT = /\.(ts|tsx|js|jsx|mjs|cjs|json|md|html|css|scss|yml|yaml|txt)$/;
 
 export function scan(root) {

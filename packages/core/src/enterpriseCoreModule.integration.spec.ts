@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment jsdom
+ */
 import { describe, it, expect, beforeAll, afterEach } from 'vitest';
 import {
   createGrid,

@@ -15,10 +15,9 @@
     "forceConsistentCasingInFileNames": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "baseUrl": ".",
     "paths": {
-      "@libregrid/core": ["packages/core/src/index.ts"],
-      "@libregrid/core/testing": ["packages/core/src/testing/index.ts"]
+      "@libregrid/core": ["./packages/core/src/index.ts"],
+      "@libregrid/core/testing": ["./packages/core/src/testing/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

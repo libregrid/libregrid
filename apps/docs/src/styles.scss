@@ -1,0 +1,60 @@
+@use '@angular/material' as mat;
+
+// Material 3 system tokens. The Phase 1 theme bridge reads these
+// (--mat-sys-primary, --mat-sys-surface, …) and maps them onto the grid's
+// Theming API params — see docs/reference/api-seams.md §8.
+html {
+  color-scheme: light dark;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$violet-palette,
+        tertiary: mat.$cyan-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+// Explicit dark override so the toggle wins over the OS preference.
+html[data-lgr-theme='dark'] {
+  color-scheme: dark;
+}
+html[data-lgr-theme='light'] {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font-family: Roboto, system-ui, sans-serif;
+}
+
+a {
+  color: var(--mat-sys-primary);
+}
+
+.lgr-page {
+  padding: 1.5rem;
+  max-width: 1100px;
+}
+
+.lgr-grid-host {
+  height: 420px;
+  width: 100%;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--mat-sys-surface-container);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}

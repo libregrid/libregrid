@@ -8,3 +8,6 @@ coverage/
 
 # Never commit — guardrail G1 (see docs/reference/guardrails.md)
 **/ag-grid-enterprise/
+.angular/
+apps/*/dist/
+out-tsc/

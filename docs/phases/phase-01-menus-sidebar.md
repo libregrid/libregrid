@@ -55,6 +55,24 @@ The Material work here also establishes the visual language for every later pane
 - [ ] Material side-bar shell (`MatTabGroup` / `MatExpansionPanel`, `MatButtonToggle` for side buttons)
 - [ ] `provideLibreGridMaterialTheme(options?)` — reads Material 3 system tokens (`--mat-sys-primary`, `--mat-sys-surface`, `--mat-sys-on-surface`, `--mat-sys-outline`, `--mat-sys-body-medium`) and returns a `Theme` via `themeQuartz.withParams({...})`
 - [ ] Recompute on theme change — `MutationObserver` on the root element's class/attribute list
+
+> ### ⚠️ Read this before writing the bridge — a working prototype already exists
+>
+> `apps/docs/src/app/theme.ts` contains a **validated** prototype. Port its behaviour; do not start from scratch, and do not "simplify" it back to the obvious implementation.
+>
+> **`getComputedStyle().getPropertyValue()` does not work.** Angular Material 3 emits its system tokens as `light-dark()` functions:
+>
+> ```
+> --mat-sys-surface: light-dark(#fef8fc, #151316)
+> ```
+>
+> `getPropertyValue` returns that string **unresolved**. Passing it to the Theming API appears to succeed — the value lands as `--ag-background-color: light-dark(…)` — but `light-dark()` then resolves against the **grid wrapper's own `color-scheme`**, which the grid sets itself. Observed result: a dark page containing a fully light grid, with no error anywhere.
+>
+> **Resolve tokens to concrete colours** by painting the value onto a throwaway element and reading back the computed colour, which the browser has already resolved against the document's `color-scheme`. See `token()` in the prototype.
+>
+> **Recompute on `requestAnimationFrame`, not `queueMicrotask`** — the tokens must be read *after* the browser applies the new `color-scheme`, or you read stale colours.
+>
+> Verified 2026-08-11: after the fix, grid background matched page background exactly (`rgb(21,19,22)`) with zero console errors.
 - [ ] Density and typography mapping (Material density scale → grid `spacing`, `fontSize`, `dataFontSize`)
 
 ---

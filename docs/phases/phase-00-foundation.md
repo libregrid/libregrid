@@ -1,6 +1,6 @@
 # Phase 0 — Foundation & Guardrails
 
-**Status:** 🟡 Partially complete — foundation built and verified; see per-task marks below. Outstanding: 0.3, 0.7, 0.9, 0.10, 0.10a, 0.12, 0.14
+**Status:** 🟡 Partially complete — foundation, guardrails, core and docs app built and verified. Outstanding: 0.3, 0.7, 0.10, 0.10a, 0.12, 0.14
 **Depends on:** nothing
 **Blocks:** every other phase
 
@@ -74,8 +74,13 @@ Everything else is ordinary scaffolding, but do not compress it — every later 
   Plus `expectTypeOf` assertions for the type-only exports.
   **If this fails: STOP and report. Do not work around it.**
 
-- [ ] **0.9 — Docs app**
-  Angular 22 standalone, zoneless, Material 3 configured. One placeholder route rendering a Community grid with `AllCommunityModule`.
+- [x] **0.9 — Docs app**
+  `apps/docs` — Angular 22 standalone, **zoneless** (`provideZonelessChangeDetection`), Material 3 via `mat.theme()`, lazy-loaded routes, `@angular/build` application builder.
+  Routes: **Overview** (positioning, roadmap, G3 attribution) and **Grid** (a live `ag-grid-community` grid with `EnterpriseCoreModule` registered, listing the registered modules and naming what is not yet available).
+  Toolbar carries a **light/dark toggle** so Phase 1's theme-bridge acceptance criterion has somewhere to be demonstrated.
+  Grid modules are registered **once in `main.ts`**, never inside a package — a package that self-registers can never be tree-shaken out (package-architecture.md §5 rule 3).
+  *Verified in a real browser:* both routes render, the grid sorts/filters/selects, dark mode restyles the grid without reload, **zero console errors or warnings**.
+  Add a route here for every feature — a working docs route is part of the Definition of Done.
 
 - [ ] **0.10 — Benchmark harness**
   `apps/bench` measuring initial render, scroll FPS, sort, filter at 10k/100k/1M rows. Commit `bench/baseline.json`.

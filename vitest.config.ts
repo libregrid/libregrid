@@ -5,11 +5,10 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['packages/**/*.spec.ts', 'tools/**/*.spec.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**'],
-    environmentMatchGlobs: [
-      // Integration tests boot a real grid and need a DOM.
-      ['packages/**/*.integration.spec.ts', 'jsdom'],
-    ],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/apps/**'],
+    // Integration tests boot a real grid and declare `@vitest-environment jsdom`
+    // in a docblock at the top of the file (vitest 4 removed
+    // `environmentMatchGlobs`).
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**/*.ts'],
