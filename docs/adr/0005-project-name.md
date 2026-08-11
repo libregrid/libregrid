@@ -53,7 +53,6 @@ The project is named **LibreGrid**.
 
 ### Accepted trade-offs
 
-- **"Libre" connotes copyleft to some readers.** LibreGrid is MIT — permissive, not GPL. Mitigated by the MIT badge and `LICENSE`, which is deliberately all we say. An earlier draft added "permissive, not copyleft, despite the `Libre` name" to the README, plan and docs site; that was removed on 2026-08-11 — pre-emptively defending the name drew attention to a concern most readers do not have. **State the licence plainly and move on.**
 - **"Grid" suggests a standalone grid**, whereas LibreGrid is an *extension* that requires `ag-grid-community`. Mitigated by the tagline, which is what actually appears next to the name everywhere it is used. Keeping "grid" in the name also aids discoverability.
 - **`libregrid.org` is held by a third party.** `.dev` is the preferred TLD for a developer tool, so this is not blocking.
 

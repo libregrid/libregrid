@@ -102,7 +102,7 @@ Everything else is ordinary scaffolding, but do not compress it — every later 
   - `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1
   - `SECURITY.md` — private disclosure route and response expectations. Matters disproportionately for a library others depend on
   - `.github/ISSUE_TEMPLATE/` (bug, feature, parity-gap) and `PULL_REQUEST_TEMPLATE.md` (links the phase file, ticks todo items, confirms parity checklist updated, and carries explicit G1/G4 attestations)
-  - Root `README.md` — tagline **"Enterprise-grade features for AG Grid Community"**, the G3 attribution disclaimer, and an MIT badge. State the licence plainly as "MIT licensed" — the badge and `LICENSE` carry the rest, and elaborating on the `Libre` name only draws attention to a concern most readers do not have
+  - Root `README.md` — tagline **"Enterprise-grade features for AG Grid Community"**, the G3 attribution disclaimer, and an MIT badge
   - Root `LICENSE` (MIT) and `NOTICE` preserving `Copyright (c) 2015-2026 AG GRID LTD`; `NOTICE` also copied into `packages/core/`
 
 - [x] **0.14 — Publish the repository publicly**
