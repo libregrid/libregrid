@@ -1,6 +1,6 @@
 # Phase 0 — Foundation & Guardrails
 
-**Status:** 🟡 Partially complete — foundation, guardrails, core and docs app built and verified. Outstanding: 0.3, 0.7, 0.10, 0.10a, 0.12, 0.14
+**Status:** 🟡 Mostly complete — repo is public and CI is green. Outstanding: 0.3, 0.7, 0.10, 0.10a, 0.12
 **Depends on:** nothing
 **Blocks:** every other phase
 
@@ -105,7 +105,7 @@ Everything else is ordinary scaffolding, but do not compress it — every later 
   - Root `README.md` — tagline **"Enterprise-grade features for AG Grid Community"**, the G3 attribution disclaimer, MIT badge, and an explicit "MIT, not copyleft" note
   - Root `LICENSE` (MIT) and `NOTICE` preserving `Copyright (c) 2015-2026 AG GRID LTD`; `NOTICE` also copied into `packages/core/`
 
-- [ ] **0.14 — Publish the repository publicly**
+- [x] **0.14 — Publish the repository publicly**
   Push to [github.com/libregrid](https://github.com/libregrid). Set the **org and repo descriptions to the official tagline** — per **G4.3** these are governed public surfaces; do not improvise wording.
   Do this **after** 0.13, so the first outside visitor finds a contribution path.
   ⚠️ Confirm `tools:check-contamination` is green **before** the first public push.

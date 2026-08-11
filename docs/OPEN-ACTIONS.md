@@ -16,6 +16,7 @@ Legend: ⬜ open · ✅ done · ⚠️ time-sensitive
 | A4 | Set the **GitHub** org description | ✅ **done 2026-08-11** | Verified via API: `"Enterprise-grade features for AG Grid Community"` — exact match to the official tagline (G4.2/G4.3). |
 | A6 | GitHub org profile polish | ⬜ open (minor) | Two optional fields still empty: **display name** → `LibreGrid` (org currently renders as its login, `libregrid`), and **website** → `https://libregrid.dev` once A3 completes. Cosmetic, not governed. |
 | A5 | npm org description | ✅ **N/A — no such field** | npm organizations have **no** description/bio field; the only npm-visible text comes from each package's `package.json` `description` and rendered `README.md`. Nothing to set until the first publish. Governed by **G4.2** — see the template and wording pattern in [`reference/standards.md`](reference/standards.md) §2. |
+| A7 | **Repository public** | ✅ **done 2026-08-11** | [github.com/libregrid/libregrid](https://github.com/libregrid/libregrid) — public, description = official tagline (G4.2/G4.3), `main` tracked, **CI green**. Pushing `.github/workflows/**` required `gh auth refresh -h github.com -s workflow`; GitHub blocks OAuth apps from writing workflow files without it. |
 
 ---
 
@@ -33,7 +34,7 @@ Legend: ⬜ open · ✅ done · ⚠️ time-sensitive
 
 | # | Decision | Status | Notes |
 |---|---|---|---|
-| C1 | Working directory named `open-grid` | ✅ **resolved 2026-08-11 — no rename** | **Decision: obtain the correct name via `git clone` after the public push**, then delete the old directory. The local folder name appears in **zero** artifacts (not `package.json`, not any config, not the code) — packages are `@libregrid/*` and the repo is `libregrid/libregrid`, so anyone cloning gets `libregrid/` regardless. Renaming in place would orphan ~6.7 MB of session history keyed to the project path, for a purely cosmetic gain. |
+| C1 | Working directory named `open-grid` | ✅ **done 2026-08-11** | Resolved by **cloning, not renaming**. Canonical working copy is `~/projects/libregrid`; the old directory is deleted, and memory + `.remember` were migrated to the new project key. The fresh clone was verified green (lint, G1, versions, tests+coverage, both builds) **before** anything was deleted — which doubles as the real test of Task 0.13: a clone must build with no undocumented steps. |
 | C2 | Cerious Widgets retained as a **design reference** | ⬜ open | Rejected as a foundation (see overview), but its signal-based/zoneless plugin host and `--cw-*` runtime token theming are worth studying when building `@libregrid/material` in Phase 1. Reading it is permitted — MIT. |
 
 ---
