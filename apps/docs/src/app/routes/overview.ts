@@ -59,9 +59,7 @@ import { MatChipsModule } from '@angular/material/chips';
       <a mat-flat-button routerLink="/grid">See the grid</a>
 
       <h2>Licence &amp; attribution</h2>
-      <p>
-        MIT — permissive, <strong>not</strong> copyleft, despite the <em>Libre</em> name.
-      </p>
+      <p>MIT licensed.</p>
       <p>
         <small>
           LibreGrid is an independent open-source project. It is not affiliated with, endorsed by,
