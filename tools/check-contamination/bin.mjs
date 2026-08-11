@@ -37,10 +37,15 @@ const PROSE_EXT = /\.(md|txt)$/;
 /** Files that must be scanned even though they are prose-adjacent. */
 const ALWAYS_SCAN = new Set(['package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml']);
 
-/** This scanner necessarily contains the forbidden strings. */
+/**
+ * Files that ARE the guard, and therefore necessarily name what they forbid.
+ * Keep this list minimal and never add a file that could plausibly *use* the
+ * package rather than merely block it.
+ */
 const SELF = new Set([
   'tools/check-contamination/bin.mjs',
   'tools/check-contamination/bin.spec.ts',
+  'eslint.config.mjs', // the no-restricted-imports rule names the banned packages
   '.gitignore',
 ]);
 

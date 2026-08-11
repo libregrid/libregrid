@@ -1,6 +1,6 @@
 # Phase 0 — Foundation & Guardrails
 
-**Status:** ⬜ Not started
+**Status:** 🟡 Partially complete — foundation built and verified; see per-task marks below. Outstanding: 0.3, 0.7, 0.9, 0.10, 0.10a, 0.12, 0.14
 **Depends on:** nothing
 **Blocks:** every other phase
 
@@ -26,32 +26,33 @@ Everything else is ordinary scaffolding, but do not compress it — every later 
 
 ## Todo
 
-- [ ] **0.1 — Init Nx workspace**
-  `npx create-nx-workspace@latest libregrid --preset=ts --packageManager=npm`
-  Add `@nx/angular`, `@nx/vite`, `@nx/playwright`. Create the `standards.md` §1 directory skeleton (`.gitkeep` in empty dirs).
-  **Also do here** (see [OPEN-ACTIONS](../OPEN-ACTIONS.md) C1): rename the working directory `open-grid` → `libregrid`, then `git init`.
-  ⚠️ The Claude session memory directory is keyed to the project path (`-home-seaston-projects-open-grid`) — renaming the project orphans it. **Migrate the memory directory in the same step.**
+- [x] **0.1 — Init workspace** ✅
+  npm workspaces + Nx, `git init` on `main`. Root `package.json`, `nx.json`, `.gitignore`.
+  Added `@nx/angular` / `@nx/playwright` **when their phases need them**, not up front.
+  **Directory name:** the local folder is `open-grid`; this is deliberate and resolved — the correct name arrives via `git clone` after the public push ([OPEN-ACTIONS](../OPEN-ACTIONS.md) C1). The folder name appears in no artifact.
   Remote: [github.com/libregrid](https://github.com/libregrid) (org claimed 2026-08-11).
 
-- [ ] **0.2 — Root configuration**
+- [x] **0.2 — Root configuration**
   `tsconfig.base.json` (standards §4), root `package.json` (standards §3), `.editorconfig`, `.prettierrc`, `eslint.config.mjs`, MIT `LICENSE`.
 
 - [ ] **0.3 — Nx module boundaries**
   Tag every package `type:framework-neutral` or `type:angular` in its `project.json`. Add `@nx/enforce-module-dependencies` so framework-neutral cannot depend on Angular.
 
-- [ ] **0.4 — Version single-source**
-  `tools/version/agGridVersion.ts` exporting `AG_GRID_TARGET = '36.1'`. Generator writes `src/version.ts` per package. CI check fails on drift from the installed `ag-grid-community`.
+- [x] **0.4 — Version single-source**
+  `tools/version/generate.mjs` reads the version from the **installed** `ag-grid-community/package.json` and writes `src/version.ts` per package. `tools/version/check.mjs` fails on drift, and also enforces the `@libregrid/core` singleton (no two workspace packages on different core ranges).
+  *Deviation from the original spec:* deriving from the installed package removes hand-maintained drift entirely, which a `AG_GRID_TARGET` constant could not. `VERSION` is **not** exported by `ag-grid-community` — see standards.md §5.
 
-- [ ] **0.5 — G1 contamination guard** ⚠️
+- [x] **0.5 — G1 contamination guard** ⚠️
   `tools/check-contamination/`:
   - Fail if `ag-grid-enterprise` appears in any `package.json`, lockfile, or source file
   - Fail if `node_modules/ag-grid-enterprise` exists
-  - ESLint `no-restricted-imports` blocking `ag-grid-enterprise` **and** `ag-grid-community/dist/*`
-  - **Deliberate fixture** `__fixtures__/violation.ts.txt` with an offending import, plus a test asserting the guard flags it
-  - Wire in as a **required, blocking** CI job
-  - `tools/sync-community-source/` — sparse-checkout of MIT paths only (guardrails G1)
+  - **Deliberate fixture** `__fixtures__/violation.ts.txt` with an offending import, plus a test asserting the guard flags it — **verified firing**
+  - Wire in as a **required, blocking** CI job — done; it gates every other job
+  - ESLint `no-restricted-imports` — **verified firing** on both `ag-grid-enterprise` and `ag-grid-community/dist/*` deep imports
+  - *Design note:* prose (`.md`) is exempt from the term scan — documentation must be free to name what it forbids, and prose cannot import anything. Manifests, lockfiles, source and CI config **are** scanned. A YAML step *label* containing the term will fail the build; keep it out of labels.
+  - ⬜ **Outstanding:** `tools/sync-community-source/` sparse-checkout helper (only needed when someone actually needs to read MIT upstream source)
 
-- [ ] **0.6 — `@libregrid/core` skeleton**
+- [x] **0.6 — `@libregrid/core` skeleton**
   - `EnterpriseCoreModule` — a `Module` with `moduleName: 'EnterpriseCore'`, no beans
   - `testing/makeBeanHarness.ts` (standards §7.1) — exported via the `./testing` subpath, **never** the main entry
   - `untyped-beans.ts` — local interfaces for the `UntypedBeanNames` slots
@@ -62,7 +63,7 @@ Everything else is ordinary scaffolding, but do not compress it — every later 
 - [ ] **0.7 — Conformance matrix**
   `tools/conformance/` runs the full suite against each supported `ag-grid-community` version (start: `36.1.0`). Nightly CI schedule plus an on-demand target.
 
-- [ ] **0.8 — SEAM VERIFICATION** ✅ *already proven — see [`../reference/spike-results.md`](../reference/spike-results.md)*
+- [x] **0.8 — SEAM VERIFICATION** ✅ *already proven — see [`../reference/spike-results.md`](../reference/spike-results.md)*
   A throwaway spike on 2026-08-11 confirmed all 18 runtime symbols, all type-only exports, live module registration, and CSRM invoking a custom `aggStage` bean against `ag-grid-community@36.1.0`. **Build it here as a permanent CI regression test** — it is the tripwire for G5 seam churn, so it must run on every commit and in the conformance matrix, not once.
   A test importing, **from the published npm package**, every symbol in `api-seams.md` §1:
   ```ts
@@ -84,18 +85,20 @@ Everything else is ordinary scaffolding, but do not compress it — every later 
   Every package gets a budget when it is created. **This runs from Phase 0 onward — tree-shaking is not a Phase 13 cleanup**, because the choices that destroy it are made in Phase 1.
   Also add the CI check that no two workspace packages resolve different `@libregrid/core` versions (§7).
 
-- [ ] **0.11 — CI**
-  GitHub Actions: lint → test → build → E2E → contamination → conformance. Changesets release workflow with npm provenance.
+- [x] **0.11 — CI**
+  `.github/workflows/ci.yml` — the **contamination job runs first and blocks every other job**, and it also runs the guard's own tests so the fixture proof is enforced, not assumed. Then lint → version checks → test (with coverage) → build → `git diff --exit-code` (catches drifted generated files). `nightly.yml` runs seam verification against `ag-grid-community@latest` as the G5 tripwire.
+  ⬜ **Outstanding:** E2E job (nothing to E2E until Phase 1) and the Changesets release workflow with npm provenance (needed before the first publish, not before the first feature).
 
 - [ ] **0.12 — ADRs**
   `docs/adr/0001-additive-strategy.md`, `0002-material-token-bridge.md`, `0003-version-compat-policy.md`, `0004-contamination-controls.md`. (`0005-project-name.md` already exists.)
 
-- [ ] **0.13 — Open-source governance files** *(required — the repo is public from this phase)*
+- [x] **0.13 — Open-source governance files** *(required — the repo is public from this phase)*
   - `CONTRIBUTING.md` — dev setup, the phase/sub-PR workflow, Definition of Done, Changeset requirement, and a prominent pointer to **guardrail G1** (contributors must never introduce `ag-grid-enterprise`)
   - `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1
   - `SECURITY.md` — private disclosure route and response expectations. Matters disproportionately for a library others depend on
-  - `.github/ISSUE_TEMPLATE/` (bug, feature, parity-gap) and `PULL_REQUEST_TEMPLATE.md` (links the phase file, ticks todo items, confirms parity checklist updated)
+  - `.github/ISSUE_TEMPLATE/` (bug, feature, parity-gap) and `PULL_REQUEST_TEMPLATE.md` (links the phase file, ticks todo items, confirms parity checklist updated, and carries explicit G1/G4 attestations)
   - Root `README.md` — tagline **"Enterprise-grade features for AG Grid Community"**, the G3 attribution disclaimer, MIT badge, and an explicit "MIT, not copyleft" note
+  - Root `LICENSE` (MIT) and `NOTICE` preserving `Copyright (c) 2015-2026 AG GRID LTD`; `NOTICE` also copied into `packages/core/`
 
 - [ ] **0.14 — Publish the repository publicly**
   Push to [github.com/libregrid](https://github.com/libregrid). Set the **org and repo descriptions to the official tagline** — per **G4.3** these are governed public surfaces; do not improvise wording.

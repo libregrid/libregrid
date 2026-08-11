@@ -33,7 +33,7 @@ Legend: ⬜ open · ✅ done · ⚠️ time-sensitive
 
 | # | Decision | Status | Notes |
 |---|---|---|---|
-| C1 | **Rename the working directory** `open-grid` → `libregrid` | ⬜ open | Do it at `git init` (Phase 0 Task 0.1), not mid-session. ⚠️ **The Claude session memory directory is keyed to the project path** (`-home-seaston-projects-open-grid`) — renaming the project orphans it, so migrate the memory directory in the same step. |
+| C1 | Working directory named `open-grid` | ✅ **resolved 2026-08-11 — no rename** | **Decision: obtain the correct name via `git clone` after the public push**, then delete the old directory. The local folder name appears in **zero** artifacts (not `package.json`, not any config, not the code) — packages are `@libregrid/*` and the repo is `libregrid/libregrid`, so anyone cloning gets `libregrid/` regardless. Renaming in place would orphan ~6.7 MB of session history keyed to the project path, for a purely cosmetic gain. |
 | C2 | Cerious Widgets retained as a **design reference** | ⬜ open | Rejected as a foundation (see overview), but its signal-based/zoneless plugin host and `--cw-*` runtime token theming are worth studying when building `@libregrid/material` in Phase 1. Reading it is permitted — MIT. |
 
 ---
