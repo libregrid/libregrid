@@ -1,0 +1,20 @@
+{
+  "name": "bundle-budgets",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:framework-neutral"],
+  "targets": {
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/bundle-budgets/check.mjs"
+      }
+    },
+    "consumer-fixtures": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["core:build", "menu:build", "side-bar:build", "material:build"],
+      "options": {
+        "command": "node tools/bundle-budgets/consumer-fixtures.mjs"
+      }
+    }
+  }
+}

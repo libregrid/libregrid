@@ -1,0 +1,7 @@
+{
+  "name": "@libregrid/sync-community-source",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module"
+}

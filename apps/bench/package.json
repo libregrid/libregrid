@@ -1,0 +1,14 @@
+{
+  "name": "@libregrid/bench",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "bench": "npx playwright test --config=playwright.config.ts",
+    "compare": "node src/compare.mjs"
+  },
+  "devDependencies": {
+    "ag-grid-community": "36.1.0"
+  }
+}

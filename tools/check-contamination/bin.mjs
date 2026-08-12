@@ -45,6 +45,7 @@ const ALWAYS_SCAN = new Set(['package.json', 'package-lock.json', 'yarn.lock', '
 const SELF = new Set([
   'tools/check-contamination/bin.mjs',
   'tools/check-contamination/bin.spec.ts',
+  'tools/sync-community-source/sync.mjs', // documents the MIT-only paths
   'eslint.config.mjs', // the no-restricted-imports rule names the banned packages
   '.gitignore',
 ]);

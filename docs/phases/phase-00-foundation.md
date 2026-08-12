@@ -12,9 +12,9 @@ This phase builds no features. It exists to make every later phase safe and veri
 
 Three things here are load-bearing:
 
-1. **Task 0.8 (seam verification).** The whole project depends on `main.ts` re-exporting `main-internal.ts`, which makes `BeanStub`, `_ModuleWithApi` and the stage interfaces importable. If those symbols are missing from the *published build*, the strategy is dead and we must re-plan. Find out now, not in Phase 2.
+1. **Task 0.8 (seam verification).** The whole project depends on `main.ts` re-exporting `main-internal.ts`, which makes `BeanStub`, `_ModuleWithApi` and the stage interfaces importable. If those symbols are missing from the _published build_, the strategy is dead and we must re-plan. Find out now, not in Phase 2.
 
-2. **Task 0.5 (contamination guard).** G1 is the project's legal foundation. A rule enforced by discipline will eventually be broken by a tired engineer or an agent that decides looking "just once" is fine. It must be mechanical, and it must be *proven* to fire.
+2. **Task 0.5 (contamination guard).** G1 is the project's legal foundation. A rule enforced by discipline will eventually be broken by a tired engineer or an agent that decides looking "just once" is fine. It must be mechanical, and it must be _proven_ to fire.
 
 3. **Task 0.10 (benchmark baseline).** Performance is an acceptance criterion in later phases. Without a baseline captured before any feature code exists, "no regression" is unmeasurable.
 
@@ -27,29 +27,29 @@ Everything else is ordinary scaffolding, but do not compress it — every later 
 ## Todo
 
 - [x] **0.1 — Init workspace** ✅
-  npm workspaces + Nx, `git init` on `main`. Root `package.json`, `nx.json`, `.gitignore`.
-  Added `@nx/angular` / `@nx/playwright` **when their phases need them**, not up front.
-  **Directory name:** the local folder is `open-grid`; this is deliberate and resolved — the correct name arrives via `git clone` after the public push ([OPEN-ACTIONS](../OPEN-ACTIONS.md) C1). The folder name appears in no artifact.
-  Remote: [github.com/libregrid](https://github.com/libregrid) (org claimed 2026-08-11).
+      npm workspaces + Nx, `git init` on `main`. Root `package.json`, `nx.json`, `.gitignore`.
+      Added `@nx/angular` / `@nx/playwright` **when their phases need them**, not up front.
+      **Directory name:** the local folder is `open-grid`; this is deliberate and resolved — the correct name arrives via `git clone` after the public push ([OPEN-ACTIONS](../OPEN-ACTIONS.md) C1). The folder name appears in no artifact.
+      Remote: [github.com/libregrid](https://github.com/libregrid) (org claimed 2026-08-11).
 
 - [x] **0.2 — Root configuration**
-  `tsconfig.base.json` (standards §4), root `package.json` (standards §3), `.editorconfig`, `.prettierrc`, `eslint.config.mjs`, MIT `LICENSE`.
+      `tsconfig.base.json` (standards §4), root `package.json` (standards §3), `.editorconfig`, `.prettierrc`, `eslint.config.mjs`, MIT `LICENSE`.
 
 - [ ] **0.3 — Nx module boundaries**
-  Tag every package `type:framework-neutral` or `type:angular` in its `project.json`. Add `@nx/enforce-module-dependencies` so framework-neutral cannot depend on Angular.
+      Tag every package `type:framework-neutral` or `type:angular` in its `project.json`. Add `@nx/enforce-module-dependencies` so framework-neutral cannot depend on Angular.
 
 - [x] **0.4 — Version single-source**
-  `tools/version/generate.mjs` reads the version from the **installed** `ag-grid-community/package.json` and writes `src/version.ts` per package. `tools/version/check.mjs` fails on drift, and also enforces the `@libregrid/core` singleton (no two workspace packages on different core ranges).
-  *Deviation from the original spec:* deriving from the installed package removes hand-maintained drift entirely, which a `AG_GRID_TARGET` constant could not. `VERSION` is **not** exported by `ag-grid-community` — see standards.md §5.
+      `tools/version/generate.mjs` reads the version from the **installed** `ag-grid-community/package.json` and writes `src/version.ts` per package. `tools/version/check.mjs` fails on drift, and also enforces the `@libregrid/core` singleton (no two workspace packages on different core ranges).
+      _Deviation from the original spec:_ deriving from the installed package removes hand-maintained drift entirely, which a `AG_GRID_TARGET` constant could not. `VERSION` is **not** exported by `ag-grid-community` — see standards.md §5.
 
 - [x] **0.5 — G1 contamination guard** ⚠️
-  `tools/check-contamination/`:
+      `tools/check-contamination/`:
   - Fail if `ag-grid-enterprise` appears in any `package.json`, lockfile, or source file
   - Fail if `node_modules/ag-grid-enterprise` exists
   - **Deliberate fixture** `__fixtures__/violation.ts.txt` with an offending import, plus a test asserting the guard flags it — **verified firing**
   - Wire in as a **required, blocking** CI job — done; it gates every other job
   - ESLint `no-restricted-imports` — **verified firing** on both `ag-grid-enterprise` and `ag-grid-community/dist/*` deep imports
-  - *Design note:* prose (`.md`) is exempt from the term scan — documentation must be free to name what it forbids, and prose cannot import anything. Manifests, lockfiles, source and CI config **are** scanned. A YAML step *label* containing the term will fail the build; keep it out of labels.
+  - _Design note:_ prose (`.md`) is exempt from the term scan — documentation must be free to name what it forbids, and prose cannot import anything. Manifests, lockfiles, source and CI config **are** scanned. A YAML step _label_ containing the term will fail the build; keep it out of labels.
   - ⬜ **Outstanding:** `tools/sync-community-source/` sparse-checkout helper (only needed when someone actually needs to read MIT upstream source)
 
 - [x] **0.6 — `@libregrid/core` skeleton**
@@ -61,43 +61,52 @@ Everything else is ordinary scaffolding, but do not compress it — every later 
   - Scope boundary is fixed by `package-architecture.md` §3: **core holds only what ≥3 feature packages need, and nothing user-facing.** Resist every temptation to grow it.
 
 - [ ] **0.7 — Conformance matrix**
-  `tools/conformance/` runs the full suite against each supported `ag-grid-community` version (start: `36.1.0`). Nightly CI schedule plus an on-demand target.
+      `tools/conformance/` runs the full suite against each supported `ag-grid-community` version (start: `36.1.0`). Nightly CI schedule plus an on-demand target.
 
-- [x] **0.8 — SEAM VERIFICATION** ✅ *already proven — see [`../reference/spike-results.md`](../reference/spike-results.md)*
-  A throwaway spike on 2026-08-11 confirmed all 18 runtime symbols, all type-only exports, live module registration, and CSRM invoking a custom `aggStage` bean against `ag-grid-community@36.1.0`. **Build it here as a permanent CI regression test** — it is the tripwire for G5 seam churn, so it must run on every commit and in the conformance matrix, not once.
-  A test importing, **from the published npm package**, every symbol in `api-seams.md` §1:
+- [x] **0.8 — SEAM VERIFICATION** ✅ _already proven — see [`../reference/spike-results.md`](../reference/spike-results.md)_
+      A throwaway spike on 2026-08-11 confirmed all 18 runtime symbols, all type-only exports, live module registration, and CSRM invoking a custom `aggStage` bean against `ag-grid-community@36.1.0`. **Build it here as a permanent CI regression test** — it is the tripwire for G5 seam churn, so it must run on every commit and in the conformance matrix, not once.
+      A test importing, **from the published npm package**, every symbol in `api-seams.md` §1:
+
   ```ts
   import * as ag from 'ag-grid-community';
-  for (const s of ['BeanStub','Component','ModuleRegistry','createGrid','createTheme','themeQuartz'])
+  for (const s of [
+    'BeanStub',
+    'Component',
+    'ModuleRegistry',
+    'createGrid',
+    'createTheme',
+    'themeQuartz',
+  ])
     expect(ag[s], `${s} missing from ag-grid-community`).toBeDefined();
   ```
+
   Plus `expectTypeOf` assertions for the type-only exports.
   **If this fails: STOP and report. Do not work around it.**
 
 - [x] **0.9 — Docs app**
-  `apps/docs` — Angular 22 standalone, **zoneless** (`provideZonelessChangeDetection`), Material 3 via `mat.theme()`, lazy-loaded routes, `@angular/build` application builder.
-  Routes: **Overview** (positioning, roadmap, G3 attribution) and **Grid** (a live `ag-grid-community` grid with `EnterpriseCoreModule` registered, listing the registered modules and naming what is not yet available).
-  Toolbar carries a **light/dark toggle** so Phase 1's theme-bridge acceptance criterion has somewhere to be demonstrated.
-  Grid modules are registered **once in `main.ts`**, never inside a package — a package that self-registers can never be tree-shaken out (package-architecture.md §5 rule 3).
-  *Verified in a real browser:* both routes render, the grid sorts/filters/selects, dark mode restyles the grid without reload, **zero console errors or warnings**.
-  Add a route here for every feature — a working docs route is part of the Definition of Done.
+      `apps/docs` — Angular 22 standalone, **zoneless** (`provideZonelessChangeDetection`), Material 3 via `mat.theme()`, lazy-loaded routes, `@angular/build` application builder.
+      Routes: **Overview** (positioning, roadmap, G3 attribution) and **Grid** (a live `ag-grid-community` grid with `EnterpriseCoreModule` registered, listing the registered modules and naming what is not yet available).
+      Toolbar carries a **light/dark toggle** so Phase 1's theme-bridge acceptance criterion has somewhere to be demonstrated.
+      Grid modules are registered **once in `main.ts`**, never inside a package — a package that self-registers can never be tree-shaken out (package-architecture.md §5 rule 3).
+      _Verified in a real browser:_ both routes render, the grid sorts/filters/selects, dark mode restyles the grid without reload, **zero console errors or warnings**.
+      Add a route here for every feature — a working docs route is part of the Definition of Done.
 
-- [ ] **0.10 — Benchmark harness**
-  `apps/bench` measuring initial render, scroll FPS, sort, filter at 10k/100k/1M rows. Commit `bench/baseline.json`.
+- [x] **0.10 — Benchmark harness**
+      `apps/bench` measures initial render, scroll FPS, sort, and filter at 10k/100k/1M rows in Chromium. `bench/baseline.chromium.json` is the compatible baseline.
 
-- [ ] **0.10a — Bundle budget & tree-shaking harness** *(see [`package-architecture.md`](../reference/package-architecture.md) §5)*
-  A fixture app importing exactly **one** LibreGrid package, built and asserted to (a) stay under its budget in `bundle-budgets.json`, and (b) contain **no other** `@libregrid/*` code.
-  Every package gets a budget when it is created. **This runs from Phase 0 onward — tree-shaking is not a Phase 13 cleanup**, because the choices that destroy it are made in Phase 1.
-  Also add the CI check that no two workspace packages resolve different `@libregrid/core` versions (§7).
+- [ ] **0.10a — Bundle budget & tree-shaking harness** _(see [`package-architecture.md`](../reference/package-architecture.md) §5)_
+      A fixture app importing exactly **one** LibreGrid package, built and asserted to (a) stay under its budget in `bundle-budgets.json`, and (b) contain **no other** `@libregrid/*` code.
+      Every package gets a budget when it is created. **This runs from Phase 0 onward — tree-shaking is not a Phase 13 cleanup**, because the choices that destroy it are made in Phase 1.
+      Also add the CI check that no two workspace packages resolve different `@libregrid/core` versions (§7).
 
 - [x] **0.11 — CI**
-  `.github/workflows/ci.yml` — the **contamination job runs first and blocks every other job**, and it also runs the guard's own tests so the fixture proof is enforced, not assumed. Then lint → version checks → test (with coverage) → build → `git diff --exit-code` (catches drifted generated files). `nightly.yml` runs seam verification against `ag-grid-community@latest` as the G5 tripwire.
-  ⬜ **Outstanding:** E2E job (nothing to E2E until Phase 1) and the Changesets release workflow with npm provenance (needed before the first publish, not before the first feature).
+      `.github/workflows/ci.yml` — the **contamination job runs first and blocks every other job**, and it also runs the guard's own tests so the fixture proof is enforced, not assumed. Then lint → version checks → test (with coverage) → build → `git diff --exit-code` (catches drifted generated files). `nightly.yml` runs seam verification against `ag-grid-community@latest` as the G5 tripwire.
+      ⬜ **Outstanding:** E2E job (nothing to E2E until Phase 1) and the Changesets release workflow with npm provenance (needed before the first publish, not before the first feature).
 
 - [ ] **0.12 — ADRs**
-  `docs/adr/0001-additive-strategy.md`, `0002-material-token-bridge.md`, `0003-version-compat-policy.md`, `0004-contamination-controls.md`. (`0005-project-name.md` already exists.)
+      `docs/adr/0001-additive-strategy.md`, `0002-material-token-bridge.md`, `0003-version-compat-policy.md`, `0004-contamination-controls.md`. (`0005-project-name.md` already exists.)
 
-- [x] **0.13 — Open-source governance files** *(required — the repo is public from this phase)*
+- [x] **0.13 — Open-source governance files** _(required — the repo is public from this phase)_
   - `CONTRIBUTING.md` — dev setup, the phase/sub-PR workflow, Definition of Done, Changeset requirement, and a prominent pointer to **guardrail G1** (contributors must never introduce `ag-grid-enterprise`)
   - `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1
   - `SECURITY.md` — private disclosure route and response expectations. Matters disproportionately for a library others depend on
@@ -106,24 +115,24 @@ Everything else is ordinary scaffolding, but do not compress it — every later 
   - Root `LICENSE` (MIT) and `NOTICE` preserving `Copyright (c) 2015-2026 AG GRID LTD`; `NOTICE` also copied into `packages/core/`
 
 - [x] **0.14 — Publish the repository publicly**
-  Push to [github.com/libregrid](https://github.com/libregrid). Set the **org and repo descriptions to the official tagline** — per **G4.3** these are governed public surfaces; do not improvise wording.
-  Do this **after** 0.13, so the first outside visitor finds a contribution path.
-  ⚠️ Confirm `tools:check-contamination` is green **before** the first public push.
+      Push to [github.com/libregrid](https://github.com/libregrid). Set the **org and repo descriptions to the official tagline** — per **G4.3** these are governed public surfaces; do not improvise wording.
+      Do this **after** 0.13, so the first outside visitor finds a contribution path.
+      ⚠️ Confirm `tools:check-contamination` is green **before** the first public push.
 
 ---
 
 ## Test plan
 
-| What | How |
-|---|---|
-| Seam availability | Task 0.8 runtime + type assertions against the published package |
-| Module registration | Integration test: register `EnterpriseCoreModule`, assert it appears in `ModuleRegistry` and the grid boots |
+| What                | How                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Seam availability   | Task 0.8 runtime + type assertions against the published package                                                         |
+| Module registration | Integration test: register `EnterpriseCoreModule`, assert it appears in `ModuleRegistry` and the grid boots              |
 | Contamination guard | Run the guard against `__fixtures__/violation.ts.txt`; assert **non-zero exit**. Then assert clean exit on the real tree |
-| Version drift | Unit test comparing generated `version.ts` against installed `ag-grid-community` |
-| Bean harness | Self-test: a trivial bean constructed via `makeBeanHarness` receives `postConstruct()` and can read `gos` |
-| Module boundaries | Lint test: a fixture importing `@angular/core` from a framework-neutral package fails lint |
-| Benchmarks | Run twice; confirm variance <5% so the baseline is meaningful |
-| Docs app | Playwright smoke: route loads, grid renders rows, no console errors |
+| Version drift       | Unit test comparing generated `version.ts` against installed `ag-grid-community`                                         |
+| Bean harness        | Self-test: a trivial bean constructed via `makeBeanHarness` receives `postConstruct()` and can read `gos`                |
+| Module boundaries   | Lint test: a fixture importing `@angular/core` from a framework-neutral package fails lint                               |
+| Benchmarks          | Run twice; confirm variance <5% so the baseline is meaningful                                                            |
+| Docs app            | Playwright smoke: route loads, grid renders rows, no console errors                                                      |
 
 ---
 

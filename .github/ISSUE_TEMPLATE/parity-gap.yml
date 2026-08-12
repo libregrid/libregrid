@@ -1,0 +1,35 @@
+name: Parity gap
+description: AG Grid Enterprise feature missing from LibreGrid
+labels: [parity-gap]
+body:
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Domain
+      options:
+        - Row grouping / aggregation
+        - Pivot
+        - Selection / clipboard
+        - Excel export
+        - Filters
+        - Server-Side Row Model
+        - Tree data / master-detail
+        - Advanced filter / find
+        - Rich select
+        - Charts / sparklines
+        - Menus / side bar / tool panels
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What's missing
+      description: Link to the AG Grid docs for the feature, and describe expected behaviour
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      options:
+        - label: This feature is documented in public AG Grid docs (G2)
+          required: true

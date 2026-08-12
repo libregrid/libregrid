@@ -11,3 +11,6 @@ coverage/
 .angular/
 apps/*/dist/
 out-tsc/
+apps/bench/bench/results/
+tools/bundle-budgets/.fixtures/
+apps/*/test-results/

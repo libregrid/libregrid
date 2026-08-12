@@ -1,0 +1,30 @@
+{
+  "name": "@libregrid/material",
+  "version": "0.1.0",
+  "description": "Angular Material adapters for AG Grid Community — part of LibreGrid",
+  "keywords": ["libregrid", "ag-grid", "angular", "material", "theme"],
+  "homepage": "https://github.com/libregrid/libregrid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libregrid/libregrid.git",
+    "directory": "packages/material"
+  },
+  "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@angular/core": ">=20.0.0",
+    "@angular/common": ">=20.0.0",
+    "@angular/material": ">=20.0.0",
+    "@angular/cdk": ">=20.0.0",
+    "ag-grid-community": ">=36.1.0 <37"
+  },
+  "dependencies": {
+    "@libregrid/core": "^0.1.0",
+    "@libregrid/menu": "^0.1.0",
+    "@libregrid/side-bar": "^0.1.0"
+  },
+  "files": ["dist", "NOTICE", "README.md"],
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+}

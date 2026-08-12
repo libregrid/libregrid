@@ -1,0 +1,32 @@
+name: Feature request
+description: Request a new feature or enhancement
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      description: Which phase does this belong to?
+      options:
+        - Phase 1 (Menus / Side bar / Material)
+        - Phase 2 (Row grouping)
+        - Phase 3 (Columns tool panel)
+        - Phase 4 (Selection / Clipboard / Status bar)
+        - Phase 5 (Excel export)
+        - Phase 6 (Filters)
+        - Phase 7 (SSRM core)
+        - Phase 8 (Pivot)
+        - Phase 9 (SSRM advanced)
+        - Phase 10 (Tree / Master-detail)
+        - Phase 11 (Advanced filter / Find / Rich select)
+        - Phase 12 (Charts)
+        - Post-1.0
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What feature and why
+    validations:
+      required: true

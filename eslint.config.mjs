@@ -1,10 +1,12 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
+import nx from '@nx/eslint-plugin';
 
 export default tseslint.config(
   { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '.nx/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  ...nx.configs['flat/base'],
   {
     rules: {
       /**
@@ -45,6 +47,29 @@ export default tseslint.config(
       ],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': 'warn',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+
+      /**
+       * Nx module boundary enforcement (standards.md §6 rule 3).
+       * Packages tagged `type:framework-neutral` must not depend on `type:angular`.
+       */
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: false,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: 'type:framework-neutral',
+              onlyDependOnLibsWithTags: ['type:framework-neutral'],
+            },
+            {
+              sourceTag: 'type:angular',
+              onlyDependOnLibsWithTags: ['type:framework-neutral', 'type:angular'],
+            },
+          ],
+        },
+      ],
     },
   },
   {
@@ -54,13 +79,23 @@ export default tseslint.config(
   },
   {
     // Node tooling scripts run outside the browser.
-    files: ['tools/**/*.mjs', '*.mjs', '*.config.ts'],
+    files: ['tools/**/*.mjs', 'apps/bench/**/*.mjs', '*.mjs', '*.config.ts'],
     languageOptions: {
       globals: {
         console: 'readonly',
         process: 'readonly',
         __dirname: 'readonly',
+        __filename: 'readonly',
+        Buffer: 'readonly',
         URL: 'readonly',
+        globalThis: 'readonly',
+        document: 'readonly',
+        HTMLElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        MouseEvent: 'readonly',
+        KeyboardEvent: 'readonly',
+        ResizeObserver: 'readonly',
+        TextEncoder: 'readonly',
       },
     },
   },

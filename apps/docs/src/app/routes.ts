@@ -9,8 +9,8 @@ import type { Routes } from '@angular/router';
 export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: '', label: 'Overview' },
   { path: 'grid', label: 'Grid (Community)' },
-  // Phase 1: { path: 'menus', label: 'Menus' }, { path: 'side-bar', label: 'Side bar' }
-  // Phase 2: { path: 'row-grouping', label: 'Row grouping' }
+  { path: 'menus', label: 'Menus' },
+  { path: 'side-bar', label: 'Side bar' },
 ];
 
 export const routes: Routes = [
@@ -23,6 +23,21 @@ export const routes: Routes = [
     path: 'grid',
     loadComponent: () => import('./routes/grid-demo').then((m) => m.GridDemo),
     title: 'LibreGrid — Grid',
+  },
+  {
+    path: 'menus',
+    loadComponent: () => import('./routes/menus-demo').then((m) => m.MenusDemo),
+    title: 'LibreGrid — Menus',
+  },
+  {
+    path: 'side-bar',
+    loadComponent: () => import('./routes/side-bar-demo').then((m) => m.SideBarDemo),
+    title: 'LibreGrid — Side Bar',
+  },
+  {
+    path: 'benchmark',
+    loadComponent: () => import('./routes/benchmark').then((m) => m.BenchmarkRoute),
+    title: 'LibreGrid — Benchmark',
   },
   { path: '**', redirectTo: '' },
 ];

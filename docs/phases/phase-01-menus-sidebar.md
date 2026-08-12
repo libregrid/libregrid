@@ -1,6 +1,6 @@
 # Phase 1 — Enterprise Core, Menus & Side Bar Shell
 
-**Status:** ⬜ Not started
+**Status:** 🟡 In progress
 **Depends on:** Phase 0 (all criteria met)
 **Blocks:** Phases 3, 6 (tool panels need the side-bar host); every phase that contributes menu items
 
@@ -15,7 +15,7 @@ Menus and the side bar land before any data feature for two reasons.
 
 **It makes progress visible.** Phase 0 produces no UI. Shipping working menus and a themed side bar proves the whole strategy end to end — DI beans, user components, popups, Material integration and the theme bridge — on surfaces a human can see and click.
 
-**Almost everything later contributes menu items.** Row grouping adds *Group by*, clipboard adds *Copy/Paste*, Excel export adds *Export*, charts add *Chart Range*. If the menu-item registry is designed badly, every later phase has to reach back and edit this package. Design it so features **contribute** items rather than modify the menu.
+**Almost everything later contributes menu items.** Row grouping adds _Group by_, clipboard adds _Copy/Paste_, Excel export adds _Export_, charts add _Chart Range_. If the menu-item registry is designed badly, every later phase has to reach back and edit this package. Design it so features **contribute** items rather than modify the menu.
 
 > **This is the extension point most likely to be got wrong. Get it right once.**
 
@@ -51,10 +51,10 @@ The Material work here also establishes the visual language for every later pane
 
 ### 1C — `@libregrid/material` v1
 
-- [ ] Material context menu + column menu (`MatMenu`, CDK Overlay, `MatIcon`)
-- [ ] Material side-bar shell (`MatTabGroup` / `MatExpansionPanel`, `MatButtonToggle` for side buttons)
-- [ ] `provideLibreGridMaterialTheme(options?)` — reads Material 3 system tokens (`--mat-sys-primary`, `--mat-sys-surface`, `--mat-sys-on-surface`, `--mat-sys-outline`, `--mat-sys-body-medium`) and returns a `Theme` via `themeQuartz.withParams({...})`
-- [ ] Recompute on theme change — `MutationObserver` on the root element's class/attribute list
+- [x] Material context menu + column menu (`MatMenu`, CDK Overlay, `MatIcon`)
+- [x] Material side-bar shell through CDK `DomPortalOutlet` with Material buttons
+- [x] `provideLibreGridMaterialTheme(options?)` — reads Material 3 system tokens (`--mat-sys-primary`, `--mat-sys-surface`, `--mat-sys-on-surface`, `--mat-sys-outline`, `--mat-sys-body-medium`) and returns a `Theme` via `themeQuartz.withParams({...})`
+- [x] Recompute on theme change — `MutationObserver` on the root element's class/attribute list
 
 > ### ⚠️ Read this before writing the bridge — a working prototype already exists
 >
@@ -70,23 +70,25 @@ The Material work here also establishes the visual language for every later pane
 >
 > **Resolve tokens to concrete colours** by painting the value onto a throwaway element and reading back the computed colour, which the browser has already resolved against the document's `color-scheme`. See `token()` in the prototype.
 >
-> **Recompute on `requestAnimationFrame`, not `queueMicrotask`** — the tokens must be read *after* the browser applies the new `color-scheme`, or you read stale colours.
+> **Recompute on `requestAnimationFrame`, not `queueMicrotask`** — the tokens must be read _after_ the browser applies the new `color-scheme`, or you read stale colours.
 >
 > Verified 2026-08-11: after the fix, grid background matched page background exactly (`rgb(21,19,22)`) with zero console errors.
-- [ ] Density and typography mapping (Material density scale → grid `spacing`, `fontSize`, `dataFontSize`)
+
+- [x] Density and typography mapping (Material density scale → grid `spacing`, `fontSize`, `dataFontSize`)
 
 ---
 
 ## Test plan
 
-| Tier | Coverage |
-|---|---|
-| **Unit** | Menu-item registry: contribution, ordering, dedupe, `disabled`/`checked` resolution, sub-menu nesting. Side bar: `SideBarDef` normalisation from all four accepted shapes (`boolean`, `string`, `string[]`, object). Theme bridge: token→param mapping given a stub computed style |
-| **Integration** | Register `ContextMenuModule` + `ColumnMenuModule` on a real grid; assert items appear and `action` fires. `openToolPanel`/`closeToolPanel`/`getOpenedToolPanel` round-trip. `getToolPanelInstance` returns the registered stub |
-| **E2E** | Right-click a cell → context menu opens with expected items; Escape closes. Click header menu button → column menu opens. Side bar button toggles panel; drag its edge to resize within min/max. Toggle app theme light↔dark → grid restyles without reload |
-| **a11y** | axe on docs route, light + dark. Menus keyboard-navigable (arrows, Enter, Escape); focus returns to trigger on close; `aria-expanded` correct on side-bar buttons |
+| Tier            | Coverage                                                                                                                                                                                                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unit**        | Menu-item registry: contribution, ordering, dedupe, `disabled`/`checked` resolution, sub-menu nesting. Side bar: `SideBarDef` normalisation from all four accepted shapes (`boolean`, `string`, `string[]`, object). Theme bridge: token→param mapping given a stub computed style |
+| **Integration** | Register `ContextMenuModule` + `ColumnMenuModule` on a real grid; assert items appear and `action` fires. `openToolPanel`/`closeToolPanel`/`getOpenedToolPanel` round-trip. `getToolPanelInstance` returns the registered stub                                                     |
+| **E2E**         | Right-click a cell → context menu opens with expected items; Escape closes. Click header menu button → column menu opens. Side bar button toggles panel; drag its edge to resize within min/max. Toggle app theme light↔dark → grid restyles without reload                        |
+| **a11y**        | axe on docs route, light + dark. Menus keyboard-navigable (arrows, Enter, Escape); focus returns to trigger on close; `aria-expanded` correct on side-bar buttons                                                                                                                  |
 
 **Specific edge cases to cover:**
+
 - `suppressContextMenu` suppresses ours, not the browser's
 - `allowContextMenuWithControlKey` on macOS Ctrl+click
 - `popupParent` renders the menu outside the grid without clipping

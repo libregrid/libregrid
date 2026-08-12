@@ -1,0 +1,13 @@
+{
+  "name": "conformance",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:framework-neutral"],
+  "targets": {
+    "matrix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/conformance/matrix.mjs"
+      }
+    }
+  }
+}

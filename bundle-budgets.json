@@ -1,0 +1,92 @@
+{
+  "$schema": "./node_modules/nx/schemas/project-schema.json",
+  "description": "Bundle size budgets per package. Every package gets a budget when created.",
+  "packages": {
+    "@libregrid/core": {
+      "maxSize": "16 KB",
+      "note": "Core singleton — beans, module def, guards. No UI."
+    },
+    "@libregrid/menu": {
+      "maxSize": "36 KB",
+      "note": "Context menu + column menu + registry + popup lifecycle."
+    },
+    "@libregrid/side-bar": {
+      "maxSize": "21 KB",
+      "note": "Side bar shell with accessible controls, tool-panel host, events, and bounded resize."
+    },
+    "@libregrid/material": {
+      "maxSize": "24 KB",
+      "note": "Angular Material theme bridge plus optional menu and CDK portal side-bar renderers."
+    },
+    "@libregrid/row-grouping": {
+      "maxSize": "32 KB",
+      "note": "GroupStage + AggFuncService + beans."
+    },
+    "@libregrid/columns-tool-panel": {
+      "maxSize": "16 KB",
+      "note": "Column chooser + drag-drop zones."
+    },
+    "@libregrid/cell-selection": {
+      "maxSize": "20 KB",
+      "note": "Range selection + fill handle."
+    },
+    "@libregrid/clipboard": {
+      "maxSize": "12 KB"
+    },
+    "@libregrid/status-bar": {
+      "maxSize": "8 KB"
+    },
+    "@libregrid/excel-export": {
+      "maxSize": "40 KB",
+      "note": "Includes fflate OOXML writer."
+    },
+    "@libregrid/set-filter": {
+      "maxSize": "16 KB"
+    },
+    "@libregrid/multi-filter": {
+      "maxSize": "8 KB"
+    },
+    "@libregrid/filters-tool-panel": {
+      "maxSize": "8 KB"
+    },
+    "@libregrid/server-side-row-model": {
+      "maxSize": "32 KB"
+    },
+    "@libregrid/pivot": {
+      "maxSize": "16 KB"
+    },
+    "@libregrid/viewport-row-model": {
+      "maxSize": "12 KB"
+    },
+    "@libregrid/tree-data": {
+      "maxSize": "12 KB"
+    },
+    "@libregrid/master-detail": {
+      "maxSize": "12 KB"
+    },
+    "@libregrid/advanced-filter": {
+      "maxSize": "16 KB"
+    },
+    "@libregrid/find": {
+      "maxSize": "12 KB"
+    },
+    "@libregrid/rich-select": {
+      "maxSize": "8 KB"
+    },
+    "@libregrid/integrated-charts": {
+      "maxSize": "16 KB",
+      "note": "Chart adapter. ag-charts-community is separate."
+    },
+    "@libregrid/sparklines": {
+      "maxSize": "8 KB"
+    },
+    "@libregrid/angular": {
+      "maxSize": "4 KB",
+      "note": "Angular wrapper directives."
+    },
+    "@libregrid/all": {
+      "maxSize": "0.5 KB",
+      "note": "Re-exports only — must not contain feature code."
+    }
+  }
+}

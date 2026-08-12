@@ -1,0 +1,23 @@
+{
+  "name": "bench",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:framework-neutral"],
+  "targets": {
+    "bench": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "BENCH_OUTPUT=apps/bench/bench/results/current.chromium.json npx playwright test --config=apps/bench/playwright.config.ts",
+        "cwd": "."
+      },
+      "cache": false,
+      "outputs": ["{workspaceRoot}/apps/bench/bench/results"]
+    },
+    "compare": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node apps/bench/src/compare.mjs",
+        "cwd": "."
+      }
+    }
+  }
+}

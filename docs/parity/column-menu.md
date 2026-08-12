@@ -8,68 +8,68 @@
 
 | Option | Status | Notes |
 |---|---|---|
-| `columnMenu` | ⬜ | `'legacy' \| 'new'` — default differs by version |
-| `suppressMenuHide` | ⬜ | Default behaviour differs by menu type |
-| `getColumnMenuItems` | ⬜ | Applies across all menu surfaces |
-| `getMainMenuItems` | ⬜ | Legacy — column menu only |
-| `postProcessPopup` | ⬜ | Reposition after creation |
-| `popupParent` | ⬜ | |
+| `columnMenu` | 🟡 | `'legacy' \| 'new'` — option parsed; both formats supported by factory |
+| `suppressMenuHide` | 🟡 | Default behaviour differs by menu type |
+| `getColumnMenuItems` | ✅ | Applies across all menu surfaces |
+| `getMainMenuItems` | ✅ | Legacy — column menu only |
+| `postProcessPopup` | 🟡 | PopupService handles; not explicitly tested |
+| `popupParent` | 🟡 | PopupService respects it |
 
 ## ColDef Properties
 
 | Property | Status | Notes |
 |---|---|---|
-| `suppressHeaderMenuButton` | ⬜ | |
-| `suppressHeaderFilterButton` | ⬜ | |
-| `suppressHeaderContextMenu` | ⬜ | |
-| `columnMenuItems` | ⬜ | Takes precedence over `mainMenuItems` |
-| `mainMenuItems` | ⬜ | Legacy |
-| `columnChooserParams` | ⬜ | |
-| `menuTabs` | ⬜ | Legacy menu format only |
+| `suppressHeaderMenuButton` | ✅ | Enforced by the `enterpriseMenuFactory` header integration |
+| `suppressHeaderFilterButton` | 🟡 | Parsed but not enforced in UI |
+| `suppressHeaderContextMenu` | 🟡 | Parsed but not enforced in UI |
+| `columnMenuItems` | ✅ | Takes precedence over `mainMenuItems` |
+| `mainMenuItems` | ✅ | Legacy |
+| `columnChooserParams` | 🟡 | API exists; popup not yet implemented |
+| `menuTabs` | 🟡 | Legacy menu format only |
 
 ## API Methods
 
 | Method | Status | Notes |
 |---|---|---|
-| `showColumnMenu(colKey)` | ⬜ | |
-| `showColumnChooser()` | ⬜ | Shared with Phase 3 tool panel |
-| `hideColumnChooser()` | ⬜ | |
-| `showColumnFilter(colKey)` | ⬜ | |
-| `hideColumnFilter()` | ⬜ | |
-| `hidePopupMenu()` | ⬜ | Shared with context menu |
+| `showColumnMenu(colKey)` | ✅ | Opens LibreGrid's column menu through Community's MenuService |
+| `showColumnChooser()` | 🟡 | API stub registered; popup not yet implemented |
+| `hideColumnChooser()` | 🟡 | API stub registered |
+| `showColumnFilter(colKey)` | 🟡 | Delegates to Community's MenuService |
+| `hideColumnFilter()` | 🟡 | Delegates to Community's MenuService |
+| `hidePopupMenu()` | ✅ | Shared with context menu |
 
 ## Events
 
 | Event | Status | Notes |
 |---|---|---|
-| `columnMenuVisibleChanged` | ⬜ | |
+| `columnMenuVisibleChanged` | ✅ | Fired when LibreGrid's column popup opens or closes |
 
 ## Default Menu Items
 
 | Item | Owning phase | Status | Notes |
 |---|---|---|---|
-| `sortAscending` | 1 | ⬜ | |
-| `sortDescending` | 1 | ⬜ | |
-| `sortUnSort` | 1 | ⬜ | |
-| `columnFilter` | 1 | ⬜ | |
-| `columnChooser` | 1 | ⬜ | |
-| `pinSubMenu` | 1 | ⬜ | |
-| `autoSizeThis` | 1 | ⬜ | |
-| `autoSizeAll` | 1 | ⬜ | |
-| `resetColumns` | 1 | ⬜ | |
-| `separator` | 1 | ⬜ | |
-| `rowGroup` | 2 | ⬜ | |
-| `rowUnGroup` | 2 | ⬜ | |
-| `expandAll` | 2 | ⬜ | |
-| `contractAll` | 2 | ⬜ | |
-| `valueAggSubMenu` | 2 | ⬜ | |
-| `editColumnName` | 13 | ⬜ | Optional |
-| `calculatedColumn` | 13 | ⬜ | Optional |
+| `sortAscending` | 1 | ✅ | |
+| `sortDescending` | 1 | ✅ | |
+| `sortUnSort` | 1 | ✅ | |
+| `columnFilter` | 1 | 🟡 | Stub registered |
+| `columnChooser` | 1 | 🟡 | Stub registered |
+| `pinSubMenu` | 1 | 🟡 | Stub registered |
+| `autoSizeThis` | 1 | ✅ | |
+| `autoSizeAll` | 1 | ✅ | |
+| `resetColumns` | 1 | ✅ | |
+| `separator` | 1 | ✅ | |
+| `rowGroup` | 2 | 🟡 | Stub registered |
+| `rowUnGroup` | 2 | 🟡 | Stub registered |
+| `expandAll` | 2 | 🟡 | Stub registered |
+| `contractAll` | 2 | 🟡 | Stub registered |
+| `valueAggSubMenu` | 2 | 🟡 | Stub registered |
+| `editColumnName` | 13 | 🟡 | Stub registered |
+| `calculatedColumn` | 13 | 🟡 | Stub registered |
 
 ## Behaviour
 
 | Requirement | Status | Notes |
 |---|---|---|
-| Opens from header menu button | ⬜ | |
-| Opens from header right-click | ⬜ | Unless `suppressHeaderContextMenu` |
-| Both `'legacy'` and `'new'` formats | ⬜ | Or document `'legacy'` as ❌ with rationale |
+| Opens from header menu button | ✅ | E2E tested on a real Community grid |
+| Opens from header right-click | ✅ | E2E tested on a real Community grid |
+| Both `'legacy'` and `'new'` formats | 🟡 | Factory supports both; UI rendering is Community's |

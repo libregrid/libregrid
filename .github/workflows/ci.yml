@@ -4,71 +4,75 @@ on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
+    branches: [main]
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
+# Contamination job runs first and blocks every other job.
+# See docs/reference/guardrails.md G1 and docs/adr/0004-contamination-controls.md.
 jobs:
-  # ───────────────────────────────────────────────────────────────────────
-  # Guardrail G1. Runs first, standalone, and blocks everything else.
-  # LibreGrid's legal standing depends on this. See docs/reference/guardrails.md
-  # ───────────────────────────────────────────────────────────────────────
   contamination:
-    name: G1 contamination guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
+        with:
+          node-version: '22'
+          cache: npm
       - run: npm ci
-      # Step names are scanned too — keep the forbidden term out of labels.
-      - name: Guardrail G1 — no commercial package references
-        run: npm run check:contamination
-      - name: Guard is proven to fire
-        # A guard never observed failing is not a guard.
-        run: npx vitest run tools/check-contamination --reporter=dot
+      - name: G1 contamination check
+        run: node tools/check-contamination/bin.mjs
+      - name: G1 guard test (proved-to-fire fixture)
+        run: npx vitest run tools/check-contamination/bin.spec.ts --reporter verbose
 
-  verify:
-    name: Lint, test & build
+  lint-test-build:
     needs: contamination
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
+        with:
+          node-version: '22'
+          cache: npm
       - run: npm ci
-      - name: Generate VERSION from installed ag-grid-community
-        run: npm run gen:version
-      - name: Version drift & core singleton
-        run: npm run check:versions
-      - name: Test
-        run: npx vitest run --coverage --reporter=dot
-      - name: Build
-        run: npm run build
-      - name: Fail if generated files drifted
+      - run: npm run gen:version
+      - name: Check generated files are committed
         run: git diff --exit-code
+      - name: Lint
+        run: npx nx run-many -t lint
+      - name: Version checks
+        run: npm run check:versions
+      - name: Test (with coverage)
+        run: npx vitest run --coverage --reporter verbose
+      - name: Build
+        run: npx nx run-many -t build
+      - name: Bundle budget check
+        run: node tools/bundle-budgets/check.mjs
 
-  # ───────────────────────────────────────────────────────────────────────
-  # G5 tripwire. The @internal seams carry no stability promise, so a
-  # Community release can break us. Nightly, across the supported range.
-  # ───────────────────────────────────────────────────────────────────────
-  conformance:
-    name: Seam conformance (ag-grid-community ${{ matrix.ag-grid }})
-    if: github.event_name != 'pull_request'
+  e2e:
+    needs: lint-test-build
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        ag-grid: ['36.1.0']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
+        with:
+          node-version: '22'
+          cache: npm
       - run: npm ci
-      - name: Pin ag-grid-community
-        run: npm install --no-save ag-grid-community@${{ matrix.ag-grid }}
-      - run: npm run gen:version
-      - name: Seam verification
-        run: npx vitest run packages/core --reporter=dot
+      - run: npx playwright install --with-deps chromium
+      - name: Playwright E2E and axe
+        run: NX_DAEMON=false npx nx e2e docs-e2e
+
+  phase-gates:
+    needs: lint-test-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Community conformance matrix
+        run: NX_DAEMON=false npx nx run conformance:matrix
+      - name: Benchmark comparison
+        run: NX_DAEMON=false npx nx run bench:compare

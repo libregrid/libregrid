@@ -1,0 +1,115 @@
+/**
+ * @vitest-environment jsdom
+ */
+import { describe, expect, it, vi } from 'vitest';
+import { makeBeanHarness } from '@libregrid/core/testing';
+import { ColumnMenuFactory } from './colMenuFactory';
+import type { MenuItemMapper } from './menuItemMapper';
+
+interface PopupOptions {
+  eChild: HTMLElement;
+  afterGuiAttached(): void;
+  closedCallback(event?: Event): void;
+  positionCallback(): void;
+}
+
+function createColumn(suppressHeaderMenuButton = false, columnMenuItems?: unknown) {
+  return {
+    getColDef: () => ({ suppressHeaderMenuButton, columnMenuItems }),
+    getColId: () => 'athlete',
+  };
+}
+
+describe('ColumnMenuFactory', () => {
+  it('uses the modern callback before legacy and column-level menu definitions', () => {
+    const mapMixed = vi.fn(() => ['separator', { name: 'Custom item' }]);
+    const { bean } = makeBeanHarness(ColumnMenuFactory, {
+      gridOptions: {
+        getColumnMenuItems: () => ['custom'],
+        getMainMenuItems: () => ['legacy'],
+      },
+      beans: { gridApi: {}, menuItemMapper: { mapMixed } as unknown as MenuItemMapper },
+    });
+    const column = createColumn(false, ['column']) as never;
+
+    expect(bean.buildColumnMenuItems(column, 'columnChooser')).toEqual([{ name: 'Custom item' }]);
+    expect(mapMixed).toHaveBeenCalledWith(['custom'], expect.objectContaining({ column }));
+    expect(bean.isMenuEnabled(createColumn(false) as never)).toBe(true);
+    expect(bean.isMenuEnabled(createColumn(true) as never)).toBe(false);
+  });
+
+  it('falls back to column definitions and then defaults when callbacks do not return arrays', () => {
+    const mapMixed = vi.fn(() => [{ name: 'Column item' }, 'separator']);
+    const mapItems = vi.fn(() => [{ name: 'Default item' }, 'separator']);
+    const column = createColumn(false, ['column']) as never;
+    const { bean, gos } = makeBeanHarness(ColumnMenuFactory, {
+      gridOptions: { getColumnMenuItems: () => null },
+      beans: { gridApi: {}, menuItemMapper: { mapMixed, mapItems } as unknown as MenuItemMapper },
+    });
+
+    expect(bean.buildColumnMenuItems(column)).toEqual([{ name: 'Column item' }]);
+    gos.set('getColumnMenuItems', undefined);
+    expect(bean.buildColumnMenuItems(null)).toEqual([{ name: 'Default item' }]);
+    expect(mapItems).toHaveBeenCalledOnce();
+  });
+
+  it('renders, positions, and closes a button-triggered menu', () => {
+    const action = vi.fn();
+    const hideFunc = vi.fn();
+    const addPopup = vi.fn((popup: PopupOptions) => {
+      document.body.appendChild(popup.eChild);
+      return { hideFunc };
+    });
+    const positionPopupByComponent = vi.fn();
+    const dispatchEvent = vi.fn();
+    const mapItems = vi.fn(() => [{ name: 'Run', action }, { name: 'Disabled', disabled: true }]);
+    const { bean } = makeBeanHarness(ColumnMenuFactory, {
+      beans: {
+        gridApi: {},
+        menuItemMapper: { mapItems } as unknown as MenuItemMapper,
+        popupSvc: { addPopup, positionPopupByComponent },
+        eventSvc: { dispatchEvent },
+      },
+    });
+    const column = createColumn() as never;
+    const button = document.createElement('button');
+    const onClosed = vi.fn();
+
+    expect(bean.showMenuAfterButtonClick(column, button, 'columnMenu', onClosed)).toBe(true);
+    const popup = addPopup.mock.calls[0]?.[0] as PopupOptions;
+    popup.afterGuiAttached();
+    expect(document.activeElement).toBe(popup.eChild.querySelector('.lgr-menu-item'));
+    popup.positionCallback();
+    expect(positionPopupByComponent).toHaveBeenCalledWith(expect.objectContaining({ eventSource: button, ePopup: popup.eChild }));
+
+    popup.eChild.querySelector<HTMLElement>('.lgr-menu-item')?.click();
+    expect(action).toHaveBeenCalledOnce();
+    expect(hideFunc).toHaveBeenCalledOnce();
+    popup.closedCallback();
+    expect(onClosed).toHaveBeenCalledOnce();
+    expect(dispatchEvent).toHaveBeenNthCalledWith(1, expect.objectContaining({ visible: true, column }));
+    expect(dispatchEvent).toHaveBeenNthCalledWith(2, expect.objectContaining({ visible: false, column }));
+  });
+
+  it('rejects non-columns and positions mouse-triggered menus under the source event', () => {
+    const addPopup = vi.fn((popup: PopupOptions) => {
+      document.body.appendChild(popup.eChild);
+      return { hideFunc: vi.fn() };
+    });
+    const positionPopupUnderMouseEvent = vi.fn();
+    const { bean } = makeBeanHarness(ColumnMenuFactory, {
+      beans: {
+        gridApi: {},
+        menuItemMapper: { mapItems: vi.fn(() => [{ name: 'Item' }]) } as unknown as MenuItemMapper,
+        popupSvc: { addPopup, positionPopupUnderMouseEvent },
+      },
+    });
+    const event = new MouseEvent('contextmenu');
+
+    expect(bean.showMenuAfterButtonClick({}, document.createElement('button'), 'columnMenu')).toBe(false);
+    bean.showMenuAfterMouseEvent(createColumn() as never, event, 'columnMenu');
+    const popup = addPopup.mock.calls[0]?.[0] as PopupOptions;
+    popup.positionCallback();
+    expect(positionPopupUnderMouseEvent).toHaveBeenCalledWith(expect.objectContaining({ mouseEvent: event }));
+  });
+});

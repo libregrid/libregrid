@@ -6,72 +6,72 @@
 
 ## Grid Options
 
-| Option | Status | Notes |
-|---|---|---|
-| `contextMenuItems` | ⬜ | |
-| `getContextMenuItems` | ⬜ | Receives default items |
-| `suppressContextMenu` | ⬜ | Must not suppress the browser menu |
-| `allowContextMenuWithControlKey` | ⬜ | macOS Ctrl+click |
-| `popupParent` | ⬜ | Render outside the grid without clipping |
-| `cellSelection` | ⬜ | Phase 4 |
-| `enableCharts` | ⬜ | Phase 12 |
+| Option                           | Status | Notes                                                         |
+| -------------------------------- | ------ | ------------------------------------------------------------- |
+| `contextMenuItems`               | ✅     | Grid-level item list is supported after the callback override |
+| `getContextMenuItems`            | 🟡     | Wired; receives default items                                 |
+| `suppressContextMenu`            | ✅     | Suppresses ours, not the browser's; E2E tested                |
+| `allowContextMenuWithControlKey` | ✅     | Ctrl+click path E2E tested                                    |
+| `popupParent`                    | 🟡     | PopupService respects it; explicit E2E still pending          |
+| `cellSelection`                  | ⬜     | Phase 4                                                       |
+| `enableCharts`                   | ⬜     | Phase 12                                                      |
 
 ## Callbacks
 
-| Callback | Status | Notes |
-|---|---|---|
-| `getContextMenuItems(params)` | ⬜ | Returning `[]` yields no menu |
+| Callback                      | Status | Notes                                                     |
+| ----------------------------- | ------ | --------------------------------------------------------- |
+| `getContextMenuItems(params)` | 🟡     | Returning `[]` yields no menu; explicit E2E still pending |
 
 ## API Methods
 
-| Method | Status | Notes |
-|---|---|---|
-| `showContextMenu()` | ⬜ | |
-| `hidePopupMenu()` | ⬜ | Shared with column menu |
+| Method              | Status | Notes                   |
+| ------------------- | ------ | ----------------------- |
+| `showContextMenu()` | ✅     |                         |
+| `hidePopupMenu()`   | ✅     | Shared with column menu |
 
 ## MenuItemDef
 
-| Property | Status | Notes |
-|---|---|---|
-| `name` | ⬜ | |
-| `action` | ⬜ | |
-| `cssClasses` | ⬜ | Use `lgr-` prefix (G4) |
-| `disabled` | ⬜ | |
-| `tooltip` | ⬜ | |
-| `subMenu` | ⬜ | Nested items |
-| `icon` | ⬜ | |
-| `shortcut` | ⬜ | Display only |
-| `checked` | ⬜ | |
+| Property     | Status | Notes                                                               |
+| ------------ | ------ | ------------------------------------------------------------------- |
+| `name`       | ✅     |                                                                     |
+| `action`     | ✅     |                                                                     |
+| `cssClasses` | ✅     | Use `lgr-` prefix (G4)                                              |
+| `disabled`   | ✅     |                                                                     |
+| `tooltip`    | ✅     |                                                                     |
+| `subMenu`    | ✅     | Nested Material menu items open and invoke registered child actions |
+| `icon`       | ✅     |                                                                     |
+| `shortcut`   | ✅     | Display only                                                        |
+| `checked`    | ✅     |                                                                     |
 
 ## Default Menu Items
 
-| Item | Owning phase | Status | Notes |
-|---|---|---|---|
-| `separator` | 1 | ⬜ | |
-| `autoSizeAll` | 1 | ⬜ | |
-| `resetColumns` | 1 | ⬜ | |
-| `pinRowSubMenu` | 1 | ⬜ | |
-| `pinTop` | 1 | ⬜ | |
-| `pinBottom` | 1 | ⬜ | |
-| `unpinRow` | 1 | ⬜ | |
-| `expandAll` | 2 | ⬜ | |
-| `contractAll` | 2 | ⬜ | |
-| `copy` | 4 | ⬜ | |
-| `copyWithHeaders` | 4 | ⬜ | |
-| `copyWithGroupHeaders` | 4 | ⬜ | |
-| `cut` | 4 | ⬜ | |
-| `paste` | 4 | ⬜ | |
-| `export` | 5 | ⬜ | |
-| `csvExport` | 5 | ⬜ | Community provides CSV |
-| `excelExport` | 5 | ⬜ | |
-| `chartRange` | 12 | ⬜ | |
-| `pivotChart` | 12 | ⬜ | |
-| `note` | 13 | ⬜ | Optional |
+| Item                   | Owning phase | Status | Notes           |
+| ---------------------- | ------------ | ------ | --------------- |
+| `separator`            | 1            | ✅     |                 |
+| `autoSizeAll`          | 1            | ✅     |                 |
+| `resetColumns`         | 1            | ✅     |                 |
+| `pinRowSubMenu`        | 1            | 🟡     | Stub registered |
+| `pinTop`               | 1            | 🟡     | Stub registered |
+| `pinBottom`            | 1            | 🟡     | Stub registered |
+| `unpinRow`             | 1            | 🟡     | Stub registered |
+| `expandAll`            | 2            | 🟡     | Stub registered |
+| `contractAll`          | 2            | 🟡     | Stub registered |
+| `copy`                 | 4            | 🟡     | Stub registered |
+| `copyWithHeaders`      | 4            | 🟡     | Stub registered |
+| `copyWithGroupHeaders` | 4            | 🟡     | Stub registered |
+| `cut`                  | 4            | 🟡     | Stub registered |
+| `paste`                | 4            | 🟡     | Stub registered |
+| `export`               | 5            | 🟡     | Stub registered |
+| `csvExport`            | 5            | 🟡     | Stub registered |
+| `excelExport`          | 5            | 🟡     | Stub registered |
+| `chartRange`           | 12           | 🟡     | Stub registered |
+| `pivotChart`           | 12           | 🟡     | Stub registered |
+| `note`                 | 13           | 🟡     | Stub registered |
 
 ## Behaviour
 
-| Requirement | Status | Notes |
-|---|---|---|
-| **Extensible registry** — later phases contribute without editing this package | ⬜ | **Key design requirement** |
-| Keyboard navigation (arrows, Enter, Escape) | ⬜ | |
-| Focus returns to trigger on close | ⬜ | |
+| Requirement                                                                    | Status | Notes                                                   |
+| ------------------------------------------------------------------------------ | ------ | ------------------------------------------------------- |
+| **Extensible registry** — later phases contribute without editing this package | ✅     | Global store + `registerMenuItem` / `registerMenuItems` |
+| Keyboard navigation (arrows, Enter, Escape)                                    | ✅     | Arrow keys navigate, Enter selects, Escape closes       |
+| Focus returns to trigger on close                                              | ✅     | Escape return to the grid-cell trigger is E2E tested    |

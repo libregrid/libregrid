@@ -1,0 +1,13 @@
+{
+  "name": "docs-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:angular"],
+  "targets": {
+    "e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx playwright test --config=apps/docs-e2e/playwright.config.ts"
+      }
+    }
+  }
+}

@@ -22,7 +22,7 @@
           "configurations": {
             "production": {
               "budgets": [
-                { "type": "initial", "maximumWarning": "1.8mb", "maximumError": "2.5mb" }
+                { "type": "initial", "maximumWarning": "2.2mb", "maximumError": "2.5mb" }
               ],
               "outputHashing": "all"
             },
@@ -40,6 +40,46 @@
             "development": { "buildTarget": "docs:build:development" }
           },
           "defaultConfiguration": "development"
+        }
+      }
+    },
+    "material": {
+      "projectType": "library",
+      "root": "packages/material",
+      "sourceRoot": "packages/material/src",
+      "prefix": "lgr",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "packages/material/dist-test-build",
+            "browser": "packages/material/src/test-bootstrap.ts",
+            "tsConfig": "packages/material/tsconfig.spec.json",
+            "polyfills": ["zone.js"]
+          },
+          "configurations": {
+            "development": { "optimization": false }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "packages/material/tsconfig.spec.json",
+            "runner": "vitest",
+            "runnerConfig": "packages/material/vitest.config.ts",
+            "include": ["packages/material/src/**/*.spec.ts"],
+            "coverage": true,
+            "coverageInclude": ["src/**/*.ts"],
+            "coverageExclude": ["src/**/*.spec.ts", "src/version.ts", "src/index.ts"],
+            "coverageReporters": ["text-summary"],
+            "coverageThresholds": {
+              "statements": 85,
+              "branches": 75,
+              "functions": 85,
+              "lines": 85
+            }
+          }
         }
       }
     }

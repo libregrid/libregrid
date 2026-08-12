@@ -1,6 +1,16 @@
 import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@libregrid/core/testing': fileURLToPath(new URL('./packages/core/src/testing/index.ts', import.meta.url)),
+      '@libregrid/core': fileURLToPath(new URL('./packages/core/src/index.ts', import.meta.url)),
+      '@libregrid/menu': fileURLToPath(new URL('./packages/menu/src/index.ts', import.meta.url)),
+      '@libregrid/side-bar': fileURLToPath(new URL('./packages/side-bar/src/index.ts', import.meta.url)),
+      '@libregrid/material': fileURLToPath(new URL('./packages/material/src/index.ts', import.meta.url)),
+    },
+  },
   test: {
     globals: true,
     environment: 'node',

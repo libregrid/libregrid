@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 
-import { ThemeService } from './theme';
+import { LibreGridThemeService } from '@libregrid/material';
 import { NAV } from './routes';
 
 @Component({
@@ -32,18 +32,20 @@ import { NAV } from './routes';
     @media (max-width: 700px) { .tagline { display: none; } }
   `,
   template: `
-    <mat-toolbar color="primary">
-      <span class="brand">LibreGrid</span>
-      <span class="tagline">Enterprise-grade features for AG Grid Community</span>
-      <span class="spacer"></span>
-      <button
-        mat-icon-button
-        (click)="theme.toggle()"
-        [attr.aria-label]="'Switch to ' + (theme.mode() === 'light' ? 'dark' : 'light') + ' theme'"
-      >
-        <mat-icon>{{ theme.mode() === 'light' ? 'dark_mode' : 'light_mode' }}</mat-icon>
-      </button>
-    </mat-toolbar>
+    <header>
+      <mat-toolbar color="primary">
+        <span class="brand">LibreGrid</span>
+        <span class="tagline">Enterprise-grade features for AG Grid Community</span>
+        <span class="spacer"></span>
+        <button
+          mat-icon-button
+          (click)="theme.toggle()"
+          [attr.aria-label]="'Switch to ' + (theme.mode() === 'light' ? 'dark' : 'light') + ' theme'"
+        >
+          <mat-icon>{{ theme.mode() === 'light' ? 'dark_mode' : 'light_mode' }}</mat-icon>
+        </button>
+      </mat-toolbar>
+    </header>
 
     <mat-sidenav-container class="shell">
       <mat-sidenav mode="side" opened>
@@ -63,12 +65,14 @@ import { NAV } from './routes';
         </mat-nav-list>
       </mat-sidenav>
       <mat-sidenav-content>
-        <router-outlet />
+        <main>
+          <router-outlet />
+        </main>
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
 })
 export class App {
-  protected readonly theme = inject(ThemeService);
+  protected readonly theme = inject(LibreGridThemeService);
   protected readonly nav = NAV;
 }

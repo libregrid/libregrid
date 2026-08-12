@@ -272,9 +272,9 @@ A phase is complete only when **every** item is true:
 ```bash
 npx nx run-many -t lint test build     # unit + build, all packages
 npx nx e2e docs-e2e                    # Playwright
-npx nx run tools-conformance:matrix    # version compatibility (nightly + on demand)
+npx nx run conformance:matrix          # version compatibility (nightly + on demand)
 npx nx run bench:compare               # perf vs baseline
-npx nx run tools:check-contamination   # G1 guard
+npx nx run check-contamination:test    # G1 guard
 npx nx serve docs                      # live demo site
 ```
 

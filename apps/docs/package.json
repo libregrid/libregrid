@@ -20,10 +20,14 @@
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
     "@libregrid/core": "^0.1.0",
+    "@libregrid/menu": "^0.1.0",
+    "@libregrid/side-bar": "^0.1.0",
+    "@libregrid/material": "^0.1.0",
     "ag-grid-angular": "36.1.0",
     "ag-grid-community": "36.1.0",
     "rxjs": "^7.8.0",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "zone.js": "~0.15.0"
   },
   "devDependencies": {
     "@angular/build": "^22.0.0",

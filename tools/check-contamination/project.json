@@ -1,0 +1,13 @@
+{
+  "name": "check-contamination",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:framework-neutral"],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run tools/check-contamination"
+      }
+    }
+  }
+}

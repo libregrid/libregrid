@@ -3,7 +3,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
 import { ModuleRegistry, type ColDef, type GridOptions } from 'ag-grid-community';
 
-import { ThemeService } from '../theme';
+import { LibreGridThemeService } from '@libregrid/material';
 
 interface Row {
   country: string;
@@ -68,15 +68,16 @@ function makeRows(n: number): Row[] {
 
       <h2>Not yet available</h2>
       <p>
-        Right-clicking a cell shows the <em>browser</em> menu — LibreGrid's context menu arrives in
-        Phase 1. Setting <code>rowGroup</code> on a column currently does nothing, because
+        Setting <code>rowGroup</code> on a column currently does nothing, because
         Community has no grouping of its own; that is Phase 2.
+        The context menu and side bar are now available — see the
+        <a routerLink="/menus">Menus</a> and <a routerLink="/side-bar">Side bar</a> demos.
       </p>
     </div>
   `,
 })
 export class GridDemo {
-  protected readonly theme = inject(ThemeService);
+  protected readonly theme = inject(LibreGridThemeService);
   protected readonly rowData = signal<Row[]>(makeRows(200));
 
   protected readonly columnDefs: ColDef<Row>[] = [

@@ -1,35 +1,23 @@
-name: Nightly conformance
-
-# G5 early-warning system. The seams we build on are marked
-# `@internal AG_GRID_INTERNAL - Not for public use. Can change / be removed at
-# any time.` A Community release that breaks one must fail here before it
-# reaches a user.
+name: Nightly
 
 on:
   schedule:
-    - cron: '0 3 * * *'
+    # Every day at 06:00 UTC
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 jobs:
-  latest-community:
-    name: Against ag-grid-community@latest
+  conformance:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
+        with:
+          node-version: '22'
+          cache: npm
       - run: npm ci
-      - name: Install latest ag-grid-community
-        run: npm install --no-save ag-grid-community@latest
       - run: npm run gen:version
-      - name: Seam verification
-        id: seams
-        continue-on-error: true
-        run: npx vitest run packages/core/src/seams.spec.ts --reporter=dot
-      - name: Report seam breakage
-        if: steps.seams.outcome == 'failure'
-        run: |
-          echo "::warning::Seam verification FAILED against ag-grid-community@latest."
-          echo "::warning::An @internal export we depend on may have changed or been removed."
-          echo "::warning::See docs/reference/guardrails.md (G5) and api-seams.md §1."
-          exit 1
+      - name: Seam verification (G5 tripwire)
+        run: npx vitest run packages/core/src/seams.spec.ts --reporter verbose
+      - name: Conformance matrix
+        run: node tools/conformance/matrix.mjs

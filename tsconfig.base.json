@@ -17,7 +17,10 @@
     "noUnusedParameters": true,
     "paths": {
       "@libregrid/core": ["./packages/core/src/index.ts"],
-      "@libregrid/core/testing": ["./packages/core/src/testing/index.ts"]
+      "@libregrid/core/testing": ["./packages/core/src/testing/index.ts"],
+      "@libregrid/menu": ["./packages/menu/src/index.ts"],
+      "@libregrid/side-bar": ["./packages/side-bar/src/index.ts"],
+      "@libregrid/material": ["./packages/material/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

@@ -1,34 +1,23 @@
-## What & why
+## Phase / Task
 
-<!-- What does this change, and which phase/sub-PR does it belong to? -->
+<!-- Link the phase file, e.g. `docs/phases/phase-01-menus-sidebar.md` -->
+<!-- Tick the todo items this PR completes -->
 
-**Phase:** <!-- e.g. Phase 2, PR 2.2 — link docs/phases/phase-02-row-grouping.md -->
+## G1 & G4 attestation
 
-## Todo items completed
+<!-- By submitting this PR, I confirm: -->
+- [ ] No `ag-grid-enterprise` source was read, installed, or referenced
+- [ ] No AG Grid trademark is used in package names, CSS classes, or marketing copy outside the official tagline
+- [ ] `NOTICE` + README attribution is present in any new package (G3)
 
-<!-- Tick the boxes you completed in the phase file, and tick them there too. -->
+## Parity checklist
 
-- [ ]
+<!-- If this PR implements a feature, update the corresponding parity checklist: -->
+- [ ] `docs/parity/<domain>.md` updated with ✅/🟡/❌ and rationale for every ❌
 
-## Definition of Done
+## Checklist
 
 - [ ] Unit tests pass, ≥85% coverage on new code
-- [ ] **At least one integration test against a real grid** (unit tests do not prove the seam works)
-- [ ] Playwright E2E for any mouse-driven surface
-- [ ] Working route in `apps/docs`
-- [ ] `docs/parity/<domain>.md` updated — every ❌ has a rationale
-- [ ] `npm run verify` green
-- [ ] Bundle budgets met; no other `@libregrid/*` package leaks in
-- [ ] axe-core: 0 violations, light and dark
-- [ ] `NOTICE` + README attribution present in any new package
-- [ ] Changeset added
-
-## Guardrails
-
-- [ ] **G1** — I have not read, installed or referenced `ag-grid-enterprise` in any form
-- [ ] **G4** — no new user-facing wording implies affiliation with AG Grid Ltd
-- [ ] Any new `agXxx` identifiers are ones Community's closed unions require, not invented
-
-## Notes for reviewers
-
-<!-- Anything surprising, deliberately deferred, or worth a closer look. -->
+- [ ] At least one integration test per feature against a real grid
+- [ ] `npm run verify` green (lint + test + build + guardrails)
+- [ ] A Changeset added

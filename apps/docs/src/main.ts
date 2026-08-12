@@ -3,6 +3,9 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import { EnterpriseCoreModule } from '@libregrid/core';
+import { ContextMenuModule, ColumnMenuModule } from '@libregrid/menu';
+import { SideBarModule } from '@libregrid/side-bar';
+import { provideLibreGridMaterialTheme } from '@libregrid/material';
 
 import { App } from './app/app';
 import { routes } from './app/routes';
@@ -20,7 +23,10 @@ import { routes } from './app/routes';
 ModuleRegistry.registerModules([
   AllCommunityModule,
   EnterpriseCoreModule,
-  // Phase 1: ContextMenuModule, ColumnMenuModule, SideBarModule
+  // Phase 1
+  ContextMenuModule,
+  ColumnMenuModule,
+  SideBarModule,
   // Phase 2: RowGroupingModule
 ]);
 
@@ -28,5 +34,6 @@ bootstrapApplication(App, {
   providers: [
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
+    provideLibreGridMaterialTheme(),
   ],
 }).catch((err) => console.error(err));

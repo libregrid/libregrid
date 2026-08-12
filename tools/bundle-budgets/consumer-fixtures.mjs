@@ -1,0 +1,61 @@
+#!/usr/bin/env node
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const require = createRequire(import.meta.url);
+const { build } = await import(pathToFileURL(require.resolve('esbuild', {
+  paths: [join(root, 'node_modules', '@angular', 'build')],
+})).href);
+const outputDirectory = join(root, 'tools', 'bundle-budgets', '.fixtures');
+const packages = ['core', 'menu', 'side-bar', 'material'];
+const packageName = (name) => `@libregrid/${name}`;
+
+if (!packages.every((name) => existsSync(join(root, 'packages', name, 'dist', 'index.js')))) {
+  throw new Error('Build packages before running consumer fixtures.');
+}
+
+rmSync(outputDirectory, { recursive: true, force: true });
+mkdirSync(outputDirectory, { recursive: true });
+
+for (const name of packages) {
+  const result = await build({
+    stdin: {
+      contents: `export * from '${packageName(name)}';`,
+      resolveDir: root,
+      sourcefile: `${name}.ts`,
+    },
+    bundle: true,
+    format: 'esm',
+    minify: true,
+    metafile: true,
+    write: false,
+    external: ['ag-grid-community', '@angular/*'],
+    plugins: [
+      {
+        name: 'workspace-packages',
+        setup(pluginBuild) {
+          pluginBuild.onResolve({ filter: /^@libregrid\// }, (args) => ({
+            path: join(root, 'packages', args.path.slice('@libregrid/'.length), 'dist', 'index.js'),
+          }));
+        },
+      },
+    ],
+  });
+  const imports = Object.keys(result.metafile.inputs)
+    .filter((input) => input.includes('/packages/'))
+    .map((input) => input.match(/\/packages\/([^/]+)\//)?.[1])
+    .filter(Boolean);
+  const unexpected = [...new Set(imports)].filter(
+    (dependency) => dependency !== name && dependency !== 'core',
+  );
+  if (unexpected.length) {
+    throw new Error(
+      `${packageName(name)} consumer bundle includes unexpected packages: ${unexpected.join(', ')}`,
+    );
+  }
+  const bytes = result.outputFiles[0]?.contents.byteLength ?? 0;
+  console.log(`   PASS ${packageName(name)} consumer fixture: ${(bytes / 1024).toFixed(1)} KB`);
+}
