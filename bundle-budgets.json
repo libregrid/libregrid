@@ -19,8 +19,8 @@
       "note": "Angular Material theme bridge plus optional menu and CDK portal side-bar renderers."
     },
     "@libregrid/row-grouping": {
-      "maxSize": "32 KB",
-      "note": "GroupStage + AggFuncService + beans."
+      "maxSize": "40 KB",
+      "note": "Group/flatten/agg/filterAgg/groupFilter stages + AggFuncService + rowGroup/value cols services. Raised from 32 KB in PR 2.2 when the cols services (required by Community's _applyColumnState and treegrid role) landed."
     },
     "@libregrid/columns-tool-panel": {
       "maxSize": "16 KB",

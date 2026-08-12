@@ -1,6 +1,6 @@
 # Phase 2 — Row Grouping & Aggregation
 
-**Status:** ⬜ Not started
+**Status:** 🟡 In progress
 **Depends on:** Phase 1
 **Blocks:** Phases 3 (drop zones), 8 (pivot), 9 (SSRM grouping), 10 (tree data)
 
@@ -41,24 +41,27 @@ Performance is a first-class requirement: grouping 100k rows is a normal workloa
 
 ## Todo
 
-### PR 2.1 — Stage plumbing
+### PR 2.1 — Stage plumbing ✅
 
-- [ ] `GroupStage` implementing `_IRowNodeGroupStage`, bean name `groupStage`, `step = 'group'`
-- [ ] Required members: `treeData`, `grouping`, `hasTreeData`, `hasRowGrouping`, `refreshProps`, `execute(params: RefreshModelParams): boolean | undefined`
-- [ ] `FlattenStage` implementing `_IRowNodeFlattenStage`, bean name `flattenStage`
-- [ ] Group `RowNode` creation: keys, levels, `childrenAfterGroup`, `allLeafChildren`
-- [ ] ColDef `rowGroup`, `enableRowGroup`
-- [ ] *Acceptance:* `rowGroup: true` on a ColDef produces group rows with correct child counts
+- [x] `GroupStage` implementing `_IRowNodeGroupStage`, bean name `groupStage`
+- [x] Required members: `treeData`, `grouping`, `hasTreeData`, `hasRowGrouping`, `refreshProps`, `execute(params: RefreshModelParams): boolean | undefined`
+- [x] `FlattenStage` implementing `_IRowNodeFlattenStage`, bean name `flattenStage`
+- [x] Group `RowNode` creation: keys, levels, `childrenAfterGroup`, `allLeafChildren`
+- [x] ColDef `rowGroup`, `enableRowGroup`
+- [x] *Acceptance:* `rowGroup: true` on a ColDef produces group rows with correct child counts
 
-### PR 2.2 — Aggregation
+### PR 2.2 — Aggregation ✅
 
-- [ ] `AggFuncService` (bean `aggFuncSvc`) with built-ins `sum`, `min`, `max`, `count`, `avg`, `first`, `last`
-- [ ] `AggregationStage` (bean `aggStage`, `step = 'aggregate'`)
-- [ ] `FilterAggregateStage` (bean `filterAggStage`, `step = 'filter_aggregates'`)
-- [ ] Options: `aggFuncs`, `suppressAggFuncInHeader`, `aggregateOnlyChangedColumns`, `suppressAggFilteredOnly`, `groupAggFiltering`, `alwaysAggregateAtRootLevel`, `getGroupRowAgg`
-- [ ] ColDef: `aggFunc`, `initialAggFunc`, `enableValue`, `allowedAggFuncs`, `defaultAggFunc`, `valueIndex`, `initialValueIndex`
-- [ ] API: `getValueColumns`, `addValueColumns`, `removeValueColumns`, `setValueColumns`, `setColumnAggFunc`, `addAggFuncs`, `clearAggFuncs`
-- [ ] `rowNode.getAggregatedChildren(colKey)` and `(colKey, true)` for deep traversal
+- [x] `AggFuncService` (bean `aggFuncSvc`) with built-ins `sum`, `min`, `max`, `count`, `avg`, `first`, `last`
+- [x] `AggregationStage` (bean `aggStage`, `step = 'aggregate'`)
+- [x] `FilterAggregateStage` (bean `filterAggStage`, `step = 'filter_aggregates'`)
+- [x] Options: `aggFuncs`, `suppressAggFuncInHeader` (deferred to 2.3), `aggregateOnlyChangedColumns` (🟡 full traversal for now), `suppressAggFilteredOnly`, `groupAggFiltering` (🟡 full version in 2.5), `alwaysAggregateAtRootLevel`, `getGroupRowAgg`
+- [x] ColDef: `aggFunc`, `initialAggFunc`, `enableValue`, `allowedAggFuncs`, `defaultAggFunc`, `valueIndex` (🟡), `initialValueIndex` (🟡)
+- [x] API: `getValueColumns`, `addValueColumns`, `removeValueColumns`, `setValueColumns`, `setColumnAggFunc`, `addAggFuncs`, `clearAggFuncs`
+- [x] `rowNode.getAggregatedChildren(colKey)` and `(colKey, true)` for deep traversal (Community method over our tree; pivot-key semantics in Phase 8)
+- [x] `ValueColsService` (bean `valueColsSvc`) — required so `_applyColumnState` routes `aggFunc` state
+- [x] `RowGroupColsService` (bean `rowGroupColsSvc`) — required for Community's `treegrid` grid role and row-group column API; `setRowGroupColumns`/`addRowGroupColumns`/`removeRowGroupColumns`/`moveRowGroupColumn`/`getRowGroupColumns` now functional
+- [x] `GroupFilterStage` (bean `groupFilterStage`) — minimal recursive version; PR 2.5 adds `groupAggFiltering`
 
 ### PR 2.3 — Auto group column
 

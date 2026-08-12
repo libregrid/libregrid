@@ -19,7 +19,7 @@
 | `initialGroupOrderComparator` | ⬜ | |
 | `groupAllowUnbalanced` | ⬜ | |
 | `groupMaintainOrder` | ⬜ | |
-| `groupDefaultExpanded` | ⬜ | |
+| `groupDefaultExpanded` | ✅ | PR 2.2 — `-1`/number levels honoured at tree creation |
 | `isGroupOpenByDefault` | ⬜ | |
 | `suppressGroupRowsSticky` | ⬜ | |
 | `rowGroupPanelShow` | ⬜ | Row-group panel built in PR 2.5 |
@@ -36,7 +36,7 @@
 
 | Property | Status | Notes |
 |---|---|---|
-| `rowGroup` | ⬜ | |
+| `rowGroup` | ✅ | PR 2.1 — GroupStage creates group rows |
 | `enableRowGroup` | ⬜ | Enables GUI grouping (tool panel, Phase 3) |
 
 ## API Methods
@@ -45,10 +45,11 @@
 |---|---|---|
 | `expandAll` | ⬜ | PR 2.4 |
 | `collapseAll` | ⬜ | PR 2.4 |
-| `setRowGroupColumns` | ⬜ | |
-| `addRowGroupColumns` | ⬜ | |
-| `removeRowGroupColumns` | ⬜ | |
-| `getRowGroupColumns` | ⬜ | |
+| `setRowGroupColumns` | ✅ | PR 2.2 — via `rowGroupColsSvc` |
+| `addRowGroupColumns` | ✅ | |
+| `removeRowGroupColumns` | ✅ | |
+| `getRowGroupColumns` | ✅ | |
+| `moveRowGroupColumn` | ✅ | |
 
 ## Callbacks
 

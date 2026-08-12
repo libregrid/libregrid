@@ -9,6 +9,7 @@ export default defineConfig({
       '@libregrid/menu': fileURLToPath(new URL('./packages/menu/src/index.ts', import.meta.url)),
       '@libregrid/side-bar': fileURLToPath(new URL('./packages/side-bar/src/index.ts', import.meta.url)),
       '@libregrid/material': fileURLToPath(new URL('./packages/material/src/index.ts', import.meta.url)),
+      '@libregrid/row-grouping': fileURLToPath(new URL('./packages/row-grouping/src/index.ts', import.meta.url)),
     },
   },
   test: {

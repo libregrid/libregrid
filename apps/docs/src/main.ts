@@ -5,6 +5,7 @@ import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import { EnterpriseCoreModule } from '@libregrid/core';
 import { ContextMenuModule, ColumnMenuModule } from '@libregrid/menu';
 import { SideBarModule } from '@libregrid/side-bar';
+import { RowGroupingModule } from '@libregrid/row-grouping';
 import { provideLibreGridMaterialTheme } from '@libregrid/material';
 
 import { App } from './app/app';
@@ -27,7 +28,8 @@ ModuleRegistry.registerModules([
   ContextMenuModule,
   ColumnMenuModule,
   SideBarModule,
-  // Phase 2: RowGroupingModule
+  // Phase 2
+  RowGroupingModule,
 ]);
 
 bootstrapApplication(App, {

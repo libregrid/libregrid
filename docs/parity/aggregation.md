@@ -8,29 +8,29 @@
 
 | Option | Status | Notes |
 |---|---|---|
-| `aggFuncs` | ⬜ | Map of name → function for custom aggs |
-| `groupTotalRow` | ⬜ | Aggregate row within groups at a given position |
-| `grandTotalRow` | ⬜ | Grand total at a given grid location |
-| `suppressAggFuncInHeader` | ⬜ | Omits function name from headers |
-| `aggregateOnlyChangedColumns` | ⬜ | Verify untouched columns are genuinely not recomputed |
-| `suppressAggFilteredOnly` | ⬜ | Aggregations unaffected by filtering |
-| `groupAggFiltering` | ⬜ | Whether filters apply to aggregated group values |
-| `groupSuppressBlankHeader` | ⬜ | |
-| `suppressStickyTotalRow` | ⬜ | |
-| `alwaysAggregateAtRootLevel` | ⬜ | |
-| `getGroupRowAgg` | ⬜ | Callback for multi-column aggregation |
+| `aggFuncs` | ✅ | Custom funcs registered at init; covered by integration test |
+| `groupTotalRow` | ⬜ | PR 2.4 |
+| `grandTotalRow` | ⬜ | PR 2.4 |
+| `suppressAggFuncInHeader` | ⬜ | Header rendering concern — lands with auto group column (PR 2.3) |
+| `aggregateOnlyChangedColumns` | 🟡 | Not implemented — aggStage always does a full traversal (documented in code); safe but not incremental |
+| `suppressAggFilteredOnly` | ✅ | `filterAggStage` re-aggregates over all children when true; integration-tested |
+| `groupAggFiltering` | 🟡 | Option read by stages but group-value filtering lands with PR 2.5's full group filter |
+| `groupSuppressBlankHeader` | ⬜ | PR 2.4 |
+| `suppressStickyTotalRow` | ⬜ | PR 2.4 |
+| `alwaysAggregateAtRootLevel` | ✅ | Root node aggregated when true; verified via `getRowNode(ROOT_NODE_ID)` |
+| `getGroupRowAgg` | ✅ | Overrides per-column aggs; integration-tested |
 
 ## ColDef Properties
 
 | Property | Status | Notes |
 |---|---|---|
-| `aggFunc` | ⬜ | |
-| `initialAggFunc` | ⬜ | Applies only on column creation |
-| `valueIndex` | ⬜ | Column order in multi-column pivot aggregation |
-| `initialValueIndex` | ⬜ | |
-| `enableValue` | ⬜ | Enables GUI aggregation (tool panel, Phase 3) |
-| `allowedAggFuncs` | ⬜ | Restricts GUI selection per column |
-| `defaultAggFunc` | ⬜ | |
+| `aggFunc` | ✅ | Read from colDef by `valueColsSvc.extractCol` |
+| `initialAggFunc` | ✅ | Applied on first column creation only |
+| `valueIndex` | 🟡 | Stored by `sortByPendingState`; multi-column pivot ordering matters in Phase 8 |
+| `initialValueIndex` | 🟡 | Same as `valueIndex` |
+| `enableValue` | ✅ | Becomes a value column with the default agg func |
+| `allowedAggFuncs` | ✅ | `aggFuncSvc.getFuncNames` honours it |
+| `defaultAggFunc` | ✅ | Preferred over the `'sum'` fallback |
 | `showValuesAs` | ⬜ | PR 2.5 |
 | `initialShowValuesAs` | ⬜ | PR 2.5 |
 | `showValuesAsDef` | ⬜ | PR 2.5 |
@@ -40,30 +40,30 @@
 
 | Method | Status | Notes |
 |---|---|---|
-| `getValueColumns` | ⬜ | |
-| `addValueColumns` | ⬜ | |
-| `removeValueColumns` | ⬜ | |
-| `setValueColumns` | ⬜ | |
-| `setColumnAggFunc` | ⬜ | |
-| `addAggFuncs` | ⬜ | |
-| `clearAggFuncs` | ⬜ | Clears grid-provided funcs too |
-| `rowNode.getAggregatedChildren(colKey)` | ⬜ | Immediate contributing children |
-| `rowNode.getAggregatedChildren(colKey, true)` | ⬜ | All descendant leaves |
+| `getValueColumns` | ✅ | Delegates to `valueColsSvc.columns` |
+| `addValueColumns` | ✅ | Dispatches `columnValueChanged`; integration-tested |
+| `removeValueColumns` | ✅ | |
+| `setValueColumns` | ✅ | Replaces the set |
+| `setColumnAggFunc` | ✅ | Switch verified sum → max in integration test |
+| `addAggFuncs` | ✅ | Custom func usable by name immediately after |
+| `clearAggFuncs` | ✅ | Clears grid-provided funcs too |
+| `rowNode.getAggregatedChildren(colKey)` | 🟡 | Community `RowNode` method works over our tree; pivot-key filtering semantics arrive with Phase 8 |
+| `rowNode.getAggregatedChildren(colKey, true)` | 🟡 | Same note |
 
 ## Built-in Aggregation Functions
 
 | Function | Status | Notes |
 |---|---|---|
-| `sum` | ⬜ | Test `[]`, all-null, mixed-null, non-numeric |
-| `min` | ⬜ | |
-| `max` | ⬜ | |
-| `count` | ⬜ | |
-| `avg` | ⬜ | Verify weighting across nested levels |
-| `first` | ⬜ | |
-| `last` | ⬜ | |
+| `sum` | ✅ | Unit-tested: `[]`, all-null, mixed-null, non-numeric, NaN, large |
+| `min` | ✅ | |
+| `max` | ✅ | |
+| `count` | ✅ | Returns `IAggFuncResult`; child counts sum across levels |
+| `avg` | ✅ | Weighted across nested levels via `{value, count}` wrapper — integration-tested |
+| `first` | ✅ | |
+| `last` | ✅ | |
 
 ## Callbacks
 
 | Callback | Status | Notes |
 |---|---|---|
-| `getGroupRowAgg` | ⬜ | |
+| `getGroupRowAgg` | ✅ | |
