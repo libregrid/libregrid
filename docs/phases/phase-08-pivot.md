@@ -1,7 +1,7 @@
 # Phase 8 — Pivot
 
 **Status:** ⬜ Not started
-**Depends on:** Phase 2 (grouping + aggregation), Phase 3 (drop zones to activate)
+**Depends on:** Phase 2 (grouping + aggregation), Phase 3 (Columns panel, static sections, builder seam, and drag adapter)
 **Blocks:** Phase 9 (SSRM pivoting), Phase 12 (pivot charts)
 
 **Package:** `@libregrid/pivot` (`moduleName: 'Pivot'`, `'PivotModule'`)
@@ -17,7 +17,9 @@ The mechanism is `pivotStage` (`_IRowNodePivotStage`), which runs **after** `gro
 
 The genuinely novel work is **pivot result columns**: they don't exist in `columnDefs`, they're generated from data values. That means column identity, ordering, state persistence and the secondary-column lifecycle all need care. `getPivotResultColumn(pivotKeys, valueColId)` is the lookup contract.
 
-This phase also activates the pivot and values drop zones built inert in Phase 3.
+Phase 3 ships functional Values controls and static Pivot Mode and Column Labels sections.
+It also supplies an inert `PivotDropZone` builder product, but it does not mount that component.
+This phase replaces the static sections, creates the functional pivot controls, and mounts the required pivot drop targets.
 
 ---
 
@@ -33,7 +35,11 @@ This phase also activates the pivot and values drop zones built inert in Phase 3
 - [ ] Options: `pivotMode`, `pivotPanelShow`, `pivotPanelSuppressSort`
 - [ ] ColDef: `pivot`, `enablePivot`
 - [ ] API: `isPivotMode`, `getPivotColumns`, `setPivotColumns`, `addPivotColumns`, `removePivotColumns`, `getPivotResultColumn`, `setPivotResultColumns`, `getPivotResultColumns`
-- [ ] Activate Phase 3's pivot + values drop zones and the pivot-mode toggle
+- [ ] Replace the Phase 3 Pivot Mode and Column Labels placeholders with functional controls
+- [ ] Activate and mount the Phase 3 `PivotDropZone` builder product where the pivot panel requires it
+- [ ] Extend the Phase 3 native drag handlers with a pivot target and pivot eligibility rules
+- [ ] Extend the Material CDK adapter with a pivot drop-list kind and pivot action mapping
+- [ ] Connect the existing Values controls to pivot behavior where required
 - [ ] Column state persistence across pivot-mode toggling
 - [ ] Contribute `pivotChart` menu-item stub for Phase 12
 
@@ -41,15 +47,16 @@ This phase also activates the pivot and values drop zones built inert in Phase 3
 
 ## Test plan
 
-| Tier | Coverage |
-|---|---|
-| **Unit** | Pivot result column ID generation and uniqueness for multi-key pivots. Column ordering determinism. `getPivotResultColumn` lookup by `pivotKeys` + `valueColId`. Header name derivation with and without `suppressAggFuncInHeader` |
+| Tier            | Coverage                                                                                                                                                                                                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Unit**        | Pivot result column ID generation and uniqueness for multi-key pivots. Column ordering determinism. `getPivotResultColumn` lookup by `pivotKeys` + `valueColId`. Header name derivation with and without `suppressAggFuncInHeader`                                                                           |
 | **Integration** | Fixture dataset produces the expected result-column set and correct intersection aggregates. Toggling `pivotMode` on→off→on preserves original column state. Adding/removing a pivot column regenerates result columns. Pivot totals and grand totals correct. Pivot combined with multiple row-group levels |
-| **E2E** | Drag a column into the pivot drop zone → result columns appear. Toggle pivot mode from the tool panel. Expand/collapse pivot column groups |
-| **Performance** | 100k rows, 2 row-group levels × 2 pivot keys × 3 value columns: initial pivot within baseline; re-pivot after changing a pivot column |
-| **a11y** | Nested pivot headers expose correct grouping semantics; axe 0 violations light + dark |
+| **E2E**         | Drag a column into the pivot drop zone → result columns appear. Toggle pivot mode from the tool panel. Expand/collapse pivot column groups                                                                                                                                                                   |
+| **Performance** | 100k rows, 2 row-group levels × 2 pivot keys × 3 value columns: initial pivot within baseline; re-pivot after changing a pivot column                                                                                                                                                                        |
+| **a11y**        | Nested pivot headers expose correct grouping semantics; axe 0 violations light + dark                                                                                                                                                                                                                        |
 
 **Specific edge cases to cover:**
+
 - Pivot key with high cardinality (guard against generating thousands of columns — document the practical limit)
 - `null` / `undefined` pivot key values
 - Pivot with no value columns configured
@@ -65,7 +72,8 @@ This phase also activates the pivot and values drop zones built inert in Phase 3
 - [ ] Toggling pivot mode preserves column state in both directions
 - [ ] Multi-level pivot keys render nested column groups correctly
 - [ ] Pivot totals and grand totals correct
-- [ ] Phase 3's pivot and values drop zones now functional; pivot-mode toggle works
+- [ ] The Columns panel has a functional pivot drop zone and pivot-mode toggle
+- [ ] The existing Values controls work with pivot mode
 - [ ] `getPivotResultColumn(pivotKeys, valueColId)` resolves reliably
 - [ ] High-cardinality behavior documented (practical column limit stated)
 - [ ] No bench regression vs. Phase-0 baseline

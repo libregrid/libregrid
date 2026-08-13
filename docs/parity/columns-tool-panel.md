@@ -6,63 +6,77 @@
 
 ## ColumnsToolPanelParams
 
-| Property | Status | Notes |
-|---|---|---|
-| `suppressColumnMove` | ✅ | Removes native and CDK drag/reorder controls. |
-| `suppressRowGroups` | ✅ | Hides the Row Groups section. |
-| `suppressValues` | ✅ | Hides the Values section. |
-| `suppressPivots` | ✅ | Hides the inert Column Labels (Pivot) section. |
-| `suppressPivotMode` | ✅ | Hides the inert Pivot Mode section. |
-| `suppressColumnFilter` | ✅ | Hides the column search box. |
-| `suppressColumnSelectAll` | ✅ | Hides Select all and Unselect all controls. |
-| `suppressColumnExpandAll` | ✅ | Hides the labelled expand-all and collapse-all controls. |
-| `contractColumnSelection` | ✅ | Column groups start collapsed. |
-| `suppressSyncLayoutWithGrid` | 🟡 | `syncLayoutWithGrid()` retains a custom layout when set; no broader panel/grid-layout parity is implemented. |
-| `buttons` | ✅ | `apply` and `cancel` defer and either commit or discard visibility, pinning, grouping, and value changes. |
+| Property                     | Status | Notes                                                                                                                                                                                 |
+| ---------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `suppressColumnMove`         | ✅     | Removes native and CDK drag sources. This disables drag reorder and drag into Row Groups or Values. The labelled function buttons remain.                                             |
+| `suppressRowGroups`          | ✅     | Hides the Row Groups section.                                                                                                                                                         |
+| `suppressValues`             | ✅     | Hides the Values section.                                                                                                                                                             |
+| `suppressPivots`             | ✅     | Hides the inert Column Labels (Pivot) section.                                                                                                                                        |
+| `suppressPivotMode`          | ✅     | Hides the inert Pivot Mode section.                                                                                                                                                   |
+| `suppressColumnFilter`       | 🟡     | Hides the column search box. A direct test is missing.                                                                                                                                |
+| `suppressColumnSelectAll`    | 🟡     | Hides Select all and Unselect all controls. A direct test is missing.                                                                                                                 |
+| `suppressColumnExpandAll`    | ✅     | Hides the labelled expand-all and collapse-all controls.                                                                                                                              |
+| `contractColumnSelection`    | ✅     | Column groups start collapsed.                                                                                                                                                        |
+| `suppressSyncLayoutWithGrid` | 🟡     | `syncLayoutWithGrid()` retains a custom layout when set; no broader panel/grid-layout parity is implemented.                                                                          |
+| `buttons`                    | ✅     | `apply` enables deferred mode. `cancel` appears only with `apply`. Visibility and pinning defer. Group and value changes defer when their setter APIs exist. Reorder stays immediate. |
 
 ## ColDef Properties
 
-| Property | Status | Notes |
-|---|---|---|
-| `suppressColumnsToolPanel` | ✅ | Excluded from the tree and flat column list. |
-| `enableRowGroup` | ✅ | Gates row-group buttons and native drops. |
-| `enablePivot` | 🟡 | Pivot is deliberately inert until Phase 8; the panel does not offer pivot mutation. |
-| `enableValue` | ✅ | Gates Values buttons and native drops. |
-| `toolPanelClass` | ✅ | String, string-array, and callback forms are applied to leaf rows. |
-| `columnMenuItems` | ✅ | Supported by the shared `@libregrid/menu` column-menu integration. |
+| Property                   | Status | Notes                                                                               |
+| -------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| `suppressColumnsToolPanel` | ✅     | Excluded from the tree and flat column list.                                        |
+| `enableRowGroup`           | ✅     | Gates row-group buttons and native drops.                                           |
+| `enablePivot`              | 🟡     | Pivot is deliberately inert until Phase 8; the panel does not offer pivot mutation. |
+| `enableValue`              | ✅     | Gates Values buttons and native drops.                                              |
+| `toolPanelClass`           | ✅     | String, string-array, and callback forms are applied to leaf rows.                  |
+| `columnMenuItems`          | ✅     | Supported by the shared `@libregrid/menu` column-menu integration.                  |
 
 ## Grid Options
 
-| Option | Status | Notes |
-|---|---|---|
-| `functionsReadOnly` | ✅ | Prevents row-group/value mutations in the panel and header row-group zone; pivot has no mutation UI. |
-| `allowDragFromColumnsToolPanel` | 🟡 | Panel-to-grid-header dragging is not implemented. Internal reorder and Row Groups/Values drops remain available because they do not leave the tool panel. |
-| `dragAndDropImageComponent` | ❌ | Native fallback and Material CDK drag are provided; custom drag-image components are not implemented. |
-| `dragAndDropImageComponentParams` | ❌ | No custom drag-image component is implemented. |
-| `rowGroupPanelShow` | ✅ | `RowGroupingPanelModule` renders the header row-group zone for `always` and `onlyWhenGrouping`. |
+| Option                            | Status | Notes                                                                                                                           |
+| --------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `functionsReadOnly`               | ✅     | Prevents row-group/value mutations in the panel and header row-group zone; pivot has no mutation UI.                            |
+| `allowDragFromColumnsToolPanel`   | ❌     | The option is not read. Drag into the column-header area is not implemented, and the option does not block existing drag paths. |
+| `dragAndDropImageComponent`       | ❌     | Native fallback and Material CDK drag are provided; custom drag-image components are not implemented.                           |
+| `dragAndDropImageComponentParams` | ❌     | No custom drag-image component is implemented.                                                                                  |
+| `rowGroupPanelShow`               | ✅     | `RowGroupingPanelModule` renders the header row-group zone for `always` and `onlyWhenGrouping`.                                 |
+| `rowGroupPanelSuppressSort`       | ❌     | The option is not read. The standalone row-group panel does not provide sort indicators or sort actions.                        |
 
 ## IColumnToolPanel API
 
-| Method | Status | Notes |
-|---|---|---|
-| `setPivotModeSectionVisible(visible)` | ✅ | Shows or hides the inert Pivot Mode section. |
-| `setRowGroupsSectionVisible(visible)` | ✅ | Shows or hides the functional Row Groups section. |
-| `setValuesSectionVisible(visible)` | ✅ | Shows or hides the functional Values section. |
-| `setPivotSectionVisible(visible)` | ✅ | Shows or hides the inert Column Labels (Pivot) section. |
-| `expandColumnGroups(groupIds?)` | ✅ | Expands specified groups, or all groups. |
-| `collapseColumnGroups(groupIds?)` | ✅ | Collapses specified groups, or all groups. |
-| `setColumnLayout(colDefs)` | ✅ | Renders the supplied flat or grouped layout order. |
+| Method                                | Status | Notes                                                                                                                              |
+| ------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `setPivotModeSectionVisible(visible)` | 🟡     | Shows or hides the inert Pivot Mode section. A direct test is missing.                                                             |
+| `setRowGroupsSectionVisible(visible)` | ✅     | Shows or hides the functional Row Groups section.                                                                                  |
+| `setValuesSectionVisible(visible)`    | 🟡     | Shows or hides the functional Values section. A direct test is missing.                                                            |
+| `setPivotSectionVisible(visible)`     | 🟡     | Shows or hides the inert Column Labels (Pivot) section. A direct test is missing.                                                  |
+| `expandColumnGroups(groupIds?)`       | ✅     | Expands specified groups, or all groups.                                                                                           |
+| `collapseColumnGroups(groupIds?)`     | ✅     | Collapses specified groups, or all groups.                                                                                         |
+| `setColumnLayout(colDefs)`            | ✅     | Renders the supplied flat or grouped layout order.                                                                                 |
+| `syncLayoutWithGrid()`                | 🟡     | Clears a custom panel layout unless `suppressSyncLayoutWithGrid` is true. Broader layout parity is not implemented.                |
+| `getState()`                          | 🟡     | Returns the current `expandedGroupIds`. The panel does not consume `initialState` or restore tool-panel state from side-bar state. |
 
 ## Behaviour
 
-| Requirement | Status | Notes |
-|---|---|---|
-| Drag into Row Groups zone regroups the grid | ✅ | Native HTML drop and labelled buttons add eligible row-group columns through the public API. |
-| Drag into Values zone applies aggregation | ✅ | Native HTML drop and labelled buttons add eligible value columns through the public API. |
-| Pivot zone + pivot-mode toggle | 🟡 | Both sections are visible but explicitly inert and labelled “Available in Phase 8”; no pivot behavior is shipped. |
-| Panel↔grid column state round-trip | ✅ | Visibility, pinning, and movement use public APIs; grid events refresh the panel. Apply/Cancel defers visibility and pinning when configured. |
-| Column search/filter box | ✅ | Filters column labels and group names, expanding matching groups. |
-| Indeterminate checkbox for mixed group visibility | ✅ | Group checkbox reflects mixed leaf visibility and toggles all leaves. |
-| **Keyboard alternative to drag-drop** | ✅ | Labelled move, group, value, remove, and reorder buttons provide the alternative. `@libregrid/material` maps CDK drops back to these same actions. |
-| Material drag-drop adapter | ✅ | Programmatic CDK `DragRef`/`DropListRef` instances decorate the neutral panel for reorder and Row Groups/Values drops without duplicating panel state. |
-| Column chooser shared with the Phase 1 menu item | ✅ | `showColumnChooser()` and the `columnChooser` menu item use one `ColumnsToolPanel` implementation in a native DOM overlay. |
+| Requirement                                       | Status | Notes                                                                                                                                                    |
+| ------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Drag into Row Groups zone regroups the grid       | ✅     | Native HTML drop and labelled buttons add eligible row-group columns through the public API.                                                             |
+| Drag into Values zone applies aggregation         | ✅     | Native HTML drop and labelled buttons add eligible value columns through the public API.                                                                 |
+| Pivot zone + pivot-mode toggle                    | 🟡     | The panel shows static Pivot Mode and Column Labels sections labelled `Available in Phase 8`. It does not ship a toggle, drop target, or pivot mutation. |
+| Inert pivot builder seam                          | 🟡     | `RowGroupPanelBuilder` creates an inert `PivotDropZone`. Phase 3 does not mount it in the panel or header. Phase 8 must activate and mount it.           |
+| Panel↔grid column state round-trip                | ✅     | Visibility, pinning, and movement use public APIs; grid events refresh the panel. Apply/Cancel defers visibility and pinning when configured.            |
+| Column search/filter box                          | ✅     | Filters column labels and group names, expanding matching groups.                                                                                        |
+| Indeterminate checkbox for mixed group visibility | ✅     | Group checkbox reflects mixed leaf visibility and toggles all leaves.                                                                                    |
+| **Keyboard alternative to drag-drop**             | ✅     | Labelled move, group, value, remove, and reorder buttons provide the alternative. `@libregrid/material` maps CDK drops back to these same actions.       |
+| Material drag-drop adapter                        | ✅     | Programmatic CDK `DragRef`/`DropListRef` instances decorate the neutral panel for reorder and Row Groups/Values drops without duplicating panel state.   |
+| Column chooser shared with the Phase 1 menu item  | ✅     | `showColumnChooser()` and the `columnChooser` menu item use one `ColumnsToolPanel` implementation in a native DOM overlay.                               |
+| Column chooser parameters                         | ✅     | Supports chooser layout and suppression parameters. The menu item forwards the selected column's `columnChooserParams`.                                  |
+| Column chooser reduced sections                   | ✅     | The chooser always hides Row Groups, Values, Pivot Mode, and Column Labels.                                                                              |
+| Standalone row-group panel                        | ✅     | Supports `always`, `onlyWhenGrouping`, remove, reorder, native drop, and `functionsReadOnly`.                                                            |
+| Cleanup                                           | 🟡     | Side-bar and drag-adapter cleanup are tested. Grid-listener removal exists but lacks a direct test.                                                      |
+| Native fallback                                   | ✅     | Native HTML drag supports internal reorder and Row Groups or Values drops when no UI adapter is active.                                                  |
+| Search-scoped visibility actions                  | ✅     | Select All and Unselect All use the current column-label or group-label search result.                                                                   |
+| Pinning controls                                  | ✅     | Leaf rows expose pin-left, pin-right, and unpin actions through the public Grid API.                                                                     |
+| Deferred external synchronization                 | ✅     | Grid events refresh deferred snapshots before a later Apply action.                                                                                      |
+| Reorder existing Row Groups and Values members    | 🟡     | The main panel can add or remove members but cannot reorder them. The standalone row-group panel can reorder row groups.                                 |
+| Tool-panel state restore                          | 🟡     | Expansion state can be read with `getState()`. Initial state and side-bar state restoration are not implemented.                                         |

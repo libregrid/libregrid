@@ -31,7 +31,7 @@ groupStage → filterStage → groupFilterStage → pivotStage → aggStage
 Two design notes that will save rework:
 
 - **`groupStage` is shared with tree data (Phase 10).** Its interface carries `treeData`, `grouping`, `hasTreeData` and `hasRowGrouping` flags precisely because one bean serves both. Structure it so Phase 10 adds a mode rather than a parallel implementation.
-- **`pivotStage` runs *before* `aggStage`.** Pivot (Phase 8) will slot into this pipeline. Don't hard-code assumptions that aggregation always sees non-pivoted columns.
+- **`pivotStage` runs _before_ `aggStage`.** Pivot (Phase 8) will slot into this pipeline. Don't hard-code assumptions that aggregation always sees non-pivoted columns.
 
 Performance is a first-class requirement: grouping 100k rows is a normal workload, and this is the phase most likely to regress the benchmark.
 
@@ -48,7 +48,7 @@ Performance is a first-class requirement: grouping 100k rows is a normal workloa
 - [x] `FlattenStage` implementing `_IRowNodeFlattenStage`, bean name `flattenStage`
 - [x] Group `RowNode` creation: keys, levels, `childrenAfterGroup`, `allLeafChildren`
 - [x] ColDef `rowGroup`, `enableRowGroup`
-- [x] *Acceptance:* `rowGroup: true` on a ColDef produces group rows with correct child counts
+- [x] _Acceptance:_ `rowGroup: true` on a ColDef produces group rows with correct child counts
 
 ### PR 2.2 — Aggregation ✅
 
@@ -71,7 +71,7 @@ Performance is a first-class requirement: grouping 100k rows is a normal workloa
 - [x] `GROUP_AUTO_COLUMN_ID` handling
 - [x] Options: `groupDisplayType` (🟡 `singleColumn` only), `autoGroupColumnDef`, `showOpenedGroup`, `groupHideOpenParents` (🟡 single hidden-ancestor level), `groupHideParentOfSingleChild`, `groupAllowUnbalanced`
 - [ ] Options not implemented this PR — see `docs/parity/row-grouping.md` for rationale per option: `groupRowRenderer`/`groupRowRendererParams` (❌ tied to unimplemented `groupRows` display type), `groupHideColumnsUntilExpanded`, `groupLockGroupColumns`, `groupMaintainOrder`, `suppressGroupChangesColumnVisibility`
-- [x] *Acceptance:* auto group column renders with working expand/collapse; `autoGroupColumnDef` overrides apply — verified by integration tests and manually in the docs app (`/row-grouping`)
+- [x] _Acceptance:_ auto group column renders with working expand/collapse; `autoGroupColumnDef` overrides apply — verified by integration tests and manually in the docs app (`/row-grouping`)
 
 ### PR 2.4 — Expand/collapse, ordering, totals ✅
 
@@ -87,27 +87,29 @@ Performance is a first-class requirement: grouping 100k rows is a normal workloa
 
 ### PR 2.5 — Group filter & show-values-as ✅
 
-- [x] `groupFilterStage` extended with full `groupAggFiltering` — reuses Community's own `FilterManager.doesRowPassAggregateFilters`/`isAggregateFilterPresent` (the exact seam already built for this). Discovered along the way: once a filter sits on a column FilterManager treats as aggregatable, it can register *only* in the aggregate bucket, not the child one — both `isChildFilterPresent()`-only gating and `doesRowPassFilter()`-only leaf checks silently no-op in that case; fixed by gating on `isAnyFilterPresent()` and requiring a leaf to pass *both* `doesRowPassFilter` and `doesRowPassAggregateFilters` (each defaults to "pass" when its own bucket is empty, so the combination is correct in every case, not just this one). `iGroupFilterService` (bean `groupFilter`, `isGroupFilter`/`isFilterAllowed`/`isFilterActive`/`updateFilterFlags`) is a *separate* seam for the group-column-header filter icon UI — not implemented, no UI consumes it yet
+- [x] `groupFilterStage` extended with full `groupAggFiltering` — reuses Community's own `FilterManager.doesRowPassAggregateFilters`/`isAggregateFilterPresent` (the exact seam already built for this). Discovered along the way: once a filter sits on a column FilterManager treats as aggregatable, it can register _only_ in the aggregate bucket, not the child one — both `isChildFilterPresent()`-only gating and `doesRowPassFilter()`-only leaf checks silently no-op in that case; fixed by gating on `isAnyFilterPresent()` and requiring a leaf to pass _both_ `doesRowPassFilter` and `doesRowPassAggregateFilters` (each defaults to "pass" when its own bucket is empty, so the combination is correct in every case, not just this one). `iGroupFilterService` (bean `groupFilter`, `isGroupFilter`/`isFilterAllowed`/`isFilterActive`/`updateFilterFlags`) is a _separate_ seam for the group-column-header filter icon UI — not implemented, no UI consumes it yet
 - [x] `showValuesAsSvc` (bean) — 5 built-in modes; see `docs/parity/row-grouping.md` for exact scope/gaps (custom mode registry and pivot-dependent modes deferred, both undocumented by Community call sites)
 - [x] ColDef: `showValuesAs`, `initialShowValuesAs`, `showValuesAsDef`, `enableShowValuesAs` (read by `isMenuEligible`, not wired to any visible menu — see parity doc)
-- [ ] Options: `rowGroupPanelShow`, `rowGroupPanelSuppressSort` — deferred to Phase 3. Confirmed via Community's own `@agModule` tags: both belong to `RowGroupingPanelModule`, a distinct module from `RowGroupingModule` — matches this phase's own stated dependency ("Blocks Phase 3 (drop zones)"), i.e. the row-group drop-zone panel is Phase 3's UI to build, not this phase's
+- [x] `rowGroupPanelShow` — implemented by Phase 3's separate `RowGroupingPanelModule` for `always`, `onlyWhenGrouping`, and `never`
+- [ ] `rowGroupPanelSuppressSort` — still not implemented after Phase 3; the standalone panel has no sort indicators or sort actions
 - [ ] `groupHierarchyConfig` — deferred; niche (`colDef.groupHierarchy` custom-component registry), no consumer of `colDef.groupHierarchy` exists yet
 - [ ] `refreshAfterGroupEdit` — deferred; controls re-aggregation timing after an inline cell edit, and LibreGrid has no cell-editing feature yet in any package
-- [x] Contribute `rowGroup`, `rowUnGroup`, `expandAll`, `contractAll`, `valueAggSubMenu` items to the Phase 1 menu registry — via `registerMenuItems` at module scope (`menuItems.ts`), no edits to `@libregrid/menu`. Registering makes them *resolvable*; they are not added to `DEFAULT_COLUMN_MENU_ITEMS`/`DEFAULT_CONTEXT_MENU_ITEMS` (those are static Phase-1-owned arrays — a consumer opts in via `getColumnMenuItems`/`contextMenuItems`). **Build gotcha found and fixed**: a bare `import './menuItems'` for its registration side effect was silently dropped by esbuild's production build despite being reachable, because `menuItems.ts` has no used exports and the package declares `sideEffects: false` — esbuild prunes *any* import of a side-effect-free file with no used bindings, reachability alone isn't enough. Fixed by listing the file explicitly in `package.json`'s `sideEffects` array (both the `src/*.ts` and `dist/*.js` paths, since this monorepo's dev builds resolve straight to `src` via `tsconfig.base.json` path mapping while a published consumer would resolve `dist`). `docs/reference/package-architecture.md` §6 only documented this trap for CSS; module-scope *registration* side effects are the same trap under a different name — worth a doc update if this pattern recurs
+- [x] Contribute `rowGroup`, `rowUnGroup`, `expandAll`, `contractAll`, `valueAggSubMenu` items to the Phase 1 menu registry — via `registerMenuItems` at module scope (`menuItems.ts`), no edits to `@libregrid/menu`. Registering makes them _resolvable_; they are not added to `DEFAULT_COLUMN_MENU_ITEMS`/`DEFAULT_CONTEXT_MENU_ITEMS` (those are static Phase-1-owned arrays — a consumer opts in via `getColumnMenuItems`/`contextMenuItems`). **Build gotcha found and fixed**: a bare `import './menuItems'` for its registration side effect was silently dropped by esbuild's production build despite being reachable, because `menuItems.ts` has no used exports and the package declares `sideEffects: false` — esbuild prunes _any_ import of a side-effect-free file with no used bindings, reachability alone isn't enough. Fixed by listing the file explicitly in `package.json`'s `sideEffects` array (both the `src/*.ts` and `dist/*.js` paths, since this monorepo's dev builds resolve straight to `src` via `tsconfig.base.json` path mapping while a published consumer would resolve `dist`). `docs/reference/package-architecture.md` §6 only documented this trap for CSS; module-scope _registration_ side effects are the same trap under a different name — worth a doc update if this pattern recurs
 
 ---
 
 ## Test plan
 
-| Tier | Coverage |
-|---|---|
-| **Unit** | Each agg func against `[]`, all-null, mixed null, non-numeric, single value, and large arrays. `avg` weighting across nested group levels. Group key derivation for null/undefined/duplicate values. Stage `refreshProps` correctness |
+| Tier            | Coverage                                                                                                                                                                                                                                                                                                                                                                                                 |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unit**        | Each agg func against `[]`, all-null, mixed null, non-numeric, single value, and large arrays. `avg` weighting across nested group levels. Group key derivation for null/undefined/duplicate values. Stage `refreshProps` correctness                                                                                                                                                                    |
 | **Integration** | Single- and multi-level grouping produces correct group counts and aggregates. Expansion state survives sort → filter → `setGridOption('rowData', ...)`. `getGroupRowAgg` overrides column aggs. `suppressAggFilteredOnly` and `groupAggFiltering` change totals as documented. `expandAll`/`collapseAll` fire the documented events. Custom `aggFuncs` registered via grid option and via `addAggFuncs` |
-| **E2E** | Click group expand/collapse chevrons. Group totals render at the bottom of expanded groups and at the grid end. Sticky group rows are an explicitly skipped test: not implemented, Phase 3 territory |
-| **Performance** | 3 grouping dimensions plus a summed value column. Benchmark API grouping (group + aggregate) across 10k, 100k, and 1M rows; compare against the promoted Chromium baseline |
-| **a11y** | Group rows expose `aria-expanded`; expand/collapse reachable by mouse and keyboard; axe 0 violations light + dark |
+| **E2E**         | Click group expand/collapse chevrons. Group totals render at the bottom of expanded groups and at the grid end. Sticky group rows are explicitly out of scope and need a separate future PR.                                                                                                                                                                                                             |
+| **Performance** | 3 grouping dimensions plus a summed value column. Benchmark API grouping (group + aggregate) across 10k, 100k, and 1M rows; compare against the promoted Chromium baseline                                                                                                                                                                                                                               |
+| **a11y**        | Group rows expose `aria-expanded`; expand/collapse reachable by mouse and keyboard; axe 0 violations light + dark                                                                                                                                                                                                                                                                                        |
 
 **Specific edge cases to cover:**
+
 - Unbalanced groups with `groupAllowUnbalanced`
 - `null`/`undefined` group keys (must not collapse into one bucket unintentionally)
 - `groupHideOpenParents` combined with `showOpenedGroup`
