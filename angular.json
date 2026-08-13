@@ -70,8 +70,12 @@
             "runnerConfig": "packages/material/vitest.config.ts",
             "include": ["packages/material/src/**/*.spec.ts"],
             "coverage": true,
-            "coverageInclude": ["src/**/*.ts"],
-            "coverageExclude": ["src/**/*.spec.ts", "src/version.ts", "src/index.ts"],
+            "coverageInclude": ["packages/material/src/**/*.ts"],
+            "coverageExclude": [
+              "packages/material/src/**/*.spec.ts",
+              "packages/material/src/version.ts",
+              "packages/material/src/index.ts"
+            ],
             "coverageReporters": ["text-summary"],
             "coverageThresholds": {
               "statements": 85,

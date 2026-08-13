@@ -43,6 +43,14 @@ export class SideBarComponent extends Component implements ISideBar {
     requestAnimationFrame(() => this.refreshRenderer());
   }
 
+  public override destroy(): void {
+    for (const panel of this.panels.values()) {
+      (panel as IToolPanel & { destroy?: () => void }).destroy?.();
+    }
+    this.panels.clear();
+    super.destroy();
+  }
+
   public refresh(): void {
     this.def = this.sideBarSvc.getDef();
     if (!this.def) {

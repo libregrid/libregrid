@@ -7,5 +7,5 @@
 export { EnterpriseCoreModule } from './enterpriseCoreModule';
 export { assertSingleCoreInstance } from './singletonGuard';
 export { asBean, getUntypedBean } from './untypedBeans';
-export type { IStatusBarSvcShape, ISsrmStoreFactoryShape } from './untypedBeans';
+export type { IColChooserFactoryShape, IStatusBarSvcShape, ISsrmStoreFactoryShape } from './untypedBeans';
 export { VERSION } from './version';

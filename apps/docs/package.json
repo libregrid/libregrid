@@ -20,6 +20,7 @@
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
     "@libregrid/core": "^0.1.0",
+    "@libregrid/columns-tool-panel": "^0.1.0",
     "@libregrid/menu": "^0.1.0",
     "@libregrid/side-bar": "^0.1.0",
     "@libregrid/material": "^0.1.0",

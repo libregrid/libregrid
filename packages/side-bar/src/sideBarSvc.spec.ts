@@ -3,7 +3,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makeBeanHarness } from '@libregrid/core/testing';
-import { SideBarService } from './sideBarSvc';
+import { SideBarService, registerToolPanel } from './sideBarSvc';
 
 describe('SideBarService', () => {
   let destroy: (() => void) | undefined;
@@ -33,9 +33,9 @@ describe('SideBarService', () => {
     expect(harness.bean.isDisplayed()).toBe(false);
   });
 
-  it('merges configured and registered panel definitions by id', () => {
+  it('resolves configured panel strings from registered definitions and omits unknown strings', () => {
     const harness = makeBeanHarness(SideBarService, {
-      gridOptions: { sideBar: { toolPanels: [{ id: 'configured', labelKey: 'configured', labelDefault: 'Configured', iconKey: 'columns' }] } },
+      gridOptions: { sideBar: { toolPanels: ['configured', 'missing'] } },
     });
     destroy = harness.destroy;
 
@@ -44,8 +44,32 @@ describe('SideBarService', () => {
 
     expect(harness.bean.getToolPanelDefs()).toEqual([
       { id: 'configured', labelKey: 'replacement', labelDefault: 'Replacement', iconKey: 'columns' },
-      { id: 'registered', labelKey: 'registered', labelDefault: 'Registered', iconKey: 'filters' },
     ]);
+  });
+
+  it('refreshes an existing component after a tool panel is registered', () => {
+    const harness = makeBeanHarness(SideBarService, { gridOptions: { sideBar: 'columns' } });
+    destroy = harness.destroy;
+    const comp = { refresh: vi.fn() };
+    harness.bean.comp = comp as never;
+
+    harness.bean.registerToolPanel({ id: 'columns', labelKey: 'columns', labelDefault: 'Columns', iconKey: 'columns' });
+
+    expect(comp.refresh).toHaveBeenCalledOnce();
+    expect(harness.bean.getToolPanelDefs()).toEqual([
+      { id: 'columns', labelKey: 'columns', labelDefault: 'Columns', iconKey: 'columns' },
+    ]);
+  });
+
+  it('registers tool panels through the owning package bridge', () => {
+    const service = { registerToolPanel: vi.fn() };
+    const def = { id: 'columns', labelKey: 'columns', labelDefault: 'Columns', iconKey: 'columns' };
+
+    registerToolPanel({ sideBar: service } as never, def);
+    registerToolPanel({} as never, def);
+
+    expect(service.registerToolPanel).toHaveBeenCalledWith(def);
+    expect(service.registerToolPanel).toHaveBeenCalledOnce();
   });
 
   it('keeps state and delegates public operations to its component', () => {

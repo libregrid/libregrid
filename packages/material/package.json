@@ -21,6 +21,7 @@
     "ag-grid-community": ">=36.1.0 <37"
   },
   "dependencies": {
+    "@libregrid/columns-tool-panel": "^0.1.0",
     "@libregrid/core": "^0.1.0",
     "@libregrid/menu": "^0.1.0",
     "@libregrid/side-bar": "^0.1.0"

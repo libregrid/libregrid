@@ -3,7 +3,7 @@
  *
  * Barrel: flat re-exports only. No logic, no side effects, no registration.
  */
-export { SideBarService } from './sideBarSvc';
+export { SideBarService, registerToolPanel } from './sideBarSvc';
 export { SideBarModule } from './sideBarModule';
 export { VERSION } from './version';
 export { registerSideBarRenderer } from './sideBarRenderer';

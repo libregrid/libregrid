@@ -99,13 +99,7 @@ describe('ColumnMenuModule', () => {
     expect(() => ModuleRegistry.registerModules([ColumnMenuModule])).not.toThrow();
   });
 
-  it('provides the showColumnChooser API function', () => {
-    api = mountGrid();
-    expect(typeof api.showColumnChooser).toBe('function');
-  });
-
-  it('provides the hideColumnChooser API function', () => {
-    api = mountGrid();
-    expect(typeof api.hideColumnChooser).toBe('function');
+  it('does not own the column chooser API functions', () => {
+    expect(ColumnMenuModule.apiFunctions).toBeUndefined();
   });
 });

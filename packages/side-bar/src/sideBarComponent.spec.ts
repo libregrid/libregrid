@@ -9,6 +9,7 @@ class TestPanel {
   readonly gui = document.createElement('div');
   readonly init = vi.fn();
   readonly refresh = vi.fn();
+  readonly destroy = vi.fn();
 
   constructor() {
     this.gui.textContent = 'Panel content';
@@ -99,6 +100,8 @@ describe('SideBarComponent', () => {
     expect(component.getGui().classList).toContain('lgr-side-bar-buttons-hidden');
     component.refresh();
     expect(panel.refresh).toHaveBeenCalledOnce();
+    component.destroy();
+    expect(panel.destroy).toHaveBeenCalledOnce();
   });
 
   it('clamps resized panel widths and retains each panel width', () => {

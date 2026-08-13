@@ -22,8 +22,8 @@
 | `groupDefaultExpanded` | ✅ | PR 2.2 — `-1`/number levels honoured at tree creation |
 | `isGroupOpenByDefault` | ✅ | PR 2.4 — takes priority over `groupDefaultExpanded` when both are set (per ag-grid.com: "only one... should be used"); integration-tested |
 | `suppressGroupRowsSticky` | ❌ | Sticky group rows are not implemented (see "Sticky rows" below) — this option is a no-op since `stickyRowSvc` is never registered, which is a safe default (Community handles its absence gracefully) |
-| `rowGroupPanelShow` | ⬜ | Deferred to Phase 3 — Community's own `@agModule` tag places this on `RowGroupingPanelModule`, distinct from `RowGroupingModule`, matching this phase's stated "blocks Phase 3 (drop zones)" dependency: the row-group drop-zone panel is Phase 3's UI |
-| `rowGroupPanelSuppressSort` | ⬜ | Same — `RowGroupingPanelModule`, deferred to Phase 3 |
+| `rowGroupPanelShow` | ✅ | `RowGroupingPanelModule` supplies the header row-group zone. `always` and `onlyWhenGrouping` visibility are integration-tested; `never` hides it. |
+| `rowGroupPanelSuppressSort` | ❌ | The header row-group panel is shipped, but it has no sort behavior and does not read this option. |
 | `pivotPanelSuppressSort` | ⬜ | Pivot panel arrives Phase 8 |
 | `groupLockGroupColumns` | ⬜ | Column drag-lock pairs naturally with Phase 3's drag-and-drop tool panel — deferred |
 | `groupHierarchyConfig` | ⬜ | PR 2.5 — deferred; niche (`colDef.groupHierarchy` custom-component registry), no consumer of `colDef.groupHierarchy` exists yet |
@@ -42,7 +42,7 @@
 | Property | Status | Notes |
 |---|---|---|
 | `rowGroup` | ✅ | PR 2.1 — GroupStage creates group rows |
-| `enableRowGroup` | ✅ | PR 2.5 — gates the `rowGroup` menu-item contribution (unit-tested); the drag-based tool-panel UI itself is still Phase 3 |
+| `enableRowGroup` | ✅ | Gates the Phase 2 menu contribution and the Phase 3 native panel/header row-group controls and drops. |
 | `showValuesAs` | ✅ | PR 2.5 — see "Show Values As" below |
 | `initialShowValuesAs` | ✅ | PR 2.5 — create-only, per doc; integration-tested via `resolveColumn`'s `applyInitial` flag |
 | `showValuesAsDef` | 🟡 | PR 2.5 — `precision`/`suppressHeaderIndicator` read; `modes` (custom mode registry / built-in overrides) not implemented |

@@ -1,4 +1,4 @@
-import { BeanStub, type NamedBean, type ISideBarService, type ISideBar, type SideBarDef, type ToolPanelDef, type IToolPanel, type SideBarState, type ComponentSelector, type Component } from 'ag-grid-community';
+import { BeanStub, type NamedBean, type ISideBarService, type ISideBar, type SideBarDef, type ToolPanelDef, type IToolPanel, type SideBarState, type ComponentSelector, type Component, type BeanCollection } from 'ag-grid-community';
 import { SideBarComponent } from './sideBarComponent';
 
 /**
@@ -131,16 +131,19 @@ export class SideBarService extends BeanStub implements NamedBean, ISideBarServi
   /** Register a tool panel definition. Called by feature packages. */
   public registerToolPanel(def: ToolPanelDef): void {
     this.panelDefs.set(def.id, def);
+    this.comp?.refresh();
   }
 
   /** Get all registered tool panel definitions. */
   public getToolPanelDefs(): ToolPanelDef[] {
-    const configured = (this.def?.toolPanels ?? []).filter(
-      (panel): panel is ToolPanelDef => typeof panel !== 'string',
-    );
-    const panels = new Map(configured.map((panel) => [panel.id, panel]));
-    for (const panel of this.panelDefs.values()) {
-      panels.set(panel.id, panel);
+    const panels = new Map<string, ToolPanelDef>();
+    for (const panel of this.def?.toolPanels ?? []) {
+      if (typeof panel === 'string') {
+        const registered = this.panelDefs.get(panel);
+        if (registered) panels.set(panel, registered);
+      } else {
+        panels.set(panel.id, panel);
+      }
     }
     return [...panels.values()];
   }
@@ -154,4 +157,9 @@ export class SideBarService extends BeanStub implements NamedBean, ISideBarServi
   public getOpenedPanelId(): string | null {
     return this.openedPanelId;
   }
+}
+
+/** Register a tool panel through the side bar package's owning service. */
+export function registerToolPanel(beans: BeanCollection, def: ToolPanelDef): void {
+  (beans.sideBar as SideBarService | undefined)?.registerToolPanel(def);
 }

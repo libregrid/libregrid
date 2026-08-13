@@ -24,7 +24,7 @@
 | `suppressHeaderContextMenu` | 🟡 | Parsed but not enforced in UI |
 | `columnMenuItems` | ✅ | Takes precedence over `mainMenuItems` |
 | `mainMenuItems` | ✅ | Legacy |
-| `columnChooserParams` | 🟡 | API exists; popup not yet implemented |
+| `columnChooserParams` | 🟡 | Passed to the shared chooser panel; the shipped native DOM overlay does not provide full PopupService or parameter-parity behavior. |
 | `menuTabs` | 🟡 | Legacy menu format only |
 
 ## API Methods
@@ -32,8 +32,8 @@
 | Method | Status | Notes |
 |---|---|---|
 | `showColumnMenu(colKey)` | ✅ | Opens LibreGrid's column menu through Community's MenuService |
-| `showColumnChooser()` | 🟡 | API stub registered; popup not yet implemented |
-| `hideColumnChooser()` | 🟡 | API stub registered |
+| `showColumnChooser()` | ✅ | Delegates to `colChooserFactory`, which opens the shared ColumnsToolPanel in a native DOM dialog when `ColumnsToolPanelModule` is registered. |
+| `hideColumnChooser()` | ✅ | Delegates to the shared factory and removes its native DOM dialog. |
 | `showColumnFilter(colKey)` | 🟡 | Delegates to Community's MenuService |
 | `hideColumnFilter()` | 🟡 | Delegates to Community's MenuService |
 | `hidePopupMenu()` | ✅ | Shared with context menu |
@@ -52,7 +52,7 @@
 | `sortDescending` | 1 | ✅ | |
 | `sortUnSort` | 1 | ✅ | |
 | `columnFilter` | 1 | 🟡 | Stub registered |
-| `columnChooser` | 1 | 🟡 | Stub registered |
+| `columnChooser` | 1 | ✅ | `Choose Columns` invokes the shared chooser API when it is available; the overlay is native DOM, not PopupService-backed. |
 | `pinSubMenu` | 1 | 🟡 | Stub registered |
 | `autoSizeThis` | 1 | ✅ | |
 | `autoSizeAll` | 1 | ✅ | |

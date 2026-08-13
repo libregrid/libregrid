@@ -229,7 +229,15 @@ const builtInItems: MenuItemContribution[] = [
   },
   {
     name: 'columnChooser',
-    factory: () => null, // TODO: implement column chooser
+    factory: (params) => {
+      const api = params.api as typeof params.api & { isModuleRegistered(moduleName: string): boolean };
+      if (!api.isModuleRegistered('ColumnsToolPanel')) return null;
+      return {
+        name: 'Choose Columns',
+        action: () => params.api.showColumnChooser(params.column?.getColDef().columnChooserParams),
+        order: 7,
+      };
+    },
     order: 7,
   },
   {

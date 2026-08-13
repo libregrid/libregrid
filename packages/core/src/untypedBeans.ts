@@ -11,7 +11,7 @@
  * Each interface is added by the phase that first implements it. Keep the
  * shapes minimal — only what consumers actually call.
  */
-import type { BeanCollection } from 'ag-grid-community';
+import type { BeanCollection, ColumnChooserParams } from 'ag-grid-community';
 
 /** Narrow an untyped `BeanCollection` slot to a declared shape. */
 export function asBean<T>(value: unknown): T | undefined {
@@ -37,6 +37,12 @@ export function getUntypedBean<T>(beans: BeanCollection, name: string): T | unde
 /** Phase 4 — `statusBarSvc` */
 export interface IStatusBarSvcShape {
   refresh(): void;
+}
+
+/** Phase 3 — `colChooserFactory` */
+export interface IColChooserFactoryShape {
+  showColumnChooser(params?: ColumnChooserParams): void;
+  hideColumnChooser(): void;
 }
 
 /** Phase 7 — `ssrmStoreFactory` */

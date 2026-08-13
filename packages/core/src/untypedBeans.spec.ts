@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { BeanCollection } from 'ag-grid-community';
-import { asBean, getUntypedBean, type IStatusBarSvcShape } from './untypedBeans';
+import { asBean, getUntypedBean, type IColChooserFactoryShape, type IStatusBarSvcShape } from './untypedBeans';
 
 /**
  * These helpers are the ONLY sanctioned place to cast Community's
@@ -44,5 +44,14 @@ describe('untypedBeans', () => {
     it('passes undefined through', () => {
       expect(asBean<IStatusBarSvcShape>(undefined)).toBeUndefined();
     });
+  });
+
+  it('declares the column chooser factory shape', () => {
+    const factory: IColChooserFactoryShape = {
+      showColumnChooser: () => {},
+      hideColumnChooser: () => {},
+    };
+
+    expect(factory).toBeDefined();
   });
 });

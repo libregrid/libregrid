@@ -21,7 +21,8 @@
       "@libregrid/menu": ["./packages/menu/src/index.ts"],
       "@libregrid/side-bar": ["./packages/side-bar/src/index.ts"],
       "@libregrid/material": ["./packages/material/src/index.ts"],
-      "@libregrid/row-grouping": ["./packages/row-grouping/src/index.ts"]
+      "@libregrid/row-grouping": ["./packages/row-grouping/src/index.ts"],
+      "@libregrid/columns-tool-panel": ["./packages/columns-tool-panel/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

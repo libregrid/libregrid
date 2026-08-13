@@ -15,16 +15,16 @@
       "note": "Side bar shell with accessible controls, tool-panel host, events, and bounded resize."
     },
     "@libregrid/material": {
-      "maxSize": "24 KB",
-      "note": "Angular Material theme bridge plus optional menu and CDK portal side-bar renderers."
+      "maxSize": "30 KB",
+      "note": "Angular Material theme bridge plus optional menu, CDK portal side-bar, and CDK columns-panel drag-drop adapters. Raised from 24 KB for the Phase 3 drag-drop adapter."
     },
     "@libregrid/row-grouping": {
       "maxSize": "95 KB",
       "note": "Group/flatten/agg/filterAgg/groupFilter stages + AggFuncService + rowGroup/value cols services. Raised from 40 KB after PRs 2.3–2.5 landed the auto group column + expand/collapse (groupCellRenderer, expansionService), group sorting + totals (groupSortStage, footerService), and group filter / show-values-as / menu contributions (groupFilterStage, showValuesAsService, menuItems)."
     },
     "@libregrid/columns-tool-panel": {
-      "maxSize": "16 KB",
-      "note": "Column chooser + drag-drop zones."
+      "maxSize": "47 KB",
+      "note": "Column tree, chooser overlay, row-group/value drop zones, standalone row-group header panel, framework-neutral drag adapter seam, deferred state, and full-grid reorder mapping. Raised from 40 KB for the completed Phase 3 implementation."
     },
     "@libregrid/cell-selection": {
       "maxSize": "20 KB",

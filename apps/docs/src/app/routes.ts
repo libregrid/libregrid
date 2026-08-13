@@ -12,6 +12,7 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'menus', label: 'Menus' },
   { path: 'side-bar', label: 'Side bar' },
   { path: 'row-grouping', label: 'Row Grouping' },
+  { path: 'columns', label: 'Columns' },
 ];
 
 export const routes: Routes = [
@@ -39,6 +40,11 @@ export const routes: Routes = [
     path: 'row-grouping',
     loadComponent: () => import('./routes/row-grouping').then((m) => m.RowGroupingDemo),
     title: 'LibreGrid — Row Grouping',
+  },
+  {
+    path: 'columns',
+    loadComponent: () => import('./routes/columns').then((m) => m.ColumnsDemo),
+    title: 'LibreGrid — Columns',
   },
   {
     path: 'benchmark',

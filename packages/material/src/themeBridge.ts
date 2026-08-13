@@ -14,6 +14,7 @@ import { ApplicationRef, EnvironmentInjector } from '@angular/core';
 import { themeQuartz, type Theme } from 'ag-grid-community';
 import { installMaterialMenuRenderer } from './materialMenuRenderer';
 import { installMaterialSideBarRenderer } from './materialSideBarRenderer';
+import { installMaterialColumnsToolPanelDragDrop } from './materialColumnsToolPanelDragDrop';
 import { buildGridTheme } from './themeParams';
 
 export { buildGridTheme } from './themeParams';
@@ -77,9 +78,13 @@ export class LibreGridThemeService {
       this.applicationRef,
       this.environmentInjector,
     );
+    const uninstallColumnsToolPanelDragDrop = installMaterialColumnsToolPanelDragDrop(
+      this.environmentInjector,
+    );
     this.destroyRef.onDestroy(() => {
       uninstallMenuRenderer();
       uninstallSideBarRenderer();
+      uninstallColumnsToolPanelDragDrop();
     });
   }
 

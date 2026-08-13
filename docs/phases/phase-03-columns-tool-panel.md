@@ -1,8 +1,8 @@
 # Phase 3 — Columns Tool Panel
 
-**Status:** ⬜ Not started
+**Status:** 🟡 In progress
 **Depends on:** Phase 1 (side-bar host), Phase 2 (grouping, for the drop zones to act on)
-**Blocks:** Phase 8 (pivot activates the pivot/value drop zones)
+**Blocks:** Phase 8 (pivot activates the inert pivot controls)
 
 > ### 🚀 This phase ends with the **`0.1.0` public release**
 > Phases 0–3 together are the first shipped version. Beyond this phase's own gate, see the **release criteria** at the end of this file.
@@ -14,33 +14,35 @@
 
 ## Context
 
-Phase 2 made grouping work programmatically. This phase makes it usable — the columns tool panel is how end users actually discover and drive grouping, aggregation and pivoting.
+Phase 2 made grouping work programmatically. This phase now ships a framework-neutral DOM columns tool panel for visibility, grouping, and aggregation. Pivot controls are present only as visibly inert Phase 8 placeholders.
 
-It is the first real tool panel, so it proves the Phase 1 registration host. It is also the heaviest drag-and-drop surface in the product: columns drag between the panel, the grid header, and the row-group / values / pivot drop zones. Use Angular CDK `DragDrop` rather than hand-rolled pointer handling.
+It is the first real tool panel, so it proves the Phase 1 registration host. The neutral implementation uses native HTML drag as its fallback, with labelled buttons as the keyboard alternative. `@libregrid/material` decorates the same DOM and actions with Angular CDK drag-drop. Dragging from the panel onto the grid header remains unshipped.
 
-Build the **pivot and values drop zones now**, but leave them inert until Phase 8 registers pivot. Retrofitting drop zones later means reworking the panel layout.
+Values controls are functional. Pivot sections and the header pivot-zone builder are present but inert until Phase 8 registers pivot; no pivot mutation behavior is shipped.
 
-The column-state round trip matters more than it looks: reordering, visibility and pinning changes made in the panel must flow through the same column-state API the grid itself uses, or the panel and grid will drift out of sync.
+Visibility, pinning, and column movement flow through public grid APIs and refresh the panel.
 
 ---
 
 ## Todo
 
-- [ ] Bean `colToolPanelFactory`; register the panel with the Phase 1 side-bar host
-- [ ] Bean `colChooserFactory` — the column chooser popup (shared with the Phase 1 `columnChooser` menu item)
-- [ ] Column tree UI with groups, expand/collapse, checkbox visibility
-- [ ] Column search/filter box
-- [ ] Select-all / un-select-all widget
-- [ ] Drag to reorder columns; drag from panel onto the grid
-- [ ] Row-group drop zone (functional)
-- [ ] Values drop zone (functional — aggregation)
-- [ ] Pivot drop zone + pivot-mode toggle (**inert until Phase 8**)
-- [ ] `ColumnsToolPanelParams`: `suppressColumnMove`, `suppressRowGroups`, `suppressValues`, `suppressPivots`, `suppressPivotMode`, `suppressColumnFilter`, `suppressColumnSelectAll`, `suppressColumnExpandAll`, `contractColumnSelection`, `suppressSyncLayoutWithGrid`, `buttons`
-- [ ] ColDef: `suppressColumnsToolPanel`, `toolPanelClass`
-- [ ] Grid options: `functionsReadOnly`, `allowDragFromColumnsToolPanel`, `dragAndDropImageComponent`, `dragAndDropImageComponentParams`
-- [ ] `IColumnToolPanel` API: `setPivotModeSectionVisible`, `setRowGroupsSectionVisible`, `setValuesSectionVisible`, `setPivotSectionVisible`, `expandColumnGroups`, `collapseColumnGroups`, `setColumnLayout`
-- [ ] `iRowGroupPanelBuilder` — the standalone row-group panel above the grid (`rowGroupPanelShow`)
-- [ ] Material implementation in `@libregrid/material`
+- [x] Bean `colToolPanelFactory`; register the panel with the Phase 1 side-bar host
+- [x] Bean `colChooserFactory` — the column chooser popup (shared with the Phase 1 `columnChooser` menu item)
+- [x] Column tree UI with groups, expand/collapse, checkbox visibility
+- [x] Column search/filter box
+- [x] Select-all / un-select-all widget
+- [x] Drag to reorder columns
+- [ ] Drag from panel onto the grid
+- [x] Row-group drop zone (functional)
+- [x] Values drop zone (functional — aggregation)
+- [x] Pivot drop zone + pivot-mode toggle (**inert until Phase 8**)
+- [x] `ColumnsToolPanelParams`: `suppressColumnMove`, `suppressRowGroups`, `suppressValues`, `suppressPivots`, `suppressPivotMode`, `suppressColumnFilter`, `suppressColumnSelectAll`, `suppressColumnExpandAll`, `contractColumnSelection`, `suppressSyncLayoutWithGrid`, `buttons`
+- [x] ColDef: `suppressColumnsToolPanel`, `toolPanelClass`
+- [x] Grid option: `functionsReadOnly`
+- [ ] Grid options: `allowDragFromColumnsToolPanel`, `dragAndDropImageComponent`, `dragAndDropImageComponentParams`
+- [x] `IColumnToolPanel` API: `setPivotModeSectionVisible`, `setRowGroupsSectionVisible`, `setValuesSectionVisible`, `setPivotSectionVisible`, `expandColumnGroups`, `collapseColumnGroups`, `setColumnLayout`
+- [x] `iRowGroupPanelBuilder` — the standalone row-group panel above the grid (`rowGroupPanelShow`)
+- [x] Material CDK drag-drop adapter in `@libregrid/material`
 
 ---
 
@@ -51,7 +53,7 @@ The column-state round trip matters more than it looks: reordering, visibility a
 | **Unit** | Column tree construction from flat and grouped `columnDefs`. Search filtering incl. group names. `suppress*` params each hide the right section. `setColumnLayout` with a custom arrangement |
 | **Integration** | Dragging a column into the row-group zone triggers regrouping. Removing it ungroups. Panel visibility toggles round-trip through column state. `functionsReadOnly` blocks GUI changes but not API changes. `suppressSyncLayoutWithGrid` decouples panel order from grid order |
 | **E2E** | Full drag-drop: panel → row-group zone; reorder within the panel; panel → grid header. Checkbox toggles hide/show columns. Expand/collapse column groups. Select-all behaves with a search filter active |
-| **a11y** | Drag-drop has a keyboard alternative (CDK supports this — implement it). Checkboxes labelled; tree exposes `aria-expanded`; axe 0 violations light + dark |
+| **a11y** | Labelled buttons provide the keyboard alternative to native drag-drop. Checkboxes labelled; tree exposes `aria-expanded`; axe 0 violations light + dark |
 
 **Specific edge cases to cover:**
 - Column groups with mixed visibility (indeterminate checkbox state)
@@ -63,14 +65,14 @@ The column-state round trip matters more than it looks: reordering, visibility a
 
 ## Acceptance criteria
 
-- [ ] Drag a column into the row-group drop zone → grid regroups immediately
-- [ ] Tool panel reorder, visibility and pinning round-trip correctly through column state
-- [ ] Values drop zone applies aggregation functions
-- [ ] Pivot drop zone and pivot-mode toggle present and visibly inert (documented as pending Phase 8)
-- [ ] Column chooser popup shared with the Phase 1 menu item — one implementation, not two
-- [ ] Keyboard-accessible alternative to drag-drop
-- [ ] `functionsReadOnly` prevents GUI mutation of grouping/pivot/aggregation
-- [ ] Parity checklist fully marked ✅/🟡/❌ with rationale
+- [x] Drag a column into the row-group drop zone → grid regroups immediately
+- [x] Tool panel reorder, visibility and pinning round-trip correctly through column state
+- [x] Values drop zone applies aggregation functions
+- [x] Pivot drop zone and pivot-mode toggle present and visibly inert (documented as pending Phase 8)
+- [x] Column chooser popup shared with the Phase 1 menu item — one implementation, not two
+- [x] Keyboard-accessible alternative to drag-drop
+- [x] `functionsReadOnly` prevents GUI mutation of grouping/pivot/aggregation
+- [x] Parity checklist fully marked ✅/🟡/❌ with rationale
 - [ ] Full Definition of Done (`standards.md` §9) satisfied
 
 ---

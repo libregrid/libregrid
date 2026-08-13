@@ -3,6 +3,7 @@ import { makeBeanHarness } from '@libregrid/core/testing';
 import { MenuItemMapper } from './menuItemMapper';
 import { MenuItemRegistry, type MenuActionParams } from './menuItemRegistry';
 import { MenuUtils } from './menuUtils';
+import './defaultItems';
 
 const params: MenuActionParams = {
   column: null,
@@ -42,6 +43,26 @@ describe('MenuItemMapper', () => {
 });
 
 describe('MenuItemRegistry', () => {
+  it('shows the column chooser only when the API is available', () => {
+    const registry = new MenuItemRegistry();
+    const showColumnChooser = vi.fn();
+    const columnChooserParams = { suppressColumnFilter: true };
+    const api = { showColumnChooser, isModuleRegistered: () => true };
+
+    const item = registry.getItem('columnChooser', {
+      ...params,
+      api: api as never,
+      column: { getColDef: () => ({ columnChooserParams }) } as never,
+    });
+    expect(item?.name).toBe('Choose Columns');
+    item?.action?.({} as never);
+    expect(showColumnChooser).toHaveBeenCalledWith(columnChooserParams);
+    expect(registry.getItem('columnChooser', {
+      ...params,
+      api: { isModuleRegistered: () => false } as never,
+    })).toBeNull();
+  });
+
   it('sorts resolved items by contribution order rather than their display names', () => {
     const registry = new MenuItemRegistry();
     registry.register({ name: 'later-key', order: 20, factory: () => ({ name: 'First label' }) });

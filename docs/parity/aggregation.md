@@ -28,7 +28,7 @@
 | `initialAggFunc` | ✅ | Applied on first column creation only |
 | `valueIndex` | 🟡 | Stored by `sortByPendingState`; multi-column pivot ordering matters in Phase 8 |
 | `initialValueIndex` | 🟡 | Same as `valueIndex` |
-| `enableValue` | ✅ | Becomes a value column with the default agg func |
+| `enableValue` | ✅ | Becomes a value column with the default agg func and gates Phase 3 Values controls and native drops. |
 | `allowedAggFuncs` | ✅ | `aggFuncSvc.getFuncNames` honours it |
 | `defaultAggFunc` | ✅ | Preferred over the `'sum'` fallback |
 | `showValuesAs` | ⬜ | PR 2.5 |
