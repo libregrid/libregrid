@@ -8,6 +8,8 @@ interface BenchmarkRow {
   id: number;
   name: string;
   category: string;
+  region: string;
+  channel: string;
   value: number;
 }
 
@@ -23,6 +25,7 @@ interface BenchmarkProtocol {
   runSort(): Promise<BenchmarkSample>;
   runFilter(): Promise<BenchmarkSample>;
   runScroll(): Promise<BenchmarkSample>;
+  runGroup(): Promise<BenchmarkSample>;
 }
 
 declare global {
@@ -62,8 +65,10 @@ export class BenchmarkRoute {
   protected readonly columnDefs: ColDef<BenchmarkRow>[] = [
     { field: 'id', sortable: true, filter: true },
     { field: 'name', sortable: true, filter: true },
-    { field: 'category', sortable: true, filter: true },
-    { field: 'value', sortable: true, filter: true },
+    { field: 'category', sortable: true, filter: true, enableRowGroup: true },
+    { field: 'region', sortable: true, filter: true, enableRowGroup: true },
+    { field: 'channel', sortable: true, filter: true, enableRowGroup: true },
+    { field: 'value', sortable: true, filter: true, aggFunc: 'sum' },
   ];
 
   protected readonly gridOptions: GridOptions<BenchmarkRow> = {
@@ -90,6 +95,11 @@ export class BenchmarkRoute {
             () => this.api?.setFilterModel(null),
           ),
         runScroll: () => this.measureScroll(),
+        runGroup: () =>
+          this.measure(
+            () => this.api?.addRowGroupColumns(['category', 'region', 'channel']),
+            () => this.api?.removeRowGroupColumns(['category', 'region', 'channel']),
+          ),
       };
     });
   }
@@ -150,6 +160,8 @@ function makeRows(count: number): BenchmarkRow[] {
       id,
       name: `Row ${id}`,
       category: String.fromCharCode(65 + (id % 5)),
+      region: String.fromCharCode(71 + (id % 4)),
+      channel: String.fromCharCode(75 + (id % 3)),
       value: seed % 10_000,
     });
   }

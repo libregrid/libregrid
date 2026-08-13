@@ -49,7 +49,8 @@ export const groupCellCss = `
 
 .lgr-group-cell-count {
   flex: none;
-  opacity: 0.6;
+  /* 0.6 failed axe color-contrast (4.45:1 < 4.5:1); 0.7 passes both themes. */
+  opacity: 0.7;
   font-size: 0.9em;
 }
 

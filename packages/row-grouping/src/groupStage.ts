@@ -46,6 +46,11 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
     const rootNode = csrm?.rootNode;
     if (!rootNode) return;
 
+    // Group nodes are rebuilt after data changes. Preserve their expansion by
+    // deterministic ID; newly introduced groups still use the configured default.
+    const previousExpansion = params.rowDataUpdated
+      ? new Map([...this.nonLeafsById].map(([id, node]) => [id, !!node.expanded]))
+      : undefined;
     this.nonLeafsById = new Map();
     const svcCols = this.beans.rowGroupColsSvc?.columns ?? [];
     const rowGroupCols =
@@ -64,7 +69,7 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
       return;
     }
 
-    this.createGroupTree(rootNode, rowGroupCols);
+    this.createGroupTree(rootNode, rowGroupCols, previousExpansion);
     // CSRM leaves this flag to the group stage: downstream stages and the
     // changed-node traversal branch on it (clientSideRowModel.hierarchical).
     csrm.hierarchical = true;
@@ -132,7 +137,11 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
     return false;
   }
 
-  private createGroupTree(rootNode: RowNode, rowGroupCols: AgColumn[]) {
+  private createGroupTree(
+    rootNode: RowNode,
+    rowGroupCols: AgColumn[],
+    previousExpansion?: ReadonlyMap<string, boolean>,
+  ) {
     const leafNodes = rootNode.allLeafChildren ?? [];
     const allowUnbalanced = this.gos.get('groupAllowUnbalanced') === true;
 
@@ -198,7 +207,9 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
         groupNode.sourceRowIndex = -1;
         groupNode.stub = false;
         groupNode.footer = false;
-        groupNode.expanded = this.isGroupExpandedByDefault(groupNode, col, level, field, key);
+        groupNode.expanded =
+          previousExpansion?.get(groupNode.id) ??
+          this.isGroupExpandedByDefault(groupNode, col, level, field, key);
         this.nonLeafsById.set(groupNode.id, groupNode);
         groupNodes.push(groupNode);
       }

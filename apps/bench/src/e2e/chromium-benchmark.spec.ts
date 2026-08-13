@@ -3,11 +3,12 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 const ROW_COUNTS = [10_000, 100_000, 1_000_000];
-const SCENARIOS = ['init', 'sort', 'filter', 'scroll'] as const;
+const SCENARIOS = ['init', 'sort', 'filter', 'scroll', 'group'] as const;
 const protocolMethod = {
   sort: 'runSort',
   filter: 'runFilter',
   scroll: 'runScroll',
+  group: 'runGroup',
 } as const;
 const RUNS = Number(process.env['BENCH_RUNS'] ?? '5');
 const output = resolve(

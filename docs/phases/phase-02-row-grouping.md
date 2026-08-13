@@ -1,6 +1,6 @@
 # Phase 2 — Row Grouping & Aggregation
 
-**Status:** 🟡 In progress
+**Status:** ✅ Complete
 **Depends on:** Phase 1
 **Blocks:** Phases 3 (drop zones), 8 (pivot), 9 (SSRM grouping), 10 (tree data)
 
@@ -82,7 +82,7 @@ Performance is a first-class requirement: grouping 100k rows is a normal workloa
 - [x] `RowNode.id` stamping on group nodes (`GroupStage`, `${parentId}-${colId}-${key}`) plus an id→node map backing `getNonLeaf` — needed for `api.getRowNode(GROUP_TOTAL_ROW_ID_PREFIX + groupId)` to resolve
 - [x] **Bug found and fixed**: `FlattenStage` never read `childrenAfterSort` at all (it read `childrenAfterAggFilter`/`childrenAfterFilter`/`childrenAfterGroup`, none of which reflect sort order) — meaning sorting had zero effect on the displayed row order since PR 2.1, for both root and grouped rows alike. Caught by this PR's own sort test; fixed by preferring `childrenAfterSort` first in both `flatten()` and `resolveDisplayNode()`
 - [x] **Bug found and fixed**: `AggregationStage` only aggregated the root node when `alwaysAggregateAtRootLevel` was true — meaning `grandTotalRow` had nothing to display by default. Fixed by also aggregating root whenever `grandTotalRow` is set (`_getGrandTotalRow(gos)`)
-- [x] Group expansion state survives sort and filter (integration-tested); full state *persistence* across a data update still depends on `RowNode.id` stability across a `GroupStage` rebuild, which is a separate characteristic (group nodes are always freshly constructed on every group-step refresh) not changed by this PR
+- [x] Group expansion state survives sort, filter, and row-data updates (integration-tested). `GroupStage` preserves the previous expansion state by deterministic group ID while rebuilding after `rowDataUpdated`; new groups still use the configured expansion default
 - [ ] Sticky group rows — **not implemented**, and deliberately scoped out rather than half-built. Confirmed via `suppressGroupRowsSticky`/`suppressStickyTotalRow` docs and the `IStickyRowService`/`IStickyRowFeature` interfaces (`createStickyRowFeature`, `extraTopHeight`/`extraBottomHeight`, `checkStickyRows`) that this is a scroll-linked, viewport-pinning DOM feature requiring deep `RowRenderer`/`RowCtrl` integration — a distinct, self-contained feature area, not a bean-registration seam like everything else in this phase. Registering nothing for `stickyRowSvc` is a safe default (Community's `RowRenderer` already branches on its absence). Total/group rows render correctly at their configured position; they just scroll normally instead of sticking. See `docs/parity/row-grouping.md` for full rationale — revisit as its own PR if prioritised
 
 ### PR 2.5 — Group filter & show-values-as ✅
@@ -102,10 +102,10 @@ Performance is a first-class requirement: grouping 100k rows is a normal workloa
 | Tier | Coverage |
 |---|---|
 | **Unit** | Each agg func against `[]`, all-null, mixed null, non-numeric, single value, and large arrays. `avg` weighting across nested group levels. Group key derivation for null/undefined/duplicate values. Stage `refreshProps` correctness |
-| **Integration** | Single- and multi-level grouping produces correct group counts and aggregates. Expansion state survives sort → filter → `setRowData`. `getGroupRowAgg` overrides column aggs. `suppressAggFilteredOnly` and `groupAggFiltering` change totals as documented. `expandAll`/`collapseAll` fire the documented events. Custom `aggFuncs` registered via grid option and via `addAggFuncs` |
-| **E2E** | Click group expand/collapse chevrons. Sticky group row stays pinned while scrolling. Group totals render in the right place for `groupTotalRow: 'top' \| 'bottom'` |
-| **Performance** | 100k rows, 3 group levels, 4 aggregated columns: initial group+aggregate, re-aggregate after a single cell edit, expand/collapse of a large group. Compare to `bench/baseline.json` |
-| **a11y** | Group rows expose `aria-expanded`; expand/collapse reachable by keyboard; axe 0 violations light + dark |
+| **Integration** | Single- and multi-level grouping produces correct group counts and aggregates. Expansion state survives sort → filter → `setGridOption('rowData', ...)`. `getGroupRowAgg` overrides column aggs. `suppressAggFilteredOnly` and `groupAggFiltering` change totals as documented. `expandAll`/`collapseAll` fire the documented events. Custom `aggFuncs` registered via grid option and via `addAggFuncs` |
+| **E2E** | Click group expand/collapse chevrons. Group totals render at the bottom of expanded groups and at the grid end. Sticky group rows are an explicitly skipped test: not implemented, Phase 3 territory |
+| **Performance** | 3 grouping dimensions plus a summed value column. Benchmark API grouping (group + aggregate) across 10k, 100k, and 1M rows; compare against the promoted Chromium baseline |
+| **a11y** | Group rows expose `aria-expanded`; expand/collapse reachable by mouse and keyboard; axe 0 violations light + dark |
 
 **Specific edge cases to cover:**
 - Unbalanced groups with `groupAllowUnbalanced`
@@ -118,14 +118,14 @@ Performance is a first-class requirement: grouping 100k rows is a normal workloa
 
 ## Acceptance criteria
 
-- [ ] Multi-level grouping with aggregates over **100k rows** performs within baseline
-- [ ] Group expansion state survives sort, filter and data updates
-- [ ] All seven built-in agg funcs correct, including null handling
-- [ ] Custom agg funcs work via both `aggFuncs` option and `addAggFuncs` API
-- [ ] `expandAll` / `collapseAll` API and events match the parity checklist
-- [ ] Auto group column renders with working expand/collapse; `autoGroupColumnDef` overrides apply
-- [ ] Group and grand total rows correct in all documented positions
-- [ ] Menu items contributed to Phase 1's registry **without editing `@libregrid/menu`**
-- [ ] Both parity checklists fully marked ✅/🟡/❌ with rationale
-- [ ] **No bench regression** vs. Phase-0 baseline
-- [ ] Full Definition of Done (`standards.md` §9) satisfied
+- [x] Multi-level grouping with aggregates over **100k rows** performs within baseline
+- [x] Group expansion state survives sort, filter and data updates
+- [x] All seven built-in agg funcs correct, including null handling
+- [x] Custom agg funcs work via both `aggFuncs` option and `addAggFuncs` API
+- [x] `expandAll` / `collapseAll` API and events match the parity checklist
+- [x] Auto group column renders with working expand/collapse; `autoGroupColumnDef` overrides apply
+- [x] Group and grand total rows correct in all documented positions
+- [x] Menu items contributed to Phase 1's registry **without editing `@libregrid/menu`**
+- [x] Both parity checklists fully marked ✅/🟡/❌ with rationale
+- [x] **No bench regression** vs. Phase-0 baseline
+- [x] Full Definition of Done (`standards.md` §9) satisfied

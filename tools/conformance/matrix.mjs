@@ -46,7 +46,7 @@ for (const target of SUPPORTED) {
 
   try {
     execSync(
-      'npx vitest run packages/core packages/menu packages/side-bar tools --reporter verbose',
+      'npx vitest run packages/core packages/menu packages/side-bar packages/row-grouping tools --reporter verbose',
       {
         cwd: root,
         stdio: 'inherit',

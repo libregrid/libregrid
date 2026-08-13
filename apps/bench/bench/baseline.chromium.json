@@ -1,10 +1,20 @@
 {
   "schemaVersion": 2,
   "harness": "chromium-docs-route-v1",
-  "timestamp": "2026-08-12T04:38:49.234Z",
+  "timestamp": "2026-08-13T05:08:06.622Z",
   "matrix": {
-    "rowCounts": [10000, 100000, 1000000],
-    "scenarios": ["init", "sort", "filter", "scroll"],
+    "rowCounts": [
+      10000,
+      100000,
+      1000000
+    ],
+    "scenarios": [
+      "init",
+      "sort",
+      "filter",
+      "scroll",
+      "group"
+    ],
     "runs": 5
   },
   "results": [
@@ -12,32 +22,104 @@
       "rowCount": 10000,
       "metrics": {
         "init": [
-          { "durationMs": 69.9 },
-          { "durationMs": 75.3 },
-          { "durationMs": 73.9 },
-          { "durationMs": 85.7 },
-          { "durationMs": 77.7 }
+          {
+            "durationMs": 94.30000000447035
+          },
+          {
+            "durationMs": 96.90000000596046
+          },
+          {
+            "durationMs": 88
+          },
+          {
+            "durationMs": 100.79999999701977
+          },
+          {
+            "durationMs": 101.10000000149012
+          }
         ],
         "sort": [
-          { "durationMs": 22.1 },
-          { "durationMs": 20.3 },
-          { "durationMs": 20 },
-          { "durationMs": 19.3 },
-          { "durationMs": 20.7 }
+          {
+            "durationMs": 30.19999999552965
+          },
+          {
+            "durationMs": 29.700000002980232
+          },
+          {
+            "durationMs": 25.5
+          },
+          {
+            "durationMs": 28.5
+          },
+          {
+            "durationMs": 30.900000005960464
+          }
         ],
         "filter": [
-          { "durationMs": 23.9 },
-          { "durationMs": 23.9 },
-          { "durationMs": 23.7 },
-          { "durationMs": 24.5 },
-          { "durationMs": 23.3 }
+          {
+            "durationMs": 31.30000000447035
+          },
+          {
+            "durationMs": 32.099999994039536
+          },
+          {
+            "durationMs": 30.600000001490116
+          },
+          {
+            "durationMs": 32.5
+          },
+          {
+            "durationMs": 30.19999999552965
+          }
         ],
         "scroll": [
-          { "durationMs": 324.1, "fps": 59.88, "p95FrameMs": 16.8, "droppedFramePercent": 60 },
-          { "durationMs": 320.3, "fps": 59.88, "p95FrameMs": 16.8, "droppedFramePercent": 55 },
-          { "durationMs": 326.5, "fps": 59.88, "p95FrameMs": 16.8, "droppedFramePercent": 60 },
-          { "durationMs": 323.1, "fps": 59.88, "p95FrameMs": 16.7, "droppedFramePercent": 60 },
-          { "durationMs": 322.5, "fps": 59.88, "p95FrameMs": 16.7, "droppedFramePercent": 65 }
+          {
+            "durationMs": 323.20000000298023,
+            "fps": 59.88023952095792,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 65
+          },
+          {
+            "durationMs": 331.3999999985099,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 50
+          },
+          {
+            "durationMs": 319.09999999403954,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.800000000000068,
+            "droppedFramePercent": 65
+          },
+          {
+            "durationMs": 322.29999999701977,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 65
+          },
+          {
+            "durationMs": 332.20000000298023,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 60
+          }
+        ],
+        "group": [
+          {
+            "durationMs": 37.80000000447035
+          },
+          {
+            "durationMs": 36.900000005960464
+          },
+          {
+            "durationMs": 36.399999998509884
+          },
+          {
+            "durationMs": 37.69999999552965
+          },
+          {
+            "durationMs": 37.5
+          }
         ]
       }
     },
@@ -45,32 +127,104 @@
       "rowCount": 100000,
       "metrics": {
         "init": [
-          { "durationMs": 144.5 },
-          { "durationMs": 147.3 },
-          { "durationMs": 138.6 },
-          { "durationMs": 138.5 },
-          { "durationMs": 140.4 }
+          {
+            "durationMs": 167.10000000149012
+          },
+          {
+            "durationMs": 168
+          },
+          {
+            "durationMs": 155.40000000596046
+          },
+          {
+            "durationMs": 168.10000000149012
+          },
+          {
+            "durationMs": 151.39999999850988
+          }
         ],
         "sort": [
-          { "durationMs": 160 },
-          { "durationMs": 149.7 },
-          { "durationMs": 148.5 },
-          { "durationMs": 161.9 },
-          { "durationMs": 152.2 }
+          {
+            "durationMs": 148.60000000149012
+          },
+          {
+            "durationMs": 127.30000000447035
+          },
+          {
+            "durationMs": 146.60000000149012
+          },
+          {
+            "durationMs": 135
+          },
+          {
+            "durationMs": 141.69999999552965
+          }
         ],
         "filter": [
-          { "durationMs": 109.8 },
-          { "durationMs": 110.2 },
-          { "durationMs": 108.4 },
-          { "durationMs": 108.2 },
-          { "durationMs": 112.4 }
+          {
+            "durationMs": 106
+          },
+          {
+            "durationMs": 103.40000000596046
+          },
+          {
+            "durationMs": 105.70000000298023
+          },
+          {
+            "durationMs": 103.60000000149012
+          },
+          {
+            "durationMs": 106.79999999701977
+          }
         ],
         "scroll": [
-          { "durationMs": 332.2, "fps": 59.88, "p95FrameMs": 16.8, "droppedFramePercent": 55 },
-          { "durationMs": 325.6, "fps": 59.88, "p95FrameMs": 16.7, "droppedFramePercent": 60 },
-          { "durationMs": 332.1, "fps": 59.88, "p95FrameMs": 16.7, "droppedFramePercent": 65 },
-          { "durationMs": 328.7, "fps": 59.88, "p95FrameMs": 16.8, "droppedFramePercent": 60 },
-          { "durationMs": 324.3, "fps": 59.88, "p95FrameMs": 16.7, "droppedFramePercent": 65 }
+          {
+            "durationMs": 318.70000000298023,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 65
+          },
+          {
+            "durationMs": 327.1000000014901,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 65
+          },
+          {
+            "durationMs": 318.79999999701977,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 60
+          },
+          {
+            "durationMs": 332.5,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 60
+          },
+          {
+            "durationMs": 327.6000000014901,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.800000000000068,
+            "droppedFramePercent": 55.00000000000001
+          }
+        ],
+        "group": [
+          {
+            "durationMs": 183.5
+          },
+          {
+            "durationMs": 173.70000000298023
+          },
+          {
+            "durationMs": 177.79999999701977
+          },
+          {
+            "durationMs": 177.39999999850988
+          },
+          {
+            "durationMs": 187.20000000298023
+          }
         ]
       }
     },
@@ -78,32 +232,104 @@
       "rowCount": 1000000,
       "metrics": {
         "init": [
-          { "durationMs": 786.2 },
-          { "durationMs": 795.3 },
-          { "durationMs": 791.4 },
-          { "durationMs": 838.5 },
-          { "durationMs": 823.1 }
+          {
+            "durationMs": 875
+          },
+          {
+            "durationMs": 942.7000000029802
+          },
+          {
+            "durationMs": 879
+          },
+          {
+            "durationMs": 872
+          },
+          {
+            "durationMs": 902.5
+          }
         ],
         "sort": [
-          { "durationMs": 1512.1 },
-          { "durationMs": 1529.6 },
-          { "durationMs": 1494.6 },
-          { "durationMs": 1452 },
-          { "durationMs": 1483.3 }
+          {
+            "durationMs": 1575.1999999955297
+          },
+          {
+            "durationMs": 1542.5
+          },
+          {
+            "durationMs": 1604.2000000029802
+          },
+          {
+            "durationMs": 1563.7000000029802
+          },
+          {
+            "durationMs": 1524.6999999955297
+          }
         ],
         "filter": [
-          { "durationMs": 713.4 },
-          { "durationMs": 719.8 },
-          { "durationMs": 707.9 },
-          { "durationMs": 710 },
-          { "durationMs": 698 }
+          {
+            "durationMs": 739.7000000029802
+          },
+          {
+            "durationMs": 753.3000000044703
+          },
+          {
+            "durationMs": 733.9000000059605
+          },
+          {
+            "durationMs": 723.2000000029802
+          },
+          {
+            "durationMs": 721.6999999955297
+          }
         ],
         "scroll": [
-          { "durationMs": 329.9, "fps": 59.88, "p95FrameMs": 16.7, "droppedFramePercent": 65 },
-          { "durationMs": 327.3, "fps": 59.88, "p95FrameMs": 16.7, "droppedFramePercent": 60 },
-          { "durationMs": 329.4, "fps": 59.88, "p95FrameMs": 16.8, "droppedFramePercent": 60 },
-          { "durationMs": 319.2, "fps": 59.88, "p95FrameMs": 16.7, "droppedFramePercent": 60 },
-          { "durationMs": 324.1, "fps": 59.88, "p95FrameMs": 16.8, "droppedFramePercent": 65 }
+          {
+            "durationMs": 318,
+            "fps": 59.88023952095792,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 65
+          },
+          {
+            "durationMs": 322.29999999701977,
+            "fps": 59.88023952095874,
+            "p95FrameMs": 16.800000000000182,
+            "droppedFramePercent": 50
+          },
+          {
+            "durationMs": 333.5,
+            "fps": 59.88023952095874,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 50
+          },
+          {
+            "durationMs": 331.6000000014901,
+            "fps": 59.88023952095792,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 65
+          },
+          {
+            "durationMs": 335.90000000596046,
+            "fps": 59.88023952095792,
+            "p95FrameMs": 33.40000000000009,
+            "droppedFramePercent": 60
+          }
+        ],
+        "group": [
+          {
+            "durationMs": 1765.1000000014901
+          },
+          {
+            "durationMs": 1829.3999999985099
+          },
+          {
+            "durationMs": 1825.5
+          },
+          {
+            "durationMs": 1785.2000000029802
+          },
+          {
+            "durationMs": 1845.8999999985099
+          }
         ]
       }
     }

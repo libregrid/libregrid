@@ -73,7 +73,25 @@ describe('GroupCellRenderer', () => {
     const gui = renderer.getGui();
     expect(gui.classList.contains('lgr-group-cell-expandable')).toBe(false);
     expect(gui.hasAttribute('aria-expanded')).toBe(false);
+    expect(gui.hasAttribute('role')).toBe(false);
     expect(gui.querySelector('.lgr-group-cell-count')?.textContent).toBe('');
+  });
+
+  it('exposes role="button" and aria-expanded on expandable group cells only', () => {
+    const renderer = new GroupCellRenderer();
+    const node = makeNode({ expanded: false });
+    renderer.init(makeParams({ node }));
+
+    const gui = renderer.getGui();
+    expect(gui.getAttribute('role')).toBe('button');
+    expect(gui.getAttribute('aria-expanded')).toBe('false');
+
+    node.expanded = true;
+    const listenerCalls = (node.addEventListener as ReturnType<typeof vi.fn>).mock.calls;
+    const [, handler] = listenerCalls.find(([type]) => type === 'expandedChanged')!;
+    handler({});
+
+    expect(gui.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('re-renders when the node dispatches expandedChanged', () => {
@@ -124,6 +142,71 @@ describe('GroupCellRenderer', () => {
 
     expect(renderer.getGui().textContent).toBe('Grand Total');
     expect(totalValueGetter).toHaveBeenCalled();
+  });
+
+  it('toggles expansion on double-click unless suppressDoubleClickExpand', () => {
+    const renderer = new GroupCellRenderer();
+    const node = makeNode({ expanded: false });
+    renderer.init(makeParams({ node }));
+
+    renderer.getGui().dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    expect(node.setExpanded).toHaveBeenCalledWith(true, expect.anything());
+
+    const suppressed = new GroupCellRenderer();
+    const suppressedNode = makeNode({ expanded: false });
+    suppressed.init(makeParams({ node: suppressedNode, suppressDoubleClickExpand: true }));
+
+    suppressed.getGui().dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    expect(suppressedNode.setExpanded).not.toHaveBeenCalled();
+  });
+
+  it('toggles expansion on Enter unless suppressEnterExpand; other keys are ignored', () => {
+    const renderer = new GroupCellRenderer();
+    const node = makeNode({ expanded: true });
+    renderer.init(makeParams({ node }));
+
+    const gui = renderer.getGui();
+    gui.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+    expect(node.setExpanded).not.toHaveBeenCalled();
+
+    gui.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(node.setExpanded).toHaveBeenCalledWith(false, expect.anything());
+
+    const suppressed = new GroupCellRenderer();
+    const suppressedNode = makeNode({ expanded: false });
+    suppressed.init(makeParams({ node: suppressedNode, suppressEnterExpand: true }));
+
+    suppressed.getGui().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(suppressedNode.setExpanded).not.toHaveBeenCalled();
+  });
+
+  it('toggle interactions no-op on non-group nodes and on groups with no children', () => {
+    const leaf = new GroupCellRenderer();
+    const leafNode = makeNode({ group: false, childrenAfterGroup: null });
+    leaf.init(makeParams({ node: leafNode, value: 'x' }));
+
+    leaf.getGui().querySelector<HTMLElement>('.lgr-group-cell-toggle')!.click();
+    leaf.getGui().dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    expect(leafNode.setExpanded).not.toHaveBeenCalled();
+
+    const empty = new GroupCellRenderer();
+    const emptyNode = makeNode({ childrenAfterGroup: [] });
+    empty.init(makeParams({ node: emptyNode }));
+
+    empty.getGui().querySelector<HTMLElement>('.lgr-group-cell-toggle')!.click();
+    expect(emptyNode.setExpanded).not.toHaveBeenCalled();
+  });
+
+  it('falls back to childrenAfterGroup.length, then 0, for the child count', () => {
+    const byLength = new GroupCellRenderer();
+    const nodeNoCount = makeNode({ allChildrenCount: null, childrenAfterGroup: [{}, {}, {}] });
+    byLength.init(makeParams({ node: nodeNoCount }));
+    expect(byLength.getGui().querySelector('.lgr-group-cell-count')?.textContent).toBe('(3)');
+
+    const none = new GroupCellRenderer();
+    const nodeNothing = makeNode({ allChildrenCount: undefined, childrenAfterGroup: null });
+    none.init(makeParams({ node: nodeNothing }));
+    expect(none.getGui().querySelector('.lgr-group-cell-count')?.textContent).toBe('');
   });
 
   it('removes node listeners on destroy', () => {

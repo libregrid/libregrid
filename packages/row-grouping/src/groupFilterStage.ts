@@ -64,7 +64,12 @@ export class GroupFilterStage extends BeanStub implements _IRowNodeFilterStage, 
 
     const filterChildren = (node: RowNode): RowNode[] => {
       const children = node.childrenAfterGroup ?? [];
-      if (!active) return children;
+      if (!active) {
+        for (const child of children) {
+          if (child.group) child.childrenAfterFilter = filterChildren(child);
+        }
+        return children;
+      }
       const out: RowNode[] = [];
       for (const child of children) {
         if (child.group) {

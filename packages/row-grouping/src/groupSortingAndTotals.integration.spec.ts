@@ -262,6 +262,51 @@ describe('expandAll / collapseAll / resetRowGroupExpansion (PR 2.4)', () => {
   });
 });
 
+describe('expansion state persistence (PR 2.4)', () => {
+  it('survives sort, filter and a rowData data update', async () => {
+    const { api, el } = bootGrid({
+      columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'city', filter: 'agTextColumnFilter' },
+        { field: 'sales', aggFunc: 'sum' },
+      ],
+      rowData: ROW_DATA,
+    });
+
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(2));
+
+    const topLevelGroup = () => {
+      for (let i = 0; i < api.getDisplayedRowCount(); i++) {
+        const node = api.getDisplayedRowAtIndex(i)!;
+        if (node.level === 0 && node.key === 'US') return node;
+      }
+      return undefined;
+    };
+
+    topLevelGroup()!.setExpanded(true);
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(4));
+
+    api.applyColumnState({ state: [{ colId: 'sales', sort: 'desc' }] });
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(4));
+    expect(topLevelGroup()!.expanded).toBe(true);
+
+    api.setFilterModel({ city: { filterType: 'text', type: 'notEqual', filter: 'SF' } });
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(3));
+    expect(topLevelGroup()!.expanded).toBe(true);
+
+    api.setFilterModel(null);
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(4));
+    expect(topLevelGroup()!.expanded).toBe(true);
+
+    api.setGridOption('rowData', [...ROW_DATA, { country: 'US', city: 'LA', sales: 50 }]);
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(5));
+    expect(topLevelGroup()!.expanded).toBe(true);
+
+    api.destroy();
+    el.remove();
+  });
+});
+
 describe('RowNode.id stability for group nodes (PR 2.4)', () => {
   it('is deterministic and resolvable via api.getRowNode', async () => {
     const { api, el } = bootGrid({

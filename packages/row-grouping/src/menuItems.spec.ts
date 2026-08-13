@@ -110,6 +110,58 @@ describe('row-grouping menu item contributions', () => {
     expect(api.setColumnAggFunc).toHaveBeenCalledWith('sales', 'sum');
   });
 
+  it('rowGroup/rowUnGroup fall back to the colId when the column has no headerName', () => {
+    const noHeader = makeColumn({ colDef: { headerName: undefined, enableRowGroup: true } });
+    const api = makeApi();
+    expect(registry.getItem('rowGroup', params({ column: noHeader, api }))?.name).toBe('Group by sales');
+
+    const groupedApi = makeApi({ getRowGroupColumns: () => [noHeader] });
+    expect(registry.getItem('rowUnGroup', params({ column: noHeader, api: groupedApi }))?.name).toBe(
+      'Stop grouping by sales',
+    );
+  });
+
+  it('rowUnGroup: not offered without a column', () => {
+    expect(registry.getItem('rowUnGroup', params({ column: null }))).toBeNull();
+  });
+
+  it('contractAll: no-grouping -> hidden; with a group node collapses only that subtree', () => {
+    expect(registry.getItem('contractAll', params({ api: makeApi() }))).toBeNull();
+
+    const api = makeApi({ getRowGroupColumns: () => [makeColumn()] });
+    const leaf = { group: false, setExpanded: vi.fn() } as unknown as IRowNode;
+    const childlessGroup = { group: true, setExpanded: vi.fn() } as unknown as IRowNode;
+    const node = {
+      group: true,
+      setExpanded: vi.fn(),
+      childrenAfterGroup: [leaf, childlessGroup],
+    } as unknown as IRowNode;
+
+    const item = registry.getItem('contractAll', params({ api, node }));
+    expect(item?.name).toBe('Collapse All Below');
+    item!.action!({} as never);
+
+    expect(node.setExpanded).toHaveBeenCalledWith(false);
+    expect(childlessGroup.setExpanded).toHaveBeenCalledWith(false);
+    expect(leaf.setExpanded).not.toHaveBeenCalled();
+    expect(api.collapseAll).not.toHaveBeenCalled();
+  });
+
+  it('expandAll: names the item "Expand All Below" for a group node', () => {
+    const api = makeApi({ getRowGroupColumns: () => [makeColumn()] });
+    const node = { group: true, setExpanded: vi.fn() } as unknown as IRowNode;
+    const item = registry.getItem('expandAll', params({ api, node }));
+    expect(item?.name).toBe('Expand All Below');
+  });
+
+  it('valueAggSubMenu: not offered without a column; unknown allowedAggFuncs fall back to the raw name', () => {
+    expect(registry.getItem('valueAggSubMenu', params({ column: null }))).toBeNull();
+
+    const column = makeColumn({ colDef: { enableValue: true, allowedAggFuncs: ['sum', 'myCustom'] } });
+    const item = registry.getItem('valueAggSubMenu', params({ column }));
+    expect(item?.subMenu?.map((i) => (typeof i === 'string' ? i : i.name))).toEqual(['Sum', 'myCustom']);
+  });
+
   it('valueAggSubMenu: honours colDef.allowedAggFuncs', () => {
     const column = makeColumn({ colDef: { enableValue: true, allowedAggFuncs: ['sum', 'avg'] } });
     const item = registry.getItem('valueAggSubMenu', params({ column }));

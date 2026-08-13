@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -10,7 +10,7 @@ const { build } = await import(pathToFileURL(require.resolve('esbuild', {
   paths: [join(root, 'node_modules', '@angular', 'build')],
 })).href);
 const outputDirectory = join(root, 'tools', 'bundle-budgets', '.fixtures');
-const packages = ['core', 'menu', 'side-bar', 'material'];
+const packages = ['core', 'menu', 'side-bar', 'material', 'row-grouping'];
 const packageName = (name) => `@libregrid/${name}`;
 
 if (!packages.every((name) => existsSync(join(root, 'packages', name, 'dist', 'index.js')))) {
@@ -48,8 +48,15 @@ for (const name of packages) {
     .filter((input) => input.includes('/packages/'))
     .map((input) => input.match(/\/packages\/([^/]+)\//)?.[1])
     .filter(Boolean);
+  // Tree-shaking check — exclude declared dependencies (core is always allowed),
+  // mirroring check.mjs's checkCrossContamination.
+  const pkg = JSON.parse(readFileSync(join(root, 'packages', name, 'package.json'), 'utf8'));
+  const declaredDeps = Object.keys(pkg.dependencies ?? {})
+    .filter((dependency) => dependency.startsWith('@libregrid/'))
+    .map((dependency) => dependency.slice('@libregrid/'.length));
   const unexpected = [...new Set(imports)].filter(
-    (dependency) => dependency !== name && dependency !== 'core',
+    (dependency) =>
+      dependency !== name && dependency !== 'core' && !declaredDeps.includes(dependency),
   );
   if (unexpected.length) {
     throw new Error(

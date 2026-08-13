@@ -151,4 +151,38 @@ describe('AggFuncService', () => {
       destroy();
     });
   });
+
+  describe('result objects', () => {
+    it('toString renders the numeric value', () => {
+      const { bean, destroy } = harness();
+      const result = bean.getAggFunc('count')(params([1, 2])) as IAggFuncResult<number>;
+      expect(result.toString()).toBe('2');
+      destroy();
+    });
+  });
+
+  describe('reloadFromOptions', () => {
+    it('picks up aggFuncs set after construction while keeping the built-ins', () => {
+      const { bean, gos, destroy } = harness();
+      const triple = (p: IAggFuncParams) => (p.values[0] as number) * 3;
+
+      gos.set('aggFuncs', { triple });
+
+      expect(bean.getAggFunc('triple')).toBe(triple);
+      expect(bean.getAggFunc('sum')).toBeTypeOf('function');
+      destroy();
+    });
+
+    it('does nothing when aggFuncs is cleared', () => {
+      const { bean, gos, destroy } = makeBeanHarness(AggFuncService, {
+        gridOptions: { aggFuncs: { mine: () => 1 } },
+      });
+
+      gos.set('aggFuncs', undefined);
+
+      expect(bean.getAggFunc('mine')).toBeTypeOf('function');
+      expect(bean.getAggFunc('sum')).toBeTypeOf('function');
+      destroy();
+    });
+  });
 });

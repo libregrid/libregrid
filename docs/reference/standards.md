@@ -257,7 +257,7 @@ A phase is complete only when **every** item is true:
 - [ ] A working route in `apps/docs` demonstrating the feature
 - [ ] `docs/parity/<domain>.md` updated with ✅/🟡/❌ and rationale
 - [ ] `npx nx run-many -t lint test build` green
-- [ ] `npx nx run tools-conformance:matrix` green
+- [ ] `npx nx run conformance:matrix` green
 - [ ] axe-core: 0 violations on the new route, light **and** dark
 - [ ] `npx nx run bench:compare` shows no regression vs. Phase-0 baseline
 - [ ] `npx nx run tools:check-contamination` green

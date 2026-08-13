@@ -89,8 +89,12 @@ export class GroupCellRenderer implements ICellRendererComp {
     this.eGui.classList.toggle('lgr-group-cell-total', !!node.footer);
     this.eGui.setAttribute('tabindex', isExpandable ? '0' : '-1');
     if (isExpandable) {
+      // role="button" makes the interactive span a valid aria-expanded host
+      // (axe aria-allowed-attr) — it toggles the group's disclosure.
+      this.eGui.setAttribute('role', 'button');
       this.eGui.setAttribute('aria-expanded', String(!!node.expanded));
     } else {
+      this.eGui.removeAttribute('role');
       this.eGui.removeAttribute('aria-expanded');
     }
 
