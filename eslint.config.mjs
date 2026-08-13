@@ -78,6 +78,31 @@ export default tseslint.config(
     rules: { '@typescript-eslint/no-explicit-any': 'off' },
   },
   {
+    /**
+     * Nx enforces the tagged LibreGrid-project graph.  This complementary
+     * rule rejects direct Angular imports, which are external to that graph,
+     * from every framework-neutral source tree.  Keep @libregrid/material out
+     * of this scope: it is the one Angular integration package.
+     */
+    files: ['packages/**/*.ts', 'tools/**/*.ts', 'apps/bench/**/*.ts'],
+    ignores: ['packages/material/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@angular/*'],
+              message:
+                'Framework-neutral code must not import Angular. Move this integration to ' +
+                '@libregrid/material or another package tagged type:angular.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Node tooling scripts run outside the browser.
     files: ['tools/**/*.mjs', 'apps/bench/**/*.mjs', '*.mjs', '*.config.ts'],
     languageOptions: {

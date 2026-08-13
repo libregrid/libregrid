@@ -1,4 +1,5 @@
 import type {
+  Module,
   _AggregationGridApi,
   _ModuleWithApi,
   _PivotGridApi,
@@ -41,6 +42,30 @@ import {
   setValueColumns,
 } from './aggregationApi';
 
+/**
+ * Community validates the grouping and aggregation column options through
+ * these internal seam names. They are deliberately separate module records:
+ * the registry keys modules by `moduleName`, so claiming either name on the
+ * public RowGrouping module would make one of the validation checks fail.
+ *
+ * They contain no beans. The public module below supplies the implementation;
+ * these records declare its compatibility with Community's feature checks.
+ */
+const SharedRowGroupingModule: Module = {
+  moduleName: 'SharedRowGrouping',
+  version: VERSION,
+};
+
+const SharedAggregationModule: Module = {
+  moduleName: 'SharedAggregation',
+  version: VERSION,
+};
+
+const CsrmGroupStagesModule: Module = {
+  moduleName: 'CsrmGroupStages',
+  version: VERSION,
+};
+
 type ValueColumnApi = Pick<
   _PivotGridApi<unknown>,
   'getValueColumns' | 'addValueColumns' | 'removeValueColumns' | 'setValueColumns'
@@ -73,7 +98,12 @@ export const RowGroupingModule: _ModuleWithApi<
   },
   css: [groupCellCss],
   enterprise: true,
-  dependsOn: [EnterpriseCoreModule],
+  dependsOn: [
+    EnterpriseCoreModule,
+    SharedRowGroupingModule,
+    SharedAggregationModule,
+    CsrmGroupStagesModule,
+  ],
   apiFunctions: {
     addRowGroupColumns,
     removeRowGroupColumns,

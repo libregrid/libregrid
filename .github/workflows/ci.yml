@@ -45,7 +45,7 @@ jobs:
       - name: Build
         run: npx nx run-many -t build
       - name: Bundle budget check
-        run: node tools/bundle-budgets/check.mjs
+        run: npm run check:budgets
 
   e2e:
     needs: lint-test-build

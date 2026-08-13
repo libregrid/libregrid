@@ -49,6 +49,7 @@ Performance is a first-class requirement: grouping 100k rows is a normal workloa
 - [x] Group `RowNode` creation: keys, levels, `childrenAfterGroup`, `allLeafChildren`
 - [x] ColDef `rowGroup`, `enableRowGroup`
 - [x] _Acceptance:_ `rowGroup: true` on a ColDef produces group rows with correct child counts
+- [x] **Benchmark-route compatibility regression repaired:** `RowGroupingModule` depends on the documented `SharedRowGrouping`, `SharedAggregation`, and `CsrmGroupStages` internal seam modules. Community validates the grouping and aggregation ColDef flags through those names; a fresh Chromium benchmark now asserts zero AG Grid diagnostics.
 
 ### PR 2.2 — Aggregation ✅
 

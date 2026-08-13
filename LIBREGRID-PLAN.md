@@ -96,13 +96,15 @@ Each phase file is self-contained and carries its own **Context**, **Todo**, **T
 
 ## 5. Master phase list
 
-Phases are ordered by **dependency**, not preference. **Do not start a phase until the previous phase's acceptance criteria are all met.**
+Phases are ordered by **dependency**, not preference. **Do not start a phase until the previous phase's acceptance criteria are all met**, except where a phase explicitly declares a narrower dependency set below.
+
+**Approved sequencing exception — SSRM core:** Phase 7 may begin once Phase 0 is complete. It is deliberately independent of Phases 1–6 and is limited to flat, sorted data. This does not advance Phase 9: advanced SSRM remains blocked on Phases 2, 6, 7, and 8.
 
 **Release strategy — decided:** `0.1.0` ships after **Phase 3**, not after Phase 13. Full parity is a 9–18 month effort; shipping a useful subset early is what attracts the users and contributors that make the rest viable. Each later phase ships as its own minor version.
 
 **The repository is public from Phase 0.** Build in the open — guardrails G3 (attribution) and G4 (trademark, incl. taglines) apply to every public surface from the first commit.
 
-- [ ] **Phase 0 — Foundation & guardrails** · [`phases/phase-00-foundation.md`](docs/phases/phase-00-foundation.md)
+- [x] **Phase 0 — Foundation & guardrails** · [`phases/phase-00-foundation.md`](docs/phases/phase-00-foundation.md)
       Nx workspace, CI, contamination guard, conformance matrix, `@libregrid/core`, benchmark baseline. **Contains the critical seam-verification task.**
 
 - [ ] **Phase 1 — Enterprise core, menus & side bar** · [`phases/phase-01-menus-sidebar.md`](docs/phases/phase-01-menus-sidebar.md)
@@ -132,7 +134,7 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 - [ ] **Phase 6 — Set/Multi filter & filters tool panel** · [`phases/phase-06-filters.md`](docs/phases/phase-06-filters.md)
 
 - [ ] **Phase 7 — Server-Side Row Model (core)** · [`phases/phase-07-ssrm-core.md`](docs/phases/phase-07-ssrm-core.md)
-      Stores, block loading, transactions, selection. Flat + sorted only.
+      May begin under the approved SSRM exception once Phase 0's benchmark gate is complete. Stores, block loading, transactions, selection. Flat + sorted only.
 
 - [ ] **Phase 8 — Pivot** · [`phases/phase-08-pivot.md`](docs/phases/phase-08-pivot.md)
 

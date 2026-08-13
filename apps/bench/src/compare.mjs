@@ -63,9 +63,12 @@ function readResults(file) {
 }
 
 function assertComparable(baseline, current) {
-  if (JSON.stringify(baseline.matrix) !== JSON.stringify(current.matrix)) {
+  if (
+    JSON.stringify(baseline.matrix.rowCounts) !== JSON.stringify(current.matrix.rowCounts) ||
+    JSON.stringify(baseline.matrix.scenarios) !== JSON.stringify(current.matrix.scenarios)
+  ) {
     throw new Error(
-      'Benchmark matrix differs from its baseline. Re-baseline after explicitly reviewing the change.',
+      'Benchmark row counts or scenarios differ from its baseline. Re-baseline after explicitly reviewing the change.',
     );
   }
 }

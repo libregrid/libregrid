@@ -1,7 +1,9 @@
 import { Component, ChangeDetectionStrategy, afterNextRender, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
-import { type ColDef, type GridApi, type GridOptions } from 'ag-grid-community';
+import { ModuleRegistry, type ColDef, type GridApi, type GridOptions } from 'ag-grid-community';
+import { EnterpriseCoreModule } from '@libregrid/core';
+import { RowGroupingModule } from '@libregrid/row-grouping';
 import { LibreGridThemeService } from '@libregrid/material';
 
 interface BenchmarkRow {
@@ -22,6 +24,7 @@ interface BenchmarkSample {
 
 interface BenchmarkProtocol {
   ready(): Promise<BenchmarkSample>;
+  isRowGroupingModuleRegistered(): boolean;
   runSort(): Promise<BenchmarkSample>;
   runFilter(): Promise<BenchmarkSample>;
   runScroll(): Promise<BenchmarkSample>;
@@ -78,9 +81,16 @@ export class BenchmarkRoute {
   };
 
   constructor() {
+    // This route is lazy-loaded. Register the feature explicitly before its
+    // child grid is constructed so its benchmark configuration is valid even
+    // when route chunks are evaluated independently by the dev server.
+    ModuleRegistry.registerModules([EnterpriseCoreModule, RowGroupingModule]);
+
     afterNextRender(() => {
       window.__lgrBench = {
         ready: () => this.readyPromise,
+        isRowGroupingModuleRegistered: () =>
+          this.api?.isModuleRegistered('RowGroupingModule') ?? false,
         runSort: () =>
           this.measure(
             () => this.api?.applyColumnState({ state: [{ colId: 'value', sort: 'asc' }] }),
