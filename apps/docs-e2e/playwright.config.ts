@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4201;
-const baseURL = process.env['BASE_URL'] ?? `http://localhost:${PORT}`;
+const port = Number(process.env['DOCS_E2E_PORT'] ?? '4201');
+const baseURL = process.env['BASE_URL'] ?? `http://localhost:${port}`;
 
 export default defineConfig({
   testDir: './src/e2e',
@@ -21,9 +21,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `NX_DAEMON=false npx nx serve docs --port=${PORT}`,
-    url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env['CI'],
+    command: `NX_DAEMON=false NX_ISOLATE_PLUGINS=false npx nx serve docs --port=${port}`,
+    url: baseURL,
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });

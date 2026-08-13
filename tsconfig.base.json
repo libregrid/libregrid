@@ -22,6 +22,7 @@
       "@libregrid/side-bar": ["./packages/side-bar/src/index.ts"],
       "@libregrid/material": ["./packages/material/src/index.ts"],
       "@libregrid/row-grouping": ["./packages/row-grouping/src/index.ts"],
+      "@libregrid/server-side-row-model": ["./packages/server-side-row-model/src/index.ts"],
       "@libregrid/columns-tool-panel": ["./packages/columns-tool-panel/src/index.ts"]
     }
   },

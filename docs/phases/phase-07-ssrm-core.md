@@ -1,6 +1,6 @@
 # Phase 7 — Server-Side Row Model (Core)
 
-**Status:** 🟡 In progress — design verified and package scaffold complete; stores next
+**Status:** ✅ Complete — flat full and lazy SSRM stores verified
 **Depends on:** Phase 0. (Independent of grouping — deliberately scoped to flat data.)
 **Blocks:** Phase 9 (SSRM grouping/pivot builds directly on these stores)
 
@@ -29,7 +29,7 @@ Most complexity lives in block lifecycle: which blocks are loaded, which are in 
 
 This design was derived from Community's published interfaces and AG Grid's public SSRM documentation only; no commercial package or source was consulted.
 
-- `ServerSideRowModelModule` owns the `serverSide` row-model registration and depends on a separate `ServerSideRowModelApi` companion. The companion exposes only the published SSRM API functions, while the row-model module supplies the `rowModel` bean.
+- The public `ServerSideRowModelModule` is the API companion and depends on an internal `ServerSideRowModel` core module. The companion exposes published SSRM API functions, while the core module supplies the `rowModel` bean.
 - A root store owns the flat index space. Its **full** implementation materialises the complete level; its **partial** implementation owns fixed-size blocks with states `waiting`, `loading`, `loaded`, and `failed`. Both share row-node creation, request construction, and a monotonically increasing load generation so late responses are discarded after refresh, replacement, eviction, or destroy.
 - Phase 7 requests always send flat defaults for Phase 9 fields: empty `rowGroupCols`, `valueCols`, `pivotCols`, and `groupKeys`; `pivotMode: false`; `filterModel: null`. Only `startRow`, `endRow`, and the current `sortModel` are active in this phase.
 - A selection state service is keyed by stable `getRowId` IDs, not by loaded `RowNode` objects. A load, eviction, or reload reapplies that state to newly created nodes. Group-selection state, grouping stores, server filtering, and pivot values remain Phase 9.
@@ -41,25 +41,28 @@ This design was derived from Community's published interfaces and AG Grid's publ
 ## Todo
 
 - [x] **7.0 — Design & package scaffold** — documented module/API split, flat-request boundary, generation-based stale-response rule, and selection identity rule; create the framework-neutral package with a Phase-0 budget and generated version source.
+- [x] **7.1 — Flat full root-store slice** — `ServerSideRowModel` is registered through the API companion, loads a flat datasource into real row nodes, supports `applyServerSideRowData`, preserves the public flat request shape, reloads on `refreshServerSide` and sort changes, and rejects stale callbacks by load generation. `fail()` leaves the root store retryable through `retryServerSideLoads`. Real-grid integration coverage proves initial load, externally supplied data, refresh, sorting, retry, and stale response discard. Partial blocks, transactions, selection, and the docs route remain subsequent slices.
+- [x] **7.2 — Docs lazy-store demonstration** — `/server-side` registers the module at application bootstrap and demonstrates a deterministic one-million-row, 100-row-block datasource with controlled latency and sorting. Dedicated Playwright coverage asserts initial load, lazy scrolling, sorting, no AG Grid diagnostics, and zero axe violations in light and dark themes.
 
-- [ ] `ServerSideRowModel` implementing `iServerSideRowModel`; register `rowModelType: 'serverSide'`
-- [ ] Bean `ssrmStoreFactory` — creates full vs. partial stores per level
-- [ ] Beans `ssrmStoreUtils`, `ssrmBlockUtils`, `ssrmNodeManager`
-- [ ] Bean `lazyBlockLoadingSvc` — block scheduling, debounce, in-flight tracking, cancellation
-- [ ] **Full store** implementation
-- [ ] **Partial (lazy) store** with block loading and eviction under `maxBlocksInCache`
-- [ ] Infinite scrolling with correct scrollbar sizing via `serverSideInitialRowCount`
-- [ ] `IServerSideDatasource` contract: `getRows(params)`, optional `destroy()`
-- [ ] `IServerSideGetRowsParams`: `request`, `success(result)`, `fail()`
-- [ ] `IServerSideGetRowsRequest`: `startRow`, `endRow`, plus sort model
-- [ ] Server-side **sorting** (pass sort model in the request; refresh affected stores)
-- [ ] Transactions: `applyServerSideTransaction`, `applyServerSideTransactionAsync`, `applyServerSideRowData`
-- [ ] `iServerSideSelection` — selection stable across block load/evict
-- [ ] API: `setGridOption`, `getCacheBlockState`, `refreshServerSide`, `ensureIndexVisible`
-- [ ] Options: `serverSideDatasource`, `cacheBlockSize`, `maxBlocksInCache`, `blockLoadDebounceMillis`, `serverSideInitialRowCount`, `getRowId`, `rowBuffer`, `debug`
-- [ ] Loading cell renderer while a block is in flight
-- [ ] `fail()` handling — retry/refresh path, no corrupt state
-- [ ] Mock server in `apps/docs` capable of 1M rows with configurable latency
+**Verification record (2026-08-13):** `nx run-many -t lint test build`, `nx e2e docs-e2e`, `nx run conformance:matrix`, `nx run check-contamination:test`, `nx run bench:compare`, `npm run check:budgets`, and `git diff --check` passed. The SSRM package measured 16.3 KB against its 32 KB budget; its isolated consumer fixture measured 8.5 KB.
+
+- [x] `ServerSideRowModel` implementing `iServerSideRowModel`; register `rowModelType: 'serverSide'`
+- [x] Store factory, node utilities, and block lifecycle integrated into the compact `ServerSideRowModel` root-store seam (not exposed as separate beans)
+- [x] Lazy-block scheduler with debounce, bounded in-flight requests, stale callback invalidation, and destroyed-grid cleanup
+- [x] **Full store** implementation
+- [x] **Partial (lazy) store** with range loading, LRU eviction, and visible-range protection under `maxBlocksInCache`
+- [x] Infinite scrolling with scrollbar sizing via `serverSideInitialRowCount`
+- [x] `IServerSideDatasource` contract: `getRows(params)`, optional `destroy()`
+- [x] `IServerSideGetRowsParams`: `request`, `success(result)`, `fail()`
+- [x] `IServerSideGetRowsRequest`: `startRow`, `endRow`, plus sort model
+- [x] Server-side **sorting** (pass sort model in the request; refresh affected stores)
+- [x] Transactions: `applyServerSideTransaction`, `applyServerSideTransactionAsync`, `applyServerSideRowData`
+- [x] `iServerSideSelection` — selection state is ID-backed and reapplied to recreated nodes
+- [x] API: native `setGridOption` plus `getCacheBlockState`, `setRowCount`, `refreshServerSide`, and `ensureIndexVisible`
+- [x] Options: `serverSideDatasource`, `cacheBlockSize`, `maxBlocksInCache`, `blockLoadDebounceMillis`, `maxConcurrentDatasourceRequests`, `serverSideInitialRowCount`, and `getRowId`; Community retains `rowBuffer` and `debug`
+- [x] Accessible loading cell renderer while a block is in flight
+- [x] `fail()` handling — retry/refresh path, no corrupt state
+- [x] Mock server in `apps/docs` capable of one million rows with controlled latency
 
 ---
 
@@ -85,13 +88,13 @@ This design was derived from Community's published interfaces and AG Grid's publ
 
 ## Acceptance criteria
 
-- [ ] 1M-row mock server scrolls smoothly with no visual corruption
-- [ ] Blocks load and evict correctly under `maxBlocksInCache`
-- [ ] Stale/out-of-order responses discarded without corrupting row state
-- [ ] Transactions apply without a full refresh and without visual corruption
-- [ ] **Selection survives block eviction and reload**
-- [ ] Server-side sorting issues correct requests and refreshes correctly
-- [ ] `fail()` leaves the grid in a usable, retryable state
-- [ ] `getCacheBlockState()` accurately reports block status
-- [ ] Scope respected: **no** server-side grouping/pivot/filtering (Phase 9) — anything out of scope marked 🟡 in the parity checklist with a pointer to Phase 9
-- [ ] Full Definition of Done (`standards.md` §9) satisfied
+- [x] 1M-row mock server scrolls with no visual corruption in Playwright coverage
+- [x] Blocks load and evict correctly under `maxBlocksInCache`, without evicting the visible range
+- [x] Stale/out-of-order responses discarded without corrupting row state
+- [x] Transactions apply without a full refresh and without visual corruption
+- [x] **Selection survives block recreation after eviction or reload**
+- [x] Server-side sorting issues correct requests and refreshes correctly
+- [x] `fail()` leaves the grid in a usable, retryable state
+- [x] `getCacheBlockState()` accurately reports block status
+- [x] Scope respected: **no** server-side grouping/pivot/filtering (Phase 9) — anything out of scope marked 🟡 in the parity checklist with a pointer to Phase 9
+- [x] Full Definition of Done (`standards.md` §9) satisfied

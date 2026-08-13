@@ -23,6 +23,7 @@
     "@libregrid/columns-tool-panel": "^0.1.0",
     "@libregrid/menu": "^0.1.0",
     "@libregrid/row-grouping": "^0.1.0",
+    "@libregrid/server-side-row-model": "^0.1.0",
     "@libregrid/side-bar": "^0.1.0",
     "@libregrid/material": "^0.1.0",
     "ag-grid-angular": "36.1.0",

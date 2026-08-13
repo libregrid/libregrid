@@ -1,10 +1,298 @@
-import { describe, expect, it } from 'vitest';
-import { ModuleRegistry } from 'ag-grid-community';
+/**
+ * @vitest-environment jsdom
+ */
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  AllCommunityModule,
+  createGrid,
+  ModuleRegistry,
+  ServerSideTransactionResultStatus,
+  type GridApi,
+  type IServerSideDatasource,
+  type IServerSideGetRowsRequest,
+} from 'ag-grid-community';
 import { ServerSideRowModelModule } from './serverSideRowModelModule';
 
-describe('ServerSideRowModelModule scaffold', () => {
-  it('registers its documented Community module name', () => {
-    expect(() => ModuleRegistry.registerModules([ServerSideRowModelModule])).not.toThrow();
-    expect(ServerSideRowModelModule.moduleName).toBe('ServerSideRowModel');
+interface Trade {
+  id: string;
+  name: string;
+}
+
+let api: GridApi<Trade> | undefined;
+
+afterEach(() => {
+  api?.destroy();
+  api = undefined;
+});
+
+describe('ServerSideRowModelModule', () => {
+  it('boots a flat server-side grid and renders datasource rows', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const datasource: IServerSideDatasource<Trade> = {
+      getRows(params) {
+        requests.push(params.request);
+        params.success({
+          rowData: [
+            { id: 'trade-1', name: 'Alpha' },
+            { id: 'trade-2', name: 'Beta' },
+          ],
+          rowCount: 2,
+        });
+      },
+    };
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [{ field: 'name' }],
+      getRowId: (params) => params.data.id,
+      serverSideDatasource: datasource,
+    });
+
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(2));
+    expect(api.getDisplayedRowAtIndex(0)?.data).toEqual({ id: 'trade-1', name: 'Alpha' });
+    expect(requests).toEqual([
+      expect.objectContaining({
+        startRow: undefined,
+        endRow: undefined,
+        rowGroupCols: [],
+        valueCols: [],
+        pivotCols: [],
+        pivotMode: false,
+        groupKeys: [],
+        filterModel: null,
+        sortModel: [],
+      }),
+    ]);
+  });
+
+  it('refreshes through the registered ServerSideRowModelApi companion', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    let loads = 0;
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [{ field: 'name' }],
+      serverSideDatasource: {
+        getRows(params) {
+          loads += 1;
+          params.success({ rowData: [{ id: String(loads), name: `Load ${loads}` }], rowCount: 1 });
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(loads).toBe(1));
+    api.refreshServerSide();
+    await vi.waitFor(() => expect(loads).toBe(2));
+    expect(api.getDisplayedRowAtIndex(0)?.data).toEqual({ id: '2', name: 'Load 2' });
+  });
+
+  it('discards a stale datasource response after refresh', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const callbacks: Array<(name: string) => void> = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [{ field: 'name' }],
+      serverSideDatasource: {
+        getRows(params) {
+          callbacks.push((name) => params.success({ rowData: [{ id: name, name }], rowCount: 1 }));
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(callbacks).toHaveLength(1));
+    api.refreshServerSide();
+    await vi.waitFor(() => expect(callbacks).toHaveLength(2));
+
+    callbacks[0]?.('stale');
+    callbacks[1]?.('fresh');
+    await vi.waitFor(() => expect(api?.getDisplayedRowAtIndex(0)?.data).toEqual({ id: 'fresh', name: 'fresh' }));
+  });
+
+  it('reloads with the current server-side sort model', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [{ field: 'name', sortable: true }],
+      serverSideDatasource: {
+        getRows(params) {
+          requests.push(params.request);
+          params.success({ rowData: [{ id: String(requests.length), name: 'Alpha' }], rowCount: 1 });
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(requests).toHaveLength(1));
+    api.applyColumnState({ state: [{ colId: 'name', sort: 'desc' }] });
+    await vi.waitFor(() => expect(requests).toHaveLength(2));
+    expect(requests[1]?.sortModel).toEqual([expect.objectContaining({ colId: 'name', sort: 'desc' })]);
+  });
+
+  it('accepts rows supplied through applyServerSideRowData', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [{ field: 'name' }],
+      serverSideDatasource: { getRows: () => undefined },
+    });
+
+    api.applyServerSideRowData({
+      successParams: { rowData: [{ id: 'provided', name: 'Provided row' }], rowCount: 1 },
+    });
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(1));
+    expect(api.getDisplayedRowAtIndex(0)?.data).toEqual({ id: 'provided', name: 'Provided row' });
+  });
+
+  it('leaves a failed load retryable through retryServerSideLoads', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    let attempts = 0;
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [{ field: 'name' }],
+      serverSideDatasource: {
+        getRows(params) {
+          attempts += 1;
+          if (attempts === 1) params.fail();
+          else params.success({ rowData: [{ id: 'recovered', name: 'Recovered' }], rowCount: 1 });
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(attempts).toBe(1));
+    expect(api.getDisplayedRowCount()).toBe(0);
+    api.retryServerSideLoads();
+    await vi.waitFor(() => expect(attempts).toBe(2));
+    expect(api.getDisplayedRowAtIndex(0)?.data).toEqual({ id: 'recovered', name: 'Recovered' });
+  });
+
+  it('uses range requests for partial blocks', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    element.style.height = '200px';
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      cacheBlockSize: 2,
+      maxBlocksInCache: 2,
+      columnDefs: [{ field: 'name' }],
+      serverSideDatasource: {
+        getRows(params) {
+          requests.push(params.request);
+          const start = params.request.startRow ?? 0;
+          params.success({
+            rowData: Array.from({ length: 2 }, (_, offset) => ({
+              id: String(start + offset),
+              name: `Row ${start + offset}`,
+            })),
+            rowCount: 100,
+          });
+        },
+      },
+    });
+
+    await vi.waitFor(() =>
+      expect(requests).toContainEqual(expect.objectContaining({ startRow: 0, endRow: 2 })),
+    );
+    api.getDisplayedRowAtIndex(40);
+    await vi.waitFor(() =>
+      expect(requests).toContainEqual(expect.objectContaining({ startRow: 40, endRow: 42 })),
+    );
+    expect(api.getCacheBlockState()).toEqual(
+      expect.objectContaining({ '20': { pageStatus: 'loaded' } }),
+    );
+    api.setRowCount(120, false);
+    expect(api.getDisplayedRowCount()).toBe(120);
+    expect(api.isLastRowIndexKnown()).toBe(false);
+  });
+
+  it('applies synchronous and batched transactions without reloading the full store', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    let loads = 0;
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [{ field: 'name' }],
+      getRowId: (params) => params.data.id,
+      serverSideDatasource: {
+        getRows(params) {
+          loads += 1;
+          params.success({ rowData: [{ id: 'one', name: 'One' }], rowCount: 1 });
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(1));
+    const result = api.applyServerSideTransaction({
+      add: [{ id: 'two', name: 'Two' }],
+      update: [{ id: 'one', name: 'Updated one' }],
+    });
+    expect(result?.status).toBe(ServerSideTransactionResultStatus.Applied);
+    expect(api.getDisplayedRowAtIndex(0)?.data).toEqual({ id: 'one', name: 'Updated one' });
+    expect(api.getDisplayedRowAtIndex(1)?.data).toEqual({ id: 'two', name: 'Two' });
+
+    const callback = vi.fn();
+    api.applyServerSideTransactionAsync({ remove: [{ id: 'one', name: 'ignored' }] }, callback);
+    api.flushServerSideAsyncTransactions();
+    expect(callback).toHaveBeenCalledWith(expect.objectContaining({ status: ServerSideTransactionResultStatus.Applied }));
+    expect(api.getDisplayedRowAtIndex(0)?.data).toEqual({ id: 'two', name: 'Two' });
+    expect(loads).toBe(1);
+  });
+
+  it('reapplies server-side selection state after a store reload', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      cacheBlockSize: 2,
+      maxBlocksInCache: 2,
+      rowSelection: { mode: 'multiRow' },
+      columnDefs: [{ field: 'name' }],
+      getRowId: (params) => params.data.id,
+      serverSideDatasource: {
+        getRows(params) {
+          requests.push(params.request);
+          const start = params.request.startRow ?? 0;
+          params.success({
+            rowData: Array.from({ length: 2 }, (_, offset) => ({
+              id: String(start + offset),
+              name: `Row ${start + offset}`,
+            })),
+            rowCount: 100,
+          });
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(api?.getDisplayedRowAtIndex(0)?.data).toEqual({ id: '0', name: 'Row 0' }));
+    api.setServerSideSelectionState({ selectAll: false, toggledNodes: ['0'] });
+    expect(api.getDisplayedRowAtIndex(0)?.isSelected()).toBe(true);
+    api.refreshServerSide();
+    await vi.waitFor(() => expect(requests.filter((request) => request.startRow === 0).length).toBeGreaterThan(1));
+    expect(api.getDisplayedRowAtIndex(0)?.isSelected()).toBe(true);
+    expect(api.getServerSideSelectionState()).toEqual({ selectAll: false, toggledNodes: ['0'] });
   });
 });

@@ -13,6 +13,7 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'side-bar', label: 'Side bar' },
   { path: 'row-grouping', label: 'Row Grouping' },
   { path: 'columns', label: 'Columns' },
+  { path: 'server-side', label: 'Server-side rows' },
 ];
 
 export const routes: Routes = [
@@ -45,6 +46,11 @@ export const routes: Routes = [
     path: 'columns',
     loadComponent: () => import('./routes/columns').then((m) => m.ColumnsDemo),
     title: 'LibreGrid — Columns',
+  },
+  {
+    path: 'server-side',
+    loadComponent: () => import('./routes/server-side-row-model').then((m) => m.ServerSideRowModelDemo),
+    title: 'LibreGrid — Server-Side Row Model',
   },
   {
     path: 'benchmark',

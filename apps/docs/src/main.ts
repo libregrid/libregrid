@@ -6,6 +6,7 @@ import { EnterpriseCoreModule } from '@libregrid/core';
 import { ContextMenuModule, ColumnMenuModule } from '@libregrid/menu';
 import { SideBarModule } from '@libregrid/side-bar';
 import { RowGroupingModule } from '@libregrid/row-grouping';
+import { ServerSideRowModelModule } from '@libregrid/server-side-row-model';
 import { ColumnsToolPanelModule, RowGroupingPanelModule } from '@libregrid/columns-tool-panel';
 import { provideLibreGridMaterialTheme } from '@libregrid/material';
 
@@ -31,6 +32,8 @@ ModuleRegistry.registerModules([
   SideBarModule,
   // Phase 2
   RowGroupingModule,
+  // Phase 7
+  ServerSideRowModelModule,
   // Phase 3
   ColumnsToolPanelModule,
   RowGroupingPanelModule,
