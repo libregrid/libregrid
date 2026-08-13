@@ -10,7 +10,15 @@ const { build } = await import(pathToFileURL(require.resolve('esbuild', {
   paths: [join(root, 'node_modules', '@angular', 'build')],
 })).href);
 const outputDirectory = join(root, 'tools', 'bundle-budgets', '.fixtures');
-const packages = ['core', 'menu', 'side-bar', 'material', 'row-grouping', 'columns-tool-panel'];
+const packages = [
+  'core',
+  'menu',
+  'side-bar',
+  'material',
+  'row-grouping',
+  'columns-tool-panel',
+  'server-side-row-model',
+];
 const packageName = (name) => `@libregrid/${name}`;
 
 if (!packages.every((name) => existsSync(join(root, 'packages', name, 'dist', 'index.js')))) {

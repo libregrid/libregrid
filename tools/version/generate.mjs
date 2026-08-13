@@ -29,7 +29,14 @@ export function agGridVersion(rootDir = root) {
 }
 
 /** Packages that ship a generated src/version.ts */
-export const VERSIONED_PACKAGES = ['core', 'menu', 'side-bar', 'row-grouping', 'columns-tool-panel'];
+export const VERSIONED_PACKAGES = [
+  'core',
+  'menu',
+  'side-bar',
+  'row-grouping',
+  'columns-tool-panel',
+  'server-side-row-model',
+];
 
 export function generate(rootDir = root) {
   const version = agGridVersion(rootDir);

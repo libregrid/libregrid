@@ -1,8 +1,10 @@
 # Phase 7 — Server-Side Row Model (Core)
 
-**Status:** ⬜ Not started
+**Status:** 🟡 In progress — design verified and package scaffold complete; stores next
 **Depends on:** Phase 0. (Independent of grouping — deliberately scoped to flat data.)
 **Blocks:** Phase 9 (SSRM grouping/pivot builds directly on these stores)
+
+**Readiness:** Phase 0 is verified complete. The master plan's approved exception permits this phase to begin before Phases 1–6. Keep the scope flat and sorted; Phase 9 remains blocked on Phases 2, 6, 7, and 8.
 
 **Package:** `@libregrid/server-side-row-model` (`moduleName: 'ServerSideRowModel'`)
 **Parity:** [`../parity/server-side-row-model.md`](../parity/server-side-row-model.md)
@@ -23,9 +25,22 @@ Most complexity lives in block lifecycle: which blocks are loaded, which are in 
 
 `getRowId` is effectively **mandatory** for correct behavior with transactions and selection, even though it is technically optional. Document that prominently.
 
+## Phase-7 design record (2026-08-13)
+
+This design was derived from Community's published interfaces and AG Grid's public SSRM documentation only; no commercial package or source was consulted.
+
+- `ServerSideRowModelModule` owns the `serverSide` row-model registration and depends on a separate `ServerSideRowModelApi` companion. The companion exposes only the published SSRM API functions, while the row-model module supplies the `rowModel` bean.
+- A root store owns the flat index space. Its **full** implementation materialises the complete level; its **partial** implementation owns fixed-size blocks with states `waiting`, `loading`, `loaded`, and `failed`. Both share row-node creation, request construction, and a monotonically increasing load generation so late responses are discarded after refresh, replacement, eviction, or destroy.
+- Phase 7 requests always send flat defaults for Phase 9 fields: empty `rowGroupCols`, `valueCols`, `pivotCols`, and `groupKeys`; `pivotMode: false`; `filterModel: null`. Only `startRow`, `endRow`, and the current `sortModel` are active in this phase.
+- A selection state service is keyed by stable `getRowId` IDs, not by loaded `RowNode` objects. A load, eviction, or reload reapplies that state to newly created nodes. Group-selection state, grouping stores, server filtering, and pivot values remain Phase 9.
+- Store refresh/destruction invalidates outstanding callbacks before invoking a datasource replacement or retry. `fail()` leaves a block retryable; it must never leave a permanent placeholder or mutate row count.
+- The initial implementation sequence is: package/module/API registration → request and node utilities → full store → partial store and scheduler → transactions/selection → docs mock-server and E2E. Each slice remains independently integration-tested against a real grid.
+
 ---
 
 ## Todo
+
+- [x] **7.0 — Design & package scaffold** — documented module/API split, flat-request boundary, generation-based stale-response rule, and selection identity rule; create the framework-neutral package with a Phase-0 budget and generated version source.
 
 - [ ] `ServerSideRowModel` implementing `iServerSideRowModel`; register `rowModelType: 'serverSide'`
 - [ ] Bean `ssrmStoreFactory` — creates full vs. partial stores per level
