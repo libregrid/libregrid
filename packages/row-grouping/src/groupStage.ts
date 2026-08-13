@@ -104,21 +104,40 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
     rowGroupCols: { getColId: () => string; getColDef: () => { field?: string } }[],
   ) {
     const leafNodes = rootNode.allLeafChildren ?? [];
+    const allowUnbalanced = this.gos.get('groupAllowUnbalanced') === true;
 
     const buildLevel = (
       nodes: RowNode[],
       level: number,
       parentNode: RowNode | null,
     ): RowNode[] => {
-      if (level >= rowGroupCols.length) return nodes;
+      if (level >= rowGroupCols.length) {
+        // Leaf rows: stamp .parent/.level so display-layer seams that walk
+        // up the tree (e.g. showOpenedGroup, groupHideOpenParents in
+        // ShowRowGroupColsValueService) can reach the owning group.
+        for (const leaf of nodes) {
+          leaf.parent = parentNode;
+          leaf.level = level;
+          leaf.uiLevel = level;
+        }
+        return nodes;
+      }
 
       const col = rowGroupCols[level]!;
       const colId = col.getColId();
       const field = col.getColDef().field ?? colId;
       const buckets = new Map<string, RowNode[]>();
+      // groupAllowUnbalanced: a row with no value at this level attaches
+      // directly under parentNode instead of joining a (Blanks) bucket and
+      // descending further — an "unbalanced" leaf that stops early.
+      const unbalanced: RowNode[] = [];
 
       for (const node of nodes) {
         const raw = node.data?.[field];
+        if (allowUnbalanced && (raw == null || raw === '')) {
+          unbalanced.push(node);
+          continue;
+        }
         const key = raw == null ? '' : String(raw);
         const bucket = buckets.get(key);
         if (bucket) {
@@ -149,6 +168,13 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
         groupNode.footer = false;
         groupNode.expanded = this.isGroupExpandedByDefault(level);
         groupNodes.push(groupNode);
+      }
+
+      for (const node of unbalanced) {
+        node.parent = parentNode;
+        node.level = level;
+        node.uiLevel = level;
+        groupNodes.push(node);
       }
 
       for (let i = 0; i < groupNodes.length; i++) {

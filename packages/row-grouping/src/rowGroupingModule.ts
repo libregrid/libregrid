@@ -14,6 +14,12 @@ import { FilterAggregateStage } from './filterAggregateStage';
 import { GroupFilterStage } from './groupFilterStage';
 import { ValueColsService } from './valueColsService';
 import { RowGroupColsService } from './rowGroupColsService';
+import { AutoGenColsService } from './autoGenColsService';
+import { ShowRowGroupColsService } from './showRowGroupColsService';
+import { ShowRowGroupColsValueService } from './showRowGroupColsValueService';
+import { ExpansionService } from './expansionService';
+import { GroupCellRenderer } from './groupCellRenderer';
+import { groupCellCss } from './groupCellCss';
 import {
   addRowGroupColumns,
   getRowGroupColumns,
@@ -45,12 +51,20 @@ export const RowGroupingModule: _ModuleWithApi<
     AggFuncService,
     ValueColsService,
     RowGroupColsService,
+    AutoGenColsService,
+    ShowRowGroupColsService,
+    ShowRowGroupColsValueService,
+    ExpansionService,
     GroupStage,
     GroupFilterStage,
     FlattenStage,
     AggregationStage,
     FilterAggregateStage,
   ],
+  userComponents: {
+    agGroupCellRenderer: GroupCellRenderer,
+  },
+  css: [groupCellCss],
   enterprise: true,
   dependsOn: [EnterpriseCoreModule],
   apiFunctions: {

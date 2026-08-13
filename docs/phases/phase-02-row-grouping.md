@@ -63,12 +63,15 @@ Performance is a first-class requirement: grouping 100k rows is a normal workloa
 - [x] `RowGroupColsService` (bean `rowGroupColsSvc`) — required for Community's `treegrid` grid role and row-group column API; `setRowGroupColumns`/`addRowGroupColumns`/`removeRowGroupColumns`/`moveRowGroupColumn`/`getRowGroupColumns` now functional
 - [x] `GroupFilterStage` (bean `groupFilterStage`) — minimal recursive version; PR 2.5 adds `groupAggFiltering`
 
-### PR 2.3 — Auto group column
+### PR 2.3 — Auto group column ✅
 
-- [ ] `autoGenColsSvc`, `showRowGroupColsSvc`
-- [ ] `agGroupCellRenderer` user component with expand/collapse affordance
-- [ ] `GROUP_AUTO_COLUMN_ID` handling
-- [ ] Options: `groupDisplayType`, `autoGroupColumnDef`, `groupRowRenderer`, `groupRowRendererParams`, `showOpenedGroup`, `groupHideOpenParents`, `groupHideColumnsUntilExpanded`, `groupHideParentOfSingleChild`, `groupLockGroupColumns`, `groupMaintainOrder`, `groupAllowUnbalanced`, `suppressGroupChangesColumnVisibility`
+- [x] `autoColSvc` (bean names verified against `context.ts` over this file's draft names — see `docs/parity/row-grouping.md`), `showRowGroupCols`, `showRowGroupColValueSvc`
+- [x] `expansionSvc` — not in the original draft list, but discovered to be required: `RowNode.setExpanded`/`.expanded`/`.isExpandable()` all delegate to it, and it's absent from `AllCommunityModule`
+- [x] `agGroupCellRenderer` user component with expand/collapse affordance (click, dblclick, Enter)
+- [x] `GROUP_AUTO_COLUMN_ID` handling
+- [x] Options: `groupDisplayType` (🟡 `singleColumn` only), `autoGroupColumnDef`, `showOpenedGroup`, `groupHideOpenParents` (🟡 single hidden-ancestor level), `groupHideParentOfSingleChild`, `groupAllowUnbalanced`
+- [ ] Options not implemented this PR — see `docs/parity/row-grouping.md` for rationale per option: `groupRowRenderer`/`groupRowRendererParams` (❌ tied to unimplemented `groupRows` display type), `groupHideColumnsUntilExpanded`, `groupLockGroupColumns`, `groupMaintainOrder`, `suppressGroupChangesColumnVisibility`
+- [x] *Acceptance:* auto group column renders with working expand/collapse; `autoGroupColumnDef` overrides apply — verified by integration tests and manually in the docs app (`/row-grouping`)
 
 ### PR 2.4 — Expand/collapse, ordering, totals
 

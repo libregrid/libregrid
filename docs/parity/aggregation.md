@@ -11,7 +11,7 @@
 | `aggFuncs` | ✅ | Custom funcs registered at init; covered by integration test |
 | `groupTotalRow` | ⬜ | PR 2.4 |
 | `grandTotalRow` | ⬜ | PR 2.4 |
-| `suppressAggFuncInHeader` | ⬜ | Header rendering concern — lands with auto group column (PR 2.3) |
+| `suppressAggFuncInHeader` | ⬜ | Not a PR 2.3 item after all — it's value-column header text (`"sum(Sales)"`), unrelated to the auto group column; still open |
 | `aggregateOnlyChangedColumns` | 🟡 | Not implemented — aggStage always does a full traversal (documented in code); safe but not incremental |
 | `suppressAggFilteredOnly` | ✅ | `filterAggStage` re-aggregates over all children when true; integration-tested |
 | `groupAggFiltering` | 🟡 | Option read by stages but group-value filtering lands with PR 2.5's full group filter |
