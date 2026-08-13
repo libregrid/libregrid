@@ -9,14 +9,14 @@
 | Option | Status | Notes |
 |---|---|---|
 | `aggFuncs` | ✅ | Custom funcs registered at init; covered by integration test |
-| `groupTotalRow` | ⬜ | PR 2.4 |
-| `grandTotalRow` | ⬜ | PR 2.4 |
+| `groupTotalRow` | ✅ | PR 2.4 — see `docs/parity/row-grouping.md` ("Sorting, Ordering & Totals") for the `footerSvc` implementation; integration-tested |
+| `grandTotalRow` | 🟡 | PR 2.4 — inline `'top'`/`'bottom'` only; `'pinnedTop'`/`'pinnedBottom'` deferred (needs the pinned row model). Also required `AggregationStage` to aggregate the root node whenever `grandTotalRow` is set, regardless of `alwaysAggregateAtRootLevel` — there's otherwise nothing for the grand total to show |
 | `suppressAggFuncInHeader` | ⬜ | Not a PR 2.3 item after all — it's value-column header text (`"sum(Sales)"`), unrelated to the auto group column; still open |
 | `aggregateOnlyChangedColumns` | 🟡 | Not implemented — aggStage always does a full traversal (documented in code); safe but not incremental |
 | `suppressAggFilteredOnly` | ✅ | `filterAggStage` re-aggregates over all children when true; integration-tested |
 | `groupAggFiltering` | 🟡 | Option read by stages but group-value filtering lands with PR 2.5's full group filter |
-| `groupSuppressBlankHeader` | ⬜ | PR 2.4 |
-| `suppressStickyTotalRow` | ⬜ | PR 2.4 |
+| `groupSuppressBlankHeader` | ✅ | PR 2.4 — free once `FooterService` links `groupNode.sibling`: Community's own `ValueService.displayIgnoresAggData` already gates on it; integration-tested |
+| `suppressStickyTotalRow` | ⬜ | No-op — total rows aren't sticky yet, see `docs/parity/row-grouping.md` |
 | `alwaysAggregateAtRootLevel` | ✅ | Root node aggregated when true; verified via `getRowNode(ROOT_NODE_ID)` |
 | `getGroupRowAgg` | ✅ | Overrides per-column aggs; integration-tested |
 

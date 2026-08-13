@@ -14,6 +14,8 @@ export class FlattenStage extends BeanStub implements _IRowNodeFlattenStage, Nam
   readonly refreshProps: (keyof GridOptions)[] | null = [
     'groupHideOpenParents',
     'groupHideParentOfSingleChild',
+    'groupTotalRow',
+    'grandTotalRow',
   ];
 
   public execute(): RowNode[] {
@@ -22,7 +24,11 @@ export class FlattenStage extends BeanStub implements _IRowNodeFlattenStage, Nam
     if (!rootNode) return [];
 
     const result: RowNode[] = [];
+    const footerSvc = this.beans.footerSvc;
+    const push = (n: RowNode) => result.push(n);
+    footerSvc?.addTotalRows(result.length, rootNode, push, true, true, 'top');
     this.flatten(rootNode, result);
+    footerSvc?.addTotalRows(result.length, rootNode, push, true, true, 'bottom');
     return result;
   }
 
@@ -39,7 +45,10 @@ export class FlattenStage extends BeanStub implements _IRowNodeFlattenStage, Nam
     let current = node;
     while (current.group) {
       const children =
-        current.childrenAfterAggFilter ?? current.childrenAfterFilter ?? current.childrenAfterGroup;
+        current.childrenAfterSort ??
+        current.childrenAfterAggFilter ??
+        current.childrenAfterFilter ??
+        current.childrenAfterGroup;
       if (children?.length !== 1) break;
       const only = children[0]!;
       const hide = mode === true || (mode === 'leafGroupsOnly' && !only.group);
@@ -50,10 +59,16 @@ export class FlattenStage extends BeanStub implements _IRowNodeFlattenStage, Nam
   }
 
   private flatten(node: RowNode, out: RowNode[]): void {
-    const children = node.childrenAfterAggFilter ?? node.childrenAfterFilter ?? node.childrenAfterGroup;
+    // childrenAfterSort takes priority: it's the order GroupSortStage (or,
+    // pre-grouping, Community's own sortStage on the root) actually produced.
+    // Earlier fields are pre-sort fallbacks for when no sort stage ran yet.
+    const children =
+      node.childrenAfterSort ?? node.childrenAfterAggFilter ?? node.childrenAfterFilter ?? node.childrenAfterGroup;
     if (!children) return;
 
     const hideOpenParents = this.gos.get('groupHideOpenParents') === true;
+    const footerSvc = this.beans.footerSvc;
+    const push = (n: RowNode) => out.push(n);
 
     for (const rawChild of children) {
       const child = rawChild.group ? this.resolveDisplayNode(rawChild) : rawChild;
@@ -69,7 +84,13 @@ export class FlattenStage extends BeanStub implements _IRowNodeFlattenStage, Nam
       if (!(hideOpenParents && child.expanded)) {
         out.push(child);
       }
-      if (child.expanded) this.flatten(child, out);
+      if (child.expanded) {
+        // groupTotalRow: footerSvc no-ops unless the group is expanded and
+        // groupTotalRow resolves to this position for this node.
+        footerSvc?.addTotalRows(out.length, child, push, true, false, 'top');
+        this.flatten(child, out);
+        footerSvc?.addTotalRows(out.length, child, push, true, false, 'bottom');
+      }
     }
   }
 }

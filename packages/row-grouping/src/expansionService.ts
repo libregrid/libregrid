@@ -68,8 +68,16 @@ export class ExpansionService
     this.onGroupExpandedOrCollapsed();
   }
 
+  /**
+   * "Reset all group expansion to defaults, as determined by
+   * groupDefaultExpanded [or] isGroupOpenByDefault" (`_CsrmSsrmSharedGridApi.
+   * resetRowGroupExpansion` doc comment) — defaults are computed once, at
+   * tree-build time, by `GroupStage.isGroupExpandedByDefault`. The only way
+   * to re-apply them is to have GroupStage rebuild the tree; there's no
+   * separate stored "default" to copy back from.
+   */
   public resetExpansion(): void {
-    this.expandAll(false);
+    _getClientSideRowModel(this.beans)?.refreshModel({ step: 'group' });
   }
 
   public getExpansionState(): RowGroupExpansionState {

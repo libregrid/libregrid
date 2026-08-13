@@ -5,6 +5,7 @@ import {
   type _IRowNodeAggregationStage,
   _getClientSideRowModel,
   _forEachChangedGroupDepthFirst,
+  _getGrandTotalRow,
 } from 'ag-grid-community';
 import type { AgColumn, ChangedPath, ColAggFunc, IAggFunc, RowNode } from 'ag-grid-community';
 
@@ -34,6 +35,7 @@ export class AggregationStage extends BeanStub implements _IRowNodeAggregationSt
     'alwaysAggregateAtRootLevel',
     'suppressAggFilteredOnly',
     'groupAggFiltering',
+    'grandTotalRow',
   ];
 
   public execute(_changedPath: ChangedPath | undefined): void {
@@ -47,7 +49,9 @@ export class AggregationStage extends BeanStub implements _IRowNodeAggregationSt
       | undefined;
     if (valueCols.length === 0 && !getGroupRowAgg) return;
 
-    const alwaysRoot = this.gos.get('alwaysAggregateAtRootLevel') === true;
+    // grandTotalRow needs a root aggregate to display regardless of
+    // alwaysAggregateAtRootLevel — there is nothing else it could show.
+    const alwaysRoot = this.gos.get('alwaysAggregateAtRootLevel') === true || !!_getGrandTotalRow(this.gos);
 
     // Full traversal: after groupStage rebuilds the tree every group node is
     // new, so a changedPath (root-only on load) would skip them. Incremental

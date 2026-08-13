@@ -9,10 +9,11 @@ import type { GroupCellRendererParams, ICellRendererComp } from 'ag-grid-communi
  * then `init(params)`, exactly as it would a consumer's own React/Vue/Angular
  * cell renderer.
  *
- * Supports `suppressCount`, `suppressPadding`, `suppressDoubleClickExpand`
- * and `suppressEnterExpand`. `innerRenderer`/`innerRendererParams`/
- * `innerRendererSelector`, `checkbox` and `totalValueGetter` are not yet
- * implemented — see `docs/parity/row-grouping.md`.
+ * Supports `suppressCount`, `suppressPadding`, `suppressDoubleClickExpand`,
+ * `suppressEnterExpand` and (function form only — the string/expression form
+ * is unsupported) `totalValueGetter`. `innerRenderer`/`innerRendererParams`/
+ * `innerRendererSelector` and `checkbox` are not yet implemented — see
+ * `docs/parity/row-grouping.md`.
  *
  * @feature Row Grouping -> Auto Group Column
  */
@@ -81,10 +82,11 @@ export class GroupCellRenderer implements ICellRendererComp {
   }
 
   private render(): void {
-    const { node, value, suppressPadding, suppressCount } = this.params;
+    const { node, value, suppressPadding, suppressCount, totalValueGetter } = this.params;
     const isExpandable = !!node.group && !!node.childrenAfterGroup?.length;
 
     this.eGui.classList.toggle('lgr-group-cell-expandable', isExpandable);
+    this.eGui.classList.toggle('lgr-group-cell-total', !!node.footer);
     this.eGui.setAttribute('tabindex', isExpandable ? '0' : '-1');
     if (isExpandable) {
       this.eGui.setAttribute('aria-expanded', String(!!node.expanded));
@@ -97,10 +99,19 @@ export class GroupCellRenderer implements ICellRendererComp {
 
     this.eGui.style.paddingLeft = suppressPadding ? '' : `${(node.uiLevel ?? 0) * 16}px`;
 
-    this.eValue.textContent = value == null ? '' : String(value);
+    // A total row's group-column cell shows 'Total' (ag-grid.com documented
+    // default), not the group key — overridable via cellRendererParams.
+    // totalValueGetter (function form only; string/expression form
+    // unsupported).
+    const displayValue = node.footer
+      ? typeof totalValueGetter === 'function'
+        ? totalValueGetter(this.params)
+        : 'Total'
+      : value;
+    this.eValue.textContent = displayValue == null ? '' : String(displayValue);
 
-    const count = node.group ? (node.allChildrenCount ?? node.childrenAfterGroup?.length ?? 0) : 0;
-    const showCount = !suppressCount && node.group && count > 0;
+    const count = !node.footer && node.group ? (node.allChildrenCount ?? node.childrenAfterGroup?.length ?? 0) : 0;
+    const showCount = !suppressCount && count > 0;
     this.eCount.textContent = showCount ? `(${count})` : '';
     this.eCount.style.display = showCount ? '' : 'none';
   }

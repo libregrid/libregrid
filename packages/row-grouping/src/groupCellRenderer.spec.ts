@@ -105,6 +105,27 @@ describe('GroupCellRenderer', () => {
     expect(gui.style.paddingLeft).toBe('');
   });
 
+  it('shows the literal "Total" for a footer row instead of the raw value, with no toggle/count', () => {
+    const renderer = new GroupCellRenderer();
+    const node = makeNode({ footer: true, key: 'US', childrenAfterGroup: null, allChildrenCount: 0 });
+    renderer.init(makeParams({ node, value: 'US' }));
+
+    const gui = renderer.getGui();
+    expect(gui.textContent).toBe('Total');
+    expect(gui.classList.contains('lgr-group-cell-total')).toBe(true);
+    expect(gui.classList.contains('lgr-group-cell-expandable')).toBe(false);
+  });
+
+  it('uses cellRendererParams.totalValueGetter (function form) to label a footer row', () => {
+    const renderer = new GroupCellRenderer();
+    const node = makeNode({ footer: true, key: 'US', childrenAfterGroup: null });
+    const totalValueGetter = vi.fn(() => 'Grand Total');
+    renderer.init(makeParams({ node, value: 'US', totalValueGetter }));
+
+    expect(renderer.getGui().textContent).toBe('Grand Total');
+    expect(totalValueGetter).toHaveBeenCalled();
+  });
+
   it('removes node listeners on destroy', () => {
     const renderer = new GroupCellRenderer();
     const node = makeNode();

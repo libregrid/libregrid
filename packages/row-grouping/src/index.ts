@@ -11,5 +11,8 @@ export { AutoGenColsService } from './autoGenColsService';
 export { ShowRowGroupColsService } from './showRowGroupColsService';
 export { ShowRowGroupColsValueService } from './showRowGroupColsValueService';
 export { ExpansionService } from './expansionService';
+export { GroupSortStage } from './groupSortStage';
+export { FooterService } from './footerService';
+export { ShowValuesAsService } from './showValuesAsService';
 export { GroupCellRenderer } from './groupCellRenderer';
 export { VERSION } from './version';

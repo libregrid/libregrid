@@ -52,4 +52,9 @@ export const groupCellCss = `
   opacity: 0.6;
   font-size: 0.9em;
 }
+
+.lgr-group-cell-total .lgr-group-cell-value {
+  font-weight: 600;
+  font-style: italic;
+}
 `;

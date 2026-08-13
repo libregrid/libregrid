@@ -12,9 +12,9 @@
   "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
   "license": "MIT",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": ["./src/menuItems.ts", "./dist/menuItems.js"],
   "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
-  "dependencies": { "@libregrid/core": "^0.1.0" },
+  "dependencies": { "@libregrid/core": "^0.1.0", "@libregrid/menu": "^0.1.0" },
   "files": ["dist", "NOTICE", "README.md"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
 }

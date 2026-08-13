@@ -1,14 +1,17 @@
 import {
   BeanStub,
   RowNode as RowNodeClass,
+  ROOT_NODE_ID,
+  type AgColumn,
   type GridOptions,
   type _IRowNodeGroupStage,
   type NamedBean,
   type RefreshModelParams,
   _getClientSideRowModel,
   _forEachChangedGroupDepthFirst,
+  _addGridCommonParams,
 } from 'ag-grid-community';
-import type { RowNode } from 'ag-grid-community';
+import type { InitialGroupOrderComparator, IsGroupOpenByDefault, RowNode } from 'ag-grid-community';
 
 export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBean {
   beanName = 'groupStage' as const;
@@ -16,6 +19,8 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
   readonly step = 'group' as const;
   readonly refreshProps: (keyof GridOptions)[] | null = [
     'groupDefaultExpanded',
+    'isGroupOpenByDefault',
+    'initialGroupOrderComparator',
     'groupDisplayType',
     'groupAllowUnbalanced',
     'groupMaintainOrder',
@@ -27,11 +32,21 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
   readonly hasTreeData = false;
   readonly hasRowGrouping = true;
 
+  /**
+   * `id -> group RowNode` for the tree built by the most recent `execute()`.
+   * Backs `getNonLeaf`, which `ClientSideRowModel.getRowNode` falls back to
+   * for any id `nodeManager` doesn't recognise (group nodes never go through
+   * `nodeManager`) — required for `api.getRowNode(GROUP_TOTAL_ROW_ID_PREFIX +
+   * groupId)` to resolve the group a total row belongs to.
+   */
+  private nonLeafsById = new Map<string, RowNode>();
+
   public execute(params: RefreshModelParams): boolean | undefined {
     const csrm = _getClientSideRowModel(this.beans);
     const rootNode = csrm?.rootNode;
     if (!rootNode) return;
 
+    this.nonLeafsById = new Map();
     const svcCols = this.beans.rowGroupColsSvc?.columns ?? [];
     const rowGroupCols =
       svcCols.length > 0
@@ -68,8 +83,8 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
     return [];
   }
 
-  public getNonLeaf(_id: string): RowNode | undefined {
-    return undefined;
+  public getNonLeaf(id: string): RowNode | undefined {
+    return this.nonLeafsById.get(id);
   }
 
   public loadLeafs(node: RowNode): RowNode[] | null {
@@ -92,17 +107,32 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
     if (csrm) csrm.refreshModel({ step: 'group' });
   }
 
-  private isGroupExpandedByDefault(level: number): boolean {
+  /**
+   * `isGroupOpenByDefault`, when provided, takes priority over
+   * `groupDefaultExpanded` — the two are documented as mutually exclusive
+   * (AG Grid docs: "Only one of `groupDefaultExpanded` and
+   * `isGroupOpenByDefault` should be used").
+   */
+  private isGroupExpandedByDefault(
+    rowNode: RowNode,
+    rowGroupColumn: AgColumn,
+    level: number,
+    field: string,
+    key: string,
+  ): boolean {
+    const isOpenByDefault = this.gos.get('isGroupOpenByDefault') as IsGroupOpenByDefault | undefined;
+    if (isOpenByDefault) {
+      return !!isOpenByDefault(
+        _addGridCommonParams(this.gos, { rowNode, rowGroupColumn, level, field, key }),
+      );
+    }
     const defaultExpanded = this.gos.get('groupDefaultExpanded');
     if (defaultExpanded === -1) return true;
     if (typeof defaultExpanded === 'number') return level < defaultExpanded;
     return false;
   }
 
-  private createGroupTree(
-    rootNode: RowNode,
-    rowGroupCols: { getColId: () => string; getColDef: () => { field?: string } }[],
-  ) {
+  private createGroupTree(rootNode: RowNode, rowGroupCols: AgColumn[]) {
     const leafNodes = rootNode.allLeafChildren ?? [];
     const allowUnbalanced = this.gos.get('groupAllowUnbalanced') === true;
 
@@ -148,10 +178,12 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
       }
 
       const groupNodes: RowNode[] = [];
+      const parentId = parentNode?.id ?? ROOT_NODE_ID;
       for (const [key, children] of buckets) {
         const groupNode = new RowNodeClass(this.beans);
         groupNode.group = true;
         groupNode.key = key;
+        groupNode.id = `${parentId}-${colId}-${key}`;
         groupNode.level = level;
         groupNode.uiLevel = level;
         groupNode.rowGroupIndex = level;
@@ -166,7 +198,8 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
         groupNode.sourceRowIndex = -1;
         groupNode.stub = false;
         groupNode.footer = false;
-        groupNode.expanded = this.isGroupExpandedByDefault(level);
+        groupNode.expanded = this.isGroupExpandedByDefault(groupNode, col, level, field, key);
+        this.nonLeafsById.set(groupNode.id, groupNode);
         groupNodes.push(groupNode);
       }
 
@@ -175,6 +208,20 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
         node.level = level;
         node.uiLevel = level;
         groupNodes.push(node);
+      }
+
+      // initialGroupOrderComparator: structural order at tree-build time,
+      // before filtering/aggregation exist to compare on (AG Grid docs:
+      // "executes before filtering and aggregation"). GroupSortStage later
+      // re-derives this same structural order whenever there is no active
+      // column sort at a level.
+      const orderComparator = this.gos.get('initialGroupOrderComparator') as
+        | InitialGroupOrderComparator
+        | undefined;
+      if (orderComparator) {
+        groupNodes.sort((nodeA, nodeB) =>
+          orderComparator(_addGridCommonParams(this.gos, { nodeA, nodeB })),
+        );
       }
 
       for (let i = 0; i < groupNodes.length; i++) {

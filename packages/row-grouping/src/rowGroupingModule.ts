@@ -18,8 +18,12 @@ import { AutoGenColsService } from './autoGenColsService';
 import { ShowRowGroupColsService } from './showRowGroupColsService';
 import { ShowRowGroupColsValueService } from './showRowGroupColsValueService';
 import { ExpansionService } from './expansionService';
+import { GroupSortStage } from './groupSortStage';
+import { FooterService } from './footerService';
+import { ShowValuesAsService } from './showValuesAsService';
 import { GroupCellRenderer } from './groupCellRenderer';
 import { groupCellCss } from './groupCellCss';
+import './menuItems';
 import {
   addRowGroupColumns,
   getRowGroupColumns,
@@ -57,6 +61,9 @@ export const RowGroupingModule: _ModuleWithApi<
     ExpansionService,
     GroupStage,
     GroupFilterStage,
+    GroupSortStage,
+    FooterService,
+    ShowValuesAsService,
     FlattenStage,
     AggregationStage,
     FilterAggregateStage,

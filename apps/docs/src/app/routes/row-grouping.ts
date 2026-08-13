@@ -89,6 +89,24 @@ function makeRows(n: number): Row[] {
         click the chevron (or press <kbd>&#8629;</kbd>) to expand or collapse
         a group.
       </p>
+      <p>
+        Each country's rows sort by <strong>sales</strong> descending —
+        recursively, per level, via <code>GroupSortStage</code> (bean
+        <code>groupSortStage</code>), which Community calls instead of its own
+        <code>sortStage</code> once grouping is active. A <strong>Total</strong>
+        row appears at the bottom of every expanded group
+        (<code>groupTotalRow: 'bottom'</code>) and a grand total row at the
+        very bottom of the grid (<code>grandTotalRow: 'bottom'</code>), both
+        served by <code>FooterService</code> (bean <code>footerSvc</code>).
+      </p>
+      <p>
+        The trailing <strong>% of Total</strong> column reads the same
+        <code>sales</code> field with
+        <code>showValuesAs: 'percentOfGrandTotal'</code> — served by
+        <code>ShowValuesAsService</code> (bean <code>showValuesAsSvc</code>),
+        which transforms each cell's raw value into a share of the grid-wide
+        total independently of the <code>sales</code> column next to it.
+      </p>
     </div>
   `,
 })
@@ -100,12 +118,15 @@ export class RowGroupingDemo {
     { field: 'country', rowGroup: true },
     { field: 'city', rowGroup: true },
     { field: 'product' },
-    { field: 'sales', aggFunc: 'sum' },
+    { field: 'sales', aggFunc: 'sum', sort: 'desc' },
+    { field: 'sales', colId: 'salesShare', headerName: '% of Total', showValuesAs: 'percentOfGrandTotal' },
   ];
 
   protected readonly gridOptions: GridOptions<Row> = {
     defaultColDef: { flex: 1 },
     groupDefaultExpanded: 1,
     autoGroupColumnDef: { headerName: 'Location', minWidth: 220 },
+    groupTotalRow: 'bottom',
+    grandTotalRow: 'bottom',
   };
 }
