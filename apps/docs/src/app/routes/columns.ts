@@ -42,8 +42,8 @@ function makeRows(count: number): Row[] {
       <h1>Columns</h1>
       <p>
         The Columns tool panel synchronizes visibility, row groups, and value
-        columns through the grid's public column APIs. Pivot controls are shown
-        as deliberately inert until Phase 8.
+        columns through the grid's public column APIs, including functional
+        pivot controls.
       </p>
 
       <mat-card appearance="outlined">
@@ -79,7 +79,7 @@ function makeRows(count: number): Row[] {
         Use the checkboxes to change visibility. The Row Groups and Values
         sections offer buttons as a keyboard-accessible alternative to drag and
         drop. The <strong>Column Labels (Pivot)</strong> and
-        <strong>Pivot Mode</strong> sections document their Phase 8 status.
+        <strong>Pivot Mode</strong> sections change the live pivot model.
       </p>
     </div>
   `,
@@ -91,7 +91,7 @@ export class ColumnsDemo {
 
   protected readonly columnDefs: ColDef<Row>[] = [
     { field: 'country', enableRowGroup: true, minWidth: 160 },
-    { field: 'region', enableRowGroup: true, minWidth: 110 },
+    { field: 'region', enableRowGroup: true, enablePivot: true, minWidth: 110 },
     { field: 'product', minWidth: 130 },
     { field: 'sales', enableValue: true, minWidth: 110 },
     { field: 'units', enableValue: true, minWidth: 100 },

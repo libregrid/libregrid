@@ -1,0 +1,16 @@
+{
+  "name": "@libregrid/multi-filter",
+  "version": "0.1.0",
+  "description": "Composable Multi Filter for AG Grid Community — part of LibreGrid",
+  "keywords": ["libregrid", "ag-grid", "data-grid", "multi-filter", "filter"],
+  "homepage": "https://github.com/libregrid/libregrid#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/libregrid/libregrid.git", "directory": "packages/multi-filter" },
+  "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
+  "dependencies": { "@libregrid/core": "^0.1.0", "@libregrid/set-filter": "^0.1.0" },
+  "files": ["dist", "NOTICE", "README.md"],
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+}

@@ -42,6 +42,7 @@
     "@playwright/test": "^1.62.1",
     "@types/node": "^22.10.0",
     "@vitest/coverage-v8": "^4.1.10",
+    "ag-charts-community": "^14.1.0",
     "ag-grid-community": "36.1.0",
     "eslint": "^9.39.5",
     "jsdom": "^25.0.0",

@@ -66,6 +66,12 @@ const CsrmGroupStagesModule: Module = {
   version: VERSION,
 };
 
+/** Declares support for CSRM hierarchy options such as `grandTotalRow`. */
+const CsrmHierarchyModule: Module = {
+  moduleName: 'CsrmHierarchy',
+  version: VERSION,
+};
+
 type ValueColumnApi = Pick<
   _PivotGridApi<unknown>,
   'getValueColumns' | 'addValueColumns' | 'removeValueColumns' | 'setValueColumns'
@@ -103,6 +109,7 @@ export const RowGroupingModule: _ModuleWithApi<
     SharedRowGroupingModule,
     SharedAggregationModule,
     CsrmGroupStagesModule,
+    CsrmHierarchyModule,
   ],
   apiFunctions: {
     addRowGroupColumns,

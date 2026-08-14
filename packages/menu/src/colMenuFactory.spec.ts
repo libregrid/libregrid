@@ -13,9 +13,13 @@ interface PopupOptions {
   positionCallback(): void;
 }
 
-function createColumn(suppressHeaderMenuButton = false, columnMenuItems?: unknown) {
+function createColumn(
+  suppressHeaderMenuButton = false,
+  columnMenuItems?: unknown,
+  overrides: { suppressHeaderFilterButton?: boolean; suppressHeaderContextMenu?: boolean } = {},
+) {
   return {
-    getColDef: () => ({ suppressHeaderMenuButton, columnMenuItems }),
+    getColDef: () => ({ suppressHeaderMenuButton, columnMenuItems, ...overrides }),
     getColId: () => 'athlete',
   };
 }
@@ -111,5 +115,17 @@ describe('ColumnMenuFactory', () => {
     const popup = addPopup.mock.calls[0]?.[0] as PopupOptions;
     popup.positionCallback();
     expect(positionPopupUnderMouseEvent).toHaveBeenCalledWith(expect.objectContaining({ mouseEvent: event }));
+  });
+
+  it('honours header menu, filter-button, and context-menu suppression', () => {
+    const addPopup = vi.fn(() => ({ hideFunc: vi.fn() }));
+    const { bean } = makeBeanHarness(ColumnMenuFactory, {
+      beans: { gridApi: {}, menuItemMapper: { mapItems: vi.fn(() => [{ name: 'Item' }]) } as unknown as MenuItemMapper, popupSvc: { addPopup } },
+    });
+    const source = document.createElement('button');
+    expect(bean.showMenuAfterButtonClick(createColumn(true) as never, source, 'columnMenu')).toBe(false);
+    expect(bean.showMenuAfterButtonClick(createColumn(false, undefined, { suppressHeaderFilterButton: true }) as never, source, 'columnMenu', undefined, { filtersOnly: true })).toBe(false);
+    bean.showMenuAfterContextMenuEvent(createColumn(false, undefined, { suppressHeaderContextMenu: true }) as never, new MouseEvent('contextmenu'));
+    expect(addPopup).not.toHaveBeenCalled();
   });
 });

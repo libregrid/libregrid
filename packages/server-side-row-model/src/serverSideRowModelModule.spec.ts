@@ -16,6 +16,8 @@ import { ServerSideRowModelModule } from './serverSideRowModelModule';
 interface Trade {
   id: string;
   name: string;
+  desk?: string;
+  quantity?: number;
 }
 
 let api: GridApi<Trade> | undefined;
@@ -294,5 +296,139 @@ describe('ServerSideRowModelModule', () => {
     await vi.waitFor(() => expect(requests.filter((request) => request.startRow === 0).length).toBeGreaterThan(1));
     expect(api.getDisplayedRowAtIndex(0)?.isSelected()).toBe(true);
     expect(api.getServerSideSelectionState()).toEqual({ selectAll: false, toggledNodes: ['0'] });
+  });
+
+  it('creates lazy child stores and sends the complete grouping request', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [
+        { field: 'desk', rowGroup: true, hide: true },
+        { field: 'name', sortable: true },
+        { field: 'quantity', aggFunc: 'sum' },
+      ],
+      getRowId: (params) => params.data.id,
+      serverSideDatasource: {
+        getRows(params) {
+          requests.push(params.request);
+          if (params.request.groupKeys.length === 0) {
+            params.success({
+              rowData: [{ desk: 'North', quantity: 13 }, { desk: 'South', quantity: 21 }],
+              rowCount: 2,
+            });
+          } else {
+            params.success({
+              rowData: [{ id: 'north-1', desk: 'North', name: 'Alpha', quantity: 13 }],
+              rowCount: 1,
+            });
+          }
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(requests).toHaveLength(1));
+    expect(requests[0]).toEqual(expect.objectContaining({
+      groupKeys: [],
+      rowGroupCols: [expect.objectContaining({ field: 'desk', id: 'desk' })],
+      valueCols: [expect.objectContaining({ field: 'quantity', aggFunc: 'sum' })],
+      pivotCols: [],
+    }));
+    api.getDisplayedRowAtIndex(0)?.setExpanded(true);
+    await vi.waitFor(() => expect(requests).toContainEqual(expect.objectContaining({ groupKeys: ['North'] })));
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(3));
+    expect(api.getDisplayedRowAtIndex(1)?.data).toEqual(expect.objectContaining({ id: 'north-1', desk: 'North' }));
+  });
+
+  it('does not locally aggregate server-provided group values and installs server pivot columns', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      pivotMode: true,
+      columnDefs: [
+        { field: 'desk', rowGroup: true, hide: true },
+        { field: 'name', pivot: true, hide: true },
+        { field: 'quantity', aggFunc: 'sum' },
+      ],
+      serverSideDatasource: {
+        getRows(params) {
+          requests.push(params.request);
+          params.success({
+            rowData: [{ desk: 'North', quantity: 999, Alpha_sum: 42 }],
+            rowCount: 1,
+            pivotResultFields: ['Alpha_sum'],
+          });
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(requests).toHaveLength(1));
+    expect(requests[0]).toEqual(expect.objectContaining({
+      pivotMode: true,
+      pivotCols: [expect.objectContaining({ field: 'name' })],
+    }));
+    await vi.waitFor(() => expect(api?.getColumn('Alpha_sum')).toBeDefined());
+    // The group row carries the authoritative 999 supplied by the datasource;
+    // SSRM never recomputes this from materialised child rows.
+    expect(api.getDisplayedRowAtIndex(0)?.aggData).toEqual(expect.objectContaining({ quantity: 999, Alpha_sum: 42 }));
+  });
+
+  it('addresses a deep child store by its complete route without duplicate requests', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [
+        { field: 'desk', rowGroup: true, hide: true },
+        { field: 'strategy', rowGroup: true, hide: true },
+        { field: 'name' },
+      ],
+      serverSideDatasource: { getRows(params) {
+        requests.push(params.request);
+        const key = params.request.groupKeys.join('/');
+        if (key === '') params.success({ rowData: [{ desk: 'North' }], rowCount: 1 });
+        else if (key === 'North') params.success({ rowData: [{ strategy: 'Macro' }], rowCount: 1 });
+        else params.success({ rowData: [{ id: 'deep', name: 'Only leaf' }], rowCount: 1 });
+      } },
+    });
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(1));
+    api.getDisplayedRowAtIndex(0)?.setExpanded(true);
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(2));
+    api.getDisplayedRowAtIndex(1)?.setExpanded(true);
+    await vi.waitFor(() => expect(api?.getDisplayedRowAtIndex(2)?.data).toEqual({ id: 'deep', name: 'Only leaf' }));
+    expect(requests.map((request) => request.groupKeys)).toEqual([[], ['North'], ['North', 'Macro']]);
+  });
+
+  it('expands all currently loaded groups without recursively storming unloaded branches', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      ssrmExpandAllAffectsAllRows: true,
+      columnDefs: [{ field: 'desk', rowGroup: true, hide: true }, { field: 'name' }],
+      serverSideDatasource: { getRows(params) {
+        requests.push(params.request);
+        if (params.request.groupKeys.length === 0) params.success({ rowData: [{ desk: 'North' }, { desk: 'South' }], rowCount: 2 });
+        else params.success({ rowData: [{ id: params.request.groupKeys[0], name: 'Leaf' }], rowCount: 1 });
+      } },
+    });
+    await vi.waitFor(() => expect(requests).toHaveLength(1));
+    api.expandAll();
+    await vi.waitFor(() => expect(requests).toHaveLength(3));
+    expect(new Set(requests.slice(1).map((request) => request.groupKeys[0]))).toEqual(new Set(['North', 'South']));
+    // A one-level tree has exactly one request per loaded group: default
+    // expansion never recursively fetches unknown descendants.
+    expect(requests).toHaveLength(3);
   });
 });

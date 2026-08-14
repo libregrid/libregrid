@@ -1,0 +1,1 @@
+{"extends":"../../tsconfig.base.json","compilerOptions":{"outDir":"./dist","rootDir":"./src","paths":{"@libregrid/core":["../core/dist/index.d.ts"],"@libregrid/cell-selection":["../cell-selection/dist/index.d.ts"],"@libregrid/menu":["../menu/dist/index.d.ts"]}},"include":["src/**/*.ts"],"exclude":["**/*.spec.ts"]}

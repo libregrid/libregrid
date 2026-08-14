@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { DragRef, DropListRef } from '@angular/cdk/drag-drop';
 import { EnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -152,7 +153,7 @@ describe('Material columns tool panel drag-drop adapter', () => {
     panel.destroy();
     expect(root.querySelector('.cdk-drop-list')).toBeNull();
     expect(root.querySelector('.cdk-drag')).toBeNull();
-    expect(disposeDropList).toHaveBeenCalledTimes(3);
+    expect(disposeDropList).toHaveBeenCalledTimes(4);
     expect(disposeDrag).toHaveBeenCalledTimes(2);
 
     uninstall();

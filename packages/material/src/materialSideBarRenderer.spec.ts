@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { ApplicationRef, EnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';

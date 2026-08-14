@@ -11,7 +11,7 @@
     },
     "consumer-fixtures": {
       "executor": "nx:run-commands",
-      "dependsOn": ["core:build", "menu:build", "side-bar:build", "material:build", "row-grouping:build", "columns-tool-panel:build", "server-side-row-model:build"],
+      "dependsOn": ["core:build", "menu:build", "side-bar:build", "material:build", "row-grouping:build", "columns-tool-panel:build", "server-side-row-model:build", "pivot:build", "advanced-filter:build", "find:build", "rich-select:build", "integrated-charts:build", "sparklines:build"],
       "options": {
         "command": "node tools/bundle-budgets/consumer-fixtures.mjs"
       }

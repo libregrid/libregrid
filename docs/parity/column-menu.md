@@ -20,8 +20,8 @@
 | Property                     | Status | Notes                                                                                                                                       |
 | ---------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `suppressHeaderMenuButton`   | ✅     | Enforced by the `enterpriseMenuFactory` header integration                                                                                  |
-| `suppressHeaderFilterButton` | 🟡     | Parsed but not enforced in UI                                                                                                               |
-| `suppressHeaderContextMenu`  | 🟡     | Parsed but not enforced in UI                                                                                                               |
+| `suppressHeaderFilterButton` | ✅     | Enforced before opening the header filter popup                                                                                           |
+| `suppressHeaderContextMenu`  | ✅     | Enforced before opening a header context menu                                                                                              |
 | `columnMenuItems`            | ✅     | Takes precedence over `mainMenuItems`                                                                                                       |
 | `mainMenuItems`              | ✅     | Legacy                                                                                                                                      |
 | `columnChooserParams`        | 🟡     | Passed to the shared chooser panel. The supported layout and suppression parameters work. The native DOM overlay does not use PopupService. |

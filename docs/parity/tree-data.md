@@ -1,51 +1,33 @@
 # Parity — Tree Data
 
-**Source:** https://www.ag-grid.com/angular-data-grid/tree-data/ · transcribed 2026-08-11
+**Sources:** [Tree Data](https://www.ag-grid.com/javascript-data-grid/tree-data/) and [Tree Data Row Dragging](https://www.ag-grid.com/javascript-data-grid/tree-data-row-dragging/) · reviewed 2026-08-13
 **Phase:** 10 · **Package:** `@libregrid/tree-data`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)
 
 ## Grid Options
 
-| Option | Type | Default | Status | Notes |
-|---|---|---|---|---|
-| `treeData` | `boolean` | `false` | ⬜ | |
-| `getDataPath` | `GetDataPath` | — | ⬜ | Source shape 1: path array |
-| `treeDataChildrenField` | `string` | — | ⬜ | Source shape 2: nested children |
-| `treeDataParentIdField` | `string` | — | ⬜ | Source shape 3: flat + parent id |
-| `treeDataDisplayType` | `'auto' \| 'custom'` | — | ⬜ | |
-| `autoGroupColumnDef` | `AutoGroupColumnDef` | — | ⬜ | Shared with Phase 2 |
-| `groupDefaultExpanded` | `number` | `0` | ⬜ | |
-| `isGroupOpenByDefault` | callback | — | ⬜ | |
-| `suppressGroupRowsSticky` | `boolean` | `false` | ⬜ | |
-
-## Callbacks
-
-| Callback | Status | Notes |
+| Option | Status | Notes |
 |---|---|---|
-| `getDataPath` | ⬜ | |
-| `isGroupOpenByDefault` | ⬜ | |
-
-## Interfaces
-
-| Interface | Status | Notes |
-|---|---|---|
-| `NestedDataGetter` | ⬜ | For `treeDataChildrenField` |
+| `treeData` | ✅ | Activates the shared GroupStage tree branch |
+| `getDataPath` | ✅ | Path-array source with deterministic filler nodes |
+| `treeDataChildrenField` | ✅ | Nested child-array source, including dotted fields |
+| `treeDataParentIdField` | ✅ | Parent-pointer source with cycle-safe fallback |
+| `treeDataDisplayType` | ✅ | Consumed by Community’s shared display layer |
+| `autoGroupColumnDef` | ✅ | Shared Phase 2 auto-group column |
+| `groupDefaultExpanded` / `isGroupOpenByDefault` | ✅ | Tree defaults/callback use the shared expansion service |
+| `suppressGroupRowsSticky` | ✅ | Consumed by Community sticky-row rendering |
 
 ## Behaviour
 
 | Requirement | Status | Notes |
 |---|---|---|
-| All three source shapes yield identical trees | ⬜ | **Gate criterion** |
-| Aggregation over tree nodes | ⬜ | Reuses Phase 2 `aggStage` |
-| Filtering retains ancestor chains | ⬜ | |
-| **Managed row dragging — reparent** | ⬜ | v34 feature |
-| **Managed row dragging — reorder** | ⬜ | |
-| **Leaf → group conversion on drop** | ⬜ | v34 feature |
-| Reparenting preserves expansion state | ⬜ | |
-| Reparenting re-aggregates | ⬜ | |
-| Missing intermediate path nodes → filler nodes | ⬜ | e.g. `['a','b','c']` with no `['a','b']` |
-| Cyclic parent references fail gracefully | ⬜ | Must not hang |
-| Tree data + master/detail combined | ⬜ | v34.1 feature |
-| `aria-level` / `aria-expanded` on tree rows | ⬜ | |
-
-> The docs page listed no ColDef properties, API methods or events. Verify against the live docs when working Phase 10.
+| All three source shapes yield identical trees | ✅ | Gate-tested with equivalent two-level trees |
+| Aggregation over tree nodes | ✅ | Reuses Phase 2 `aggStage` |
+| Filtering retains ancestor chains | ✅ | Community hierarchical filter operates on the shared parent links |
+| Managed reparent/reorder | ✅ | Managed drops mutate paths, child arrays, or parent IDs then rebuild |
+| Leaf → group conversion | ✅ | Dropping onto a leaf makes it the parent of the moved row |
+| Reparenting preserves expansion and re-aggregates | ✅ | Deterministic IDs and a group-stage refresh |
+| Missing intermediates | ✅ | Filler nodes are generated for partial paths |
+| Cyclic parents fail gracefully | ✅ | Warning plus accessible root placement; no traversal loop |
+| Tree Data + Master/Detail | ✅ | `/master-detail` runs both modes |
+| `aria-level` / `aria-expanded` | ✅ | Shared group-cell renderer semantics |

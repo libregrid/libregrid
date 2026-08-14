@@ -18,6 +18,12 @@ const packages = [
   'row-grouping',
   'columns-tool-panel',
   'server-side-row-model',
+  'pivot',
+  'advanced-filter',
+  'find',
+  'rich-select',
+  'integrated-charts',
+  'sparklines',
 ];
 const packageName = (name) => `@libregrid/${name}`;
 
@@ -40,7 +46,7 @@ for (const name of packages) {
     minify: true,
     metafile: true,
     write: false,
-    external: ['ag-grid-community', '@angular/*'],
+    external: ['ag-grid-community', 'ag-charts-community', '@angular/*'],
     plugins: [
       {
         name: 'workspace-packages',

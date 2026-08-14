@@ -1,0 +1,9 @@
+{
+  "name": "multi-filter",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:framework-neutral"],
+  "targets": {
+    "build": { "executor": "nx:run-commands", "options": { "command": "tsc -p tsconfig.lib.json", "cwd": "packages/multi-filter" } },
+    "test": { "executor": "nx:run-commands", "options": { "command": "vitest run packages/multi-filter" } }
+  }
+}

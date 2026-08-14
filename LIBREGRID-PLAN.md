@@ -144,7 +144,7 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 
 - [ ] **Phase 11 — Advanced filter, find & rich select** · [`phases/phase-11-advanced-filter-find.md`](docs/phases/phase-11-advanced-filter-find.md)
 
-- [ ] **Phase 12 — Integrated charts & sparklines** · [`phases/phase-12-charts.md`](docs/phases/phase-12-charts.md)
+- [x] **Phase 12 — Integrated charts & sparklines** · [`phases/phase-12-charts.md`](docs/phases/phase-12-charts.md)
       On `ag-charts-community` (MIT).
 
 - [ ] **Phase 13 — Long tail & 1.0 hardening** · [`phases/phase-13-hardening.md`](docs/phases/phase-13-hardening.md)

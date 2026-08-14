@@ -99,13 +99,27 @@ test.describe('Columns Tool Panel', () => {
     await expect(page.locator('.ag-row[aria-expanded]').first()).toBeVisible();
   });
 
-  test('shows inert pivot controls and filters the column list', async ({ page }) => {
+  test('enables pivoting from the tool panel and accepts a pivot column', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Column Labels (Pivot)' })).toBeVisible();
-    await expect(page.getByText('Available in Phase 8').first()).toBeVisible();
+    await page.getByRole('button', { name: 'Add pivot Region' }).click();
+    await expect(page.getByRole('button', { name: 'Remove Region from pivots' })).toBeVisible();
+    await page.getByRole('checkbox', { name: 'Enable pivot mode' }).check();
+    await expect(page.locator('.ag-header-group-cell')).toBeVisible();
     const search = page.getByRole('searchbox', { name: 'Search columns' });
     await search.fill('Sales');
     await expect(page.getByRole('checkbox', { name: 'Show Sales' })).toBeVisible();
     await expect(page.getByRole('checkbox', { name: 'Show Country' })).not.toBeVisible();
+  });
+
+  test('adds an eligible column dropped into the Pivot zone', async ({ page }) => {
+    const region = page.getByRole('treeitem').filter({
+      has: page.getByRole('checkbox', { name: 'Show Region' }),
+    });
+    const pivots = page.locator(".lgr-columns-drop-zone[aria-label='Drop columns into Column Labels (Pivot)']");
+    await dropColumn(region, pivots);
+    await expect(pivots.getByRole('button', { name: 'Remove Region from pivots' })).toBeVisible();
+    await page.getByRole('checkbox', { name: 'Enable pivot mode' }).check();
+    await expect(page.locator('.ag-header-group-cell')).toBeVisible();
   });
 
   test('opens and closes the shared column chooser', async ({ page }) => {

@@ -51,7 +51,7 @@ describe('RowGroupingPanel', () => {
     const builder = new RowGroupPanelBuilder();
 
     expect(builder.createRowGroupDropZone(true)).toBeInstanceOf(RowGroupDropZone);
-    expect(builder.createPivotDropZone(false).getGui().textContent).toContain('Pivot available in Phase 8');
+    expect(builder.createPivotDropZone(false).getGui().getAttribute('aria-label')).toBe('Column Labels (Pivot)');
   });
 
   it('uses guarded public APIs to remove, reorder, and add eligible group columns', () => {

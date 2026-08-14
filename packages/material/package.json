@@ -25,6 +25,7 @@
     "@libregrid/core": "^0.1.0",
     "@libregrid/menu": "^0.1.0",
     "@libregrid/side-bar": "^0.1.0"
+    ,"@libregrid/rich-select": "^0.1.0"
   },
   "files": ["dist", "NOTICE", "README.md"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }

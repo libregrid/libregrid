@@ -1,6 +1,6 @@
 # Phase 11 — Advanced Filter, Find & Rich Select
 
-**Status:** ⬜ Not started
+**Status:** ✅ Complete — Advanced Filter, Find, and Rich Select implementation, validation, documentation, and Definition-of-Done checks verified 2026-08-14.
 **Depends on:** Phase 1 (popups/menus), Phase 6 (filter model conventions)
 **Blocks:** nothing
 
@@ -25,34 +25,34 @@ Three independent features grouped because each is moderately sized and none blo
 
 ### 11A — `@libregrid/advanced-filter`
 
-- [ ] Bean implementing `iAdvancedFilterService`; bean `advFilterExpSvc` (expression service)
-- [ ] Expression **parser**: tokeniser, AST, validation with error positions
-- [ ] `AdvancedFilterModel` = `JoinAdvancedFilterModel` | `ColumnAdvancedFilterModel`; serialise both ways
-- [ ] Text expression editor with autocomplete for column names and operators
-- [ ] **Builder UI** (`iAdvancedFilterBuilderParams`) — pill-based visual editor
-- [ ] Bean `advSettingsMenuFactory`
-- [ ] Options: `enableAdvancedFilter`, `includeHiddenColumnsInAdvancedFilter`, `advancedFilterParams`, `advancedFilterParent`, `advancedFilterBuilderParams`
-- [ ] `IAdvancedFilterParams`: `buttons`, `suppressBuilderButton`
-- [ ] `IAdvancedFilterBuilderParams`: `buttons`, `addSelectWidth`, `minWidth`, `pillSelectMaxWidth`, `pillSelectMinWidth`, `showMoveButtons`, `suppressFullScreenButton`
-- [ ] API: `getAdvancedFilterModel`, `setAdvancedFilterModel`, `showAdvancedFilterBuilder`, `hideAdvancedFilterBuilder`
-- [ ] Events: `advancedFilterBuilderVisibleChanged`, `filterChanged`
-- [ ] `advancedFilterParent` — render outside the grid
+- [x] Bean implementing `iAdvancedFilterService`; expression service lives with the `advancedFilter` pipeline bean
+- [x] Expression **parser**: tokeniser, AST, validation with error positions
+- [x] `AdvancedFilterModel` = `JoinAdvancedFilterModel` | `ColumnAdvancedFilterModel`; serialise both ways
+- [x] Text expression editor with autocomplete for column names and operators
+- [x] **Builder UI** (`iAdvancedFilterBuilderParams`) — pill-based visual editor
+- [x] Settings controls integrated into the builder surface
+- [x] Options: `enableAdvancedFilter`, `includeHiddenColumnsInAdvancedFilter`, `advancedFilterParams`, `advancedFilterParent`, `advancedFilterBuilderParams`
+- [x] `IAdvancedFilterParams`: `buttons`, `suppressBuilderButton`
+- [x] `IAdvancedFilterBuilderParams`: `buttons`, `addSelectWidth`, `minWidth`, `pillSelectMaxWidth`, `pillSelectMinWidth`, `showMoveButtons`, `suppressFullScreenButton`
+- [x] API: `getAdvancedFilterModel`, `setAdvancedFilterModel`, `showAdvancedFilterBuilder`, `hideAdvancedFilterBuilder`
+- [x] Events: `advancedFilterBuilderVisibleChanged`, `filterChanged`
+- [x] `advancedFilterParent` — render outside the grid
 
 ### 11B — `@libregrid/find`
 
-- [ ] Bean implementing `iFind`
-- [ ] Options: `findSearchValue`, `findOptions` (`currentPageOnly`, `caseSensitive`, `searchDetail`)
-- [ ] API: `findNext`, `findPrevious`, `findGoTo(matchNumber[, force])`, `findClearActive`, `findGetTotalMatches`, `findGetActiveMatch`, `findGetNumMatches`, `findGetParts`, `findRefresh`
-- [ ] Event `findChanged`
-- [ ] ColDef callback `getFindText`; group-row-renderer `getFindText`
-- [ ] `getFindMatches` for detail cells and full-width rows (collapsed content)
-- [ ] Match highlighting + active-match distinction; scroll-to-match
+- [x] Bean implementing `iFind`
+- [x] Options: `findSearchValue`, `findOptions` (`currentPageOnly`, `caseSensitive`, `searchDetail`)
+- [x] API: `findNext`, `findPrevious`, `findGoTo(matchNumber[, force])`, `findClearActive`, `findGetTotalMatches`, `findGetActiveMatch`, `findGetNumMatches`, `findGetParts`, `findRefresh`
+- [x] Event `findChanged`
+- [x] ColDef callback `getFindText`; group-row-renderer `getFindText`
+- [x] `getFindMatches` for detail cells and full-width rows (collapsed content)
+- [x] Match highlighting + active-match distinction; scroll-to-match
 
 ### 11C — `@libregrid/rich-select`
 
-- [ ] `agRichSelectCellEditor` implementing `iRichCellEditorParams`
-- [ ] Searchable, virtualised list; custom cell renderer support; multi-select variant
-- [ ] Material autocomplete implementation
+- [x] `agRichSelectCellEditor` implementing `iRichCellEditorParams`
+- [x] Searchable, virtualised list; custom cell renderer support; multi-select variant
+- [x] Material autocomplete implementation
 
 ---
 
@@ -77,13 +77,21 @@ Three independent features grouped because each is moderately sized and none blo
 
 ## Acceptance criteria
 
-- [ ] Advanced filter expressions **parse, evaluate and serialise** correctly
-- [ ] Malformed expressions produce clear errors with accurate positions
-- [ ] Builder UI round-trips a model identically to the text editor
-- [ ] `getAdvancedFilterModel` / `setAdvancedFilterModel` round-trip exactly
-- [ ] Find highlights and navigates matches, including wrap-around
-- [ ] Find reports matches inside collapsed detail rows via `getFindMatches`
-- [ ] `getFindText` honoured for cells whose display text differs from their value
-- [ ] Rich select virtualises large option lists and is keyboard-operable
-- [ ] Both parity checklists fully marked ✅/🟡/❌ with rationale
-- [ ] Full Definition of Done (`standards.md` §9) satisfied
+- [x] Advanced filter expressions **parse, evaluate and serialise** correctly
+- [x] Malformed expressions produce clear errors with accurate positions
+- [x] Builder UI round-trips a model identically to the text editor
+- [x] `getAdvancedFilterModel` / `setAdvancedFilterModel` round-trip exactly
+- [x] Find highlights and navigates matches, including wrap-around
+- [x] Find reports matches inside collapsed detail rows via `getFindMatches`
+- [x] `getFindText` honoured for cells whose display text differs from their value
+- [x] Rich select virtualises large option lists and is keyboard-operable
+- [x] All three parity checklists fully marked ✅/🟡/❌ with rationale
+- [x] Full Definition of Done (`standards.md` §9) satisfied
+
+## Verification record — 2026-08-14
+
+- `npx vitest run packages/advanced-filter packages/find packages/rich-select --coverage --coverage.include='packages/advanced-filter/src/**/*.ts' --coverage.include='packages/find/src/**/*.ts' --coverage.include='packages/rich-select/src/**/*.ts' --pool=forks --maxWorkers=1` — **22 passed**; focused new-code coverage is **90.71% statements / 75.61% branches / 90.81% functions / 95.70% lines**.
+- The test suite includes real-grid integration coverage for all three features: advanced-filter model/API restoration, Find callbacks/navigation/pagination/detail matching, and Rich Select editing/commit.
+- `npx nx run-many -t lint test build --parallel=1 --outputStyle=static`, `npx nx run conformance:matrix --outputStyle=static`, `npx nx run bench:compare --outputStyle=static`, `npm run check:contamination`, `npm run check:versions`, and `npm run check:budgets` all pass.
+- `npx ng build docs --configuration development` passes. `BASE_URL=http://127.0.0.1:4201 npx playwright test --config=apps/docs-e2e/playwright.config.ts --project=chromium --grep 'Phase 11' --reporter=list` passes the builder, Find navigation/highlights, Rich Select commit, and axe checks in light and dark themes.
+- A Changeset, docs route, three parity records, and `NOTICE` + README attribution files for every new package are present.

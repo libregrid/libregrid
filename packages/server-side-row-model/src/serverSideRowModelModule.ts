@@ -7,7 +7,10 @@ import {
   type ServerSideTransactionResult,
 } from 'ag-grid-community';
 import { EnterpriseCoreModule } from '@libregrid/core';
+import { RowGroupingModule } from '@libregrid/row-grouping';
+import { PivotModule } from '@libregrid/pivot';
 import { ServerSideLoadingCellRenderer, ServerSideRowModel } from './serverSideRowModel';
+import { SsrmExpandListener, SsrmFilterListener, SsrmListenerUtils, SsrmSortService } from './ssrmListeners';
 import { VERSION } from './version';
 
 function refreshServerSide(beans: Parameters<typeof _getServerSideRowModel>[0]): void {
@@ -53,7 +56,7 @@ function applyServerSideTransaction(
   beans: Parameters<typeof _getServerSideRowModel>[0],
   transaction: ServerSideTransaction,
 ): ServerSideTransactionResult<unknown> | undefined {
-  return _getServerSideRowModel(beans)?.applyTransaction(transaction);
+  return (_getServerSideRowModel(beans) as ServerSideRowModel | undefined)?.applyTransaction(transaction);
 }
 
 function applyServerSideTransactionAsync(
@@ -61,22 +64,22 @@ function applyServerSideTransactionAsync(
   transaction: ServerSideTransaction,
   callback?: (result: ServerSideTransactionResult<unknown>) => void,
 ): void {
-  _getServerSideRowModel(beans)?.applyTransactionAsync(transaction, callback);
+  ( _getServerSideRowModel(beans) as ServerSideRowModel | undefined)?.applyTransactionAsync(transaction, callback);
 }
 
 function flushServerSideAsyncTransactions(beans: Parameters<typeof _getServerSideRowModel>[0]): void {
-  _getServerSideRowModel(beans)?.flushAsyncTransactions();
+  (_getServerSideRowModel(beans) as ServerSideRowModel | undefined)?.flushAsyncTransactions();
 }
 
 function getServerSideSelectionState(beans: Parameters<typeof _getServerSideRowModel>[0]) {
-  return _getServerSideRowModel(beans)?.getSelectionState() ?? null;
+  return (_getServerSideRowModel(beans) as ServerSideRowModel | undefined)?.getSelectionState() ?? null;
 }
 
 function setServerSideSelectionState(
   beans: Parameters<typeof _getServerSideRowModel>[0],
   state: IServerSideSelectionState,
 ): void {
-  _getServerSideRowModel(beans)?.setSelectionState(state);
+  (_getServerSideRowModel(beans) as ServerSideRowModel | undefined)?.setSelectionState(state);
 }
 
 /**
@@ -93,9 +96,11 @@ const ServerSideRowModelCoreModule = {
   version: VERSION,
   enterprise: true,
   rowModels: ['serverSide' as const],
-  beans: [ServerSideRowModel],
+  beans: [ServerSideRowModel, SsrmListenerUtils, SsrmFilterListener, SsrmSortService, SsrmExpandListener],
   userComponents: { agLoadingCellRenderer: ServerSideLoadingCellRenderer },
-  dependsOn: [EnterpriseCoreModule],
+  // SSRM requests describe the same analytical column state as these modules.
+  // They provide column services only; aggregation remains wholly server-side.
+  dependsOn: [EnterpriseCoreModule, RowGroupingModule, PivotModule],
 };
 
 const apiFunctions = {

@@ -1,7 +1,7 @@
 # Phase 13 — Long Tail & 1.0 Hardening
 
 **Status:** ⬜ Not started
-**Depends on:** Phases 0–12 all complete
+**Depends on:** Phases 0–4 and 6–12 complete; Phase 5 is optional and is not a 1.0 prerequisite
 **Blocks:** the 1.0.0 release
 
 **Packages:** `@libregrid/angular`, `@libregrid/all`, plus long-tail additions
@@ -35,6 +35,8 @@ The long-tail features here are genuinely optional. Ship them if the audit is cl
 - [ ] Toolbar (`iToolbar`, bean `toolbarMenuBuilder`) — hosts Find and pivot-panel items
 - [ ] `testIdSvc` (`iTestIdService`) — test IDs for consumer test suites
 - [ ] PDF export (`iPdfCreator`) — **only if warranted**; otherwise document as out of scope
+- [ ] Columns-panel header-area drag target, custom drag-image component, and in-panel function-member reordering — only if the Phase 13 parity audit justifies their interaction and bundle cost
+- [ ] `rowGroupPanelSuppressSort` — only alongside a real row-group sorting surface
 
 ### 13B — `@libregrid/angular`
 

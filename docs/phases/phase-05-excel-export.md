@@ -1,11 +1,20 @@
 # Phase 5 — Excel Export
 
-**Status:** ⬜ Not started
-**Depends on:** Phase 2 (grouped-row export needs outlines), Phase 4 (range-scoped export)
-**Blocks:** nothing
+**Status:** ⏸️ Optional / deferred — intentionally held until all non-optional roadmap work is complete. It does not block 1.0.
+**Depends on:** Phase 2 (grouped-row export needs outlines), Phase 4 (range-scoped export); scheduling resumes only after Phases 4 and 8–13 are otherwise complete.
+**Blocks:** nothing — Excel Export is an opt-in post-core investment.
 
 **Package:** `@libregrid/excel-export` (`moduleName: 'ExcelExport'`)
 **Parity:** [`../parity/excel-export.md`](../parity/excel-export.md)
+
+> ## Scheduling decision — 2026-08-13
+>
+> Excel Export is optional. Do not begin this phase while any non-optional
+> roadmap phase remains unfinished. Its large OOXML implementation cost and
+> manual consumer-validation matrix are intentionally deferred until the core
+> product is complete. This decision also removes Phase 5 from the 1.0 gate;
+> it remains available as a documented post-core phase if the project elects
+> to fund it later.
 
 ---
 

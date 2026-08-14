@@ -6,8 +6,23 @@ import { EnterpriseCoreModule } from '@libregrid/core';
 import { ContextMenuModule, ColumnMenuModule } from '@libregrid/menu';
 import { SideBarModule } from '@libregrid/side-bar';
 import { RowGroupingModule } from '@libregrid/row-grouping';
+import { PivotModule } from '@libregrid/pivot';
 import { ServerSideRowModelModule } from '@libregrid/server-side-row-model';
+import { ViewportRowModelModule } from '@libregrid/viewport-row-model';
+import { TreeDataModule } from '@libregrid/tree-data';
+import { MasterDetailModule } from '@libregrid/master-detail';
 import { ColumnsToolPanelModule, RowGroupingPanelModule } from '@libregrid/columns-tool-panel';
+import { SetFilterModule } from '@libregrid/set-filter';
+import { MultiFilterModule } from '@libregrid/multi-filter';
+import { FiltersToolPanelModule } from '@libregrid/filters-tool-panel';
+import { CellSelectionModule } from '@libregrid/cell-selection';
+import { ClipboardModule } from '@libregrid/clipboard';
+import { StatusBarModule } from '@libregrid/status-bar';
+import { AdvancedFilterModule } from '@libregrid/advanced-filter';
+import { FindModule } from '@libregrid/find';
+import { RichSelectModule } from '@libregrid/rich-select';
+import { IntegratedChartsModule } from '@libregrid/integrated-charts';
+import { SparklinesModule } from '@libregrid/sparklines';
 import { provideLibreGridMaterialTheme } from '@libregrid/material';
 
 import { App } from './app/app';
@@ -34,9 +49,31 @@ ModuleRegistry.registerModules([
   RowGroupingModule,
   // Phase 7
   ServerSideRowModelModule,
+  // Phase 9
+  ViewportRowModelModule,
+  // Phase 10
+  TreeDataModule,
+  MasterDetailModule,
+  // Phase 8
+  PivotModule,
   // Phase 3
   ColumnsToolPanelModule,
   RowGroupingPanelModule,
+  // Phase 6
+  SetFilterModule,
+  MultiFilterModule,
+  FiltersToolPanelModule,
+  // Phase 4
+  CellSelectionModule,
+  ClipboardModule,
+  StatusBarModule,
+  // Phase 11
+  AdvancedFilterModule,
+  FindModule,
+  RichSelectModule,
+  // Phase 12
+  IntegratedChartsModule,
+  SparklinesModule,
 ]);
 
 bootstrapApplication(App, {

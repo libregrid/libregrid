@@ -23,7 +23,9 @@ export default defineConfig({
   webServer: {
     command: `NX_DAEMON=false NX_ISOLATE_PLUGINS=false npx nx serve docs --port=${port}`,
     url: baseURL,
-    reuseExistingServer: false,
+    // Local validation may already have a docs server running; CI still
+    // starts an isolated server for deterministic results.
+    reuseExistingServer: !process.env['CI'],
     timeout: 60_000,
   },
 });

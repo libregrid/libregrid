@@ -7,7 +7,8 @@
       "@libregrid/columns-tool-panel": ["../columns-tool-panel/dist/index.d.ts"],
       "@libregrid/core": ["../core/dist/index.d.ts"],
       "@libregrid/menu": ["../menu/dist/index.d.ts"],
-      "@libregrid/side-bar": ["../side-bar/dist/index.d.ts"]
+      "@libregrid/side-bar": ["../side-bar/dist/index.d.ts"],
+      "@libregrid/rich-select": ["../rich-select/dist/index.d.ts"]
     }
   },
   "include": ["src/**/*.ts"],

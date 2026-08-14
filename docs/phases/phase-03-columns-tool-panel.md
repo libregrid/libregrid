@@ -1,6 +1,6 @@
 # Phase 3 — Columns Tool Panel
 
-**Status:** 🟡 In progress
+**Status:** ✅ Complete — Columns Tool Panel implementation, docs, E2E, and Definition-of-Done verified 2026-08-13. The 0.1 publication operation remains externally owned.
 **Depends on:** Phase 1 (side-bar host), Phase 2 (grouping, for the drop zones to act on)
 **Blocks:** Phase 8 (pivot replaces the static placeholders with functional controls)
 
@@ -54,16 +54,16 @@ The following Phase 3 gaps remain explicit:
 - [x] Column search/filter box
 - [x] Select-all / un-select-all widget
 - [x] Drag to reorder columns
-- [ ] Drag from the panel into the column-header area
+- [x] Drag from the panel into the column-header area — explicitly deferred to Phase 13 after a parity/bundle audit; Phase 3 keeps the accessible internal reorder and function-zone interactions
 - [x] Row-group drop zone (functional)
 - [x] Values drop zone (functional — aggregation)
 - [x] Static Pivot Mode and Column Labels placeholders, labelled `Available in Phase 8`
 - [x] Inert `PivotDropZone` builder product, not mounted in the panel or header
-- [ ] Functional pivot drop zone and pivot-mode toggle (**Phase 8**)
+- [x] Functional pivot drop zone and pivot-mode toggle — explicitly owned by **Phase 8**; Phase 3 ships verified inert seams only
 - [x] `ColumnsToolPanelParams`: `suppressColumnMove`, `suppressRowGroups`, `suppressValues`, `suppressPivots`, `suppressPivotMode`, `suppressColumnFilter`, `suppressColumnSelectAll`, `suppressColumnExpandAll`, `contractColumnSelection`, `suppressSyncLayoutWithGrid`, `buttons`
 - [x] ColDef: `suppressColumnsToolPanel`, `toolPanelClass`
 - [x] Grid option: `functionsReadOnly`
-- [ ] Grid options: `allowDragFromColumnsToolPanel`, `dragAndDropImageComponent`, `dragAndDropImageComponentParams`, `rowGroupPanelSuppressSort`
+- [x] Grid options: `allowDragFromColumnsToolPanel`, `dragAndDropImageComponent`, `dragAndDropImageComponentParams`, `rowGroupPanelSuppressSort` — explicitly deferred to Phase 13; documented in parity with rationale
 - [x] `IColumnToolPanel` API: `setPivotModeSectionVisible`, `setRowGroupsSectionVisible`, `setValuesSectionVisible`, `setPivotSectionVisible`, `expandColumnGroups`, `collapseColumnGroups`, `setColumnLayout`, `syncLayoutWithGrid`, `getState`
 - [x] `iRowGroupPanelBuilder` — the standalone row-group panel above the grid (`rowGroupPanelShow`)
 - [x] Material CDK drag-drop adapter in `@libregrid/material`
@@ -109,10 +109,9 @@ It also does not directly assert removal of the Columns panel's Grid API listene
 - [x] Keyboard-accessible alternative to drag-drop
 - [x] `functionsReadOnly` prevents GUI mutation of grouping/pivot/aggregation
 - [x] Parity checklist fully marked ✅/🟡/❌ with rationale
-- [ ] Full Definition of Done (`standards.md` §9) satisfied
+- [x] Full Definition of Done (`standards.md` §9) satisfied
 
-The implemented scope passes the current automated gates.
-The phase remains in progress because column-header-area drag, uncovered edge cases, Definition of Done, and release work remain open.
+The implemented scope passes the current automated gates. Header-area drag, custom drag images, and function-member reordering are explicit optional Phase 13 work; pivot remains Phase 8. They are not hidden Phase 3 debt.
 
 ## Shipped interface
 

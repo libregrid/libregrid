@@ -185,7 +185,16 @@ export class ValueColsService extends BeanStub implements IValueColsService, Nam
   private resolve(key: ColKey | null | undefined): AgColumn | undefined {
     if (key == null) return undefined;
     const colId = typeof key === 'string' ? key : (key as AgColumn).getColId?.();
-    return this.beans.colModel.getCols().find((c) => c.getColId() === colId);
+    // Pivot mode parks primary columns from `getCols()`; values must remain
+    // mutable through their stable primary column IDs. The fallback maintains
+    // compatibility with lightweight column-model adapters.
+    const colModel = this.beans.colModel as unknown as {
+      getAllCols?: () => AgColumn[];
+      getCols?: () => AgColumn[];
+    };
+    return (colModel.getAllCols?.() ?? colModel.getCols?.() ?? []).find(
+      (column) => column.getColId() === colId,
+    );
   }
 
   private activate(col: AgColumn): void {

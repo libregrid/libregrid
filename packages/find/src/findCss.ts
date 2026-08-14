@@ -1,0 +1,1 @@
+export const findCss = `.lgr-find-match{background:var(--ag-find-match-background-color,#ffe082);color:inherit}.lgr-find-match-active{background:var(--ag-find-active-match-background-color,#ff9800);outline:1px solid currentColor}`;

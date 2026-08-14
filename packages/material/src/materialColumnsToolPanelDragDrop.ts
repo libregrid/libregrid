@@ -17,7 +17,7 @@ interface ColumnDragData {
 }
 
 interface DropListData {
-  kind: 'source' | 'group' | 'value';
+  kind: 'source' | 'group' | 'value' | 'pivot';
 }
 
 interface PendingMove {
@@ -79,7 +79,7 @@ export function createMaterialColumnsToolPanelDragDropAdapter(
         root.querySelectorAll<HTMLElement>('.lgr-columns-drop-zone'),
       ).flatMap((element): DropListRef<DropListData>[] => {
         const kind = element.dataset['functionKind'];
-        if (kind !== 'group' && kind !== 'value') return [];
+        if (kind !== 'group' && kind !== 'value' && kind !== 'pivot') return [];
         const target = createDropListRef<DropListData>(environmentInjector, element);
         target.data = { kind };
         target.sortingDisabled = true;
@@ -102,7 +102,8 @@ export function createMaterialColumnsToolPanelDragDropAdapter(
           const element = target.element instanceof HTMLElement
             ? target.element
             : target.element.nativeElement;
-          clickButton(element, `${target.data.kind === 'group' ? 'Group by' : 'Add value'} ${item.data.name}`);
+          const action = target.data.kind === 'group' ? 'Group by' : target.data.kind === 'value' ? 'Add value' : 'Add pivot';
+          clickButton(element, `${action} ${item.data.name}`);
         })),
       ];
 

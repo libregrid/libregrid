@@ -5,6 +5,8 @@ import {
   _getRowHeightAsNumber,
   _getRowIdCallback,
   _getSortModel,
+  type AgColumn,
+  type ColumnVO,
   type IRowNode,
   type IServerSideDatasource,
   type IServerSideRowModel,
@@ -19,6 +21,18 @@ import {
   type ServerSideTransactionResult,
   type ServerSideGroupLevelState,
 } from 'ag-grid-community';
+
+interface HierarchicalStore {
+  route: string[];
+  parentNode: RowNode;
+  rows: RowNode[];
+  loading: boolean;
+  failed: boolean;
+  generation: number;
+  rowCount: number;
+}
+
+type SsrmNode = RowNode & { __lgrSsrmRoute?: string[]; __lgrSsrmStore?: HierarchicalStore };
 
 type PartialBlockState = 'waiting' | 'loading' | 'loaded' | 'failed';
 
@@ -60,7 +74,7 @@ export class ServerSideLoadingCellRenderer {
 export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSideRowModel<unknown> {
   public beanName = 'rowModel' as const;
   public rootNode: RowNode | null = null;
-  public readonly hierarchical = false;
+  public get hierarchical(): boolean { return this.isHierarchical(); }
 
   private datasource: IServerSideDatasource<unknown> | undefined;
   private rows: RowNode[] = [];
@@ -77,18 +91,27 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
   private inFlightBlockLoads = 0;
   private selectionState: IServerSideSelectionState = { selectAll: false, toggledNodes: [] };
   private selectionUpdateInProgress = false;
+  private readonly selectedGroupRoutes = new Map<string, boolean>();
   private readonly asyncTransactions: Array<{
     transaction: ServerSideTransaction<unknown>;
     callback?: (result: ServerSideTransactionResult<unknown>) => void;
   }> = [];
   private asyncTransactionTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly hierarchyStores = new Map<string, HierarchicalStore>();
+  private expandAllDefault: boolean | undefined;
+  private readonly expandedRoutes = new Set<string>();
 
   public postConstruct(): void {
     this.rootNode = this.createRootNode();
     this.addManagedPropertyListener('serverSideDatasource', () => {
       this.setDatasource(this.gos.get('serverSideDatasource'));
     });
-    this.addManagedEventListeners({ sortChanged: () => this.refreshStore() });
+    this.addManagedEventListeners({
+      columnRowGroupChanged: () => this.refreshStore(),
+      columnPivotChanged: () => this.refreshStore(),
+      columnValueChanged: () => this.refreshStore(),
+      columnPivotModeChanged: () => this.refreshStore(),
+    });
     this.addManagedEventListeners({
       rowSelected: (event) => {
         if (this.selectionUpdateInProgress || !event.node || event.node.stub || !event.node.id) return;
@@ -107,6 +130,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     this.destroyDatasource();
     this.rows = [];
     this.blocks.clear();
+    this.hierarchyStores.clear();
     this.partial = false;
     this.flushAsyncTransactions();
     this.rootNode = null;
@@ -118,47 +142,57 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
   }
 
   public getRow(index: number): RowNode | undefined {
+    if (this.isHierarchical()) return this.hierarchicalRows()[index];
     if (this.partial) return this.getPartialRow(index);
     return this.rows[index];
   }
 
   public getRowNode(id: string): RowNode | undefined {
-    return this.loadedRows().find((node) => node.id === id);
+    return this.allLoadedRows().find((node) => node.id === id);
   }
 
   public getRowCount(): number {
+    if (this.isHierarchical()) return this.hierarchicalRows().length;
     return this.rowCount;
   }
 
   public getTopLevelRowCount(): number {
+    if (this.isHierarchical()) return this.rootStore()?.rows.length ?? 0;
     return this.rowCount;
   }
 
   public getTopLevelRowDisplayedIndex(topLevelIndex: number): number {
+    if (this.isHierarchical()) {
+      const node = this.rootStore()?.rows[topLevelIndex];
+      return node ? this.hierarchicalRows().indexOf(node) : -1;
+    }
     return topLevelIndex;
   }
 
   public getRowIndexAtPixel(pixel: number): number {
     const rowHeight = _getRowHeightAsNumber(this.beans);
-    if (rowHeight <= 0 || this.rowCount === 0) return 0;
-    return Math.min(Math.floor(pixel / rowHeight), this.rowCount - 1);
+    const count = this.displayedRowCount();
+    if (rowHeight <= 0 || count === 0) return 0;
+    return Math.min(Math.floor(pixel / rowHeight), count - 1);
   }
 
   public isRowPresent(rowNode: RowNode): boolean {
-    return this.loadedRows().includes(rowNode);
+    return this.allLoadedRows().includes(rowNode);
   }
 
   public getRowBounds(index: number): RowBounds | null {
-    if (index < 0 || index >= this.rowCount) return null;
+    if (index < 0 || index >= this.displayedRowCount()) return null;
     const rowHeight = _getRowHeightAsNumber(this.beans);
     return { rowTop: index * rowHeight, rowHeight, rowIndex: index };
   }
 
   public isEmpty(): boolean {
+    if (this.isHierarchical()) return !this.loading && (this.rootStore()?.rows.length ?? 0) === 0;
     return !this.loading && !this.failed && this.rowCount === 0;
   }
 
   public isRowsToRender(): boolean {
+    if (this.isHierarchical()) return this.loading || this.hierarchicalRows().length > 0;
     return this.loading || this.loadedRows().length > 0;
   }
 
@@ -168,7 +202,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
   }
 
   public getNodesInRangeForSelection(first: RowNode, last: RowNode): RowNode[] | null {
-    const rows = this.loadedRows();
+    const rows = this.isHierarchical() ? this.hierarchicalRows() : this.loadedRows();
     const firstIndex = rows.indexOf(first);
     const lastIndex = rows.indexOf(last);
     if (firstIndex < 0 || lastIndex < 0) return null;
@@ -177,7 +211,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
   }
 
   public forEachNode(callback: (node: RowNode, index: number) => void): void {
-    this.loadedRows().forEach(callback);
+    this.allLoadedRows().forEach(callback);
   }
 
   public isLastRowIndexKnown(): boolean {
@@ -190,7 +224,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
 
   public resetRowHeights(): void {
     const rowHeight = _getRowHeightAsNumber(this.beans);
-    this.loadedRows().forEach((node) => this.positionNode(node, node.sourceRowIndex, rowHeight));
+    (this.isHierarchical() ? this.hierarchicalRows() : this.loadedRows()).forEach((node, index) => this.positionNode(node, index, rowHeight));
     this.dispatchModelUpdated();
   }
 
@@ -200,6 +234,13 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
 
   public refreshStore(_params?: RefreshServerSideParams): void {
     if (!this.datasource) return;
+    if (this.isHierarchical()) {
+      const route = _params?.route ?? [];
+      const store = this.hierarchyStores.get(this.routeId(route));
+      if (route.length === 0 && !_params?.route) this.clearChildStores();
+      if (store) this.loadHierarchyStore(store, !!_params?.purge);
+      return;
+    }
     if (this.partial) {
       this.invalidateLoad();
       this.clearPendingBlockLoads();
@@ -211,6 +252,13 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
   }
 
   public getStoreState(): ServerSideGroupLevelState[] {
+    if (this.isHierarchical()) {
+      return [...this.hierarchyStores.values()].map((store) => ({
+        route: store.route,
+        rowCount: store.rowCount,
+        lastRowIndexKnown: !store.loading,
+      }));
+    }
     return [
       {
         route: [],
@@ -239,13 +287,15 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     this.rows = [];
     this.clearPendingBlockLoads();
     this.blocks.clear();
+    this.hierarchyStores.clear();
     this.rowCount = 0;
     this.lastRowIndexKnown = false;
     this.failed = false;
     const maxBlocksInCache = this.gos.get('maxBlocksInCache');
-    this.partial = datasource !== undefined && typeof maxBlocksInCache === 'number' && maxBlocksInCache > 0;
+    this.partial = datasource !== undefined && !this.isHierarchical() && typeof maxBlocksInCache === 'number' && maxBlocksInCache > 0;
     if (datasource) {
-      if (this.partial) this.initialisePartialStore();
+      if (this.isHierarchical()) this.initialiseHierarchyStore();
+      else if (this.partial) this.initialisePartialStore();
       else this.loadRootStore();
     }
     else this.dispatchModelUpdated();
@@ -254,7 +304,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
   public forEachNodeAfterFilterAndSort(
     callback: (node: IRowNode<unknown>, index: number) => void,
   ): void {
-    this.loadedRows().forEach(callback);
+    (this.isHierarchical() ? this.hierarchicalRows() : this.loadedRows()).forEach(callback);
   }
 
   public resetRootStore(): void {
@@ -278,6 +328,11 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     startRow: number,
     route: string[],
   ): void {
+    if (this.isHierarchical()) {
+      const store = this.hierarchyStores.get(this.routeId(route));
+      if (store) this.applyHierarchySuccess(store, rowDataParams);
+      return;
+    }
     if (route.length > 0) return;
     if (this.partial) {
       const block = this.ensureBlock(Math.floor(startRow / this.blockSize()));
@@ -349,7 +404,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     transaction: ServerSideTransaction<unknown>,
     callback?: (result: ServerSideTransactionResult<unknown>) => void,
   ): void {
-    this.asyncTransactions.push({ transaction, callback });
+    this.asyncTransactions.push(callback ? { transaction, callback } : { transaction });
     if (this.asyncTransactionTimer) return;
     const delay = this.gos.get('asyncTransactionWaitMillis');
     this.asyncTransactionTimer = setTimeout(
@@ -406,17 +461,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
       context: this.gos.get('context'),
       parentNode: rootNode,
       needsGrandTotal: false,
-      request: {
-        startRow: undefined,
-        endRow: undefined,
-        rowGroupCols: [],
-        valueCols: [],
-        pivotCols: [],
-        pivotMode: false,
-        groupKeys: [],
-        filterModel: null,
-        sortModel: _getSortModel(this.beans.sortSvc),
-      },
+      request: this.createRequest(undefined, undefined, []),
       success: (params) => {
         if (generation !== this.loadGeneration) return;
         this.applySuccess(params, 0);
@@ -474,7 +519,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
       context: this.gos.get('context'),
       parentNode: rootNode,
       needsGrandTotal: false,
-      request: { startRow: block.startRow, endRow: block.endRow, rowGroupCols: [], valueCols: [], pivotCols: [], pivotMode: false, groupKeys: [], filterModel: null, sortModel: _getSortModel(this.beans.sortSvc) },
+      request: this.createRequest(block.startRow, block.endRow, []),
       success: (params) => {
         this.inFlightBlockLoads -= 1;
         this.schedulePendingBlockLoads();
@@ -612,6 +657,235 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     return _getRowIdCallback(this.beans)?.({ data, level: 0 }) ?? String(index);
   }
 
+  /** A full SSRM request mirrors the grid's analytical column state. */
+  private createRequest(startRow: number | undefined, endRow: number | undefined, groupKeys: string[]) {
+    const toColumnVO = (column: AgColumn): ColumnVO => {
+      const colDef = column.getColDef();
+      return {
+        id: column.getColId(),
+        displayName: column.getColDef().headerName ?? column.getColId(),
+        ...(colDef.field ? { field: colDef.field } : {}),
+        ...(typeof colDef.aggFunc === 'string' ? { aggFunc: colDef.aggFunc } : {}),
+      };
+    };
+    const services = this.beans as typeof this.beans & {
+      rowGroupColsSvc?: { columns: AgColumn[] };
+      valueColsSvc?: { columns: AgColumn[] };
+      pivotColsSvc?: { columns: AgColumn[] };
+      filterManager?: { getFilterModel(): Record<string, unknown> | null };
+      colModel?: { pivotMode?: boolean };
+    };
+    const activeFilterModel = services.filterManager?.getFilterModel() ?? null;
+    const filterModel = activeFilterModel && Object.keys(activeFilterModel).length > 0 ? activeFilterModel : null;
+    return {
+      startRow,
+      endRow,
+      rowGroupCols: (services.rowGroupColsSvc?.columns ?? []).map(toColumnVO),
+      valueCols: (services.valueColsSvc?.columns ?? []).map(toColumnVO),
+      pivotCols: (services.pivotColsSvc?.columns ?? []).map(toColumnVO),
+      pivotMode: services.colModel?.pivotMode === true,
+      groupKeys,
+      filterModel,
+      sortModel: _getSortModel(this.beans.sortSvc),
+    };
+  }
+
+  private isHierarchical(): boolean {
+    const services = this.beans as typeof this.beans & { rowGroupColsSvc?: { columns: AgColumn[] } };
+    return (services.rowGroupColsSvc?.columns.length ?? 0) > 0;
+  }
+
+  private routeId(route: string[]): string {
+    // JSON preserves the distinction between [`a.b`] and [`a`, `b`].
+    return JSON.stringify(route);
+  }
+
+  private rootStore(): HierarchicalStore | undefined {
+    return this.hierarchyStores.get(this.routeId([]));
+  }
+
+  private allLoadedRows(): RowNode[] {
+    return this.isHierarchical()
+      ? [...this.hierarchyStores.values()].flatMap((store) => store.rows)
+      : this.loadedRows();
+  }
+
+  private displayedRowCount(): number {
+    return this.isHierarchical() ? this.hierarchicalRows().length : this.rowCount;
+  }
+
+  private hierarchicalRows(): RowNode[] {
+    const root = this.rootStore();
+    if (!root) return [];
+    const output: RowNode[] = [];
+    const walk = (store: HierarchicalStore) => {
+      for (const node of store.rows) {
+        output.push(node);
+        const child = (node as SsrmNode).__lgrSsrmStore;
+        if (node.group && node.expanded && child) walk(child);
+      }
+    };
+    walk(root);
+    return output;
+  }
+
+  private initialiseHierarchyStore(): void {
+    const rootNode = this.rootNode;
+    if (!rootNode) return;
+    this.loading = true;
+    this.failed = false;
+    this.rowCount = 1;
+    this.lastRowIndexKnown = true;
+    const root: HierarchicalStore = {
+      route: [], parentNode: rootNode, rows: [], loading: false, failed: false, generation: 0, rowCount: 0,
+    };
+    this.hierarchyStores.set(this.routeId([]), root);
+    this.loadHierarchyStore(root, true);
+  }
+
+  private loadHierarchyStore(store: HierarchicalStore, _purge: boolean): void {
+    const datasource = this.datasource;
+    if (!datasource || store.loading) return;
+    store.loading = true;
+    store.failed = false;
+    store.generation += 1;
+    const generation = store.generation;
+    if (store.route.length === 0) this.loading = true;
+    this.dispatchModelUpdated();
+    datasource.getRows({
+      api: this.beans.gridApi,
+      context: this.gos.get('context'),
+      parentNode: store.parentNode,
+      needsGrandTotal: false,
+      request: this.createRequest(undefined, undefined, store.route),
+      success: (params) => {
+        if (this.hierarchyStores.get(this.routeId(store.route)) !== store || store.generation !== generation) return;
+        this.applyHierarchySuccess(store, params);
+      },
+      fail: () => {
+        if (this.hierarchyStores.get(this.routeId(store.route)) !== store || store.generation !== generation) return;
+        store.loading = false;
+        store.failed = true;
+        if (store.route.length === 0) { this.loading = false; this.failed = true; }
+        this.dispatchModelUpdatedDeferred();
+      },
+    });
+  }
+
+  private applyHierarchySuccess(store: HierarchicalStore, params: LoadSuccessParams<unknown>): void {
+    const rowHeight = _getRowHeightAsNumber(this.beans);
+    const groupColumns = (this.beans as typeof this.beans & { rowGroupColsSvc?: { columns: AgColumn[] } }).rowGroupColsSvc?.columns ?? [];
+    const level = store.route.length;
+    store.rows = params.rowData.map((data, index) => {
+      if (level < groupColumns.length) return this.createGroupNode(data, index, rowHeight, store, groupColumns[level]!);
+      return this.createHierarchyLeafNode(data, index, rowHeight, store);
+    });
+    store.rowCount = params.rowCount ?? store.rows.length;
+    store.loading = false;
+    store.failed = false;
+    store.parentNode.childrenAfterGroup = store.rows;
+    store.parentNode.childrenAfterFilter = store.rows;
+    store.parentNode.childrenAfterSort = store.rows;
+    if (store.route.length === 0) { this.loading = false; this.failed = false; this.rowCount = store.rowCount; }
+    this.applyPivotResultColumns(params);
+    this.reindexHierarchyRows();
+    this.dispatchModelUpdated();
+  }
+
+  private createGroupNode(data: unknown, index: number, rowHeight: number, store: HierarchicalStore, column: AgColumn): RowNode {
+    const record = data as Record<string, unknown>;
+    const key = String(record[column.getColDef().field ?? column.getColId()] ?? record.key ?? '');
+    const route = [...store.route, key];
+    const node = new RowNode(this.beans) as SsrmNode;
+    node.parent = store.parentNode;
+    node.level = store.route.length;
+    node.group = true;
+    node.leafGroup = node.level + 1 >= ((this.beans as typeof this.beans & { rowGroupColsSvc?: { columns: AgColumn[] } }).rowGroupColsSvc?.columns.length ?? 0);
+    node.key = key;
+    node.field = column.getColDef().field ?? column.getColId();
+    node.sourceRowIndex = index;
+    node.setDataAndId(data, `ssrm-group:${this.routeId(route)}`);
+    node.aggData = record;
+    node.childrenAfterGroup = [];
+    node.childrenAfterFilter = [];
+    node.childrenAfterSort = [];
+    node.__lgrSsrmRoute = route;
+    node.expanded = this.expandAllDefault === true || this.expandedRoutes.has(this.routeId(route));
+    this.positionNode(node, index, rowHeight);
+    this.applySelection(node);
+    return node;
+  }
+
+  private createHierarchyLeafNode(data: unknown, index: number, rowHeight: number, store: HierarchicalStore): RowNode {
+    const node = new RowNode(this.beans);
+    node.parent = store.parentNode;
+    node.level = store.route.length;
+    node.group = false;
+    node.sourceRowIndex = index;
+    node.setDataAndId(data, this.rowIdFor(data, index));
+    this.positionNode(node, index, rowHeight);
+    this.applySelection(node);
+    return node;
+  }
+
+  private reindexHierarchyRows(): void {
+    const rowHeight = _getRowHeightAsNumber(this.beans);
+    this.hierarchicalRows().forEach((node, index) => this.positionNode(node, index, rowHeight));
+  }
+
+  private applyPivotResultColumns(params: LoadSuccessParams<unknown>): void {
+    if (!params.pivotResultFields?.length) return;
+    const services = this.beans as typeof this.beans & {
+      pivotColDefSvc?: { createColDefsFromFields(fields: string[]): unknown[] };
+      pivotResultCols?: { setPivotResultCols(defs: unknown[], source: string, appSupplied?: boolean): void };
+    };
+    const defs = services.pivotColDefSvc?.createColDefsFromFields(params.pivotResultFields);
+    if (defs) services.pivotResultCols?.setPivotResultCols(defs, 'api', false);
+  }
+
+  /** Called by the common row-group expansion service when an SSRM group opens. */
+  public onGroupExpanded(node: RowNode, expanded: boolean): void {
+    const route = (node as SsrmNode).__lgrSsrmRoute;
+    if (!route) return;
+    const routeId = this.routeId(route);
+    if (expanded) this.expandedRoutes.add(routeId);
+    else this.expandedRoutes.delete(routeId);
+    if (expanded) {
+      let store = (node as SsrmNode).__lgrSsrmStore;
+      if (!store) {
+        store = { route, parentNode: node, rows: [], loading: false, failed: false, generation: 0, rowCount: 0 };
+        (node as SsrmNode).__lgrSsrmStore = store;
+        this.hierarchyStores.set(this.routeId(route), store);
+      }
+      this.loadHierarchyStore(store, false);
+    }
+    this.reindexHierarchyRows();
+    this.dispatchModelUpdated();
+  }
+
+  /** `expandAll` only visits loaded nodes unless explicitly configured otherwise. */
+  public setAllExpanded(expanded: boolean): void {
+    this.expandAllDefault = this.gos.get('ssrmExpandAllAffectsAllRows') === true ? expanded : undefined;
+    for (const node of this.allLoadedRows()) {
+      if (!node.group) continue;
+      node.expanded = expanded;
+      const route = (node as SsrmNode).__lgrSsrmRoute;
+      if (route) {
+        if (expanded) this.expandedRoutes.add(this.routeId(route));
+        else this.expandedRoutes.delete(this.routeId(route));
+      }
+      if (expanded) this.onGroupExpanded(node, true);
+    }
+    this.reindexHierarchyRows();
+    this.dispatchModelUpdated();
+  }
+
+  private clearChildStores(): void {
+    for (const [id, store] of this.hierarchyStores) {
+      if (store.route.length > 0) this.hierarchyStores.delete(id);
+    }
+  }
+
   private sameRow(node: RowNode, data: unknown): boolean {
     const getRowId = _getRowIdCallback(this.beans);
     return getRowId ? node.id === getRowId({ data, level: 0 }) : node.data === data;
@@ -631,13 +905,38 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     if (selected === this.selectionState.selectAll) toggled.delete(id);
     else toggled.add(id);
     this.selectionState = { selectAll: this.selectionState.selectAll, toggledNodes: [...toggled] };
+    const selectedNode = this.getRowNode(id);
+    if (selectedNode?.group) {
+      const route = (selectedNode as SsrmNode).__lgrSsrmRoute;
+      if (route) this.selectedGroupRoutes.set(this.routeId(route), selected);
+      for (const child of this.loadedDescendants(selectedNode)) {
+        if (!child.id) continue;
+        const descendantToggles = new Set(this.selectionState.toggledNodes);
+        if (selected === this.selectionState.selectAll) descendantToggles.delete(child.id);
+        else descendantToggles.add(child.id);
+        this.selectionState = { selectAll: this.selectionState.selectAll, toggledNodes: [...descendantToggles] };
+        this.applySelection(child);
+      }
+    }
+  }
+
+  private loadedDescendants(parent: RowNode): RowNode[] {
+    const output: RowNode[] = [];
+    const walk = (node: RowNode) => {
+      for (const child of node.childrenAfterGroup ?? []) {
+        output.push(child);
+        walk(child);
+      }
+    };
+    walk(parent);
+    return output;
   }
 
   private applySelection(node: RowNode): void {
     if (!node.id) return;
-    const selected = this.selectionState.toggledNodes.includes(node.id)
+    const selected = this.groupSelectionFor(node) ?? (this.selectionState.toggledNodes.includes(node.id)
       ? !this.selectionState.selectAll
-      : this.selectionState.selectAll;
+      : this.selectionState.selectAll);
     if (node.isSelected() === selected) return;
     this.selectionUpdateInProgress = true;
     // SSRM owns durable selection state. The generic selection service does not
@@ -645,6 +944,19 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     node.__selected = selected;
     node.dispatchRowEvent('rowSelected');
     this.selectionUpdateInProgress = false;
+  }
+
+  private groupSelectionFor(node: RowNode): boolean | undefined {
+    let parent = node.parent;
+    while (parent) {
+      const route = (parent as SsrmNode).__lgrSsrmRoute;
+      if (route) {
+        const selected = this.selectedGroupRoutes.get(this.routeId(route));
+        if (selected !== undefined) return selected;
+      }
+      parent = parent.parent;
+    }
+    return undefined;
   }
 
   private positionNode(node: RowNode, index: number, rowHeight: number): void {

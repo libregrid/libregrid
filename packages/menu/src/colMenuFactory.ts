@@ -92,9 +92,11 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     eventSource: HTMLElement,
     _containerType: ContainerType,
     onClosedCallback?: (event?: Event) => void,
-    _options?: { filtersOnly?: boolean; suppressCloseOnEventSource?: boolean },
+    options?: { filtersOnly?: boolean; suppressCloseOnEventSource?: boolean },
   ): boolean {
     if (!isColumn(column)) return false;
+    const colDef = column.getColDef();
+    if (options?.filtersOnly ? colDef.suppressHeaderFilterButton : colDef.suppressHeaderMenuButton) return false;
     return this.showMenu(column, onClosedCallback, (popupSvc, menuEl) => {
       popupSvc.positionPopupByComponent({
         type: 'columnMenu',
@@ -114,6 +116,7 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     _filtersOnly?: boolean,
   ): void {
     if (!isColumn(column)) return;
+    if (column.getColDef().suppressHeaderMenuButton) return;
     this.showMenu(column, onClosedCallback, (popupSvc, menuEl) => {
       popupSvc.positionPopupUnderMouseEvent({
         type: 'columnMenu',
@@ -130,6 +133,7 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
   ): void {
     const event = mouseEvent ?? touchEvent?.touches[0];
     if (!isColumn(column) || !event) return;
+    if (column.getColDef().suppressHeaderContextMenu) return;
     this.showMenuAfterMouseEvent(column, event, 'columnMenu');
   }
 

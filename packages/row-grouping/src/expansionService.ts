@@ -1,4 +1,4 @@
-import { BeanStub, _getClientSideRowModel, type NamedBean, type RowNode } from 'ag-grid-community';
+import { BeanStub, _getClientSideRowModel, _getServerSideRowModel, type NamedBean, type RowNode } from 'ag-grid-community';
 import type { GridApi, IExpansionService, RowCtrl, RowGroupExpansionState } from 'ag-grid-community';
 
 /**
@@ -34,6 +34,8 @@ export class ExpansionService
     if (this.isExpanded(rowNode) === expanded) return;
     rowNode.expanded = expanded;
     rowNode.dispatchRowEvent('expandedChanged');
+    const ssrmListener = this.beans as typeof this.beans & { ssrmExpandListener?: { onGroupExpanded(node: RowNode, state: boolean): void } };
+    ssrmListener.ssrmExpandListener?.onGroupExpanded(rowNode, expanded);
     this.onGroupExpandedOrCollapsed();
   }
 
@@ -43,11 +45,12 @@ export class ExpansionService
   }
 
   public isExpandable(rowNode: RowNode): boolean {
-    return !!rowNode.group && !!rowNode.childrenAfterGroup?.length;
+    return !!rowNode.master || (!!rowNode.group && (!!rowNode.childrenAfterGroup?.length || !!(rowNode as unknown as { __lgrSsrmRoute?: string[] }).__lgrSsrmRoute));
   }
 
   public onGroupExpandedOrCollapsed(): void {
     _getClientSideRowModel(this.beans)?.refreshModel({ step: 'map' });
+    _getServerSideRowModel(this.beans)?.resetRowHeights();
   }
 
   public addExpandedCss(classes: string[], rowNode: RowNode): void {
@@ -62,6 +65,11 @@ export class ExpansionService
   }
 
   public expandAll(value: boolean): void {
+    const ssrm = _getServerSideRowModel(this.beans);
+    if (ssrm?.hierarchical) {
+      (ssrm as typeof ssrm & { setAllExpanded(value: boolean): void }).setAllExpanded(value);
+      return;
+    }
     this.forEachGroup((node) => {
       node.expanded = value;
     });

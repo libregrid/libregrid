@@ -13,6 +13,7 @@ interface FakeColumnOptions {
   field?: string;
   enableRowGroup?: boolean;
   enableValue?: boolean;
+  enablePivot?: boolean;
   pinned?: ColumnPinnedType;
   toolPanelClass?: ToolPanelClass;
 }
@@ -29,6 +30,7 @@ function createColumn(options: FakeColumnOptions): Column {
       suppressColumnsToolPanel: options.suppress,
       enableRowGroup: options.enableRowGroup,
       enableValue: options.enableValue,
+      enablePivot: options.enablePivot,
       toolPanelClass: options.toolPanelClass,
     }),
     isVisible: () => visible,
@@ -42,6 +44,7 @@ function createApi(columns: Column[], functionsReadOnly = false, definitions?: (
   const listeners = new Map<string, () => void>();
   const rowGroups: Column[] = [];
   const values: Column[] = [];
+  const pivots: Column[] = [];
   return {
     getAllGridColumns: () => columns,
     getColumnDefs: definitions ? vi.fn(() => definitions) : undefined,
@@ -55,12 +58,16 @@ function createApi(columns: Column[], functionsReadOnly = false, definitions?: (
     getDisplayNameForColumn: vi.fn((column: Column) => `Display ${column.getColId()}`),
     getRowGroupColumns: vi.fn(() => rowGroups),
     getValueColumns: vi.fn(() => values),
+    getPivotColumns: vi.fn(() => pivots),
     addRowGroupColumns: vi.fn((selected: Column[]) => rowGroups.push(...selected)),
     removeRowGroupColumns: vi.fn((selected: Column[]) => selected.forEach((column) => rowGroups.splice(rowGroups.indexOf(column), 1))),
     addValueColumns: vi.fn((selected: Column[]) => values.push(...selected)),
     removeValueColumns: vi.fn((selected: Column[]) => selected.forEach((column) => values.splice(values.indexOf(column), 1))),
+    addPivotColumns: vi.fn((selected: Column[]) => pivots.push(...selected)),
+    removePivotColumns: vi.fn((selected: Column[]) => selected.forEach((column) => pivots.splice(pivots.indexOf(column), 1))),
     setRowGroupColumns: vi.fn((selected: Column[]) => rowGroups.splice(0, rowGroups.length, ...selected)),
     setValueColumns: vi.fn((selected: Column[]) => values.splice(0, values.length, ...selected)),
+    setPivotColumns: vi.fn((selected: Column[]) => pivots.splice(0, pivots.length, ...selected)),
     getGridOption: vi.fn((key: string) => key === 'functionsReadOnly' ? functionsReadOnly : key === 'allowDragFromColumnsToolPanel' ? allowDrag : undefined),
     addEventListener: vi.fn((name: string, listener: () => void) => listeners.set(name, listener)),
     removeEventListener: vi.fn((name: string) => listeners.delete(name)),
@@ -134,17 +141,18 @@ describe('ColumnsToolPanel', () => {
     expect(lockedApi.addValueColumns).not.toHaveBeenCalled();
   });
 
-  it('shows inert pivot sections, respects suppression, and applies custom column layout order', () => {
-    const athlete = createColumn({ id: 'athlete' });
+  it('controls pivot mode and pivot columns, respects suppression, and applies custom column layout order', () => {
+    const athlete = createColumn({ id: 'athlete', enablePivot: true });
     const year = createColumn({ id: 'year' });
     const api = createApi([athlete, year]);
     const panel = initPanel(api);
     expect(panel.getGui().textContent).toContain('Pivot Mode');
     expect(panel.getGui().textContent).toContain('Column Labels (Pivot)');
-    expect(panel.getGui().textContent).toContain('Available in Phase 8');
+    panel.getGui().querySelector<HTMLButtonElement>('[aria-label="Add pivot Display athlete"]')!.click();
+    expect(api.addPivotColumns).toHaveBeenCalledWith([athlete]);
 
     panel.setColumnLayout([{ headerName: 'Details', children: [{ field: 'year' }, { colId: 'athlete' }] }]);
-    expect(Array.from(panel.getGui().querySelectorAll('label')).map((label) => label.textContent)).toEqual(['Display year', 'Display athlete']);
+    expect(Array.from(panel.getGui().querySelectorAll('.lgr-columns-list label')).map((label) => label.textContent)).toEqual(['Display year', 'Display athlete']);
     panel.setRowGroupsSectionVisible(false);
     expect(panel.getGui().textContent).not.toContain('Row Groups');
 
@@ -180,6 +188,31 @@ describe('ColumnsToolPanel', () => {
     expect(panel.getGui().textContent).toContain('Display age');
     panel.getGui().querySelector<HTMLButtonElement>('[aria-label="Select all columns"]')!.click();
     expect(api.setColumnsVisible).toHaveBeenLastCalledWith([age], true);
+  });
+
+  it('restores initial expansion state and removes grid listeners on destruction', () => {
+    const athlete = createColumn({ id: 'athlete' });
+    const api = createApi([athlete], false, [{ groupId: 'details', headerName: 'Details', children: [{ colId: 'athlete' }] }]);
+    const panel = initPanel(api, { initialState: { expandedGroupIds: ['details'] } });
+    expect(panel.getGui().textContent).toContain('Display athlete');
+    panel.destroy();
+    expect(api.removeEventListener).toHaveBeenCalled();
+    expect(api.listeners.size).toBe(0);
+  });
+
+  it('honours every panel-control suppression and section visibility API', () => {
+    const athlete = createColumn({ id: 'athlete' });
+    const api = createApi([athlete]);
+    const panel = initPanel(api, { suppressColumnFilter: true, suppressColumnSelectAll: true, suppressColumnExpandAll: true });
+    expect(panel.getGui().querySelector('input[type="search"]')).toBeNull();
+    expect(panel.getGui().querySelector('[aria-label="Select all columns"]')).toBeNull();
+    expect(panel.getGui().querySelector('[aria-label="Expand all column groups"]')).toBeNull();
+    panel.setValuesSectionVisible(false);
+    panel.setPivotModeSectionVisible(false);
+    panel.setPivotSectionVisible(false);
+    expect(panel.getGui().textContent).not.toContain('Values');
+    expect(panel.getGui().textContent).not.toContain('Pivot Mode');
+    expect(panel.getGui().textContent).not.toContain('Column Labels (Pivot)');
   });
 
   it('expands and collapses all column groups from accessible controls', () => {
@@ -365,7 +398,7 @@ describe('ColumnsToolPanel', () => {
     api.listeners.get('columnMoved')?.();
     expect(panel.getGui().querySelector('.lgr-columns-list')).toBe(list);
     panel.syncLayoutWithGrid();
-    expect(Array.from(panel.getGui().querySelectorAll('label')).map((label) => label.textContent)).toEqual(['Display age', 'Display athlete']);
+    expect(Array.from(panel.getGui().querySelectorAll('.lgr-columns-list label')).map((label) => label.textContent)).toEqual(['Display age', 'Display athlete']);
   });
 
   it('syncs manual layout when layout sync is enabled and safely applies callback classes', () => {
@@ -382,7 +415,7 @@ describe('ColumnsToolPanel', () => {
     expect(panel.getGui().querySelector('.callback-row')).not.toBeNull();
     panel.setColumnLayout([{ colId: 'age' }, { colId: 'athlete' }]);
     panel.syncLayoutWithGrid();
-    expect(Array.from(panel.getGui().querySelectorAll('label')).map((label) => label.textContent)).toEqual(['Display athlete', 'Display age']);
+    expect(Array.from(panel.getGui().querySelectorAll('.lgr-columns-list label')).map((label) => label.textContent)).toEqual(['Display athlete', 'Display age']);
 
     const throwing = createColumn({ id: 'throwing', toolPanelClass: () => { throw new Error('no class'); } });
     const throwingPanel = initPanel(createApi([throwing]));

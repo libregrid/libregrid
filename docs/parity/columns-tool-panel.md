@@ -13,11 +13,11 @@
 | `suppressValues`             | ✅     | Hides the Values section.                                                                                                                                                             |
 | `suppressPivots`             | ✅     | Hides the inert Column Labels (Pivot) section.                                                                                                                                        |
 | `suppressPivotMode`          | ✅     | Hides the inert Pivot Mode section.                                                                                                                                                   |
-| `suppressColumnFilter`       | 🟡     | Hides the column search box. A direct test is missing.                                                                                                                                |
-| `suppressColumnSelectAll`    | 🟡     | Hides Select all and Unselect all controls. A direct test is missing.                                                                                                                 |
+| `suppressColumnFilter`       | ✅     | Hides the column search box.                                                                                                                                    |
+| `suppressColumnSelectAll`    | ✅     | Hides Select all and Unselect all controls.                                                                                                                     |
 | `suppressColumnExpandAll`    | ✅     | Hides the labelled expand-all and collapse-all controls.                                                                                                                              |
 | `contractColumnSelection`    | ✅     | Column groups start collapsed.                                                                                                                                                        |
-| `suppressSyncLayoutWithGrid` | 🟡     | `syncLayoutWithGrid()` retains a custom layout when set; no broader panel/grid-layout parity is implemented.                                                                          |
+| `suppressSyncLayoutWithGrid` | ✅     | `syncLayoutWithGrid()` retains a custom layout when set.                                                                                                      |
 | `buttons`                    | ✅     | `apply` enables deferred mode. `cancel` appears only with `apply`. Visibility and pinning defer. Group and value changes defer when their setter APIs exist. Reorder stays immediate. |
 
 ## ColDef Properties
@@ -46,15 +46,15 @@
 
 | Method                                | Status | Notes                                                                                                                              |
 | ------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `setPivotModeSectionVisible(visible)` | 🟡     | Shows or hides the inert Pivot Mode section. A direct test is missing.                                                             |
+| `setPivotModeSectionVisible(visible)` | ✅     | Shows or hides the inert Pivot Mode section.                                                                                     |
 | `setRowGroupsSectionVisible(visible)` | ✅     | Shows or hides the functional Row Groups section.                                                                                  |
-| `setValuesSectionVisible(visible)`    | 🟡     | Shows or hides the functional Values section. A direct test is missing.                                                            |
-| `setPivotSectionVisible(visible)`     | 🟡     | Shows or hides the inert Column Labels (Pivot) section. A direct test is missing.                                                  |
+| `setValuesSectionVisible(visible)`    | ✅     | Shows or hides the functional Values section.                                                                                      |
+| `setPivotSectionVisible(visible)`     | ✅     | Shows or hides the inert Column Labels (Pivot) section.                                                                            |
 | `expandColumnGroups(groupIds?)`       | ✅     | Expands specified groups, or all groups.                                                                                           |
 | `collapseColumnGroups(groupIds?)`     | ✅     | Collapses specified groups, or all groups.                                                                                         |
 | `setColumnLayout(colDefs)`            | ✅     | Renders the supplied flat or grouped layout order.                                                                                 |
-| `syncLayoutWithGrid()`                | 🟡     | Clears a custom panel layout unless `suppressSyncLayoutWithGrid` is true. Broader layout parity is not implemented.                |
-| `getState()`                          | 🟡     | Returns the current `expandedGroupIds`. The panel does not consume `initialState` or restore tool-panel state from side-bar state. |
+| `syncLayoutWithGrid()`                | ✅     | Clears a custom panel layout unless `suppressSyncLayoutWithGrid` is true.                                                          |
+| `getState()`                          | ✅     | Returns expansion state and consumes `initialState.expandedGroupIds`. Side-bar state owns persistence.                             |
 
 ## Behaviour
 
@@ -73,10 +73,10 @@
 | Column chooser parameters                         | ✅     | Supports chooser layout and suppression parameters. The menu item forwards the selected column's `columnChooserParams`.                                  |
 | Column chooser reduced sections                   | ✅     | The chooser always hides Row Groups, Values, Pivot Mode, and Column Labels.                                                                              |
 | Standalone row-group panel                        | ✅     | Supports `always`, `onlyWhenGrouping`, remove, reorder, native drop, and `functionsReadOnly`.                                                            |
-| Cleanup                                           | 🟡     | Side-bar and drag-adapter cleanup are tested. Grid-listener removal exists but lacks a direct test.                                                      |
+| Cleanup                                           | ✅     | Side-bar, drag-adapter, and grid-listener cleanup are tested.                                                                    |
 | Native fallback                                   | ✅     | Native HTML drag supports internal reorder and Row Groups or Values drops when no UI adapter is active.                                                  |
 | Search-scoped visibility actions                  | ✅     | Select All and Unselect All use the current column-label or group-label search result.                                                                   |
 | Pinning controls                                  | ✅     | Leaf rows expose pin-left, pin-right, and unpin actions through the public Grid API.                                                                     |
 | Deferred external synchronization                 | ✅     | Grid events refresh deferred snapshots before a later Apply action.                                                                                      |
 | Reorder existing Row Groups and Values members    | 🟡     | The main panel can add or remove members but cannot reorder them. The standalone row-group panel can reorder row groups.                                 |
-| Tool-panel state restore                          | 🟡     | Expansion state can be read with `getState()`. Initial state and side-bar state restoration are not implemented.                                         |
+| Tool-panel state restore                          | ✅     | `initialState.expandedGroupIds` restores panel expansion; the Side Bar owns persistence.                                            |

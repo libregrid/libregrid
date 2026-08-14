@@ -1,0 +1,20 @@
+{
+  "name": "@libregrid/pivot",
+  "version": "0.1.0",
+  "description": "Client-side pivoting for AG Grid Community — part of LibreGrid",
+  "keywords": ["libregrid", "ag-grid", "data-grid", "pivot"],
+  "homepage": "https://github.com/libregrid/libregrid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libregrid/libregrid.git",
+    "directory": "packages/pivot"
+  },
+  "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
+  "dependencies": { "@libregrid/core": "^0.1.0", "@libregrid/row-grouping": "^0.1.0" },
+  "files": ["dist", "NOTICE", "README.md"],
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+}

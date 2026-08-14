@@ -1,6 +1,6 @@
 # Phase 1 — Enterprise Core, Menus & Side Bar Shell
 
-**Status:** 🟡 In progress
+**Status:** ✅ Complete — menus, side-bar host, Material bridge, and Phase 1 Definition-of-Done verified 2026-08-13.
 **Depends on:** Phase 0 (all criteria met)
 **Blocks:** Phases 3, 6 (tool panels need the side-bar host); every phase that contributes menu items
 
@@ -27,27 +27,27 @@ The Material work here also establishes the visual language for every later pane
 
 ### 1A — `@libregrid/menu`
 
-- [ ] Beans: `menuItemMapper`, `menuUtils`, `colMenuFactory`
-- [ ] `ContextMenuModule` (`moduleName: 'ContextMenu'`), `ColumnMenuModule` (`moduleName: 'ColumnMenu'`), both `dependsOn: [EnterpriseCoreModule]`
-- [ ] **Menu-item registry** — an extensible contribution API so later phases register items without editing this package
-- [ ] `MenuItemDef` support: `name`, `action`, `cssClasses`, `disabled`, `tooltip`, `subMenu`, `icon`, `shortcut`, `checked`
-- [ ] Grid options: `contextMenuItems`, `getContextMenuItems`, `suppressContextMenu`, `allowContextMenuWithControlKey`, `popupParent`, `columnMenu` (`'legacy'|'new'`), `suppressMenuHide`, `getColumnMenuItems`, `getMainMenuItems`, `postProcessPopup`
-- [ ] ColDef: `suppressHeaderMenuButton`, `suppressHeaderFilterButton`, `suppressHeaderContextMenu`, `columnMenuItems`, `mainMenuItems`, `menuTabs`, `columnChooserParams`
-- [ ] API: `showContextMenu`, `hidePopupMenu`, `showColumnMenu`, `showColumnChooser`, `hideColumnChooser`, `showColumnFilter`, `hideColumnFilter`
-- [ ] Event: `columnMenuVisibleChanged`
-- [ ] Default items **whose owning feature exists now**: `separator`, `resetColumns`, `autoSizeThis`, `autoSizeAll`, `sortAscending`, `sortDescending`, `sortUnSort`, `pinSubMenu`, `columnChooser`, `columnFilter`, `pinRowSubMenu`, `pinTop`, `pinBottom`, `unpinRow`
-- [ ] Register **stubs** for items owned by later phases so the registry shape is proven: `copy`, `copyWithHeaders`, `copyWithGroupHeaders`, `cut`, `paste`, `export`, `csvExport`, `excelExport`, `rowGroup`, `rowUnGroup`, `expandAll`, `contractAll`, `valueAggSubMenu`, `chartRange`, `pivotChart`, `note`, `editColumnName`, `calculatedColumn`
+- [x] Beans: `menuItemMapper`, `menuUtils`, `colMenuFactory`
+- [x] `ContextMenuModule` (`moduleName: 'ContextMenu'`), `ColumnMenuModule` (`moduleName: 'ColumnMenu'`), both `dependsOn: [EnterpriseCoreModule]`
+- [x] **Menu-item registry** — an extensible contribution API so later phases register items without editing this package
+- [x] `MenuItemDef` support: `name`, `action`, `cssClasses`, `disabled`, `tooltip`, `subMenu`, `icon`, `shortcut`, `checked`
+- [x] Grid options: `contextMenuItems`, `getContextMenuItems`, `suppressContextMenu`, `allowContextMenuWithControlKey`, `popupParent`, `columnMenu` (`'legacy'|'new'`), `suppressMenuHide`, `getColumnMenuItems`, `getMainMenuItems`, `postProcessPopup`
+- [x] ColDef: `suppressHeaderMenuButton`, `suppressHeaderFilterButton`, `suppressHeaderContextMenu`, `columnMenuItems`, `mainMenuItems`, `menuTabs`, `columnChooserParams`
+- [x] API: `showContextMenu`, `hidePopupMenu`, `showColumnMenu`, `showColumnChooser`, `hideColumnChooser`, `showColumnFilter`, `hideColumnFilter`
+- [x] Event: `columnMenuVisibleChanged`
+- [x] Default items **whose owning feature exists now**: `separator`, `resetColumns`, `autoSizeThis`, `autoSizeAll`, `sortAscending`, `sortDescending`, `sortUnSort`, `pinSubMenu`, `columnChooser`, `columnFilter`, `pinRowSubMenu`, `pinTop`, `pinBottom`, `unpinRow`
+- [x] Register **stubs** for items owned by later phases so the registry shape is proven: `copy`, `copyWithHeaders`, `copyWithGroupHeaders`, `cut`, `paste`, `export`, `csvExport`, `excelExport`, `rowGroup`, `rowUnGroup`, `expandAll`, `contractAll`, `valueAggSubMenu`, `chartRange`, `pivotChart`, `note`, `editColumnName`, `calculatedColumn`
 
 ### 1B — `@libregrid/side-bar`
 
-- [ ] Bean `sideBarSvc`; module `moduleName: 'SideBar'`; implements `iSideBar` / `iToolPanel`
-- [ ] Option `sideBar` accepting `boolean | string | string[] | SideBarDef`
-- [ ] `SideBarDef`: `toolPanels`, `defaultToolPanel`, `hiddenByDefault`, `position`, `hideButtons`
-- [ ] `ToolPanelDef`: `id`, `labelKey`, `labelDefault`, `minWidth` (default 100), `maxWidth`, `width`, `iconKey`, `toolPanel`, `toolPanelParams`, `parent`
-- [ ] API: `getSideBar`, `setSideBarVisible`, `isSideBarVisible`, `setSideBarPosition`, `openToolPanel`, `closeToolPanel`, `getOpenedToolPanel`, `isToolPanelShowing`, `refreshToolPanel`, `getToolPanelInstance`
-- [ ] Events: `toolPanelVisibleChanged`, `toolPanelSizeChanged`
-- [ ] Tool-panel **registration host** — later phases register panels; ship one stub panel only
-- [ ] Resizable side bar with min/max width honoured
+- [x] Bean `sideBarSvc`; module `moduleName: 'SideBar'`; implements `iSideBar` / `iToolPanel`
+- [x] Option `sideBar` accepting `boolean | string | string[] | SideBarDef`
+- [x] `SideBarDef`: `toolPanels`, `defaultToolPanel`, `hiddenByDefault`, `position`, `hideButtons`
+- [x] `ToolPanelDef`: `id`, `labelKey`, `labelDefault`, `minWidth` (default 100), `maxWidth`, `width`, `iconKey`, `toolPanel`, `toolPanelParams`, `parent`
+- [x] API: `getSideBar`, `setSideBarVisible`, `isSideBarVisible`, `setSideBarPosition`, `openToolPanel`, `closeToolPanel`, `getOpenedToolPanel`, `isToolPanelShowing`, `refreshToolPanel`, `getToolPanelInstance`
+- [x] Events: `toolPanelVisibleChanged`, `toolPanelSizeChanged`
+- [x] Tool-panel **registration host** — later phases register panels; ship one stub panel only
+- [x] Resizable side bar with min/max width honoured
 
 ### 1C — `@libregrid/material` v1
 
@@ -98,12 +98,12 @@ The Material work here also establishes the visual language for every later pane
 
 ## Acceptance criteria
 
-- [ ] Right-click context menu operates on a real Community grid with working actions
-- [ ] Column menu opens from the header button and from header right-click
-- [ ] Side bar opens/closes with a stub panel; position `left`/`right` both work; resize honours min/max
-- [ ] Toggling the app's Material theme (light↔dark) visibly restyles the grid **without reload**
-- [ ] Menu-item registry demonstrated: a test-only module contributes an item **without editing `@libregrid/menu`**
-- [ ] All parity items in the three checklists marked ✅/🟡/❌ with rationale
-- [ ] Keyboard navigation works throughout; axe 0 violations light + dark
-- [ ] Docs routes live for menus and side bar
-- [ ] Full Definition of Done (`standards.md` §9) satisfied
+- [x] Right-click context menu operates on a real Community grid with working actions
+- [x] Column menu opens from the header button and from header right-click
+- [x] Side bar opens/closes with a stub panel; position `left`/`right` both work; resize honours min/max
+- [x] Toggling the app's Material theme (light↔dark) visibly restyles the grid **without reload**
+- [x] Menu-item registry demonstrated: a test-only module contributes an item **without editing `@libregrid/menu`**
+- [x] All parity items in the three checklists marked ✅/🟡/❌ with rationale
+- [x] Keyboard navigation works throughout; axe 0 violations light + dark
+- [x] Docs routes live for menus and side bar
+- [x] Full Definition of Done (`standards.md` §9) satisfied

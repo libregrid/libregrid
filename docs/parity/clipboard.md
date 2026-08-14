@@ -6,65 +6,65 @@
 
 ## Grid Options
 
-| Option | Status | Notes |
-|---|---|---|
-| `copyHeadersToClipboard` | ⬜ | |
-| `suppressCutToClipboard` | ⬜ | |
-| `suppressClipboardPaste` | ⬜ | |
-| `clipboardDelimiter` | ⬜ | Default `\t` |
-| `enableCellTextSelection` | ⬜ | Browser text selection instead of grid selection |
-| `ensureDomOrder` | ⬜ | Required with `enableCellTextSelection` for a11y |
-| `readOnlyEdit` | ⬜ | Emits `cellEditRequest` instead of mutating |
-| `cellSelection` | ⬜ | Provided by `@libregrid/cell-selection` |
-| `rowSelection.copySelectedRows` | ⬜ | |
+| Option                          | Status | Notes                                        |
+| ------------------------------- | ------ | -------------------------------------------- |
+| `copyHeadersToClipboard`        | ✅     | Includes processed headers.                  |
+| `suppressCutToClipboard`        | ✅     | Prevents both copy and clear on cut.         |
+| `suppressClipboardPaste`        | ✅     | Prevents browser/API paste mutation.         |
+| `clipboardDelimiter`            | ✅     | TSV default plus custom delimiter coverage.  |
+| `enableCellTextSelection`       | ✅     | Consumed by Community's cell renderer.       |
+| `ensureDomOrder`                | ✅     | Consumed by Community's row renderer.        |
+| `readOnlyEdit`                  | ✅     | Emits `cellEditRequest` without mutation.    |
+| `cellSelection`                 | ✅     | Provided by `@libregrid/cell-selection`.     |
+| `rowSelection.copySelectedRows` | ✅     | `copySelectedRowsToClipboard` API supported. |
 
 ## Callbacks
 
-| Callback | Status | Notes |
-|---|---|---|
-| `sendToClipboard` | ⬜ | Custom clipboard handling |
-| `processCellForClipboard` | ⬜ | |
-| `processHeaderForClipboard` | ⬜ | |
-| `processGroupHeaderForClipboard` | ⬜ | |
-| `processCellFromClipboard` | ⬜ | |
-| `processDataFromClipboard` | ⬜ | Full control over paste data |
+| Callback                         | Status | Notes                                                                                     |
+| -------------------------------- | ------ | ----------------------------------------------------------------------------------------- |
+| `sendToClipboard`                | ✅     | Receives serialised text.                                                                 |
+| `processCellForClipboard`        | ✅     | Applied to copied values.                                                                 |
+| `processHeaderForClipboard`      | ✅     | Applied to copied headers.                                                                |
+| `processGroupHeaderForClipboard` | 🟡     | Invoked for group-header copy mode; grouped header-row serialisation is not yet distinct. |
+| `processCellFromClipboard`       | ✅     | Applied before mutation/request.                                                          |
+| `processDataFromClipboard`       | ✅     | Can replace parsed clipboard matrix.                                                      |
 
 ## ColDef Properties
 
-| Property | Status | Notes |
-|---|---|---|
-| `suppressPaste` | ⬜ | `boolean` or function |
+| Property        | Status | Notes                                                     |
+| --------------- | ------ | --------------------------------------------------------- |
+| `suppressPaste` | ✅     | Boolean and callback forms are checked per target column. |
 
 ## API Methods
 
-| Method | Status | Notes |
-|---|---|---|
-| `copySelectedRowsToClipboard` | ⬜ | |
-| `copySelectedRangeToClipboard` | ⬜ | |
-| `cutToClipboard` | ⬜ | Not enumerated on the docs page — verify |
-| `pasteFromClipboard` | ⬜ | Not enumerated on the docs page — verify |
+| Method                         | Status | Notes                                           |
+| ------------------------------ | ------ | ----------------------------------------------- |
+| `copySelectedRowsToClipboard`  | ✅     | Registered on Grid API.                         |
+| `copySelectedRangeToClipboard` | ✅     | Registered on Grid API.                         |
+| `cutToClipboard`               | ✅     | Registered on Grid API.                         |
+| `pasteFromClipboard`           | ✅     | Reads browser clipboard when permission allows. |
 
 ## Events
 
-| Event | Status | Notes |
-|---|---|---|
-| `cutStart` | ⬜ | |
-| `cutEnd` | ⬜ | |
-| `pasteStart` | ⬜ | |
-| `pasteEnd` | ⬜ | |
-| `cellValueChanged` | ⬜ | After cut/paste/edit |
-| `cellEditRequest` | ⬜ | When `readOnlyEdit = true` |
+| Event              | Status | Notes                                 |
+| ------------------ | ------ | ------------------------------------- |
+| `cutStart`         | ✅     | Unit covered.                         |
+| `cutEnd`           | ✅     | Unit covered.                         |
+| `pasteStart`       | ✅     | Unit covered.                         |
+| `pasteEnd`         | ✅     | Unit covered.                         |
+| `cellValueChanged` | ✅     | Mutation uses RowNode `setDataValue`. |
+| `cellEditRequest`  | ✅     | Read-only edit path unit covered.     |
 
 ## Behaviour
 
-| Requirement | Status | Notes |
-|---|---|---|
-| TSV round-trips through Excel with correct shape | ⬜ | **Gate criterion** |
-| Values containing tabs survive round trip | ⬜ | |
-| Values containing newlines survive round trip | ⬜ | |
-| Values containing quotes survive round trip | ⬜ | |
-| Paste larger than target range | ⬜ | Document expand-vs-clip behaviour |
-| Paste into a grouped grid ignores group rows | ⬜ | |
-| Multi-range copy | ⬜ | Document behaviour for non-contiguous ranges |
-| Verified against LibreOffice Calc | ⬜ | |
-| Verified against Google Sheets | ⬜ | |
+| Requirement                                      | Status | Notes                                                                                                          |
+| ------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------- |
+| TSV round-trips through Excel with correct shape | 🟡     | Quoting/delimiter/newline unit coverage is green; desktop Excel verification remains a manual completion gate. |
+| Values containing tabs survive round trip        | ✅     | Unit covered.                                                                                                  |
+| Values containing newlines survive round trip    | ✅     | Unit covered.                                                                                                  |
+| Values containing quotes survive round trip      | ✅     | Unit covered.                                                                                                  |
+| Paste larger than target range                   | ✅     | Clips at available displayed rows/columns.                                                                     |
+| Paste into a grouped grid ignores group rows     | ✅     | Group rows are skipped.                                                                                        |
+| Multi-range copy                                 | ✅     | Non-contiguous ranges are TSV blocks separated by one blank row.                                               |
+| Verified against LibreOffice Calc                | 🟡     | Requires desktop manual check.                                                                                 |
+| Verified against Google Sheets                   | 🟡     | Requires authenticated browser manual check.                                                                   |

@@ -13,7 +13,12 @@ function svc(beans: BeanCollection): IValueColsService | undefined {
 }
 
 function refreshAggregate(beans: BeanCollection): void {
-  _getClientSideRowModel(beans)?.refreshModel({ step: 'aggregate' });
+  // A value-column mutation changes the generated pivot result set as well as
+  // its aggregate values. Start at pivot when that feature is active so stale
+  // secondary columns are removed before aggregation proceeds.
+  _getClientSideRowModel(beans)?.refreshModel({
+    step: beans.colModel.isPivotActive() ? 'pivot' : 'aggregate',
+  });
 }
 
 /** Add custom aggregation functions. */

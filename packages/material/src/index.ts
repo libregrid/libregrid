@@ -10,8 +10,10 @@ export {
 } from './themeBridge';
 export type { ThemeMode } from './themeBridge';
 export { installMaterialSideBarRenderer } from './materialSideBarRenderer';
+export { MaterialStatusBarComponent } from './materialStatusBar';
 export {
   createMaterialColumnsToolPanelDragDropAdapter,
   installMaterialColumnsToolPanelDragDrop,
 } from './materialColumnsToolPanelDragDrop';
 export { VERSION } from './version';
+export { MaterialRichSelectCellEditor, installMaterialRichSelectCellEditor } from './materialRichSelect';

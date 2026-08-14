@@ -22,8 +22,23 @@
       "@libregrid/side-bar": ["./packages/side-bar/src/index.ts"],
       "@libregrid/material": ["./packages/material/src/index.ts"],
       "@libregrid/row-grouping": ["./packages/row-grouping/src/index.ts"],
+      "@libregrid/pivot": ["./packages/pivot/src/index.ts"],
       "@libregrid/server-side-row-model": ["./packages/server-side-row-model/src/index.ts"],
-      "@libregrid/columns-tool-panel": ["./packages/columns-tool-panel/src/index.ts"]
+      "@libregrid/viewport-row-model": ["./packages/viewport-row-model/src/index.ts"],
+      "@libregrid/tree-data": ["./packages/tree-data/src/index.ts"],
+      "@libregrid/master-detail": ["./packages/master-detail/src/index.ts"],
+      "@libregrid/columns-tool-panel": ["./packages/columns-tool-panel/src/index.ts"],
+      "@libregrid/set-filter": ["./packages/set-filter/src/index.ts"],
+      "@libregrid/multi-filter": ["./packages/multi-filter/src/index.ts"],
+      "@libregrid/filters-tool-panel": ["./packages/filters-tool-panel/src/index.ts"],
+      "@libregrid/cell-selection": ["./packages/cell-selection/src/index.ts"],
+      "@libregrid/clipboard": ["./packages/clipboard/src/index.ts"],
+      "@libregrid/status-bar": ["./packages/status-bar/src/index.ts"]
+      ,"@libregrid/advanced-filter": ["./packages/advanced-filter/src/index.ts"]
+      ,"@libregrid/find": ["./packages/find/src/index.ts"]
+      ,"@libregrid/rich-select": ["./packages/rich-select/src/index.ts"]
+      ,"@libregrid/integrated-charts": ["./packages/integrated-charts/src/index.ts"]
+      ,"@libregrid/sparklines": ["./packages/sparklines/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

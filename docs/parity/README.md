@@ -45,6 +45,7 @@ These lists were transcribed from the AG Grid documentation pages named in each 
 | [`multi-filter.md`](multi-filter.md) | 6 | `@libregrid/multi-filter` |
 | [`advanced-filter.md`](advanced-filter.md) | 11 | `@libregrid/advanced-filter` |
 | [`find.md`](find.md) | 11 | `@libregrid/find` |
+| [`rich-select.md`](rich-select.md) | 11 | `@libregrid/rich-select` |
 | [`tree-data.md`](tree-data.md) | 10 | `@libregrid/tree-data` |
 | [`master-detail.md`](master-detail.md) | 10 | `@libregrid/master-detail` |
 | [`integrated-charts.md`](integrated-charts.md) | 12 | `@libregrid/integrated-charts` |

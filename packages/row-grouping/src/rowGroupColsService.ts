@@ -161,7 +161,13 @@ export class RowGroupColsService extends BeanStub implements IRowGroupColsServic
   private resolve(key: ColKey | null | undefined): AgColumn | undefined {
     if (key == null) return undefined;
     const colId = typeof key === 'string' ? key : (key as AgColumn).getColId?.();
-    return this.beans.colModel.getCols().find((c) => c.getColId() === colId);
+    const colModel = this.beans.colModel as unknown as {
+      getAllCols?: () => AgColumn[];
+      getCols?: () => AgColumn[];
+    };
+    return (colModel.getAllCols?.() ?? colModel.getCols?.() ?? []).find(
+      (column) => column.getColId() === colId,
+    );
   }
 
   private activate(col: AgColumn, index?: number): void {

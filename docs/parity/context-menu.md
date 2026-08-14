@@ -64,8 +64,8 @@
 | `export`               | 5            | 🟡     | Stub registered |
 | `csvExport`            | 5            | 🟡     | Stub registered |
 | `excelExport`          | 5            | 🟡     | Stub registered |
-| `chartRange`           | 12           | 🟡     | Stub registered |
-| `pivotChart`           | 12           | 🟡     | Stub registered |
+| `chartRange`           | 12           | ✅     | Creates linked Community range charts from the selected range |
+| `pivotChart`           | 12           | ✅     | Creates a chart from pivot-visible data |
 | `note`                 | 13           | 🟡     | Stub registered |
 
 ## Behaviour

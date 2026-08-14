@@ -6,56 +6,56 @@
 
 ## Grid Options
 
-| Option | Status | Notes |
-|---|---|---|
-| `statusBar` | ⬜ | |
-| `statusBar.statusPanels` | ⬜ | Array of `StatusPanelDef` |
+| Option                   | Status | Notes                                                            |
+| ------------------------ | ------ | ---------------------------------------------------------------- |
+| `statusBar`              | ✅     | Configured panel definitions are instantiated by `statusBarSvc`. |
+| `statusBar.statusPanels` | ✅     | Array of provided or custom `StatusPanelDef`s.                   |
 
 ## StatusPanelDef
 
-| Property | Status | Notes |
-|---|---|---|
-| `statusPanel` | ⬜ | Component name or class |
-| `align` | ⬜ | `'left' \| 'center' \| 'right'` |
-| `key` | ⬜ | Lookup key for `getStatusPanel` |
-| `statusPanelParams` | ⬜ | |
+| Property            | Status | Notes                                                                     |
+| ------------------- | ------ | ------------------------------------------------------------------------- |
+| `statusPanel`       | ✅     | Provided name or custom class.                                            |
+| `align`             | 🟡     | Retained by the definition; a multi-panel layout host is not yet shipped. |
+| `key`               | ✅     | Used by `getStatusPanel`.                                                 |
+| `statusPanelParams` | ✅     | Merged into init parameters.                                              |
 
 ## Provided Status Panel Components
 
-| Component | Status | Notes |
-|---|---|---|
-| `agTotalRowCountComponent` | ⬜ | |
-| `agTotalAndFilteredRowCountComponent` | ⬜ | |
-| `agFilteredRowCountComponent` | ⬜ | |
-| `agSelectedRowCountComponent` | ⬜ | |
-| `agAggregationComponent` | ⬜ | Aggregates the current cell selection |
+| Component                             | Status | Notes                                |
+| ------------------------------------- | ------ | ------------------------------------ |
+| `agTotalRowCountComponent`            | ✅     | Unit and real-grid config coverage.  |
+| `agTotalAndFilteredRowCountComponent` | ✅     | Unit coverage.                       |
+| `agFilteredRowCountComponent`         | ✅     | Unit coverage.                       |
+| `agSelectedRowCountComponent`         | ✅     | Unit coverage.                       |
+| `agAggregationComponent`              | ✅     | Selection aggregation unit coverage. |
 
 ## Params Interfaces
 
-| Interface / property | Status | Notes |
-|---|---|---|
-| `IProvidedStatusPanelParams.valueFormatter` | ⬜ | |
-| `IStatusPanelParams.key` | ⬜ | |
-| `IStatusPanelParams.api` | ⬜ | |
-| `IStatusPanelParams.context` | ⬜ | |
+| Interface / property                        | Status | Notes                                                                             |
+| ------------------------------------------- | ------ | --------------------------------------------------------------------------------- |
+| `IProvidedStatusPanelParams.valueFormatter` | 🟡     | Built-in text formatting is available; custom value formatter is not applied yet. |
+| `IStatusPanelParams.key`                    | ✅     | Supplied during init/refresh.                                                     |
+| `IStatusPanelParams.api`                    | ✅     | Supplied during init/refresh.                                                     |
+| `IStatusPanelParams.context`                | ✅     | Supplied during init/refresh.                                                     |
 
 ## API Methods
 
-| Method | Status | Notes |
-|---|---|---|
-| `getStatusPanel(key)` | ⬜ | |
+| Method                | Status | Notes                                                      |
+| --------------------- | ------ | ---------------------------------------------------------- |
+| `getStatusPanel(key)` | ✅     | Real-grid config test includes provided and custom panels. |
 
 ## Custom Status Panel Contract
 
-| Method | Status | Notes |
-|---|---|---|
-| `agInit(params)` | ⬜ | Mandatory |
-| `refresh(params)` | ⬜ | Optional |
+| Method            | Status | Notes                                                              |
+| ----------------- | ------ | ------------------------------------------------------------------ |
+| `agInit(params)`  | ✅     | Called on configured custom panel.                                 |
+| `refresh(params)` | ✅     | Called on grid model, filter, selection, range, and value changes. |
 
 ## Behaviour
 
-| Requirement | Status | Notes |
-|---|---|---|
-| Counts update live under filtering | ⬜ | |
-| Aggregation panel tracks cell selection | ⬜ | Depends on `@libregrid/cell-selection` |
-| `aria-live` announcements for count changes | ⬜ | |
+| Requirement                                 | Status | Notes                                                                               |
+| ------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| Counts update live under filtering          | ✅     | Service refreshes on `filterChanged`/`modelUpdated`.                                |
+| Aggregation panel tracks cell selection     | ✅     | Service refreshes on `rangeSelectionChanged`.                                       |
+| `aria-live` announcements for count changes | ✅     | Each provided panel uses polite live output; Material demo shell has `role=status`. |

@@ -1,6 +1,6 @@
 # Phase 9 — SSRM Grouping/Pivot & Viewport Row Model
 
-**Status:** ⬜ Not started
+**Status:** ✅ Complete — validated 2026-08-13
 **Depends on:** Phase 7 (SSRM stores), Phase 2 (grouping), Phase 6 (filter models), Phase 8 (pivot)
 **Blocks:** nothing
 
@@ -28,26 +28,26 @@ The **Viewport Row Model** is a separate, much smaller row model for streaming/l
 
 ### 9A — SSRM grouping, pivot, filter, sort
 
-- [ ] Hierarchical stores — child store per expanded group node
-- [ ] Request extension: `rowGroupCols`, `groupKeys`, `valueCols`, `pivotCols`, `pivotMode`, `filterModel`, `sortModel`
-- [ ] Server-side **grouping** with lazy child loading on expand
-- [ ] Server-supplied aggregates on group rows (no client-side re-aggregation)
-- [ ] Server-side **pivoting**; `setPivotResultColumns` driven by the response
-- [ ] Bean `ssrmFilterListener` — refresh affected stores on filter change
-- [ ] Bean `ssrmSortSvc` — sort model propagation and store refresh
-- [ ] Bean `ssrmExpandListener` — expand/collapse triggering child-store load
-- [ ] Bean `ssrmListenerUtils`
-- [ ] Expand-all / collapse-all for group rows; `ssrmExpandAllAffectsAllRows`
-- [ ] Group-level selection semantics (select group ⇒ descendants)
-- [ ] Extend the `apps/docs` mock server to perform real grouping/pivot/filter/sort
+- [x] Hierarchical stores — child store per expanded group node
+- [x] Request extension: `rowGroupCols`, `groupKeys`, `valueCols`, `pivotCols`, `pivotMode`, `filterModel`, `sortModel`
+- [x] Server-side **grouping** with lazy child loading on expand
+- [x] Server-supplied aggregates on group rows (no client-side re-aggregation)
+- [x] Server-side **pivoting**; response `pivotResultFields` drive generated result columns
+- [x] Bean `ssrmFilterListener` — refresh affected stores on filter change
+- [x] Bean `ssrmSortSvc` — sort model propagation and store refresh
+- [x] Bean `ssrmExpandListener` — expand/collapse triggering child-store load
+- [x] Bean `ssrmListenerUtils`
+- [x] Expand-all / collapse-all for group rows; `ssrmExpandAllAffectsAllRows`
+- [x] Group-level selection semantics (select group ⇒ loaded and later materialized descendants)
+- [x] Extend the `apps/docs` mock server to perform real grouping/pivot/filter/sort
 
 ### 9B — `@libregrid/viewport-row-model`
 
-- [ ] `ViewportRowModel` implementing `iViewportRowModel`; `rowModelType: 'viewport'`
-- [ ] `iViewportDatasource`: `init`, `setViewportRange`, `destroy`
-- [ ] `setRowCount`, `setRowData` push-update path
-- [ ] Viewport range change notification as the user scrolls
-- [ ] Streaming demo route in `apps/docs`
+- [x] `ViewportRowModel` implementing `iViewportRowModel`; `rowModelType: 'viewport'`
+- [x] `iViewportDatasource`: `init`, `setViewportRange`, `destroy`
+- [x] `setRowCount`, `setRowData` push-update path
+- [x] Viewport range change notification as the user scrolls
+- [x] Streaming demo route in `apps/docs`
 
 ---
 
@@ -73,12 +73,23 @@ The **Viewport Row Model** is a separate, much smaller row model for streaming/l
 
 ## Acceptance criteria
 
-- [ ] Server-side grouped data expands lazily with **correct server-supplied aggregates**
-- [ ] Filter, sort and pivot all propagate into requests and refresh the right stores
-- [ ] Expand-all / collapse-all correct under both `ssrmExpandAllAffectsAllRows` settings
-- [ ] No client-side re-aggregation of server-supplied group values
-- [ ] In-flight request races resolve without corrupt row state
-- [ ] Viewport row model tracks a streaming datasource and applies pushed updates
-- [ ] Deep expansion produces a bounded request count (no storm)
-- [ ] Both parity checklists fully marked ✅/🟡/❌; Phase 7's 🟡 items now resolved
-- [ ] Full Definition of Done (`standards.md` §9) satisfied
+- [x] Server-side grouped data expands lazily with **correct server-supplied aggregates**
+- [x] Filter, sort and pivot all propagate into requests and refresh the right stores
+- [x] Expand-all / collapse-all correct under both `ssrmExpandAllAffectsAllRows` settings
+- [x] No client-side re-aggregation of server-supplied group values
+- [x] In-flight request races resolve without corrupt row state
+- [x] Viewport row model tracks a streaming datasource and applies pushed updates
+- [x] Deep expansion produces a bounded request count (no storm)
+- [x] Both parity checklists fully marked ✅/🟡/❌; Phase 7's 🟡 items now resolved
+- [x] Full Definition of Done (`standards.md` §9) satisfied
+
+## Completion record
+
+Implemented in `@libregrid/server-side-row-model` and the new
+`@libregrid/viewport-row-model`. Focused package tests cover flat-store
+regression, full analytical request construction, two-level lazy grouping,
+server aggregate/pivot response handling, bounded expand-all requests,
+Viewport datasource lifecycle, and pushed row data. The docs routes add a
+deterministic in-browser analytical server (`/server-side-advanced`) and a
+live streaming datasource (`/viewport`), both covered by Playwright including
+SSRM light/dark axe checks.

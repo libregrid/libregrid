@@ -2,6 +2,7 @@ import {
   BeanStub,
   type _IRowNodeFlattenStage,
   type GridOptions,
+  type RefreshModelParams,
   type NamedBean,
   type RowNode,
   _getClientSideRowModel,
@@ -27,6 +28,7 @@ export class FlattenStage extends BeanStub implements _IRowNodeFlattenStage, Nam
     const footerSvc = this.beans.footerSvc;
     const push = (n: RowNode) => result.push(n);
     footerSvc?.addTotalRows(result.length, rootNode, push, true, true, 'top');
+    this.beans.masterDetailSvc?.refreshModel({} as RefreshModelParams);
     this.flatten(rootNode, result);
     footerSvc?.addTotalRows(result.length, rootNode, push, true, true, 'bottom');
     return result;
@@ -73,8 +75,15 @@ export class FlattenStage extends BeanStub implements _IRowNodeFlattenStage, Nam
     for (const rawChild of children) {
       const child = rawChild.group ? this.resolveDisplayNode(rawChild) : rawChild;
 
+      const pushRowAndDetail = (row: RowNode) => {
+        this.beans.masterDetailSvc?.setMaster(row, row.master !== true, false);
+        out.push(row);
+        const detail = this.beans.masterDetailSvc?.getDetail(row);
+        if (detail) out.push(detail);
+      };
+
       if (!child.group) {
-        out.push(child);
+        pushRowAndDetail(child);
         continue;
       }
 
@@ -82,7 +91,7 @@ export class FlattenStage extends BeanStub implements _IRowNodeFlattenStage, Nam
       // value reappears on the first child via
       // ShowRowGroupColsValueService.getDisplayedNode.
       if (!(hideOpenParents && child.expanded)) {
-        out.push(child);
+        pushRowAndDetail(child);
       }
       if (child.expanded) {
         // groupTotalRow: footerSvc no-ops unless the group is expanded and

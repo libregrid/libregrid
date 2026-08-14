@@ -16,13 +16,13 @@ import {
 } from './columnsToolPanelDragDropAdapter';
 
 type PanelParams = Partial<IToolPanelColumnCompParams> & IToolPanelParams & { api: GridApi };
-type GridEventName = 'columnVisible' | 'columnPinned' | 'columnEverythingChanged' | 'columnsReset' | 'columnRowGroupChanged' | 'columnValueChanged' | 'columnMoved';
+type GridEventName = 'columnVisible' | 'columnPinned' | 'columnEverythingChanged' | 'columnsReset' | 'columnRowGroupChanged' | 'columnValueChanged' | 'columnPivotChanged' | 'columnPivotModeChanged' | 'columnMoved';
 type ColumnApi = Pick<GridApi, 'setColumnsVisible' | 'setColumnsPinned' | 'getAllGridColumns'> & Partial<Pick<GridApi,
-  'getColumnDefs' | 'moveColumns' | 'getDisplayNameForColumn' | 'getRowGroupColumns' | 'getValueColumns' | 'addRowGroupColumns' |
-  'removeRowGroupColumns' | 'addValueColumns' | 'removeValueColumns' | 'setRowGroupColumns' | 'setValueColumns' | 'getGridOption' |
+  'getColumnDefs' | 'moveColumns' | 'getDisplayNameForColumn' | 'getRowGroupColumns' | 'getValueColumns' | 'getPivotColumns' | 'addRowGroupColumns' |
+  'removeRowGroupColumns' | 'addValueColumns' | 'removeValueColumns' | 'addPivotColumns' | 'removePivotColumns' | 'setRowGroupColumns' | 'setValueColumns' | 'setPivotColumns' | 'getGridOption' | 'setGridOption' |
   'addEventListener' | 'removeEventListener'
 >>;
-type ColumnDef = Pick<ColDef, 'field' | 'headerName' | 'colId' | 'suppressColumnsToolPanel' | 'toolPanelClass' | 'enableRowGroup' | 'enableValue'>;
+type ColumnDef = Pick<ColDef, 'field' | 'headerName' | 'colId' | 'suppressColumnsToolPanel' | 'toolPanelClass' | 'enableRowGroup' | 'enableValue' | 'enablePivot'>;
 type ColumnTreeNode = ColumnLeaf | ColumnGroup;
 let nextPanelId = 0;
 
@@ -58,6 +58,7 @@ export class ColumnsToolPanel implements IColumnToolPanel {
   private pendingPinned: Map<string, ColumnPinnedType> | undefined;
   private pendingRowGroupColumns: Column[] | undefined;
   private pendingValueColumns: Column[] | undefined;
+  private pendingPivotColumns: Column[] | undefined;
   private draggedColumn: Column | undefined;
   private applyingPendingChanges = false;
 
@@ -70,6 +71,9 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     this.removeApiListeners();
     this.params = params;
     this.api = params.api as ColumnApi;
+    const initialState = params.initialState as { expandedGroupIds?: string[] } | undefined;
+    this.groupExpansion.clear();
+    for (const groupId of initialState?.expandedGroupIds ?? []) this.groupExpansion.set(groupId, true);
     this.clearPendingChanges();
     this.addApiListeners();
     this.render();
@@ -147,8 +151,8 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     this.appendColumnList();
     if (!this.params?.suppressRowGroups && this.isVisible('row-groups')) this.appendFunctionSection('Row Groups', 'group');
     if (!this.params?.suppressValues && this.isVisible('values')) this.appendFunctionSection('Values', 'value');
-    if (!this.params?.suppressPivotMode && this.isVisible('pivot-mode')) this.appendUnavailableSection('Pivot Mode');
-    if (!this.params?.suppressPivots && this.isVisible('pivots')) this.appendUnavailableSection('Column Labels (Pivot)');
+    if (!this.params?.suppressPivotMode && this.isVisible('pivot-mode')) this.appendPivotMode();
+    if (!this.params?.suppressPivots && this.isVisible('pivots')) this.appendFunctionSection('Column Labels (Pivot)', 'pivot');
     if (this.isDeferredActionsEnabled()) this.appendActionButtons();
     attachColumnsToolPanelDragDrop(this.gui);
   }
@@ -342,7 +346,7 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     row.append(up, down);
   }
 
-  private appendFunctionSection(title: string, kind: 'group' | 'value'): void {
+  private appendFunctionSection(title: string, kind: 'group' | 'value' | 'pivot'): void {
     const section = document.createElement('section');
     section.className = 'lgr-columns-section lgr-columns-drop-zone';
     section.dataset['functionKind'] = kind;
@@ -371,7 +375,7 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     const eligible = this.getColumns().filter((column) => this.isEligible(column, kind) && !current.includes(column));
     for (const column of eligible) {
       section.append(this.createButton(
-        `${kind === 'group' ? 'Group by' : 'Add value'} ${this.getColumnName(column)}`,
+        `${kind === 'group' ? 'Group by' : kind === 'value' ? 'Add value' : 'Add pivot'} ${this.getColumnName(column)}`,
         () => this.addFunctionColumn(column, kind),
       ));
     }
@@ -384,24 +388,30 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     this.gui.appendChild(section);
   }
 
-  private createFunctionMember(column: Column, kind: 'group' | 'value'): HTMLElement {
+  private createFunctionMember(column: Column, kind: 'group' | 'value' | 'pivot'): HTMLElement {
     const member = document.createElement('div');
     member.className = 'lgr-columns-member';
     const label = document.createElement('span');
     label.textContent = this.getColumnName(column);
-    member.append(label, this.createButton(`Remove ${this.getColumnName(column)} from ${kind === 'group' ? 'row groups' : 'values'}`, () => this.removeFunctionColumn(column, kind)));
+    const section = kind === 'group' ? 'row groups' : kind === 'value' ? 'values' : 'pivots';
+    member.append(label, this.createButton(`Remove ${this.getColumnName(column)} from ${section}`, () => this.removeFunctionColumn(column, kind)));
     return member;
   }
 
-  private appendUnavailableSection(title: string): void {
+  private appendPivotMode(): void {
     const section = document.createElement('section');
     section.className = 'lgr-columns-section';
     const heading = document.createElement('h3');
-    heading.textContent = title;
-    const status = document.createElement('div');
-    status.className = 'lgr-columns-unavailable';
-    status.textContent = 'Available in Phase 8';
-    section.append(heading, status);
+    heading.textContent = 'Pivot Mode';
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = this.api?.getGridOption?.('pivotMode') === true;
+    input.setAttribute('aria-label', 'Enable pivot mode');
+    input.disabled = this.isFunctionsReadOnly();
+    input.addEventListener('change', () => this.api?.setGridOption?.('pivotMode', input.checked));
+    label.append(input, ' Enable pivot mode');
+    section.append(heading, label);
     this.gui.appendChild(section);
   }
 
@@ -570,20 +580,20 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     }
   }
 
-  private getFunctionColumns(kind: 'group' | 'value'): Column[] {
+  private getFunctionColumns(kind: 'group' | 'value' | 'pivot'): Column[] {
     if (this.isFunctionDeferred(kind)) {
-      return kind === 'group' ? this.pendingRowGroupColumns ?? [] : this.pendingValueColumns ?? [];
+      return kind === 'group' ? this.pendingRowGroupColumns ?? [] : kind === 'value' ? this.pendingValueColumns ?? [] : this.pendingPivotColumns ?? [];
     }
-    const getter = kind === 'group' ? this.api?.getRowGroupColumns : this.api?.getValueColumns;
+    const getter = kind === 'group' ? this.api?.getRowGroupColumns : kind === 'value' ? this.api?.getValueColumns : this.api?.getPivotColumns;
     return getter?.call(this.api) ?? [];
   }
 
-  private isEligible(column: Column, kind: 'group' | 'value'): boolean {
+  private isEligible(column: Column, kind: 'group' | 'value' | 'pivot'): boolean {
     const colDef = this.getColDef(column);
-    return kind === 'group' ? colDef.enableRowGroup === true : colDef.enableValue === true;
+    return kind === 'group' ? colDef.enableRowGroup === true : kind === 'value' ? colDef.enableValue === true : colDef.enablePivot === true;
   }
 
-  private addFunctionColumn(column: Column, kind: 'group' | 'value'): void {
+  private addFunctionColumn(column: Column, kind: 'group' | 'value' | 'pivot'): void {
     if (this.isFunctionsReadOnly() || !this.isEligible(column, kind)) return;
     if (this.isFunctionDeferred(kind)) {
       const current = this.getFunctionColumns(kind);
@@ -591,18 +601,18 @@ export class ColumnsToolPanel implements IColumnToolPanel {
       this.render();
       return;
     }
-    const add = kind === 'group' ? this.api?.addRowGroupColumns : this.api?.addValueColumns;
+    const add = kind === 'group' ? this.api?.addRowGroupColumns : kind === 'value' ? this.api?.addValueColumns : this.api?.addPivotColumns;
     add?.call(this.api, [column]);
   }
 
-  private removeFunctionColumn(column: Column, kind: 'group' | 'value'): void {
+  private removeFunctionColumn(column: Column, kind: 'group' | 'value' | 'pivot'): void {
     if (this.isFunctionsReadOnly()) return;
     if (this.isFunctionDeferred(kind)) {
       this.setPendingFunctionColumns(kind, this.getFunctionColumns(kind).filter((current) => current !== column));
       this.render();
       return;
     }
-    const remove = kind === 'group' ? this.api?.removeRowGroupColumns : this.api?.removeValueColumns;
+    const remove = kind === 'group' ? this.api?.removeRowGroupColumns : kind === 'value' ? this.api?.removeValueColumns : this.api?.removePivotColumns;
     remove?.call(this.api, [column]);
   }
 
@@ -638,17 +648,18 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     this.render();
   }
 
-  private setPendingFunctionColumns(kind: 'group' | 'value', columns: Column[]): void {
+  private setPendingFunctionColumns(kind: 'group' | 'value' | 'pivot', columns: Column[]): void {
     if (kind === 'group') this.pendingRowGroupColumns = columns;
-    else this.pendingValueColumns = columns;
+    else if (kind === 'value') this.pendingValueColumns = columns;
+    else this.pendingPivotColumns = columns;
   }
 
   private isDeferredActionsEnabled(): boolean {
     return this.params?.buttons?.includes('apply') === true;
   }
 
-  private isFunctionDeferred(kind: 'group' | 'value'): boolean {
-    const setter = kind === 'group' ? this.api?.setRowGroupColumns : this.api?.setValueColumns;
+  private isFunctionDeferred(kind: 'group' | 'value' | 'pivot'): boolean {
+    const setter = kind === 'group' ? this.api?.setRowGroupColumns : kind === 'value' ? this.api?.setValueColumns : this.api?.setPivotColumns;
     return this.isDeferredActionsEnabled() && typeof setter === 'function';
   }
 
@@ -657,11 +668,13 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     this.pendingPinned = undefined;
     this.pendingRowGroupColumns = undefined;
     this.pendingValueColumns = undefined;
+    this.pendingPivotColumns = undefined;
     if (!this.isDeferredActionsEnabled()) return;
     this.pendingVisibility = new Map(this.getColumns().map((column) => [this.getColumnId(column), column.isVisible()]));
     this.pendingPinned = new Map(this.getColumns().map((column) => [this.getColumnId(column), column.getPinned()]));
     this.pendingRowGroupColumns = this.api?.getRowGroupColumns?.call(this.api);
     this.pendingValueColumns = this.api?.getValueColumns?.call(this.api);
+    this.pendingPivotColumns = this.api?.getPivotColumns?.call(this.api);
   }
 
   private applyPendingChanges(): void {
@@ -684,6 +697,7 @@ export class ColumnsToolPanel implements IColumnToolPanel {
       }
       if (this.pendingRowGroupColumns) this.api?.setRowGroupColumns?.(this.pendingRowGroupColumns);
       if (this.pendingValueColumns) this.api?.setValueColumns?.(this.pendingValueColumns);
+      if (this.pendingPivotColumns) this.api?.setPivotColumns?.(this.pendingPivotColumns);
     } finally {
       this.applyingPendingChanges = false;
     }
@@ -709,7 +723,7 @@ export class ColumnsToolPanel implements IColumnToolPanel {
   private addApiListeners(): void {
     const api = this.api;
     if (!api?.addEventListener) return;
-    for (const event of ['columnVisible', 'columnPinned', 'columnEverythingChanged', 'columnsReset', 'columnRowGroupChanged', 'columnValueChanged', 'columnMoved'] as const) {
+    for (const event of ['columnVisible', 'columnPinned', 'columnEverythingChanged', 'columnsReset', 'columnRowGroupChanged', 'columnValueChanged', 'columnPivotChanged', 'columnPivotModeChanged', 'columnMoved'] as const) {
       const eventListener = event === 'columnMoved' && this.params?.suppressSyncLayoutWithGrid
         ? () => undefined
         : () => this.syncPendingState(event);
@@ -729,6 +743,8 @@ export class ColumnsToolPanel implements IColumnToolPanel {
         this.pendingRowGroupColumns = this.api?.getRowGroupColumns?.call(this.api);
       } else if (event === 'columnValueChanged') {
         this.pendingValueColumns = this.api?.getValueColumns?.call(this.api);
+      } else if (event === 'columnPivotChanged') {
+        this.pendingPivotColumns = this.api?.getPivotColumns?.call(this.api);
       } else if (event === 'columnEverythingChanged' || event === 'columnsReset') {
         this.clearPendingChanges();
       }

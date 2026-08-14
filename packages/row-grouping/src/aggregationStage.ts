@@ -15,6 +15,12 @@ function isValueColumn(col: AgColumn): boolean {
   return colDef['aggFunc'] != null || colDef['enableValue'] === true;
 }
 
+function pivotKey(value: unknown): string {
+  if (value === null) return '\u0000null';
+  if (value === undefined) return '\u0000undefined';
+  return String(value);
+}
+
 /**
  * Computes `aggData` for every group node — bean `aggStage`, step `'aggregate'`.
  *
@@ -44,14 +50,15 @@ export class AggregationStage extends BeanStub implements _IRowNodeAggregationSt
     if (!rootNode) return;
 
     const valueCols = (this.beans.colModel.getCols() ?? []).filter(isValueColumn);
+    const pivotCols = this.beans.pivotResultCols?.pivotCols ?? null;
     const getGroupRowAgg = this.gos.get('getGroupRowAgg') as
       | ((params: { rowNode: RowNode }) => Record<string, unknown> | null | undefined)
       | undefined;
-    if (valueCols.length === 0 && !getGroupRowAgg) return;
+    if (valueCols.length === 0 && !pivotCols?.length && !getGroupRowAgg) return;
 
     // grandTotalRow needs a root aggregate to display regardless of
     // alwaysAggregateAtRootLevel — there is nothing else it could show.
-    const alwaysRoot = this.gos.get('alwaysAggregateAtRootLevel') === true || !!_getGrandTotalRow(this.gos);
+    const alwaysRoot = this.gos.get('alwaysAggregateAtRootLevel') === true || !!_getGrandTotalRow(this.gos) || !!pivotCols?.length;
 
     // Full traversal: after groupStage rebuilds the tree every group node is
     // new, so a changedPath (root-only on load) would skip them. Incremental
@@ -72,6 +79,7 @@ export class AggregationStage extends BeanStub implements _IRowNodeAggregationSt
         }
       }
       this.aggregateNode(node, valueCols, children);
+      if (pivotCols?.length) this.aggregatePivotNode(node, pivotCols, children);
     });
   }
 
@@ -120,6 +128,53 @@ export class AggregationStage extends BeanStub implements _IRowNodeAggregationSt
       const result = aggFunc(params as unknown as Parameters<IAggFunc>[0]);
       node.aggData[colId] = result ?? null;
     }
+  }
+
+  /**
+   * Result columns must aggregate from raw leaves, not a child group's already
+   * pivoted values: a child can contain several pivot-key buckets. This is a
+   * deliberately straightforward traversal; changed-path optimisation belongs
+   * to the later performance phase and must not compromise totals correctness.
+   */
+  private aggregatePivotNode(node: RowNode, pivotCols: AgColumn[], children: RowNode[]): void {
+    if (!node.aggData) node.aggData = Object.create(null);
+    const leaves = this.collectLeaves(children);
+    for (const resultCol of pivotCols) {
+      const def = resultCol.getColDef();
+      const source = def.pivotValueColumn as AgColumn | null | undefined;
+      if (!source) continue;
+      const keys = def.pivotKeys ?? [];
+      const values = leaves
+        .filter((leaf) => (this.beans.pivotColsSvc?.columns ?? []).every((pivotCol, index) =>
+          pivotKey(this.beans.valueSvc.getValue(pivotCol, leaf, 'data', true)) === keys[index],
+        ))
+        .map((leaf) => this.beans.valueSvc.getValue(source, leaf, 'data', true));
+      const aggFunc = this.resolveAggFunc(source);
+      if (!aggFunc) continue;
+      const params = this.gos.addCommon({
+        values,
+        column: resultCol,
+        colDef: resultCol.getColDef(),
+        rowNode: node,
+        data: node.data,
+        aggregatedChildren: leaves,
+      });
+      node.aggData[resultCol.getColId()] = aggFunc(params as unknown as Parameters<IAggFunc>[0]) ?? null;
+    }
+  }
+
+  private collectLeaves(children: RowNode[]): RowNode[] {
+    const leaves: RowNode[] = [];
+    const visit = (node: RowNode) => {
+      const descendants = node.childrenAfterFilter ?? node.childrenAfterGroup;
+      if (node.group && descendants) {
+        for (const child of descendants) visit(child);
+      } else {
+        leaves.push(node);
+      }
+    };
+    for (const child of children) visit(child);
+    return leaves;
   }
 
   private resolveAggFunc(col: AgColumn): IAggFunc | undefined {
