@@ -255,7 +255,7 @@ describe('ExcelCreator scope and page params (5.8)', () => {
     expect((mime as Blob).type).toBe('application/x-custom');
     const freezeCallback = await sheetOf(
       api!.getDataAsExcel({
-        freezeRows: ({ node }) => node.rowIndex !== null && node.rowIndex < 1,
+        freezeRows: ({ node }) => node !== undefined && node.rowIndex !== null && node.rowIndex < 1,
         freezeColumns: ({ column }) => column.getColId() !== 'amount',
       }),
     );

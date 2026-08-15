@@ -27,6 +27,14 @@ export class StyleResolver {
     for (const style of styles) this.byId.set(style.id, style);
   }
 
+  /** The cellXf index of the built-in mm-dd-yy date style (registered once). */
+  public dateStyleIndex(): number {
+    return this.registry.register({
+      id: '__libregrid-date__',
+      numberFormat: { format: 'mm-dd-yy' },
+    });
+  }
+
   /** Resolve a cell's styleId(s) to a cellXf index, or undefined for no style. */
   public indexFor(cell: ExcelCell): number | undefined {
     const styleId = cell.styleId;

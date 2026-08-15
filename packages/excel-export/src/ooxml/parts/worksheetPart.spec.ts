@@ -139,6 +139,24 @@ describe('buildWorksheetXml', () => {
     expect(cellNodes.map((c) => children(c, 'v')[0]!.text)).toEqual(['1', '0', '1', '0']);
   });
 
+  it('attaches the built-in date format to date cells via the resolver', () => {
+    const table = new SharedStringTable();
+    const resolver = new StyleResolver([]);
+    const sheet: ExcelTable = {
+      columns: [],
+      rows: [{ cells: [cell({ type: 'DateTime', value: '2020-01-01' })] }],
+    };
+    collectSharedStrings(table, sheet);
+    const xml = parseXml(
+      buildWorksheetXml({ table: sheet, sharedStrings: table, styleResolver: resolver }),
+    );
+    const cellNode = children(findAll(xml, 'row')[0]!, 'c')[0]!;
+    expect(cellNode.attrs.s).toBe('1');
+    const dateRecord = resolver.registry.styleRecords()[1]!;
+    expect(dateRecord.style.numberFormat).toEqual({ numFmtId: 14 });
+    expect(resolver.registry.styleRecords()).toHaveLength(2); // default + date
+  });
+
   it('converts date cells to 1900-system serial numbers', () => {
     const table = new SharedStringTable();
     const sheet: ExcelTable = {

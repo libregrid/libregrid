@@ -93,8 +93,12 @@ describe('ExcelCreator (integration)', () => {
     // Amount stays numeric; boolean is 1; date becomes a 1900 serial.
     expect(child(body[2]!, 'v')!.text).toBe('100');
     expect(child(body[3]!, 'v')!.text).toBe('1');
-    // 2024-01-15 = serial 45306 (2024-01-01 is 45292).
+    // 2024-01-15 = serial 45306 (2024-01-01 is 45292), displayed with the
+    // built-in mm-dd-yy format via the auto-registered date style.
     expect(child(body[4]!, 'v')!.text).toBe('45306');
+    expect(body[4]!.attrs.s).toBeDefined();
+    const styles = parsePart(parts, 'xl/styles.xml');
+    expect(children(child(styles, 'cellXfs')!, 'xf')[1]!.attrs.numFmtId).toBe('14');
 
     // Column widths: the default 200px column in jsdom layout.
     const colNodes = children(child(sheet, 'cols')!, 'col');
@@ -194,10 +198,12 @@ describe('ExcelCreator (integration)', () => {
     const sheet = parsePart(parts, 'xl/worksheets/sheet1.xml');
     const styles = parsePart(parts, 'xl/styles.xml');
     const xfs = children(child(styles, 'cellXfs')!, 'xf');
-    expect(xfs).toHaveLength(3);
+    // Money style (164), rule style (red font), and the auto date style (14).
+    expect(xfs).toHaveLength(4);
     // Money style: custom number format 164. Negative style: red font.
     expect(xfs[1]!.attrs.numFmtId).toBe('164');
     expect(xfs[2]!.attrs.fontId).toBe('1');
+    expect(xfs[3]!.attrs.numFmtId).toBe('14');
     expect(child(children(child(styles, 'fonts')!, 'font')[1]!, 'color')!.attrs.rgb).toBe('FFFF0000');
     // Amount cells carry the money style; the boolean column carries the rule style.
     const bodyRow = children(findAll(sheet, 'row')[1]!, 'c');

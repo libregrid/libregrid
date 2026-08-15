@@ -33,7 +33,9 @@ export type CellShape =
   | { kind: 'error'; value: string }
   | { kind: 'string'; value: string }
   | { kind: 'inlineString'; value: string }
-  | { kind: 'formula'; value: string };
+  | { kind: 'formula'; value: string }
+  /** A date serial: numeric, and displayed with the built-in date format. */
+  | { kind: 'date'; value: string };
 
 /**
  * Map an ExcelData value to its cell shape. Dates convert to 1900-system
@@ -58,7 +60,7 @@ export function resolveCellShape(data: ExcelData): CellShape {
     case 'DateTime':
     case 'd': {
       const serial = isoToExcelSerial(data.value);
-      if (serial !== null) return { kind: 'number', value: formatExcelSerial(serial) };
+      if (serial !== null) return { kind: 'date', value: formatExcelSerial(serial) };
       return { kind: 'string', value: truncateExcelString(data.value) };
     }
     case 'Error':
@@ -257,6 +259,14 @@ function buildCell(
         attrs: styleAttrs(ref, styleIndex),
         children: [{ name: 'v', text: shape.value }],
       };
+    case 'date':
+      // Without a style resolver the serial exports unformatted; the builder
+      // always provides one when a sheet contains date cells.
+      return {
+        name: 'c',
+        attrs: styleAttrs(ref, dateStyleIndexFor(cell, styleResolver)),
+        children: [{ name: 'v', text: shape.value }],
+      };
     case 'boolean':
       return {
         name: 'c',
@@ -298,6 +308,18 @@ function buildCell(
       };
     }
   }
+}
+
+/** The cellXf index for a date cell: the user's style unless it carries a
+ * number format, otherwise the built-in mm-dd-yy date style. */
+function dateStyleIndexFor(cell: ExcelCell, styleResolver?: StyleResolver): number | undefined {
+  if (!styleResolver) return undefined;
+  const userIndex = styleResolver.indexFor(cell);
+  if (userIndex !== undefined) {
+    const record = styleResolver.registry.styleRecords()[userIndex];
+    if (record && record.style.numberFormat.numFmtId !== 0) return userIndex;
+  }
+  return styleResolver.dateStyleIndex();
 }
 
 function styleAttrs(ref: string, styleIndex?: number, t?: string): XmlAttributes {

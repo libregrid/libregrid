@@ -12,6 +12,7 @@ import {
 import { buildSharedStringsXml } from './parts/sharedStringsPart';
 import { buildStylesXml } from './parts/stylesPart';
 import { buildCorePropsXml, buildCustomPropsXml } from './parts/docPropsPart';
+import { isoToExcelSerial } from './dateSerial';
 import {
   buildWorksheetXml,
   collectSharedStrings,
@@ -49,13 +50,28 @@ export interface XlsxBuildOptions {
  * The `parts` map mirrors the archive so the unzip-and-assert test harness
  * (phase 5.1) can cross-check the ZIP assembly against the generated XML.
  */
+/** Whether a table contains at least one cell that serialises as a date. */
+function tableHasDates(table: ExcelWorksheet['table']): boolean {
+  for (const row of table.rows) {
+    for (const cell of row.cells) {
+      const data = cell.data;
+      if (!data || data.value === null) continue;
+      if ((data.type === 'DateTime' || data.type === 'd') && isoToExcelSerial(data.value) !== null) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function buildXlsx(worksheets: ExcelWorksheet[], options: XlsxBuildOptions = {}): BuiltXlsx {
   const sharedStrings = new SharedStringTable();
   for (const worksheet of worksheets) {
     collectSharedStrings(sharedStrings, worksheet.table);
   }
   const hasStyles = (options.styles?.length ?? 0) > 0 || options.fontSize !== undefined;
-  const styleResolver = hasStyles
+  const hasDates = worksheets.some((worksheet) => tableHasDates(worksheet.table));
+  const styleResolver = hasStyles || hasDates
     ? new StyleResolver(options.styles ?? [], options.fontSize)
     : undefined;
 

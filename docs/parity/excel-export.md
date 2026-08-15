@@ -100,7 +100,7 @@
 | Opens without repair prompt in **Microsoft Excel** | ⬜ | **Gate criterion** — manual: open the `basic`, `styled`, `layout`, `grouped` and `paged` golden workbooks (see the phase test plan) in Excel and confirm no repair prompt |
 | Opens without repair prompt in **LibreOffice Calc** | ⬜ | **Gate criterion** — manual, same five workbooks |
 | Opens without repair prompt in **Google Sheets** | ⬜ | **Gate criterion** — manual, same five workbooks |
-| Dates correct incl. 1900 phantom leap day | ✅ | 5.2 — 1900-system serials with the phantom-leap-day rule; pre-1900 dates export as text (the 1900 system has no serial for them) |
+| Dates correct incl. 1900 phantom leap day | ✅ | 5.2 — 1900-system serials with the phantom-leap-day rule; pre-1900 dates export as text (the 1900 system has no serial for them). Date cells display with the built-in `mm-dd-yy` format unless the cell's style sets a number format (added after the first manual matrix run) |
 | Strings >32,767 chars handled | ✅ | 5.2 — truncated to Excel's per-cell limit |
 | Empty grid produces a valid workbook | ✅ | 5.1 — golden `empty` fixture + unzip-and-assert |
 | Unicode / emoji / RTL text correct | 🟡 | Unicode/emoji ✅ in 5.2 (integration round-trip) · RTL lands with 5.4 `rightToLeft` |

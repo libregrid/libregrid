@@ -126,4 +126,22 @@ describe('buildXlsx', () => {
     const { parts } = buildXlsx([emptySheet]);
     expect(parts['xl/styles.xml']).toBeUndefined();
   });
+
+  it('emits styles.xml with the date format when a sheet contains dates', () => {
+    const sheet: ExcelWorksheet = {
+      name: 'Dates',
+      table: {
+        columns: [],
+        rows: [{ cells: [{ data: { type: 'DateTime', value: '2020-01-01' } }] }],
+      },
+    };
+    const { parts } = buildXlsx([sheet]);
+    expect(parts['xl/styles.xml']).toBeDefined();
+    const styles = parsePart(parts, 'xl/styles.xml');
+    const xfs = children(child(styles, 'cellXfs')!, 'xf');
+    expect(xfs[1]!.attrs.numFmtId).toBe('14');
+    const cell = children(findAll(parsePart(parts, 'xl/worksheets/sheet1.xml'), 'row')[0]!, 'c')[0]!;
+    expect(cell.attrs.s).toBe('1');
+    expect(child(cell, 'v')!.text).toBe('43831');
+  });
 });
