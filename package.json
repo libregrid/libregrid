@@ -29,6 +29,7 @@
     "check:contamination": "node tools/check-contamination/bin.mjs",
     "check:versions": "node tools/version/check.mjs",
     "gen:version": "node tools/version/generate.mjs",
+    "release": "npm run gen:version && npm run verify && npx changeset publish",
     "docs": "npm -w apps/docs run dev",
     "manual:validate": "npm -w apps/docs run dev"
   },

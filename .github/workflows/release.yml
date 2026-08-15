@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  # A release is only prepared or published from a main commit that has passed CI.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # Use this once after adding the workflow to prepare the first version PR.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - run: npm ci
+
+      - name: Create version PR or publish packages
+        uses: changesets/action@v1
+        with:
+          version: npx changeset version
+          publish: npm run release
+          commit: 'chore: version packages'
+          title: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Required for the initial publish. Once every package has an npm
+          # trusted-publisher configuration, this secret can be removed.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Changesets invokes npm itself; this npm config flag creates
+          # provenance attestations, including for a package's first release.
+          NPM_CONFIG_PROVENANCE: 'true'
