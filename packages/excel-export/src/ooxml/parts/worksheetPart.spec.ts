@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ExcelCell, ExcelData, ExcelTable } from 'ag-grid-community';
+import type { ExcelCell, ExcelData, ExcelDataType, ExcelTable } from 'ag-grid-community';
 import { SharedStringTable } from '../sharedStringTable';
 import { collectSharedStrings, buildWorksheetXml } from './worksheetPart';
 import { parseXml, child, children, findAll } from '../../testing/parseXml';
@@ -195,14 +195,26 @@ describe('buildWorksheetXml', () => {
     expect(children(cellNode, 'v')[0]!.text).toBe('0');
   });
 
-  it('throws for data types that a later sub-PR implements', () => {
+  it('writes formula cells as f elements', () => {
     const table = new SharedStringTable();
     const sheet: ExcelTable = {
       columns: [],
-      rows: [{ cells: [cell({ type: 'Formula', value: '=1+1' })] }],
+      rows: [{ cells: [cell({ type: 'Formula', value: 'SUM(A2:A3)' })] }],
+    };
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table }));
+    const cellNode = children(findAll(xml, 'row')[0]!, 'c')[0]!;
+    expect(cellNode.attrs.t).toBeUndefined();
+    expect(child(cellNode, 'f')!.text).toBe('SUM(A2:A3)');
+  });
+
+  it('throws for data types that no sub-PR implements', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = {
+      columns: [],
+      rows: [{ cells: [cell({ type: 'unknown' as ExcelDataType, value: 'x' })] }],
     };
     expect(() => buildWorksheetXml({ table: sheet, sharedStrings: table })).toThrow(
-      'Excel data type "Formula" is not supported yet',
+      'Excel data type "unknown" is not supported.',
     );
   });
 

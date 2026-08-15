@@ -61,7 +61,7 @@
 
 - [x] **5.6 — Multi-sheet & API.** ✅ Landed 2026-08-15. `exportDataAsExcel`, `getDataAsExcel`, `getSheetDataForExcel`, `exportMultipleSheetsAsExcel`, `getMultipleSheetsAsExcel`; `sheetName`, `fileName`, `mimeType`, `activeSheetIndex`. The `ExcelCreator` bean extracts grid state (grouped rows included); grouped-grid outline tests cover `rowGroupExpandState`, `suppressRowOutline`, `skipRowGroups`; docs route + Playwright spec with real downloads.
 
-- [ ] **5.7 — Formulas & callbacks.** `autoConvertFormulas`, the `formula` bean, and every `process*Callback` plus `shouldRowBeSkipped`, `getCustomContentBelowRow`, `transformValues`, `valueFrom`.
+- [x] **5.7 — Formulas & callbacks.** ✅ Landed 2026-08-15. `autoConvertFormulas` (`=`-prefixed strings become `<f>` cells), `processCellCallback` (with `parseValue`/`formatValue` utilities and `accumulatedRowIndex`), `processHeaderCallback`, `processGroupHeaderCallback` (with merged column-group header rows), `processRowGroupCallback`, `shouldRowBeSkipped`, `getCustomContentBelowRow`, `transformValues` (via the `showValuesAsSvc` seam), `valueFrom`. The `formula` bean slot is intentionally not integrated: LibreGrid ships no Formula feature, and exported cells carry their values directly.
 
 - [ ] **5.8 — Scope, page setup & protection.** `allColumns`, `columnKeys`, `onlySelected`, `onlySelectedAllPages`, `exportedRows`, `rowPositions`, `skipColumnHeaders`, `skipColumnGroupHeaders`, `skipPinnedTop`, `skipPinnedBottom`, `skipPinnedRowDuplicates`, `pageSetup`, `margins`, `headerFooterConfig`, `protectSheet`, `author`, `customMetadata`, `prependContent`, `appendContent`, `exportRowNumbers`, `fontSize`.
 

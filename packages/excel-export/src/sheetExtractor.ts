@@ -1,5 +1,6 @@
 import type {
   Column,
+  ColumnGroup,
   ExcelCell,
   ExcelColumn,
   ExcelData,
@@ -9,8 +10,11 @@ import type {
   ExcelStyle,
   ExcelTable,
   ExcelWorksheet,
+  AgColumn,
   GridApi,
   IRowNode,
+  IShowValuesAsService,
+  ProvidedColumnGroup,
 } from 'ag-grid-community';
 import { isoToExcelSerial } from './ooxml/dateSerial';
 import type { WorksheetLayoutOptions } from './ooxml/parts/worksheetPart';
@@ -34,22 +38,138 @@ export function extractSheet(
   api: GridApi,
   params: ExcelExportParams,
   styles: ExcelStyle[] | null | undefined,
+  showValuesAs: IShowValuesAsService | null | undefined,
+  columnTree: readonly (Column | ProvidedColumnGroup)[],
 ): ExtractedSheet {
   const styleList = styles ?? [];
   const styleById = new Map(styleList.map((style) => [style.id, style]));
-  const columns = api.getAllDisplayedColumns() ?? [];
-  const headerRow: ExcelRow = {
-    cells: columns.map((column) => ({
-      data: { type: 'String', value: headerName(column) },
-    })),
+  const columns = selectColumns(api, params);
+  const rowNumberColumn = params.exportRowNumbers ? rowNumbersColumn(api) : null;
+  const headerRows = extractHeaderRows(api, params, columns, columnTree, rowNumberColumn);
+  const rows = extractRows(api, params, columns, styleById, showValuesAs, rowNumberColumn);
+  const pinnedTop = params.skipPinnedTop ? [] : extractPinnedRows(api, 'top', columns);
+  const pinnedBottom = params.skipPinnedBottom ? [] : extractPinnedRows(api, 'bottom', columns);
+  const bodyRows = [...params.prependContent ?? [], ...pinnedTop, ...rows, ...pinnedBottom, ...params.appendContent ?? []];
+  const allRows = [...headerRows, ...bodyRows];
+  const table: ExcelTable = {
+    columns: columns.map((column, index) => toExcelColumn(column, params, index)),
+    rows: allRows,
   };
-  const rows = extractRows(api, params, columns, styleById);
-  const table: ExcelTable = { columns: columns.map(toExcelColumn), rows: [headerRow, ...rows] };
   return {
     worksheet: { name: resolveSheetName(params, api), table },
-    layout: {},
+    layout: resolveLayout(api, params, headerRows.length),
     styles: styleList,
   };
+}
+
+/** Columns for the export: visible (default), all, or a columnKeys subset. */
+function selectColumns(api: GridApi, params: ExcelExportParams): Column[] {
+  if (params.columnKeys !== undefined) {
+    return params.columnKeys
+      .map((key) => (typeof key === 'string' ? api.getColumn(key) : key))
+      .filter((column): column is Column => column !== null && column !== undefined);
+  }
+  if (params.allColumns) return api.getAllGridColumns() ?? [];
+  return api.getAllDisplayedColumns() ?? [];
+}
+
+/** Synthetic first column for exportRowNumbers. */
+function rowNumbersColumn(api: GridApi): Column {
+  return {
+    getColId: () => '__libregrid_row_numbers__',
+    getColDef: () => ({ headerName: '#', field: undefined }),
+    getActualWidth: () => 50,
+    isRowGroupActive: () => false,
+  } as unknown as Column;
+}
+
+/** One cell of a header row: a leaf column or a spanning group cell. */
+interface HeaderCellInput {
+  column: Column | null;
+  group: ColumnGroup | null;
+  headerName: string;
+  leafCount: number;
+}
+
+/** Build group-header rows (one per tree level above the leaves) plus the leaf header row. */
+function extractHeaderRows(
+  api: GridApi,
+  params: ExcelExportParams,
+  columns: Column[],
+  columnTree: readonly (Column | ProvidedColumnGroup)[],
+  rowNumberColumn: Column | null,
+): ExcelRow[] {
+  const context = api.getGridOption('context');
+  const rows = params.skipColumnGroupHeaders
+    ? []
+    : headerRowsFromTree(columnTree, params, api, context);
+  if (!params.skipColumnHeaders) {
+    const cells: ExcelCell[] = [];
+    if (rowNumberColumn) {
+      cells.push({ data: { type: 'String', value: '#' } });
+    }
+    for (const column of columns) {
+      const headerName =
+        params.processHeaderCallback?.({ column, api, context }) ?? columnHeaderName(column);
+      cells.push({ data: { type: 'String', value: headerName } });
+    }
+    rows.push({ cells });
+  }
+  return rows;
+}
+
+/** Recursively flatten the column-group tree into one header row per level. */
+function headerRowsFromTree(
+  tree: readonly (Column | ProvidedColumnGroup)[],
+  params: ExcelExportParams,
+  api: GridApi,
+  context: unknown,
+): ExcelRow[] {
+  const rows: HeaderCellInput[][] = [];
+  const walk = (nodes: readonly (Column | ProvidedColumnGroup)[], level: number): void => {
+    for (const node of nodes) {
+      if (node.isColumn) {
+        const column = node as Column;
+        const levelRows = (rows[level] ??= []);
+        levelRows.push({
+          column,
+          group: null,
+          headerName:
+            params.processHeaderCallback?.({ column, api, context }) ?? columnHeaderName(column),
+          leafCount: 1,
+        });
+        continue;
+      }
+      const group = node as ProvidedColumnGroup;
+      const children = group.getChildren();
+      const leafCount = group.getLeafColumns().length;
+      const groupHeaderName = group.getColGroupDef()?.headerName ?? group.getGroupId();
+      const levelRows = (rows[level] ??= []);
+      levelRows.push({
+        column: null,
+        group: null,
+        headerName:
+          params.processGroupHeaderCallback?.({
+            columnGroup: group as unknown as ColumnGroup,
+            api,
+            context,
+          }) ?? groupHeaderName,
+        leafCount,
+      });
+      walk(children, level + 1);
+    }
+  };
+  walk(tree, 0);
+  // The last level holds the leaf columns; extractHeaderRows adds that row
+  // itself, so only the group levels above the leaves become rows here.
+  return rows.slice(0, -1).map((levelRow) => {
+    const cells: ExcelCell[] = [];
+    for (const input of levelRow) {
+      const data: ExcelData = { type: 'String', value: input.headerName };
+      cells.push(input.leafCount > 1 ? { data, mergeAcross: input.leafCount - 1 } : { data });
+    }
+    return { cells };
+  });
 }
 
 function extractRows(
@@ -57,18 +177,35 @@ function extractRows(
   params: ExcelExportParams,
   columns: Column[],
   styleById: Map<string, ExcelStyle>,
+  showValuesAs: IShowValuesAsService | null | undefined,
+  rowNumberColumn: Column | null,
 ): ExcelRow[] {
   const rows: ExcelRow[] = [];
   const expandState = params.rowGroupExpandState ?? 'expanded';
+  const context = api.getGridOption('context');
   // Iterate every node, not only displayed rows: children of collapsed
   // groups must exist in the file as hidden rows so Excel can expand them.
   const nodes: IRowNode[] = [];
   api.forEachNode((node) => nodes.push(node));
-  for (const node of nodes) {
+  const selected = selectNodes(api, params, nodes);
+  let rowNumber = 1;
+  let accumulatedRowIndex = params.prependContent?.length ?? 0;
+  for (const node of selected) {
     const isGroup = node.group === true;
     if (isGroup && params.skipRowGroups) continue;
-    const cells = columns.map((column) => cellFor(api, node, column, styleById));
+    if (params.shouldRowBeSkipped?.({ node, api, context })) continue;
+    const cells: ExcelCell[] = [];
+    if (rowNumberColumn) {
+      cells.push({ data: { type: 'Number', value: String(rowNumber) } });
+    }
+    for (const column of columns) {
+      cells.push(cellFor(api, node, column, styleById, params, accumulatedRowIndex, showValuesAs));
+    }
     const row: ExcelRow = { cells };
+    if (params.rowHeight !== undefined) {
+      const height = resolveRowHeight(params.rowHeight, accumulatedRowIndex);
+      if (height !== undefined) row.height = height;
+    }
     if (!params.suppressRowOutline) {
       const outlineLevel = outlineLevelFor(node, isGroup);
       if (outlineLevel !== undefined) {
@@ -78,8 +215,136 @@ function extractRows(
       }
     }
     rows.push(row);
+    rowNumber++;
+    accumulatedRowIndex++;
+    const customRows = params.getCustomContentBelowRow?.({ node, api, context });
+    if (customRows) {
+      rows.push(...customRows);
+      accumulatedRowIndex += customRows.length;
+    }
   }
   return rows;
+}
+
+/** Node subset per exportedRows / onlySelected / onlySelectedAllPages / rowPositions. */
+function selectNodes(api: GridApi, params: ExcelExportParams, nodes: IRowNode[]): IRowNode[] {
+  if (params.rowPositions !== undefined) {
+    const positions = new Set(
+      params.rowPositions
+        .filter((position) => !position.rowPinned)
+        .map((position) => position.rowIndex),
+    );
+    return nodes.filter((node) => node.rowIndex !== null && positions.has(node.rowIndex));
+  }
+  if (params.onlySelected || params.onlySelectedAllPages) {
+    const selected = api.getSelectedNodes() as IRowNode[];
+    if (params.onlySelectedAllPages) return selected;
+    return selected.filter((node) => node.displayed);
+  }
+  if (params.exportedRows === 'filteredAndSorted') {
+    return nodes.filter(
+      (node) => node.displayed || ancestorCollapsed(node, 'match'),
+    );
+  }
+  return nodes;
+}
+
+/** Pinned rows of one section, as export rows. */
+function extractPinnedRows(
+  api: GridApi,
+  position: 'top' | 'bottom',
+  columns: Column[],
+): ExcelRow[] {
+  const count =
+    position === 'top' ? api.getPinnedTopRowCount() : api.getPinnedBottomRowCount();
+  const rows: ExcelRow[] = [];
+  for (let index = 0; index < count; index++) {
+    const node =
+      position === 'top' ? api.getPinnedTopRow(index) : api.getPinnedBottomRow(index);
+    if (!node) continue;
+    rows.push({
+      cells: columns.map((column) => {
+        const value = api.getCellValue({ rowNode: node, colKey: column, useFormatter: false });
+        const data = excelData(value, undefined, paramsForPinned());
+        return data ? { data } : {};
+      }),
+    });
+  }
+  return rows;
+}
+
+function paramsForPinned(): ExcelExportParams | undefined {
+  return undefined;
+}
+
+/** Layout settings from the export params. */
+function resolveLayout(
+  api: GridApi,
+  params: ExcelExportParams,
+  headerRowCount: number,
+): WorksheetLayoutOptions {
+  const layout: WorksheetLayoutOptions = {};
+  const freezeColumns = resolveFreezeColumns(api, params);
+  if (freezeColumns !== undefined) layout.freezeColumns = freezeColumns;
+  const freezeRows = resolveFreezeRows(api, params, headerRowCount);
+  if (freezeRows !== undefined) layout.freezeRows = freezeRows;
+  const rightToLeft = params.rightToLeft ?? api.getGridOption('enableRtl') ?? false;
+  if (rightToLeft) layout.rightToLeft = true;
+  return layout;
+}
+
+function resolveFreezeColumns(api: GridApi, params: ExcelExportParams): number | undefined {
+  const freeze = params.freezeColumns;
+  if (freeze === undefined || freeze === 'pinned') {
+    const columns = api.getAllDisplayedColumns() ?? [];
+    const frozen = columns.filter((column) => column.isPinned?.());
+    return frozen.length > 0 ? frozen.length : undefined;
+  }
+  if (typeof freeze === 'function') {
+    const columns = api.getAllDisplayedColumns() ?? [];
+    let count = 0;
+    for (const column of columns) {
+      if (!freeze({ column, api, context: api.getGridOption('context') })) break;
+      count++;
+    }
+    return count > 0 ? count : undefined;
+  }
+  return undefined;
+}
+
+function resolveFreezeRows(
+  api: GridApi,
+  params: ExcelExportParams,
+  headerRowCount: number,
+): number | undefined {
+  const freeze = params.freezeRows;
+  if (freeze === 'headers') {
+    return headerRowCount;
+  }
+  if (freeze === 'headersAndPinnedRows') {
+    return headerRowCount + api.getPinnedTopRowCount();
+  }
+  if (typeof freeze === 'function') {
+    let count = 0;
+    api.forEachNode((node) => {
+      if (freeze({ node, api, context: api.getGridOption('context') })) count++;
+    });
+    return count > 0 ? count : undefined;
+  }
+  return undefined;
+}
+
+/** Pixels to Excel points (1px = 0.75pt). */
+function pxToPoints(px: number): number {
+  return Math.round(px * 75) / 100;
+}
+
+function resolveRowHeight(
+  rowHeight: ExcelExportParams['rowHeight'],
+  rowIndex: number,
+): number | undefined {
+  const value = typeof rowHeight === 'function' ? rowHeight({ rowIndex }) : rowHeight;
+  return value === undefined ? undefined : pxToPoints(value);
 }
 
 function cellFor(
@@ -87,36 +352,134 @@ function cellFor(
   node: IRowNode,
   column: Column,
   styleById: Map<string, ExcelStyle>,
+  params: ExcelExportParams,
+  accumulatedRowIndex: number,
+  showValuesAs: IShowValuesAsService | null | undefined,
 ): ExcelCell {
-  const value = rawValue(api, node, column);
+  const context = api.getGridOption('context');
+  let value = rawValue(api, node, column, params);
+  if (node.group && column.isRowGroupActive()) {
+    value = params.processRowGroupCallback?.({ node, column, api, context }) ?? value;
+  }
+  const agColumn = column as unknown as AgColumn;
+  if (
+    params.transformValues !== false &&
+    showValuesAs?.isApplying(agColumn) &&
+    value !== null &&
+    value !== undefined
+  ) {
+    const transformed = showValuesAs.transform(agColumn, node, value);
+    if (transformed !== null) {
+      value = showValuesAs.formatValue(agColumn, node, transformed, value, false) ?? value;
+    }
+  }
+  if (params.processCellCallback) {
+    value =
+      params.processCellCallback({
+        value,
+        accumulatedRowIndex,
+        node,
+        column,
+        type: 'excel',
+        parseValue: (text: string) => parseValue(api, column, node, text, value, context),
+        formatValue: (raw: unknown) => formatValue(api, column, node, raw, context),
+        api,
+        context,
+      }) ?? value;
+  }
   const dataTypeHint = styleDataTypeFor(column, styleById);
-  const data = excelData(value, dataTypeHint);
+  const data = excelData(value, dataTypeHint, params);
   const styleId = resolveCellStyleIds(api, node, column, value);
   if (data && styleId) return { data, styleId };
   return data ? { data } : styleId ? { styleId } : {};
 }
 
+function parseValue(
+  api: GridApi,
+  column: Column,
+  node: IRowNode,
+  text: string,
+  oldValue: unknown,
+  context: unknown,
+): unknown {
+  const parser = column.getColDef().valueParser;
+  if (typeof parser !== 'function') return text;
+  const colDef = column.getColDef();
+  return parser({
+    newValue: text,
+    oldValue,
+    data: node.data,
+    node,
+    colDef,
+    column,
+    api,
+    context,
+  } as never);
+}
+
+function formatValue(
+  api: GridApi,
+  column: Column,
+  node: IRowNode,
+  raw: unknown,
+  context: unknown,
+): string {
+  const formatter = column.getColDef().valueFormatter;
+  if (typeof formatter !== 'function') return String(raw);
+  const colDef = column.getColDef();
+  return (
+    formatter({
+      value: raw,
+      data: node.data,
+      node,
+      colDef,
+      column,
+      api,
+      context,
+    } as never) ?? String(raw)
+  );
+}
+
 /** The raw cell value, with group nodes reading group keys and aggregates. */
-function rawValue(api: GridApi, node: IRowNode, column: Column): unknown {
+function rawValue(
+  api: GridApi,
+  node: IRowNode,
+  column: Column,
+  params: ExcelExportParams,
+): unknown {
   if (node.group) {
     if (column.isRowGroupActive()) return node.key;
     const field = column.getColDef().field ?? column.getColId();
     if (node.aggData && field in node.aggData) return node.aggData[field];
     return null;
   }
-  return api.getCellValue({ rowNode: node, colKey: column, useFormatter: false });
+  return api.getCellValue({
+    rowNode: node,
+    colKey: column,
+    useFormatter: false,
+    ...(params.valueFrom !== undefined ? { valueFrom: params.valueFrom } : {}),
+  });
 }
 
 /** Map a grid value to ExcelData, honouring an ExcelStyle dataType hint. */
-export function excelData(value: unknown, dataTypeHint?: ExcelDataType): ExcelData | null {
+export function excelData(
+  value: unknown,
+  dataTypeHint?: ExcelDataType,
+  params?: ExcelExportParams,
+): ExcelData | null {
   if (value === null || value === undefined) return null;
   if (value instanceof Date) return { type: 'DateTime', value: value.toISOString() };
+  if (typeof value === 'string' && params?.autoConvertFormulas && value.startsWith('=')) {
+    return { type: 'Formula', value: value.slice(1) };
+  }
   switch (dataTypeHint) {
     case 'String':
       return { type: 'String', value: String(value) };
     case 'Number': {
       const numeric = typeof value === 'number' ? value : Number(value);
-      return Number.isNaN(numeric) ? { type: 'String', value: String(value) } : { type: 'Number', value: String(numeric) };
+      return Number.isNaN(numeric)
+        ? { type: 'String', value: String(value) }
+        : { type: 'Number', value: String(numeric) };
     }
     case 'Boolean':
       return {
@@ -147,7 +510,9 @@ function styleDataTypeFor(
 
 function cellClassIds(cellClass: unknown): string[] {
   if (typeof cellClass === 'string') return [cellClass];
-  if (Array.isArray(cellClass)) return cellClass.filter((entry): entry is string => typeof entry === 'string');
+  if (Array.isArray(cellClass)) {
+    return cellClass.filter((entry): entry is string => typeof entry === 'string');
+  }
   return [];
 }
 
@@ -183,7 +548,14 @@ function resolveCellStyleIds(
   return ids.length > 0 ? ids : undefined;
 }
 
-function toExcelColumn(column: Column): ExcelColumn {
+function toExcelColumn(column: Column, params: ExcelExportParams, index: number): ExcelColumn {
+  if (params.columnWidth !== undefined) {
+    const px =
+      typeof params.columnWidth === 'function'
+        ? params.columnWidth({ column, index })
+        : params.columnWidth;
+    if (px !== undefined) return { width: pxToExcelWidth(px) };
+  }
   // Without a rendered layout (e.g. headless tests) the width is undefined;
   // the documented 75px minimum still applies.
   return { width: pxToExcelWidth(column.getActualWidth() ?? 0) };
@@ -194,7 +566,7 @@ export function pxToExcelWidth(px: number): number {
   return Math.round((Math.max(px, MIN_COLUMN_WIDTH_PX) / PX_PER_EXCEL_CHAR) * 100) / 100;
 }
 
-function headerName(column: Column): string {
+function columnHeaderName(column: Column): string {
   const colDef = column.getColDef();
   return colDef.headerName ?? colDef.field ?? column.getColId();
 }

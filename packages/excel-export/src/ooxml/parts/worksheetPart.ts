@@ -23,7 +23,8 @@ export type CellShape =
   | { kind: 'boolean'; value: '1' | '0' }
   | { kind: 'error'; value: string }
   | { kind: 'string'; value: string }
-  | { kind: 'inlineString'; value: string };
+  | { kind: 'inlineString'; value: string }
+  | { kind: 'formula'; value: string };
 
 /**
  * Map an ExcelData value to its cell shape. Dates convert to 1900-system
@@ -54,10 +55,13 @@ export function resolveCellShape(data: ExcelData): CellShape {
     case 'Error':
     case 'e':
       return { kind: 'error', value: data.value };
+    case 'Formula':
+    case 'f':
+      return { kind: 'formula', value: data.value };
     case 'empty':
       return { kind: 'skip' };
     default:
-      throw new Error('Excel data type "' + data.type + '" is not supported yet (Phase 5.7).');
+      throw new Error('Excel data type "' + data.type + '" is not supported.');
   }
 }
 
@@ -180,6 +184,12 @@ function buildCell(
         name: 'c',
         attrs: styleAttrs(ref, styleIndex, 'e'),
         children: [{ name: 'v', text: shape.value }],
+      };
+    case 'formula':
+      return {
+        name: 'c',
+        attrs: styleAttrs(ref, styleIndex),
+        children: [{ name: 'f', text: shape.value }],
       };
     case 'inlineString':
       return {

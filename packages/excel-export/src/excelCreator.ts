@@ -1,5 +1,6 @@
 import {
   BeanStub,
+  type Column,
   type ExcelExportMultipleSheetParams,
   type ExcelExportParams,
   type ExcelFactoryMode,
@@ -9,6 +10,7 @@ import {
   type GridApi,
   type IExcelCreator,
   type NamedBean,
+  type ProvidedColumnGroup,
 } from 'ag-grid-community';
 import { buildXlsx } from './ooxml/xlsxBuilder';
 import type { WorksheetLayoutOptions } from './ooxml/parts/worksheetPart';
@@ -94,7 +96,16 @@ export class ExcelCreator extends BeanStub implements NamedBean, IExcelCreator {
 
   private extract(params: ExcelExportParams): ExtractedSheet {
     const styles = this.gos.get('excelStyles') as ExcelStyle[] | null | undefined;
-    return extractSheet(this.beans.gridApi, params, styles);
+    const colModel = this.beans.colModel as {
+      colsTree?: readonly (Column | ProvidedColumnGroup)[];
+    };
+    return extractSheet(
+      this.beans.gridApi,
+      params,
+      styles,
+      this.beans.showValuesAsSvc,
+      colModel.colsTree ?? [],
+    );
   }
 }
 

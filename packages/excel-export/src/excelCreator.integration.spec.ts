@@ -269,4 +269,182 @@ describe('ExcelCreator (integration)', () => {
     expect(createObjectURL).toHaveBeenCalledOnce();
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock');
   });
+
+  it('converts = strings into formulas only when autoConvertFormulas is set', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ExcelExportModule]);
+    api = createTradeGrid({
+      columnDefs: [{ field: 'country' }, { field: 'product' }],
+      rowData: [{ country: 'X', product: '=1+1' }],
+    });
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(1));
+    const asText = unzipXlsx(await blobBytes(expectBlob(api!.getDataAsExcel())));
+    const textCell = children(findAll(parsePart(asText, 'xl/worksheets/sheet1.xml'), 'row')[1]!, 'c')[1]!;
+    expect(textCell.attrs.t).toBe('s');
+    const textEntries = children(parsePart(asText, 'xl/sharedStrings.xml'), 'si').map(
+      (si) => child(si, 't')!.text,
+    );
+    expect(textEntries).toContain('=1+1');
+
+    const asFormula = unzipXlsx(
+      await blobBytes(expectBlob(api!.getDataAsExcel({ autoConvertFormulas: true }))),
+    );
+    const formulaCell = children(
+      findAll(parsePart(asFormula, 'xl/worksheets/sheet1.xml'), 'row')[1]!,
+      'c',
+    )[1]!;
+    expect(formulaCell.attrs.t).toBeUndefined();
+    expect(child(formulaCell, 'f')!.text).toBe('1+1');
+  });
+
+  it('invokes processCellCallback with parseValue/formatValue utilities', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ExcelExportModule]);
+    api = createTradeGrid({
+      columnDefs: [
+        { field: 'country' },
+        {
+          field: 'amount',
+          valueFormatter: (p: { value?: unknown }) => '$' + String(p.value),
+          valueParser: (p: { newValue?: string }) => Number(p.newValue),
+        },
+      ],
+      rowData: [{ country: 'X', amount: 100 }],
+    });
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(1));
+    const seen: unknown[] = [];
+    const blob = api!.getDataAsExcel({
+      processCellCallback: (p) => {
+        seen.push({ value: p.value, accumulatedRowIndex: p.accumulatedRowIndex, type: p.type });
+        return p.formatValue(p.parseValue('200'));
+      },
+    });
+    const parts = unzipXlsx(await blobBytes(expectBlob(blob)));
+    const bodyRow = children(findAll(parsePart(parts, 'xl/worksheets/sheet1.xml'), 'row')[1]!, 'c');
+    expect(seen).toEqual([
+      { value: 'X', accumulatedRowIndex: 0, type: 'excel' },
+      { value: 100, accumulatedRowIndex: 0, type: 'excel' },
+    ]);
+    const strings = parsePart(parts, 'xl/sharedStrings.xml');
+    expect(children(strings, 'si').map((si) => child(si, 't')!.text)).toContain('$200');
+    expect(bodyRow[1]!.attrs.t).toBe('s');
+  });
+
+  it('overrides header text through processHeaderCallback', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ExcelExportModule]);
+    api = createTradeGrid();
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(3));
+    const blob = api!.getDataAsExcel({
+      processHeaderCallback: (p) =>
+        p.column.getColId() === 'amount'
+          ? 'Total Amount'
+          : p.column.getColDef().headerName ?? p.column.getColId(),
+    });
+    const parts = unzipXlsx(await blobBytes(expectBlob(blob)));
+    const headerCells = children(findAll(parsePart(parts, 'xl/worksheets/sheet1.xml'), 'row')[0]!, 'c');
+    const strings = parsePart(parts, 'xl/sharedStrings.xml');
+    const texts = children(strings, 'si').map((si) => child(si, 't')!.text);
+    expect(texts[Number(child(headerCells[2]!, 'v')!.text)]).toBe('Total Amount');
+  });
+
+  it('renders column group header rows with merges and processGroupHeaderCallback', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ExcelExportModule]);
+    api = createTradeGrid({
+      columnDefs: [
+        { headerName: 'Details', children: [{ field: 'country' }, { field: 'product' }] },
+        { field: 'amount' },
+      ],
+      rowData: [{ country: 'X', product: 'A', amount: 1 }],
+    });
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(1));
+    const blob = api!.getDataAsExcel({
+      processGroupHeaderCallback: () => 'Renamed Group Header',
+    });
+    const parts = unzipXlsx(await blobBytes(expectBlob(blob)));
+    const sheet = parsePart(parts, 'xl/worksheets/sheet1.xml');
+    const rows = findAll(sheet, 'row');
+    expect(rows).toHaveLength(3); // group header + column header + body
+    const groupCells = children(rows[0]!, 'c');
+    expect(groupCells[0]!.attrs.r).toBe('A1');
+    expect(child(sheet, 'mergeCells')!).toBeDefined();
+    expect(children(child(sheet, 'mergeCells')!, 'mergeCell')[0]!.attrs.ref).toBe('A1:B1');
+    const strings = parsePart(parts, 'xl/sharedStrings.xml');
+    const texts = children(strings, 'si').map((si) => child(si, 't')!.text);
+    expect(texts).toContain('Renamed Group Header');
+  });
+
+  it('overrides group cell text through processRowGroupCallback', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule, ExcelExportModule]);
+    api = createTradeGrid({
+      columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'product' },
+        { field: 'amount' },
+        { field: 'closed' },
+        { field: 'date' },
+      ],
+      groupDefaultExpanded: -1,
+    });
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(5));
+    const blob = api!.getDataAsExcel({
+      processRowGroupCallback: (p) => 'Region: ' + String(p.node.key),
+    });
+    const parts = unzipXlsx(await blobBytes(expectBlob(blob)));
+    const strings = parsePart(parts, 'xl/sharedStrings.xml');
+    const texts = children(strings, 'si').map((si) => child(si, 't')!.text);
+    expect(texts).toContain('Region: US');
+    expect(texts).toContain('Region: DE');
+  });
+
+  it('skips rows via shouldRowBeSkipped and inserts custom rows below', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ExcelExportModule]);
+    api = createTradeGrid();
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(3));
+    const blob = api!.getDataAsExcel({
+      shouldRowBeSkipped: (p) => p.node.data?.product === 'Gadget',
+      getCustomContentBelowRow: (p) =>
+        p.node.data?.product === 'Widget'
+          ? [{ cells: [{ data: { type: 'String', value: 'Custom row' } }] }]
+          : undefined,
+    });
+    const parts = unzipXlsx(await blobBytes(expectBlob(blob)));
+    const sheet = parsePart(parts, 'xl/worksheets/sheet1.xml');
+    const strings = parsePart(parts, 'xl/sharedStrings.xml');
+    const texts = children(strings, 'si').map((si) => child(si, 't')!.text);
+    const stringOf = (cell: ReturnType<typeof findAll>[0]) =>
+      texts[Number(child(cell, 'v')!.text)];
+    const rows = findAll(sheet, 'row');
+    // Header + US/Widget + Custom row + DE/Widget + Custom row (Gadget rows skipped).
+    expect(rows).toHaveLength(5);
+    const productCells = rows.slice(1).map((row) => {
+      const cells = children(row, 'c');
+      return cells.length > 1 ? stringOf(cells[1]!) : stringOf(cells[0]!);
+    });
+    expect(productCells).toEqual(['Widget', 'Custom row', 'Widget', 'Custom row']);
+  });
+
+  it('applies the Show Values As transform unless transformValues is false', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule, ExcelExportModule]);
+    api = createTradeGrid({
+      columnDefs: [
+        { field: 'country' },
+        { field: 'product' },
+        { field: 'amount', showValuesAs: 'percentOfGrandTotal' },
+      ],
+      rowData: [
+        { country: 'X', product: 'A', amount: 100 },
+        { country: 'Y', product: 'B', amount: 300 },
+      ],
+    });
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(2));
+    const transformed = unzipXlsx(await blobBytes(expectBlob(api!.getDataAsExcel())));
+    const strings = parsePart(transformed, 'xl/sharedStrings.xml');
+    const texts = children(strings, 'si').map((si) => child(si, 't')!.text);
+    expect(texts.some((text) => text.includes('%'))).toBe(true);
+
+    const raw = unzipXlsx(
+      await blobBytes(expectBlob(api!.getDataAsExcel({ transformValues: false }))),
+    );
+    const rawSheet = parsePart(raw, 'xl/worksheets/sheet1.xml');
+    const amountCell = children(findAll(rawSheet, 'row')[1]!, 'c')[2]!;
+    expect(child(amountCell, 'v')!.text).toBe('100');
+  });
 });

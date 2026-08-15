@@ -49,17 +49,17 @@
 | `skipRowGroups` | 5.5 | ✅ | End-to-end test: group rows excluded from the export |
 | `rowGroupExpandState` | 5.5 | ✅ | ⭐ outline state — `expanded`/`collapsed`/`match` tested against a real grouped grid |
 | `suppressRowOutline` | 5.5 | ✅ | ⭐ differentiator — outline attributes suppressed end-to-end |
-| `suppressColumnOutline` | 5.5 | 🟡 | ⭐ differentiator — writer mechanism landed (5.5); param plumbing lands with 5.6 |
-| `autoConvertFormulas` | 5.7 | ⬜ | sub-PR 5.7 |
-| `processCellCallback` | 5.7 | ⬜ | sub-PR 5.7 |
-| `processHeaderCallback` | 5.7 | ⬜ | sub-PR 5.7 |
-| `processGroupHeaderCallback` | 5.7 | ⬜ | sub-PR 5.7 |
-| `processRowGroupCallback` | 5.5 | 🟡 | Writer outline mechanism landed (5.5); callback plumbing lands with 5.7 |
+| `suppressColumnOutline` | 5.5 | 🟡 | ⭐ differentiator — writer mechanism landed (5.5); grid-driven column-group outline extraction is not implemented (groups export as merged header rows, 5.7) |
+| `autoConvertFormulas` | 5.7 | ✅ | `=`-prefixed strings become `<f>` cells only when enabled; test covers both modes |
+| `processCellCallback` | 5.7 | ✅ | Tested with `accumulatedRowIndex`, `type`, `parseValue` and `formatValue` |
+| `processHeaderCallback` | 5.7 | ✅ | Header override tested |
+| `processGroupHeaderCallback` | 5.7 | ✅ | Tested with merged column-group header rows |
+| `processRowGroupCallback` | 5.5 | ✅ | Group-cell override tested on a real grouped grid |
 | `processNoteCallback` | 5.9 | ⬜ | Optional · decided at sub-PR 5.9 |
-| `shouldRowBeSkipped` | 5.7 | ⬜ | sub-PR 5.7 |
-| `getCustomContentBelowRow` | 5.7 | ⬜ | sub-PR 5.7 |
-| `transformValues` | 5.7 | ⬜ | sub-PR 5.7 |
-| `valueFrom` | 5.7 | ⬜ | sub-PR 5.7 |
+| `shouldRowBeSkipped` | 5.7 | ✅ | Tested |
+| `getCustomContentBelowRow` | 5.7 | ✅ | Custom rows inserted below matching rows; tested |
+| `transformValues` | 5.7 | ✅ | Show Values As transform applied via `showValuesAsSvc`; `false` tested |
+| `valueFrom` | 5.7 | 🟡 | Default `'data'` tested; `'batch'`/`'edit'` pass through to `getCellValue` |
 | `prependContent` | 5.8 | ⬜ | sub-PR 5.8 |
 | `appendContent` | 5.8 | ⬜ | sub-PR 5.8 |
 | `pageSetup` | 5.8 | ⬜ | sub-PR 5.8 |
