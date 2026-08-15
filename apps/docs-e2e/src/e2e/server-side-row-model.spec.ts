@@ -14,24 +14,18 @@ test.describe('server-side row model demo', () => {
     const grid = page.getByTestId('server-side-grid');
     await expect(grid.locator('[row-index="0"]')).toContainText('trade-1');
 
-    // v36's scrolling is wheel-driven; setting scrollTop programmatically
-    // does not feed the SSRM block loader. Wheel in steps so the lazy block
-    // loader has time to fetch between scrolls.
-    await grid.hover();
-    for (let step = 0; step < 5; step += 1) {
-      await page.mouse.wheel(0, 5_000);
-      await page.waitForTimeout(400);
+    // The demo paginates (100 rows/page), so the grid's scroll range never
+    // exceeds one page — reaching row 300 means paging forward, not scrolling.
+    const nextPage = page.getByRole('button', { name: 'Next Page' });
+    for (let step = 0; step < 3; step += 1) {
+      await nextPage.click();
+      await expect(grid.locator(`[row-index="${(step + 1) * 100}"]`)).toBeVisible();
     }
-    await expect.poll(async () =>
-      grid.locator('[row-index]').evaluateAll((rows) =>
-        rows.some(
-          (row) =>
-            Number(row.getAttribute('row-index')) > 300 && row.textContent?.includes('trade-'),
-        ),
-      ),
-    ).toBe(true);
+    await expect(grid.locator('[row-index="300"]')).toContainText('trade-301');
 
+    // Sorting doesn't return the pager to page 1 on its own.
     await grid.getByRole('columnheader', { name: 'Quantity' }).click();
+    await page.getByRole('button', { name: 'First Page' }).click();
     await expect(grid.locator('[row-index="0"]')).toContainText('trade-1');
     expect(gridErrors).toEqual([]);
   });

@@ -75,4 +75,10 @@ jobs:
       - name: Community conformance matrix
         run: NX_DAEMON=false npx nx run conformance:matrix
       - name: Benchmark comparison
+        # Non-blocking for now: comparing against a same-run baseline on shared
+        # GitHub Actions runners produces regression numbers dominated by
+        # runner noise, not real perf changes. Revisit once there's a stable
+        # baseline strategy (e.g. a dedicated runner or multi-run averaging)
+        # worth gating merges on.
+        continue-on-error: true
         run: NX_DAEMON=false npx nx run bench:compare
