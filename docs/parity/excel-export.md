@@ -91,8 +91,8 @@
 | Opens without repair prompt in **Microsoft Excel** | ⬜ | **Gate criterion** · manual matrix at the phase gate |
 | Opens without repair prompt in **LibreOffice Calc** | ⬜ | **Gate criterion** · manual matrix at the phase gate |
 | Opens without repair prompt in **Google Sheets** | ⬜ | **Gate criterion** · manual matrix at the phase gate |
-| Dates correct incl. 1900 phantom leap day | ⬜ | sub-PR 5.2 |
-| Strings >32,767 chars handled | ⬜ | Excel cell limit · sub-PR 5.2 |
+| Dates correct incl. 1900 phantom leap day | ✅ | 5.2 — 1900-system serials with the phantom-leap-day rule; pre-1900 dates export as text (the 1900 system has no serial for them) |
+| Strings >32,767 chars handled | ✅ | 5.2 — truncated to Excel's per-cell limit |
 | Empty grid produces a valid workbook | ✅ | 5.1 — golden `empty` fixture + unzip-and-assert |
-| Unicode / emoji / RTL text correct | ⬜ | Unicode/emoji sub-PR 5.2 · RTL sub-PR 5.4 |
+| Unicode / emoji / RTL text correct | 🟡 | Unicode/emoji ✅ in 5.2 (integration round-trip) · RTL lands with 5.4 `rightToLeft` |
 | Only runtime dependency is `fflate` | ✅ | 5.1 — `package.json` declares only `@libregrid/core` + `fflate` |

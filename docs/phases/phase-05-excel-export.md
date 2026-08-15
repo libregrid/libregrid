@@ -50,7 +50,7 @@
 - [x] **5.1 — OOXML skeleton.** ✅ Landed 2026-08-15. `fflate` zip assembly; `[Content_Types].xml`, `_rels/.rels`, `xl/workbook.xml`, `xl/_rels/workbook.xml.rels`, `xl/worksheets/sheet1.xml`, `xl/sharedStrings.xml`. Plain values only.
   The unzip-and-assert test harness ships in `src/testing/` with golden `basic`/`empty` fixtures — every later PR builds on it.
 
-- [ ] **5.2 — Data types.** String, number, boolean, date. 1900-epoch serial numbers including the phantom-leap-day rule.
+- [x] **5.2 — Data types.** ✅ Landed 2026-08-15. String, number, boolean, date, error. 1900-epoch serial numbers including the phantom-leap-day rule; pre-1900 dates fall back to text; strings truncate at Excel's 32,767-char cell limit.
 
 - [ ] **5.3 — Styling.** `xl/styles.xml` with a **deduplicating style registry** keyed by resolved `ExcelStyle`. Map `ExcelStyle`: `id`, `font`, `interior`, `borders`, `numberFormat`, `alignment`, `protection`, `dataType`.
 

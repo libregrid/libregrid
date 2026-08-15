@@ -40,6 +40,12 @@ const scenarios: Record<string, ExcelWorksheet[]> = {
               {},
             ],
           },
+          {
+            cells: [
+              { data: { type: 'Boolean', value: '1' } },
+              { data: { type: 'DateTime', value: '2020-01-01' } },
+            ],
+          },
         ],
       },
     },

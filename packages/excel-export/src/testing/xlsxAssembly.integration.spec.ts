@@ -124,4 +124,36 @@ describe('xlsx assembly (unzip-and-assert)', () => {
     const texts = children(strings, 'si').map((si) => child(si, 't')!.text);
     expect(texts).toEqual(['Name', 'Amount', 'Widget "A" & <B>']);
   });
+
+  it('handles booleans, dates, errors, unicode and strings over the cell limit', () => {
+    const long = 'y'.repeat(40000);
+    const typesSheet: ExcelWorksheet = {
+      name: 'Types',
+      table: {
+        columns: [],
+        rows: [
+          {
+            cells: [
+              { data: { type: 'Boolean', value: 'true' } },
+              { data: { type: 'DateTime', value: '1900-03-01' } },
+              { data: { type: 'Error', value: '#N/A' } },
+              { data: { type: 'String', value: 'emoji \ud83d\ude80 RTL \u0645\u0631\u062d\u0628\u0627' } },
+              { data: { type: 'String', value: long } },
+            ],
+          },
+        ],
+      },
+    };
+    const { parts } = buildXlsx([typesSheet]);
+    const sheetXml = parsePart(parts, 'xl/worksheets/sheet1.xml');
+    const cells = children(findAll(sheetXml, 'row')[0]!, 'c');
+    expect(cells.map((c) => c.attrs.t)).toEqual(['b', undefined, 'e', 's', 's']);
+    expect(child(cells[0]!, 'v')!.text).toBe('1');
+    expect(child(cells[1]!, 'v')!.text).toBe('61');
+    expect(child(cells[2]!, 'v')!.text).toBe('#N/A');
+    const strings = parsePart(parts, 'xl/sharedStrings.xml');
+    const texts = children(strings, 'si').map((si) => child(si, 't')!.text);
+    expect(texts[0]).toBe('emoji \ud83d\ude80 RTL \u0645\u0631\u062d\u0628\u0627');
+    expect(texts[1]).toHaveLength(32767);
+  });
 });
