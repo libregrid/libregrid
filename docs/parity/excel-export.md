@@ -46,15 +46,15 @@
 | `skipPinnedTop` | 5.8 | ⬜ | sub-PR 5.8 |
 | `skipPinnedBottom` | 5.8 | ⬜ | sub-PR 5.8 |
 | `skipPinnedRowDuplicates` | 5.8 | ⬜ | sub-PR 5.8 |
-| `skipRowGroups` | 5.5 | ⬜ | sub-PR 5.5 |
-| `rowGroupExpandState` | 5.5 | ⬜ | ⭐ outline state · sub-PR 5.5 |
-| `suppressRowOutline` | 5.5 | ⬜ | ⭐ differentiator · sub-PR 5.5 |
-| `suppressColumnOutline` | 5.5 | ⬜ | ⭐ differentiator · sub-PR 5.5 |
+| `skipRowGroups` | 5.5 | 🟡 | Writer outline mechanism landed (5.5); grid-driven mapping lands with the 5.6 extraction |
+| `rowGroupExpandState` | 5.5 | 🟡 | ⭐ outline state — writer emits `outlineLevel`/`collapsed`/`hidden` (5.5); grid-driven expansion mapping lands with 5.6 |
+| `suppressRowOutline` | 5.5 | 🟡 | ⭐ differentiator — writer mechanism landed (5.5); param plumbing lands with 5.6 |
+| `suppressColumnOutline` | 5.5 | 🟡 | ⭐ differentiator — writer mechanism landed (5.5); param plumbing lands with 5.6 |
 | `autoConvertFormulas` | 5.7 | ⬜ | sub-PR 5.7 |
 | `processCellCallback` | 5.7 | ⬜ | sub-PR 5.7 |
 | `processHeaderCallback` | 5.7 | ⬜ | sub-PR 5.7 |
 | `processGroupHeaderCallback` | 5.7 | ⬜ | sub-PR 5.7 |
-| `processRowGroupCallback` | 5.5 | ⬜ | sub-PR 5.5 |
+| `processRowGroupCallback` | 5.5 | 🟡 | Writer outline mechanism landed (5.5); callback plumbing lands with 5.7 |
 | `processNoteCallback` | 5.9 | ⬜ | Optional · decided at sub-PR 5.9 |
 | `shouldRowBeSkipped` | 5.7 | ⬜ | sub-PR 5.7 |
 | `getCustomContentBelowRow` | 5.7 | ⬜ | sub-PR 5.7 |

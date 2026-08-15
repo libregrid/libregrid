@@ -258,4 +258,65 @@ describe('xlsx assembly (unzip-and-assert)', () => {
       state: 'frozen',
     });
   });
+
+  it('preserves grouped-row outline levels and collapse state', () => {
+    const groupedSheet: ExcelWorksheet = {
+      name: 'Grouped',
+      table: {
+        columns: [{ width: 20, outlineLevel: 1 }, { width: 20, outlineLevel: 1 }],
+        rows: [
+          {
+            cells: [
+              { data: { type: 'String', value: 'Europe' } },
+              { data: { type: 'String', value: '' } },
+            ],
+            outlineLevel: 1,
+            collapsed: true,
+          },
+          {
+            cells: [
+              { data: { type: 'String', value: 'Germany' } },
+              { data: { type: 'Number', value: '10' } },
+            ],
+            outlineLevel: 2,
+            hidden: true,
+          },
+          {
+            cells: [
+              { data: { type: 'String', value: 'Asia' } },
+              { data: { type: 'String', value: '' } },
+            ],
+            outlineLevel: 1,
+            collapsed: false,
+          },
+          {
+            cells: [
+              { data: { type: 'String', value: 'Japan' } },
+              { data: { type: 'Number', value: '20' } },
+            ],
+            outlineLevel: 2,
+          },
+        ],
+      },
+    };
+    const { bytes, parts } = buildXlsx([groupedSheet]);
+    const unzipped = unzipXlsx(bytes);
+    expect(unzipped['xl/worksheets/sheet1.xml']).toBe(parts['xl/worksheets/sheet1.xml']);
+    const sheetXml = parsePart(parts, 'xl/worksheets/sheet1.xml');
+    const rows = findAll(sheetXml, 'row');
+    expect(rows.map((row) => row.attrs)).toEqual([
+      { r: '1', outlineLevel: '1', collapsed: '1' },
+      { r: '2', outlineLevel: '2', hidden: '1' },
+      { r: '3', outlineLevel: '1' },
+      { r: '4', outlineLevel: '2' },
+    ]);
+    const colNodes = children(child(sheetXml, 'cols')!, 'col');
+    expect(colNodes[0]!.attrs).toEqual({
+      width: '20',
+      customWidth: '1',
+      outlineLevel: '1',
+      min: '1',
+      max: '2',
+    });
+  });
 });

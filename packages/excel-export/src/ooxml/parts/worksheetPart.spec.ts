@@ -293,6 +293,38 @@ describe('buildWorksheetXml', () => {
     expect(rows[1]!.attrs).toEqual({ r: '2', hidden: '1' });
   });
 
+  it('writes row outline levels with collapse state', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = {
+      columns: [],
+      rows: [
+        { cells: [cell(stringCell('group'))], outlineLevel: 1, collapsed: true },
+        { cells: [cell(stringCell('child'))], outlineLevel: 2 },
+        { cells: [cell(stringCell('hidden-child'))], outlineLevel: 2, hidden: true },
+      ],
+    };
+    collectSharedStrings(table, sheet);
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table }));
+    const rows = findAll(xml, 'row');
+    expect(rows[0]!.attrs).toEqual({ r: '1', outlineLevel: '1', collapsed: '1' });
+    expect(rows[1]!.attrs).toEqual({ r: '2', outlineLevel: '2' });
+    expect(rows[2]!.attrs).toEqual({ r: '3', outlineLevel: '2', hidden: '1' });
+  });
+
+  it('writes column outline levels', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = {
+      columns: [{ outlineLevel: 1 }, { outlineLevel: 2 }, { outlineLevel: 2 }],
+      rows: [],
+    };
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table }));
+    const colNodes = children(child(xml, 'cols')!, 'col');
+    expect(colNodes.map((c) => c.attrs)).toEqual([
+      { outlineLevel: '1', min: '1', max: '1' },
+      { outlineLevel: '2', min: '2', max: '3' },
+    ]);
+  });
+
   it('writes mergeCells for mergeAcross and skips the covered cells', () => {
     const table = new SharedStringTable();
     const sheet: ExcelTable = {

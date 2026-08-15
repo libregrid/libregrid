@@ -120,6 +120,8 @@ function rowAttrs(row: ExcelRow, rowIndex: number): XmlAttributes {
     attrs.customHeight = 1;
   }
   if (row.hidden) attrs.hidden = 1;
+  if (row.outlineLevel !== undefined) attrs.outlineLevel = row.outlineLevel;
+  if (row.collapsed) attrs.collapsed = 1;
   return attrs;
 }
 
@@ -243,6 +245,7 @@ function colAttrs(column: ExcelColumn): XmlAttributes {
   if (column.hidden) attrs.hidden = 1;
   if (column.bestFit) attrs.bestFit = 1;
   if (column.s !== undefined) attrs.style = column.s;
+  if (column.outlineLevel !== undefined) attrs.outlineLevel = column.outlineLevel;
   return attrs;
 }
 

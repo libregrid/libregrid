@@ -56,8 +56,8 @@
 
 - [x] **5.4 — Layout.** ✅ Landed 2026-08-15. Column widths (`columnWidth`), row heights (`rowHeight`, `headerRowHeight`), merged cells (`mergeAcross` → `mergeCells`), freeze panes (`freezeColumns`, `freezeRows` → pane splits), `rightToLeft` (`sheetView`). Writer mechanisms only — the ExcelExportParams plumbing completes with the 5.6 API and 5.8 extraction.
 
-- [ ] **5.5 — Grouping outlines.** ⭐ Row/column `outlineLevel` + `collapsed`, driven by grid row groups. Implements `suppressRowOutline`, `suppressColumnOutline`, `rowGroupExpandState`, `skipRowGroups`, `processRowGroupCallback`.
-  **This is the differentiator — no off-the-shelf library does it.**
+- [x] **5.5 — Grouping outlines.** ✅ Writer landed 2026-08-15: ⭐ row/column `outlineLevel` + row `collapsed`/`hidden` (golden `grouped` fixture + unzip-and-assert integration test).
+  The grid-driven mapping — `suppressRowOutline`, `suppressColumnOutline`, `rowGroupExpandState`, `skipRowGroups`, `processRowGroupCallback` — completes with the 5.6 extraction and 5.7 callbacks, where the real-grouped-grid tests live. **This is the differentiator — no off-the-shelf library does it.**
 
 - [ ] **5.6 — Multi-sheet & API.** `exportDataAsExcel`, `getDataAsExcel`, `getSheetDataForExcel`, `exportMultipleSheetsAsExcel`, `getMultipleSheetsAsExcel`; `sheetName`, `fileName`, `mimeType`.
 

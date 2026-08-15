@@ -114,6 +114,34 @@ const scenarios: Record<string, Scenario> = {
       worksheets: [{ freezeColumns: 1, freezeRows: 1, rightToLeft: true }],
     },
   },
+  grouped: {
+    worksheets: [
+      {
+        name: 'Grouped',
+        table: {
+          columns: [{ width: 20, outlineLevel: 1 }, { width: 20, outlineLevel: 1 }],
+          rows: [
+            {
+              cells: [
+                { data: { type: 'String', value: 'Europe' } },
+                { data: { type: 'String', value: '' } },
+              ],
+              outlineLevel: 1,
+              collapsed: true,
+            },
+            {
+              cells: [
+                { data: { type: 'String', value: 'Germany' } },
+                { data: { type: 'Number', value: '10' } },
+              ],
+              outlineLevel: 2,
+              hidden: true,
+            },
+          ],
+        },
+      },
+    ],
+  },
 };
 
 function listFiles(dir: string): string[] {
