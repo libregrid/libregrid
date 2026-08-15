@@ -2,12 +2,13 @@
 
 > Enterprise-grade grid features for [AG Grid Community](https://www.npmjs.com/package/ag-grid-community), delivered as open-source modules.
 
+[![npm version](https://img.shields.io/npm/v/%40libregrid%2Fcore.svg)](https://www.npmjs.com/package/@libregrid/core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
 LibreGrid is for teams using `ag-grid-community` who need advanced data-grid
 capabilities without replacing their existing grid. It plugs into the Community
-module registry, so you keep your grid instance, column definitions, events,
-and familiar grid options while registering only the features your application
+module registry. You keep your grid instance, column definitions, events, and
+familiar grid options. You register only the feature modules your application
 uses.
 
 LibreGrid is an independent open-source project. It is not affiliated with,
@@ -25,35 +26,33 @@ advanced grid capabilities:
 | Filtering     | Set Filter, Multi Filter, Filters Tool Panel, Advanced Filter, Find      |
 | Interaction   | Cell-range selection, fill handle, clipboard copy/cut/paste, Rich Select |
 | Grid UI       | Context and column menus, side bar, columns tool panel, status bar       |
-| Visualisation | Integrated charts and sparklines                                         |
+| Visualization | Integrated charts and sparklines                                         |
 | Angular       | Angular module registration helpers, signals, and Material theme bridge  |
 
 Every feature is a separate package. Import only what you need for a smaller
-bundle; [`@libregrid/all`](./packages/all/README.md) is available for prototypes
-and demos.
+bundle. [`@libregrid/all`](./packages/all/README.md) is available for
+prototypes and demos.
 
 ## Status and compatibility
 
-LibreGrid’s 1.0 release is prepared and its feature set is covered by unit,
-integration, accessibility, and browser tests. Public npm publication is the
-remaining release operation. Until that happens, use this repository directly
-for evaluation or development.
+LibreGrid 1.0 is published to npm under the `@libregrid` scope. Unit,
+integration, accessibility, and browser tests cover its feature set.
 
-Maintainers can follow the [publishing guide](./docs/guides/publishing.md) to
-make the first release and configure subsequent tokenless releases.
+The [publishing guide](./docs/guides/publishing.md) describes how releases
+work. It also lists the remaining steps toward tokenless (trusted publisher)
+releases.
 
 - Supported peer dependency: `ag-grid-community >=36.1.0 <37`
-- Licence: [MIT](./LICENSE)
-- Known differences and omissions: [honest gap list](./docs/parity/gap-list.md)
+- License: [MIT](./LICENSE)
+- Known differences and omissions: [gap list](./docs/parity/gap-list.md)
 - Migration from `ag-grid-enterprise`: [migration guide](./docs/guides/migration-guide.md)
 
-Notably, Excel export is not shipped and PDF export is not planned. Read the
-gap list before committing to a migration.
+Excel export is not shipped. PDF export is not planned. Read the gap list
+before you plan a migration.
 
 ## Quick start
 
-Once the packages are published, install AG Grid Community and the LibreGrid
-feature packages you need:
+Install AG Grid Community and the LibreGrid feature packages you need:
 
 ```bash
 npm install ag-grid-community @libregrid/row-grouping
@@ -80,8 +79,8 @@ createGrid(document.querySelector('#myGrid')!, {
 });
 ```
 
-Feature modules bring along the shared LibreGrid core automatically. Add more
-packages and modules as your grid needs grow:
+Feature modules pull in the shared LibreGrid core automatically. Add more
+feature packages and modules as your grid needs grow:
 
 ```ts
 import { CellSelectionModule } from '@libregrid/cell-selection';
@@ -103,8 +102,8 @@ Enterprise module to its LibreGrid package.
 ## Angular
 
 For Angular applications, `@libregrid/angular` registers modules during
-bootstrap. `@libregrid/material` is optional and maps Angular Material 3 tokens
-onto the grid’s Quartz theme.
+bootstrap. `@libregrid/material` is optional. It maps Angular Material 3
+tokens onto the grid's Quartz theme.
 
 ```ts
 import { ApplicationConfig } from '@angular/core';
@@ -123,22 +122,23 @@ See [`@libregrid/angular`](./packages/angular/README.md) and
 
 ## Choose packages by feature
 
-| Need                                         | Package                                                                                                           |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Group, aggregate, or pivot client-side rows  | `@libregrid/row-grouping`, `@libregrid/pivot`                                                                     |
-| Load large server-backed data sets           | `@libregrid/server-side-row-model`                                                                                |
-| Provide filter controls                      | `@libregrid/set-filter`, `@libregrid/multi-filter`, `@libregrid/filters-tool-panel`, `@libregrid/advanced-filter` |
-| Let users select, fill, copy, or paste cells | `@libregrid/cell-selection`, `@libregrid/clipboard`                                                               |
-| Add menus, panels, or grid chrome            | `@libregrid/menu`, `@libregrid/side-bar`, `@libregrid/columns-tool-panel`, `@libregrid/status-bar`                |
-| Work with hierarchical or related records    | `@libregrid/tree-data`, `@libregrid/master-detail`                                                                |
-| Search/edit/display data                     | `@libregrid/find`, `@libregrid/rich-select`, `@libregrid/sparklines`                                              |
-| Create charts                                | `@libregrid/integrated-charts`                                                                                    |
-| Use Angular or Angular Material              | `@libregrid/angular`, `@libregrid/material`                                                                       |
+| Need | Package |
+| --- | --- |
+| Group, aggregate, or pivot client-side rows | [`@libregrid/row-grouping`](./packages/row-grouping/README.md), [`@libregrid/pivot`](./packages/pivot/README.md) |
+| Load large or live server-backed data sets | [`@libregrid/server-side-row-model`](./packages/server-side-row-model/README.md), [`@libregrid/viewport-row-model`](./packages/viewport-row-model/README.md) |
+| Provide filter controls | [`@libregrid/set-filter`](./packages/set-filter/README.md), [`@libregrid/multi-filter`](./packages/multi-filter/README.md), [`@libregrid/filters-tool-panel`](./packages/filters-tool-panel/README.md), [`@libregrid/advanced-filter`](./packages/advanced-filter/README.md) |
+| Let users select, fill, copy, or paste cells | [`@libregrid/cell-selection`](./packages/cell-selection/README.md), [`@libregrid/clipboard`](./packages/clipboard/README.md) |
+| Add menus, panels, or grid chrome | [`@libregrid/menu`](./packages/menu/README.md), [`@libregrid/side-bar`](./packages/side-bar/README.md), [`@libregrid/columns-tool-panel`](./packages/columns-tool-panel/README.md), [`@libregrid/status-bar`](./packages/status-bar/README.md) |
+| Work with hierarchical or related records | [`@libregrid/tree-data`](./packages/tree-data/README.md), [`@libregrid/master-detail`](./packages/master-detail/README.md) |
+| Search, edit, or display data | [`@libregrid/find`](./packages/find/README.md), [`@libregrid/rich-select`](./packages/rich-select/README.md), [`@libregrid/sparklines`](./packages/sparklines/README.md) |
+| Create charts | [`@libregrid/integrated-charts`](./packages/integrated-charts/README.md) |
+| Use Angular or Angular Material | [`@libregrid/angular`](./packages/angular/README.md), [`@libregrid/material`](./packages/material/README.md) |
+| Shared infrastructure (installed automatically) | [`@libregrid/core`](./packages/core/README.md) |
 
 ## Try the validation app
 
-This repository includes a hands-on docs and validation app covering every
-feature, including selection/clipboard flows, SSRM pagination, filter controls,
+This repository includes a docs and validation app. It covers every feature,
+including selection and clipboard flows, SSRM pagination, filter controls,
 and accessibility modes.
 
 ```bash
@@ -148,7 +148,7 @@ npm install
 npm run manual:validate
 ```
 
-Open the local URL printed by Angular, then visit **Manual validation** from the
+Open the local URL printed by Angular. Visit **Manual validation** from the
 navigation. The checklist is also available in
 [`docs/guides/manual-validation.md`](./docs/guides/manual-validation.md).
 
@@ -171,11 +171,12 @@ npm run build
 npm run verify
 ```
 
-Contributors should also read the
-[clean-room guardrails](./docs/reference/guardrails.md). LibreGrid must never
-depend on, install, or inspect `ag-grid-enterprise`.
+Read the [clean-room guardrails](./docs/reference/guardrails.md) before you
+contribute. LibreGrid must never depend on, install, or inspect
+`ag-grid-enterprise`.
 
-## Licence
+## License
 
-MIT — see [`LICENSE`](./LICENSE). LibreGrid preserves the relevant copyright
-notice in each package’s `NOTICE` file.
+MIT — see [`LICENSE`](./LICENSE). Every published package carries its own
+copy of the license plus a `NOTICE` file with the relevant copyright and
+third-party attribution.

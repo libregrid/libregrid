@@ -267,7 +267,59 @@ A phase is complete only when **every** item is true:
 
 ---
 
-## 10. Commands
+## 10. End-user-facing writing (Simplified Technical English)
+
+All writing a user reads — package `README.md`s, `docs/guides/`, the docs
+site (`apps/docs`), TSDoc on publicly exported symbols, and any error,
+warning, or CLI message a consumer can see — follows the sentence-construction
+rules of **ASD-STE100** (Simplified Technical English). Internal-only writing
+— phase files, ADRs, code comments, commit messages, this file — is exempt;
+write those however is clearest for maintainers.
+
+STE100's published dictionary is a fixed ~900-word vocabulary written for
+aircraft maintenance manuals. Applying it literally would reject words this
+project needs — `bean`, `pivot`, `tree-shaking`, `aggregation`, `module` — so
+**follow the sentence rules below, not the word list.** A defined technical
+or API term is always allowed, used consistently.
+
+1. **One idea per sentence.** Split any sentence that describes two actions
+   or two facts.
+   ✅ "Install the package. Then register its module."
+   ❌ "Install the package and then register its module before creating the grid."
+
+2. **Active voice.** Name what does the action.
+   ✅ "The grid registers the module."
+   ❌ "The module is registered by the grid."
+
+3. **Short sentences — aim under 20 words.** If a sentence needs a comma to
+   join two independent clauses, it is probably two sentences.
+
+4. **Imperative mood for instructions.** Tell the reader what to do; don't
+   describe what they could do.
+   ✅ "Add `ContextMenuModule` to `registerModules`."
+   ❌ "You could add `ContextMenuModule` to `registerModules`."
+
+5. **One term per concept, used consistently.** Don't vary a word for style.
+   If a doc calls something a "panel" once, don't call it a "widget" later.
+
+6. **No idioms, metaphors, or filler.** "Under the hood," "out of the box,"
+   and "at the end of the day" carry no fixed meaning for a non-native
+   reader. Delete them and state the fact instead.
+
+7. **Limit noun stacks to established terms.** Three or more nouns in a row
+   are hard to parse unless the whole phrase is already a fixed term (e.g.
+   "row group column" is a defined concept here). Don't invent new ones.
+   ✅ "the width of the side-bar panel"
+   ❌ "the side-bar panel width value"
+
+8. **Keep articles** (`a`, `the`). Don't drop them for brevity.
+
+Code samples, table cells, and headings are exempt from the sentence-length
+rules but still use plain, consistent wording.
+
+---
+
+## 11. Commands
 
 ```bash
 npx nx run-many -t lint test build     # unit + build, all packages
@@ -280,7 +332,7 @@ npx nx serve docs                      # live demo site
 
 ---
 
-## 11. Git workflow
+## 12. Git workflow
 
 - Branch per PR: `phase-N/short-description`
 - Large phases ship as **sequential** sub-PRs (see the phase file) — never one giant PR

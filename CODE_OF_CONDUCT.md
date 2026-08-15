@@ -2,23 +2,23 @@
 
 ## Our pledge
 
-We as members, contributors and leaders pledge to make participation in the LibreGrid community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, colour, religion, or sexual identity and orientation.
+We, as members, contributors and leaders, pledge to make participation in the LibreGrid community a harassment-free experience for everyone. This pledge holds regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.
 
 We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive and healthy community.
 
 ## Our standards
 
-Examples of behaviour that contributes to a positive environment:
+Examples of behavior that contributes to a positive environment:
 
 - Demonstrating empathy and kindness toward other people
 - Being respectful of differing opinions, viewpoints and experiences
 - Giving and gracefully accepting constructive feedback
-- Accepting responsibility, apologising to those affected by our mistakes, and learning from the experience
+- Accepting responsibility, apologizing to those affected by our mistakes, and learning from the experience
 - Focusing on what is best for the overall community
 
-Examples of unacceptable behaviour:
+Examples of unacceptable behavior:
 
-- The use of sexualised language or imagery, and sexual attention or advances of any kind
+- The use of sexualized language or imagery, and sexual attention or advances of any kind
 - Trolling, insulting or derogatory comments, and personal or political attacks
 - Public or private harassment
 - Publishing others' private information, such as a physical or email address, without their explicit permission
@@ -26,15 +26,15 @@ Examples of unacceptable behaviour:
 
 ## Enforcement responsibilities
 
-Project maintainers are responsible for clarifying and enforcing these standards and will take appropriate and fair corrective action in response to any behaviour they deem inappropriate, threatening, offensive or harmful.
+Project maintainers are responsible for clarifying and enforcing these standards. They will take appropriate and fair corrective action in response to any behavior they deem inappropriate, threatening, offensive or harmful.
 
 ## Scope
 
-This Code of Conduct applies within all community spaces, and also applies when an individual is officially representing the community in public spaces.
+This Code of Conduct applies within all community spaces. It also applies when an individual officially represents the community in public spaces.
 
 ## Enforcement
 
-Instances of abusive, harassing or otherwise unacceptable behaviour may be reported to the maintainers via [GitHub Security Advisories](https://github.com/libregrid/libregrid/security/advisories/new) or by contacting a maintainer directly. All complaints will be reviewed and investigated promptly and fairly.
+Report instances of abusive, harassing or otherwise unacceptable behavior to the maintainers via [GitHub Security Advisories](https://github.com/libregrid/libregrid/security/advisories/new) or by contacting a maintainer directly. Maintainers will review and investigate all complaints promptly and fairly.
 
 Maintainers are obligated to respect the privacy and security of the reporter of any incident.
 

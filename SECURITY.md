@@ -12,7 +12,8 @@ Please include: affected package and version, the `ag-grid-community` version in
 
 ## Supported versions
 
-Pre-`1.0.0`, only the latest published minor receives security fixes.
+LibreGrid packages version in lockstep. Only the latest published version
+receives security fixes.
 
 ## Scope
 
@@ -22,6 +23,6 @@ Pre-`1.0.0`, only the latest published minor receives security fixes.
 
 ## Supply chain
 
-LibreGrid keeps its dependency surface deliberately small: **`fflate`** (Excel export) and **`ag-charts-community`** (charts) are the only permitted runtime dependencies outside `@libregrid/*`. Adding another requires explicit sign-off.
+LibreGrid keeps its dependency surface small. **`fflate`** (Excel export) and **`ag-charts-community`** (charts) are the only permitted runtime dependencies outside `@libregrid/*`. Adding another dependency requires explicit sign-off.
 
 Packages are published with npm provenance.

@@ -60,10 +60,18 @@ for (const dir of dirs) {
     continue;
   }
 
-  // G3 attribution (Phase 13): every published package carries a NOTICE and
-  // a README with the independence disclaimer (guardrail G4).
+  // G3 attribution (Phase 13): every published package carries a LICENSE, a
+  // NOTICE, and a README with the independence disclaimer (guardrail G4).
+  const licensePath = join(PACKAGES_DIR, dir, 'LICENSE');
   const noticePath = join(PACKAGES_DIR, dir, 'NOTICE');
   const readmePath = join(PACKAGES_DIR, dir, 'README.md');
+  if (!existsSync(licensePath)) {
+    console.error(`   FAIL ${name}: missing LICENSE (G3 attribution)`);
+    failures++;
+  } else if (!(pkg.files ?? []).includes('LICENSE')) {
+    console.error(`   FAIL ${name}: LICENSE exists but is not in package.json "files" (G3 attribution)`);
+    failures++;
+  }
   if (!existsSync(noticePath)) {
     console.error(`   FAIL ${name}: missing NOTICE (G3 attribution)`);
     failures++;

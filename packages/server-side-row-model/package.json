@@ -19,6 +19,6 @@
     "@libregrid/pivot": "^1.0.0",
     "@libregrid/row-grouping": "^1.0.0"
   },
-  "files": ["dist", "NOTICE", "README.md"],
+  "files": ["dist", "LICENSE", "NOTICE", "README.md"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
 }

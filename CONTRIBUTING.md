@@ -1,6 +1,6 @@
 # Contributing to LibreGrid
 
-Thanks for your interest. Please read this in full before your first PR — LibreGrid has one non-negotiable legal rule that is unusual, and it matters more than anything else here.
+Thanks for your interest. Read this in full before your first PR. LibreGrid has one non-negotiable legal rule that is unusual. It matters more than anything else here.
 
 ---
 
@@ -14,11 +14,11 @@ LibreGrid is a **clean-room implementation**. We build against the MIT-licensed 
 - Reading its source, `dist`, `.d.ts`, or decompiled bundles
 - Cloning `github.com/ag-grid/ag-grid` without path exclusions (the enterprise package sits beside the community one)
 - Copying from blog posts, Stack Overflow answers or AI output that quotes Enterprise source
-- Installing a trial Enterprise build to compare behaviour — its EULA restricts reverse engineering
+- Installing a trial Enterprise build to compare behavior — its EULA restricts reverse engineering
 
 **Permitted sources, exclusively:** MIT source under `packages/ag-grid-community/`, `packages/ag-stack/`, `packages/ag-grid-angular/`, `community-modules/`; public documentation at ag-grid.com; `ag-charts-community`; `write-excel-file` (Phase 5 OOXML reference only).
 
-This is enforced by `npm run check:contamination`, which runs on every commit. If you are unsure whether something is allowed, **ask before doing it**. A contaminated contribution cannot be merged and may require rewriting history.
+`npm run check:contamination` enforces this rule on every commit. If you are unsure whether something is allowed, **ask before doing it**. A contaminated contribution cannot be merged and may require rewriting history.
 
 Full detail: [`docs/reference/guardrails.md`](./docs/reference/guardrails.md).
 
@@ -51,9 +51,9 @@ Read, in order:
 
 ---
 
-## How work is organised
+## How work is organized
 
-Development proceeds in **phases**, each with its own file carrying context, a todo list, a test plan and acceptance criteria. Phases are ordered by dependency.
+Development proceeds in **phases**. Each phase has its own file with context, a todo list, a test plan, and acceptance criteria. Phases are ordered by dependency.
 
 - **Do not start a phase until the previous one's acceptance criteria are met.**
 - Large phases ship as **sequential sub-PRs** (Phase 2 has five, Phase 5 has nine). Never one giant PR.
@@ -76,7 +76,7 @@ A change is complete when **all** of these hold — see [`standards.md`](./docs/
 - [ ] `NOTICE` + README attribution present in any new package
 - [ ] A Changeset added
 
-**Never mark a parity item ✅ without a passing test.** An option that exists in a type definition but is not honoured at runtime is ⬜, not ✅.
+**Never mark a parity item ✅ without a passing test.** An option that exists in a type definition but the grid does not honor at runtime is ⬜, not ✅.
 
 ---
 
@@ -100,6 +100,22 @@ A change is complete when **all** of these hold — see [`standards.md`](./docs/
 ❌ "The open-source AG Grid Enterprise" · anything implying affiliation or endorsement
 
 See [`guardrails.md`](./docs/reference/guardrails.md) G4.
+
+---
+
+## Writing style
+
+All writing a user reads follows the sentence-construction rules of
+**ASD-STE100** (Simplified Technical English). This covers READMEs,
+`docs/guides/`, the docs site, TSDoc on public exports, and error messages.
+The rules: one idea per sentence, active voice, short sentences, imperative
+instructions, one term per concept, no idioms. Defined technical and API
+terms (`bean`, `pivot`, `module`) are always allowed — the rule is about
+sentence construction, not a fixed word list. Internal-only writing (phase
+files, ADRs, code comments) is exempt.
+
+See [`standards.md`](./docs/reference/standards.md) §10 for the full rules
+with examples.
 
 ---
 

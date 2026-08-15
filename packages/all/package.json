@@ -46,6 +46,6 @@
     "@libregrid/tree-data": "^1.0.0",
     "@libregrid/viewport-row-model": "^1.0.0"
   },
-  "files": ["dist", "NOTICE", "README.md"],
+  "files": ["dist", "LICENSE", "NOTICE", "README.md"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
 }

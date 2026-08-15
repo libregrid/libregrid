@@ -2,9 +2,9 @@
 
 LibreGrid adds AG Grid Enterprise-equivalent features to **stock, unmodified
 `ag-grid-community`**. You keep the grid you already have — same `ag-grid-community`,
-same `ag-grid-angular`, same grid options — and swap only the module registration.
+same `ag-grid-angular`, same grid options. You swap only the module registration.
 
-LibreGrid is an independent open-source project and is not affiliated with AG Grid Ltd.
+LibreGrid is an independent open-source project. It is not affiliated with AG Grid Ltd.
 
 ## The five-minute migration
 
@@ -45,9 +45,9 @@ Install the packages you need alongside `ag-grid-community` (it stays a peer dep
 npm i ag-grid-community @libregrid/row-grouping @libregrid/menu @libregrid/columns-tool-panel
 ```
 
-That is the whole migration for most applications: **no grid code changes**, because
+That is the whole migration for most applications: **no grid code changes**.
 LibreGrid registers into the same module seams and bean slots that Community already
-declares. Registration performs no licence check; the grid behaves exactly as it does
+declares. Registration performs no license check. The grid behaves exactly as it does
 with the commercial package for the features listed here.
 
 ## Module-by-module mapping
@@ -91,32 +91,32 @@ LibreGrid-only packages with no Enterprise equivalent:
 
 ## What is identical
 
-- The grid instance, its options, events and API are `ag-grid-community`'s own — nothing is forked.
-- Module names match Enterprise's names, so code that checks `ModuleName` or registers
+- The grid instance, its options, events and API are `ag-grid-community`'s own. Nothing is forked.
+- Module names match Enterprise's names. Code that checks `ModuleName` or registers
   modules by name keeps working.
-- Version compatibility follows Community: LibreGrid peers on `ag-grid-community >=36.1.0 <37`,
-  and every package ships a generated `VERSION` pinned to the installed Community version.
+- Version compatibility follows Community. LibreGrid peers on `ag-grid-community >=36.1.0 <37`.
+  Every package ships a generated `VERSION` pinned to the installed Community version.
 
 ## What differs
 
 - **Charts** are drawn by MIT `ag-charts-community`. Chart types that exist only in the
-  commercial AG Charts are not available; the gap is documented in
+  commercial AG Charts are not available. The gap is documented in
   [`integrated-charts.md`](../parity/integrated-charts.md) and the gap list.
 - **UI shells** (menus, side bar, tool panels, status bar) are framework-neutral components
-  with optional Angular Material renderers — install `@libregrid/material` for a Material look.
-- **Performance characteristics** can differ per feature; benchmarks run against a Phase-0
+  with optional Angular Material renderers. Install `@libregrid/material` for a Material look.
+- **Performance characteristics** can differ per feature. Benchmarks run against a Phase-0
   baseline in CI (see `apps/bench`).
 
 ## What is missing
 
-Every unimplemented or partially implemented option is tracked, with a written rationale,
-in the per-feature checklists under [`docs/parity/`](../parity/) and summarised in the
-[gap list](../parity/gap-list.md). Read it before you commit to a migration — the honest
-gap list is what lets you judge whether LibreGrid covers your usage.
+The per-feature checklists under [`docs/parity/`](../parity/) track every
+unimplemented or partially implemented option, with a written rationale. The
+[gap list](../parity/gap-list.md) summarizes them. Read the gap list before
+you plan a migration. It helps you judge whether LibreGrid covers your usage.
 
 ## Versioning and releases
 
-- LibreGrid packages are versioned in lockstep; `@libregrid/core` is a regular dependency
-  (never a peer) and must resolve to one copy in your app.
-- Keep `ag-grid-community` inside `>=36.1.0 <37`; a conformance matrix runs in CI against
+- LibreGrid packages are versioned in lockstep. `@libregrid/core` is a regular dependency,
+  never a peer. It must resolve to one copy in your app.
+- Keep `ag-grid-community` inside `>=36.1.0 <37`. A conformance matrix runs in CI against
   every supported Community release.

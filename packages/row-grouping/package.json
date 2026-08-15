@@ -15,6 +15,6 @@
   "sideEffects": ["./src/menuItems.ts", "./dist/menuItems.js"],
   "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
   "dependencies": { "@libregrid/core": "^1.0.0", "@libregrid/menu": "^1.0.0" },
-  "files": ["dist", "NOTICE", "README.md"],
+  "files": ["dist", "LICENSE", "NOTICE", "README.md"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
 }

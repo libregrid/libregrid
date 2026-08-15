@@ -5,39 +5,39 @@ in the project [README](../../README.md).
 
 ## Before the first release
 
-1. Be an owner of the `@libregrid` npm organisation and enable npm two-factor
+1. Be an owner of the `@libregrid` npm organization. Enable npm two-factor
    authentication for **authorization and writes**.
 2. Create an npm granular access token named `libregrid-first-release` with
    **Bypass 2FA** enabled. Under **Packages and scopes**, grant **Read and
-   write** access to the `@libregrid` scope; do not grant access to every
+   write** access to the `@libregrid` scope. Do not grant access to every
    package in the account. Give it a short expiry that covers this release.
    In GitHub, add the copied value as a repository Actions secret named
    `NPM_TOKEN`. Never put this token in the repository or a workflow file.
-3. Confirm the GitHub repository is public and that every publishable package
+3. Confirm the GitHub repository is public. Confirm every publishable package
    has a `repository.url` pointing at `https://github.com/libregrid/libregrid`.
-   This is required for npm provenance.
+   npm provenance requires this.
 
 ## Release flow
 
-The [Release workflow](../../.github/workflows/release.yml) is driven by
-Changesets and has two outcomes:
+Changesets drives the [Release workflow](../../.github/workflows/release.yml).
+It has two outcomes:
 
 1. When release changesets exist, it opens a **Version Packages** pull request.
-   Review it, including the generated changelogs and package versions, then
+   Review it, including the generated changelogs and package versions. Then
    merge it.
 2. When no changesets remain, a successful CI run on `main` runs the release
-   checks and publishes every unpublished package with the `latest` dist-tag.
+   checks. It publishes every unpublished package with the `latest` dist-tag.
 
 The first successful CI run after the Release workflow reaches `main` creates
-the Version Packages pull request from the prepared 1.0.0 Changeset. If it
-needs to be retried, open **GitHub → Actions → Release → Run workflow** and
-select `main`. Merging the version pull request starts CI; after CI succeeds,
-the workflow publishes the packages.
+the Version Packages pull request from the prepared 1.0.0 Changeset. To retry
+it, open **GitHub → Actions → Release → Run workflow**. Select `main`.
+Merging the version pull request starts CI. After CI succeeds, the workflow
+publishes the packages.
 
 The workflow runs `npm run verify` before publishing. It uses
-`NPM_CONFIG_PROVENANCE=true`, while Changesets supplies `--access public` from
-the repository's Changesets configuration. This makes the initial scoped
-packages public and publishes npm provenance attestations.
+`NPM_CONFIG_PROVENANCE=true`. Changesets supplies `--access public` from the
+repository's Changesets configuration. This makes the initial scoped packages
+public. It also publishes npm provenance attestations.
 
 ## Verify a release
 
@@ -54,17 +54,16 @@ announcing the release.
 
 ## Move to tokenless publishing
 
-npm trusted publishers can only be configured after a package exists on the
+You can configure npm trusted publishers only after a package exists on the
 registry. After the first release, configure each `@libregrid/*` package in
 npm as a GitHub Actions trusted publisher:
 
-- GitHub organisation: `libregrid`
+- GitHub organization: `libregrid`
 - Repository: `libregrid`
 - Workflow filename: `release.yml`
 - Allowed action: `npm publish`
 
-Then remove the `NPM_TOKEN` repository secret and, on each npm package's
-**Publishing access** page, select **Require two-factor authentication and
-disallow tokens**. The workflow already has the required GitHub OIDC
-permission (`id-token: write`), and npm will use its short-lived credential
-automatically.
+Remove the `NPM_TOKEN` repository secret. On each npm package's **Publishing
+access** page, select **Require two-factor authentication and disallow
+tokens**. The workflow already has the required GitHub OIDC permission
+(`id-token: write`). npm will use its short-lived credential automatically.

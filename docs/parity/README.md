@@ -1,6 +1,6 @@
 # Parity Checklists
 
-These are **living documents**. They define what "feature for feature with AG Grid Enterprise" means in practice, and they are the artifact a reviewer checks at every phase gate.
+These are **living documents**. They define what "feature for feature with AG Grid Enterprise" means in practice. A reviewer checks them at every phase gate.
 
 ## Legend
 
@@ -14,14 +14,14 @@ These are **living documents**. They define what "feature for feature with AG Gr
 ## Rules
 
 1. **Updating the relevant checklist is part of every phase's acceptance criteria.** A phase is not done until its checklists are marked.
-2. **Never mark ✅ without a test.** An option that exists in a type definition but is not honoured at runtime is ⬜, not ✅.
+2. **Never mark ✅ without a test.** An option that exists in a type definition but the grid does not honor at runtime is ⬜, not ✅.
 3. **Every ❌ needs a written reason.** "Not implemented" is not a rationale. "AG Charts Community does not provide this chart type; would require reimplementing a commercial charting feature" is.
 4. **Sources are public documentation only** (guardrails G2). Never resolve an ambiguity by running the commercial build. If the docs are unclear, ask.
-5. Each file records the source URL and the transcription date. Docs change — if you find a discrepancy, re-check the source and note the date.
+5. Each file records the source URL and the transcription date. Docs change. If you find a discrepancy, re-check the source. Note the new date.
 
 ## Coverage caveat
 
-These lists were transcribed from the AG Grid documentation pages named in each file on **2026-08-11**. Where a docs page was an overview rather than an API reference, the file says so and names the sub-pages to expand from. Treat these as a strong starting point, not a guaranteed-exhaustive API dump — verify against the live docs when working a phase.
+We transcribed these lists from the AG Grid documentation pages named in each file on **2026-08-11**. Where a docs page was an overview rather than an API reference, the file says so. It names the sub-pages to expand from. Treat these lists as a strong starting point, not a guaranteed-exhaustive API dump. Verify against the live docs when you work a phase.
 
 ## Files
 

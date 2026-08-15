@@ -6,6 +6,6 @@ Run the focused browser validation harness from the repository root:
 npm run manual:validate
 ```
 
-Open the URL printed by Angular (normally `http://localhost:4200/`) and select **Manual validation**. The page links to a deterministic demo for every completed functional area, tells you what to exercise, and stores completed checks in browser local storage. Use **Reset** to start a new pass.
+Open the URL printed by Angular (normally `http://localhost:4200/`). Select **Manual validation**. The page links to a deterministic demo for every completed functional area. It tells you what to exercise. It stores completed checks in browser local storage. Use **Reset** to start a new pass.
 
-The harness is a real Angular consumer of the source packages and registers the same LibreGrid modules as the documentation app. It is intended for functional smoke testing; the automated suite remains responsible for regression and accessibility coverage.
+The harness is a real Angular consumer of the source packages. It registers the same LibreGrid modules as the documentation app. The harness provides functional smoke testing. The automated suite remains responsible for regression and accessibility coverage.
