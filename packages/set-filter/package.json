@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/set-filter",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Virtualised Set Filter for AG Grid Community — part of LibreGrid",
   "keywords": ["libregrid", "ag-grid", "set-filter", "filter"],
   "homepage": "https://github.com/libregrid/libregrid#readme",
@@ -10,7 +10,7 @@
   "type": "module",
   "sideEffects": false,
   "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
-  "dependencies": { "@libregrid/core": "^0.1.0" },
+  "dependencies": { "@libregrid/core": "^1.0.0" },
   "files": ["dist", "NOTICE", "README.md"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
 }

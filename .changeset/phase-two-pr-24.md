@@ -1,5 +1,0 @@
----
-'@libregrid/row-grouping': minor
----
-
-PR 2.4 — Expand/collapse, ordering & totals: `GroupSortStage` (bean `groupSortStage`, which Community calls *instead of* its own `sortStage` once grouping is active, so it owns root-level sorting too), `FooterService` (bean `footerSvc`) for `groupTotalRow`/`grandTotalRow`, `initialGroupOrderComparator` and `isGroupOpenByDefault` support in `GroupStage`, and stable `RowNode.id`s on group nodes. `api.expandAll`/`collapseAll`/`resetRowGroupExpansion` now work end-to-end (Community's own API functions were inert without `expansionSvc`, registered in PR 2.3). Also fixes two latent bugs found while building this: `FlattenStage` never read `childrenAfterSort`, so sorting never affected display order since PR 2.1; and `AggregationStage` never aggregated the root node unless `alwaysAggregateAtRootLevel` was set, so `grandTotalRow` had nothing to show. Sticky group/total rows are explicitly out of scope — a separate, self-contained `RowRenderer`/`RowCtrl` DOM-pinning feature; see `docs/parity/row-grouping.md`.

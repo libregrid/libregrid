@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/integrated-charts",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Integrated charting for AG Grid Community — part of LibreGrid",
   "keywords": ["libregrid", "ag-grid", "charts", "integrated-charts"],
   "homepage": "https://github.com/libregrid/libregrid#readme",
@@ -10,7 +10,7 @@
   "type": "module",
   "sideEffects": false,
   "peerDependencies": { "ag-grid-community": ">=36.1.0 <37", "ag-charts-community": ">=14.1.0 <15" },
-  "dependencies": { "@libregrid/core": "^0.1.0", "@libregrid/cell-selection": "^0.1.0", "@libregrid/menu": "^0.1.0" },
+  "dependencies": { "@libregrid/core": "^1.0.0", "@libregrid/cell-selection": "^1.0.0", "@libregrid/menu": "^1.0.0" },
   "files": ["dist", "NOTICE", "README.md"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
 }

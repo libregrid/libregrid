@@ -1,0 +1,37 @@
+# @libregrid/row-grouping
+
+## 1.0.0
+
+### Major Changes
+
+- a3b983c: Phase 13 — 1.0.0 release: parity audit, honest gap list, migration guide,
+  bundle budgets with tree-shaking fixtures, dist purity checks, dependency and
+  attribution CI checks, Angular signal ergonomics, the @libregrid/all barrel,
+  accessibility fixes, and hardened CI across Chromium, Firefox and WebKit.
+
+  Publication is externally owned: run the changesets release workflow from
+  main and publish with npm provenance (--provenance) as documented in
+  docs/phases/phase-13-hardening.md.
+
+### Minor Changes
+
+- 7aa7801: PR 2.1 — Stage plumbing: GroupStage, FlattenStage, and package scaffolding for AG Grid Community row grouping.
+- 7aa7801: PR 2.2 — Aggregation: AggFuncService with seven built-ins, aggStage/filterAggStage pipeline beans, ValueColsService and RowGroupColsService (enabling `treegrid` role and the row-group/value column APIs), minimal GroupFilterStage, and `groupDefaultExpanded` support.
+- 39bdeb0: PR 2.3 — Auto group column: `AutoGenColsService` (bean `autoColSvc`), `ShowRowGroupColsService`/`ShowRowGroupColsValueService` (the seam Community's `ValueService` routes group-column values through), `ExpansionService` (bean `expansionSvc`, required for `RowNode.setExpanded` to do anything), and the `agGroupCellRenderer` user component with a click/dblclick/Enter expand-collapse affordance. Supports `autoGroupColumnDef`, `groupDisplayType: 'singleColumn'`, `showOpenedGroup`, `groupHideOpenParents`, `groupHideParentOfSingleChild`, and `groupAllowUnbalanced`.
+- 1bbfdc5: PR 2.4 — Expand/collapse, ordering & totals: `GroupSortStage` (bean `groupSortStage`, which Community calls _instead of_ its own `sortStage` once grouping is active, so it owns root-level sorting too), `FooterService` (bean `footerSvc`) for `groupTotalRow`/`grandTotalRow`, `initialGroupOrderComparator` and `isGroupOpenByDefault` support in `GroupStage`, and stable `RowNode.id`s on group nodes. `api.expandAll`/`collapseAll`/`resetRowGroupExpansion` now work end-to-end (Community's own API functions were inert without `expansionSvc`, registered in PR 2.3). Also fixes two latent bugs found while building this: `FlattenStage` never read `childrenAfterSort`, so sorting never affected display order since PR 2.1; and `AggregationStage` never aggregated the root node unless `alwaysAggregateAtRootLevel` was set, so `grandTotalRow` had nothing to show. Sticky group/total rows are explicitly out of scope — a separate, self-contained `RowRenderer`/`RowCtrl` DOM-pinning feature; see `docs/parity/row-grouping.md`.
+- 1bbfdc5: PR 2.5 — Group filter & Show Values As: full `groupAggFiltering` support in `GroupFilterStage` (reusing Community's own `FilterManager.doesRowPassAggregateFilters`, with a fix for a filter-bucket classification quirk that otherwise silently disabled per-leaf filtering once `groupAggFiltering` was configured), a new `ShowValuesAsService` (bean `showValuesAsSvc`) implementing the five built-in "Show Values As" percent-of-total modes, and menu-item contributions (`rowGroup`, `rowUnGroup`, `expandAll`, `contractAll`, `valueAggSubMenu`) registered into `@libregrid/menu`'s registry with zero edits to that package. Also fixes a production-build bug where the menu registration's side effect was silently dropped by esbuild despite being reachable — `menuItems.ts` needed an explicit `sideEffects` array entry, not just an import.
+
+### Patch Changes
+
+- 4bad79b: Add the client-side Pivot module with generated nested result columns,
+  intersection aggregation, pivot APIs, functional Columns-panel controls, and
+  the documented high-cardinality guard.
+- 4bad79b: Add Tree Data source shapes and managed reparenting plus Master/Detail nested-grid lifecycle, caching, and refresh strategies.
+- 985c5f9: Preserve group expansion state across row-data updates by restoring deterministic group IDs after regrouping, and restore every nested group's rows when filters are cleared.
+- Updated dependencies [4bad79b]
+- Updated dependencies [f0d2329]
+- Updated dependencies [a3b983c]
+- Updated dependencies [ee4f9cc]
+- Updated dependencies [7aa7801]
+  - @libregrid/menu@1.0.0
+  - @libregrid/core@1.0.0
