@@ -1,5 +1,17 @@
 # @libregrid/pivot
 
+## 1.0.1
+
+### Patch Changes
+
+- 1fe2b96: Rewrote every package README with install instructions, usage examples,
+  and an API table, and added a LICENSE file to every package (previously
+  only NOTICE and README shipped in the published tarball). No runtime
+  behavior changed.
+- Updated dependencies [1fe2b96]
+  - @libregrid/core@1.0.1
+  - @libregrid/row-grouping@1.0.1
+
 ## 1.0.0
 
 ### Major Changes
