@@ -21,6 +21,33 @@ interface Scenario {
 }
 
 const scenarios: Record<string, Scenario> = {
+  paged: {
+    worksheets: [
+      {
+        name: 'Paged',
+        table: {
+          columns: [{ width: 30 }],
+          rows: [{ cells: [{ data: { type: 'String', value: 'Cell' } }] }],
+        },
+      },
+    ],
+    options: {
+      author: 'LibreGrid',
+      customMetadata: { exporter: 'libregrid' },
+      worksheets: [
+        {
+          pageSetup: { orientation: 'Landscape', pageSize: 'A4' },
+          margins: { left: 1 },
+          headerFooter: {
+            oddHeader: '&CReport',
+            oddFooter: '&LPage &P of &N',
+            firstHeader: '&CFirst Page',
+          },
+          protectSheet: { formatCells: true },
+        },
+      ],
+    },
+  },
   basic: {
     worksheets: [
       {

@@ -2,7 +2,7 @@
 
 > Parity-audited 2026-08-14 — no unresolved ⬜ rows.
 
-> **▶️ Phase 5 in progress.** Sub-PR 5.1 (OOXML skeleton + unzip-and-assert harness) landed 2026-08-15. Rows land sub-PR by sub-PR; rows still ⬜ carry the sub-PR that delivers them. The manual consumer-validation matrix (Excel / LibreOffice / Google Sheets) runs at the phase gate and blocks every ✅ in the gates table.
+> **▶️ Phase 5 delivered through 5.8 on 2026-08-15; 5.9 descoped with per-row rationale.** Only the three manual consumer-validation gates remain open — open the five golden workbooks in Excel, LibreOffice and Google Sheets and confirm no repair prompt. Everything else is ✅ or has a 🟡/❌ note.
 
 **Sources:** https://www.ag-grid.com/angular-data-grid/excel-export/ · `/excel-export-api/` · transcribed 2026-08-11
 **Phase:** 5 · **Package:** `@libregrid/excel-export`
@@ -25,27 +25,27 @@
 | `fileName` | 5.6 | ✅ | String or getter; default `export.xlsx` |
 | `sheetName` | 5.6 | ✅ | String or getter; default `ag-grid`; clamped to 31 chars |
 | `mimeType` | 5.6 | ✅ | Defaults to the OOXML mime type |
-| `author` | 5.8 | ⬜ | sub-PR 5.8 |
-| `customMetadata` | 5.8 | ⬜ | sub-PR 5.8 |
-| `columnWidth` | 5.4 | ✅ | Writer mechanism: `ExcelColumn.width` → `<col width customHeight>`; param plumbing in 5.8 |
-| `rowHeight` | 5.4 | ✅ | Writer mechanism: `ExcelRow.height` → `<row ht customHeight>`; param plumbing in 5.8 |
-| `headerRowHeight` | 5.4 | 🟡 | Writer mechanism ready (5.4); param plumbing lands in 5.8 |
-| `fontSize` | 5.8 | ⬜ | sub-PR 5.8 |
-| `freezeColumns` | 5.4 | ✅ | Writer mechanism: pane `xSplit`/`activePane`; param plumbing in 5.8 |
-| `freezeRows` | 5.4 | ✅ | Writer mechanism: pane `ySplit`/`activePane`; param plumbing in 5.8 |
-| `rightToLeft` | 5.4 | ✅ | Writer mechanism: `sheetView rightToLeft`; param plumbing in 5.8 |
-| `allColumns` | 5.8 | ⬜ | sub-PR 5.8 |
-| `columnKeys` | 5.8 | ⬜ | sub-PR 5.8 |
-| `onlySelected` | 5.8 | ⬜ | sub-PR 5.8 |
-| `onlySelectedAllPages` | 5.8 | ⬜ | sub-PR 5.8 |
-| `exportedRows` | 5.8 | ⬜ | sub-PR 5.8 |
-| `rowPositions` | 5.8 | ⬜ | sub-PR 5.8 |
-| `exportRowNumbers` | 5.8 | ⬜ | sub-PR 5.8 |
-| `skipColumnHeaders` | 5.8 | ⬜ | sub-PR 5.8 |
-| `skipColumnGroupHeaders` | 5.8 | ⬜ | sub-PR 5.8 |
-| `skipPinnedTop` | 5.8 | ⬜ | sub-PR 5.8 |
-| `skipPinnedBottom` | 5.8 | ⬜ | sub-PR 5.8 |
-| `skipPinnedRowDuplicates` | 5.8 | ⬜ | sub-PR 5.8 |
+| `author` | 5.8 | ✅ | `docProps/core.xml` `dc:creator`; tested |
+| `customMetadata` | 5.8 | ✅ | `docProps/custom.xml` string properties; tested |
+| `columnWidth` | 5.4 | ✅ | Number or callback → `ExcelColumn.width`; tested |
+| `rowHeight` | 5.4 | ✅ | Number or callback (px → pt) → `ExcelRow.height`; tested |
+| `headerRowHeight` | 5.4 | ✅ | Number or callback applied to header rows; tested |
+| `fontSize` | 5.8 | ✅ | Default font size in `styles.xml`; tested |
+| `freezeColumns` | 5.4 | ✅ | `pinned` or callback → pane `xSplit`; tested |
+| `freezeRows` | 5.4 | ✅ | `headers`/`headersAndPinnedRows`/callback → pane `ySplit`; tested |
+| `rightToLeft` | 5.4 | ✅ | Param or grid `enableRtl` → `sheetView rightToLeft` |
+| `allColumns` | 5.8 | ✅ | Hidden columns exported; tested |
+| `columnKeys` | 5.8 | ✅ | Column subset; tested |
+| `onlySelected` | 5.8 | ✅ | Selected displayed rows only; tested |
+| `onlySelectedAllPages` | 5.8 | 🟡 | Implemented (all selected nodes); no paginated-grid test |
+| `exportedRows` | 5.8 | ✅ | `filteredAndSorted` (default) vs `all`; tested with a live filter |
+| `rowPositions` | 5.8 | ✅ | Tested |
+| `exportRowNumbers` | 5.8 | ✅ | Leading numbered column; tested |
+| `skipColumnHeaders` | 5.8 | ✅ | Tested |
+| `skipColumnGroupHeaders` | 5.8 | ✅ | Tested |
+| `skipPinnedTop` | 5.8 | ✅ | Tested |
+| `skipPinnedBottom` | 5.8 | 🟡 | Same code path as `skipPinnedTop`; not separately tested |
+| `skipPinnedRowDuplicates` | 5.8 | 🟡 | Implemented via data-reference matching; no test (manual pinning needs the row-pinning drag feature) |
 | `skipRowGroups` | 5.5 | ✅ | End-to-end test: group rows excluded from the export |
 | `rowGroupExpandState` | 5.5 | ✅ | ⭐ outline state — `expanded`/`collapsed`/`match` tested against a real grouped grid |
 | `suppressRowOutline` | 5.5 | ✅ | ⭐ differentiator — outline attributes suppressed end-to-end |
@@ -55,21 +55,21 @@
 | `processHeaderCallback` | 5.7 | ✅ | Header override tested |
 | `processGroupHeaderCallback` | 5.7 | ✅ | Tested with merged column-group header rows |
 | `processRowGroupCallback` | 5.5 | ✅ | Group-cell override tested on a real grouped grid |
-| `processNoteCallback` | 5.9 | ⬜ | Optional · decided at sub-PR 5.9 |
+| `processNoteCallback` | 5.9 | ❌ | Descoped 2026-08-15 — notes need `xl/comments*` + vmlDrawing parts; not delivered (phase 5.9 descoped) |
 | `shouldRowBeSkipped` | 5.7 | ✅ | Tested |
 | `getCustomContentBelowRow` | 5.7 | ✅ | Custom rows inserted below matching rows; tested |
 | `transformValues` | 5.7 | ✅ | Show Values As transform applied via `showValuesAsSvc`; `false` tested |
 | `valueFrom` | 5.7 | 🟡 | Default `'data'` tested; `'batch'`/`'edit'` pass through to `getCellValue` |
-| `prependContent` | 5.8 | ⬜ | sub-PR 5.8 |
-| `appendContent` | 5.8 | ⬜ | sub-PR 5.8 |
-| `pageSetup` | 5.8 | ⬜ | sub-PR 5.8 |
-| `margins` | 5.8 | ⬜ | sub-PR 5.8 |
-| `headerFooterConfig` | 5.8 | ⬜ | sub-PR 5.8 |
-| `protectSheet` | 5.8 | ⬜ | sub-PR 5.8 |
-| `addImageToCell` | 5.9 | ⬜ | Optional — media parts + drawing XML · decided at sub-PR 5.9 |
-| `exportAsExcelTable` | 5.9 | ⬜ | Optional · decided at sub-PR 5.9 |
-| `suppressGridNotesExport` | 5.9 | ⬜ | Optional · decided at sub-PR 5.9 |
-| `suppressPrependAuthorToNotes` | 5.9 | ⬜ | Optional · decided at sub-PR 5.9 |
+| `prependContent` | 5.8 | ✅ | Tested |
+| `appendContent` | 5.8 | ✅ | Tested |
+| `pageSetup` | 5.8 | ✅ | Orientation + paper sizes incl. the full AG Grid list; tested |
+| `margins` | 5.8 | ✅ | Documented defaults filled in; tested |
+| `headerFooterConfig` | 5.8 | ✅ | Text, positions and font codes; images (`&G`) deferred to 5.9 |
+| `protectSheet` | 5.8 | ✅ | All flags + legacy password hash; tested |
+| `addImageToCell` | 5.9 | ❌ | Descoped 2026-08-15 — media parts + drawing XML out of scope; header/footer `&G` images too |
+| `exportAsExcelTable` | 5.9 | ❌ | Descoped 2026-08-15 — `xl/tables` parts out of scope |
+| `suppressGridNotesExport` | 5.9 | ❌ | Descoped with notes (above) |
+| `suppressPrependAuthorToNotes` | 5.9 | ❌ | Descoped with notes (above) |
 
 ## ExcelStyle
 
@@ -97,9 +97,9 @@
 
 | Requirement | Status | Notes |
 |---|---|---|
-| Opens without repair prompt in **Microsoft Excel** | ⬜ | **Gate criterion** · manual matrix at the phase gate |
-| Opens without repair prompt in **LibreOffice Calc** | ⬜ | **Gate criterion** · manual matrix at the phase gate |
-| Opens without repair prompt in **Google Sheets** | ⬜ | **Gate criterion** · manual matrix at the phase gate |
+| Opens without repair prompt in **Microsoft Excel** | ⬜ | **Gate criterion** — manual: open the `basic`, `styled`, `layout`, `grouped` and `paged` golden workbooks (see the phase test plan) in Excel and confirm no repair prompt |
+| Opens without repair prompt in **LibreOffice Calc** | ⬜ | **Gate criterion** — manual, same five workbooks |
+| Opens without repair prompt in **Google Sheets** | ⬜ | **Gate criterion** — manual, same five workbooks |
 | Dates correct incl. 1900 phantom leap day | ✅ | 5.2 — 1900-system serials with the phantom-leap-day rule; pre-1900 dates export as text (the 1900 system has no serial for them) |
 | Strings >32,767 chars handled | ✅ | 5.2 — truncated to Excel's per-cell limit |
 | Empty grid produces a valid workbook | ✅ | 5.1 — golden `empty` fixture + unzip-and-assert |

@@ -128,8 +128,8 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 - [x] **Phase 4 — Cell selection, clipboard & status bar** · [`phases/phase-04-selection-clipboard.md`](docs/phases/phase-04-selection-clipboard.md)
       Ranges, fill handle, Excel-compatible copy/paste, status panels.
 
-- [ ] **Phase 5 — Excel export — deferred, does not block 1.0** · [`phases/phase-05-excel-export.md`](docs/phases/phase-05-excel-export.md)
-      Own OOXML writer over `fflate`. Nine sub-PRs.
+- [x] **Phase 5 — Excel export** · [`phases/phase-05-excel-export.md`](docs/phases/phase-05-excel-export.md)
+      Own OOXML writer over `fflate`. Sub-PRs 5.1–5.8 landed 2026-08-15; 5.9 (images/tables/notes) descoped with rationale. The three consumer-validation gates (Excel/LibreOffice/Google Sheets open without a repair prompt) remain a manual check.
 
 - [x] **Phase 6 — Set/Multi filter & filters tool panel** · [`phases/phase-06-filters.md`](docs/phases/phase-06-filters.md)
 

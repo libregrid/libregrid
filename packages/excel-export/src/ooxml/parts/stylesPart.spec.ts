@@ -104,4 +104,16 @@ describe('buildStylesXml', () => {
     expect(children(font, 'name')[0]!.attrs.val).toBe('Arial');
     expect(children(font, 'family')[0]!.attrs.val).toBe('3');
   });
+
+  it('serialises single underlines and subscripts', () => {
+    const registry = new StyleRegistry();
+    registry.register({
+      id: 'sub',
+      font: { underline: 'Single', verticalAlign: 'Subscript' },
+    });
+    const xml = parseXml(buildStylesXml(registry));
+    const font = children(child(xml, 'fonts')!, 'font')[1]!;
+    expect(children(font, 'u')[0]!.attrs).toEqual({});
+    expect(children(font, 'vertAlign')[0]!.attrs.val).toBe('subscript');
+  });
 });

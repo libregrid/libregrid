@@ -6,6 +6,9 @@ import type {
   ExcelData,
   ExcelDataType,
   ExcelExportParams,
+  ExcelHeaderFooter,
+  ExcelHeaderFooterConfig,
+  ExcelHeaderFooterContent,
   ExcelRow,
   ExcelStyle,
   ExcelTable,
@@ -44,7 +47,7 @@ export function extractSheet(
   const styleList = styles ?? [];
   const styleById = new Map(styleList.map((style) => [style.id, style]));
   const columns = selectColumns(api, params);
-  const rowNumberColumn = params.exportRowNumbers ? rowNumbersColumn(api) : null;
+  const rowNumberColumn = params.exportRowNumbers ? rowNumbersColumn() : null;
   const headerRows = extractHeaderRows(api, params, columns, columnTree, rowNumberColumn);
   const rows = extractRows(api, params, columns, styleById, showValuesAs, rowNumberColumn);
   const pinnedTop = params.skipPinnedTop ? [] : extractPinnedRows(api, 'top', columns);
@@ -74,7 +77,7 @@ function selectColumns(api: GridApi, params: ExcelExportParams): Column[] {
 }
 
 /** Synthetic first column for exportRowNumbers. */
-function rowNumbersColumn(api: GridApi): Column {
+function rowNumbersColumn(): Column {
   return {
     getColId: () => '__libregrid_row_numbers__',
     getColDef: () => ({ headerName: '#', field: undefined }),
@@ -114,6 +117,12 @@ function extractHeaderRows(
       cells.push({ data: { type: 'String', value: headerName } });
     }
     rows.push({ cells });
+  }
+  if (params.headerRowHeight !== undefined) {
+    for (let index = 0; index < rows.length; index++) {
+      const height = resolveRowHeight(params.headerRowHeight, index);
+      if (height !== undefined) rows[index]!.height = height;
+    }
   }
   return rows;
 }
@@ -185,8 +194,11 @@ function extractRows(
   const context = api.getGridOption('context');
   // Iterate every node, not only displayed rows: children of collapsed
   // groups must exist in the file as hidden rows so Excel can expand them.
-  const nodes: IRowNode[] = [];
+  let nodes: IRowNode[] = [];
   api.forEachNode((node) => nodes.push(node));
+  if (params.skipPinnedRowDuplicates) {
+    nodes = withoutPinnedDuplicates(api, nodes);
+  }
   const selected = selectNodes(api, params, nodes);
   let rowNumber = 1;
   let accumulatedRowIndex = params.prependContent?.length ?? 0;
@@ -241,12 +253,24 @@ function selectNodes(api: GridApi, params: ExcelExportParams, nodes: IRowNode[])
     if (params.onlySelectedAllPages) return selected;
     return selected.filter((node) => node.displayed);
   }
-  if (params.exportedRows === 'filteredAndSorted') {
-    return nodes.filter(
-      (node) => node.displayed || ancestorCollapsed(node, 'match'),
-    );
+  if ((params.exportedRows ?? 'filteredAndSorted') === 'filteredAndSorted') {
+    return nodes.filter((node) => node.displayed || ancestorCollapsed(node, 'match'));
   }
   return nodes;
+}
+
+/** Drop body rows whose data object also backs a manually pinned row. */
+function withoutPinnedDuplicates(api: GridApi, nodes: IRowNode[]): IRowNode[] {
+  const pinnedData = new Set<unknown>();
+  for (let index = 0; index < api.getPinnedTopRowCount(); index++) {
+    const node = api.getPinnedTopRow(index);
+    if (node?.data !== undefined) pinnedData.add(node.data);
+  }
+  for (let index = 0; index < api.getPinnedBottomRowCount(); index++) {
+    const node = api.getPinnedBottomRow(index);
+    if (node?.data !== undefined) pinnedData.add(node.data);
+  }
+  return nodes.filter((node) => node.data === undefined || !pinnedData.has(node.data));
 }
 
 /** Pinned rows of one section, as export rows. */
@@ -265,16 +289,12 @@ function extractPinnedRows(
     rows.push({
       cells: columns.map((column) => {
         const value = api.getCellValue({ rowNode: node, colKey: column, useFormatter: false });
-        const data = excelData(value, undefined, paramsForPinned());
+        const data = excelData(value, undefined, undefined);
         return data ? { data } : {};
       }),
     });
   }
   return rows;
-}
-
-function paramsForPinned(): ExcelExportParams | undefined {
-  return undefined;
 }
 
 /** Layout settings from the export params. */
@@ -290,7 +310,80 @@ function resolveLayout(
   if (freezeRows !== undefined) layout.freezeRows = freezeRows;
   const rightToLeft = params.rightToLeft ?? api.getGridOption('enableRtl') ?? false;
   if (rightToLeft) layout.rightToLeft = true;
+  if (params.pageSetup) layout.pageSetup = params.pageSetup;
+  if (params.margins) layout.margins = params.margins;
+  if (params.headerFooterConfig) {
+    layout.headerFooter = resolveHeaderFooter(params.headerFooterConfig);
+  }
+  if (params.protectSheet) {
+    layout.protectSheet = params.protectSheet === true ? {} : params.protectSheet;
+  }
   return layout;
+}
+
+/** Resolve the header/footer config into OOXML code-syntax strings. */
+function resolveHeaderFooter(config: ExcelHeaderFooterConfig): {
+  oddHeader?: string;
+  oddFooter?: string;
+  evenHeader?: string;
+  evenFooter?: string;
+  firstHeader?: string;
+  firstFooter?: string;
+} {
+  const resolved: {
+    oddHeader?: string;
+    oddFooter?: string;
+    evenHeader?: string;
+    evenFooter?: string;
+    firstHeader?: string;
+    firstFooter?: string;
+  } = {};
+  if (config.all) {
+    const odd = headerFooterText(config.all);
+    if (odd.header !== undefined) resolved.oddHeader = odd.header;
+    if (odd.footer !== undefined) resolved.oddFooter = odd.footer;
+  }
+  if (config.first) {
+    const first = headerFooterText(config.first);
+    if (first.header !== undefined) resolved.firstHeader = first.header;
+    if (first.footer !== undefined) resolved.firstFooter = first.footer;
+  }
+  if (config.even) {
+    const even = headerFooterText(config.even);
+    if (even.header !== undefined) resolved.evenHeader = even.header;
+    if (even.footer !== undefined) resolved.evenFooter = even.footer;
+  }
+  return resolved;
+}
+
+function headerFooterText(section: ExcelHeaderFooter): {
+  header?: string;
+  footer?: string;
+} {
+  const out: { header?: string; footer?: string } = {};
+  if ('header' in section) out.header = buildHeaderFooterLine(section.header);
+  if ('footer' in section) out.footer = buildHeaderFooterLine(section.footer);
+  return out;
+}
+
+function buildHeaderFooterLine(items: ExcelHeaderFooterContent[]): string {
+  const parts = { Left: '', Center: '', Right: '' };
+  for (const item of items) {
+    const position = item.position ?? 'Left';
+    let text = item.value;
+    if (item.image) text += '&G';
+    if (item.font) {
+      const flags: string[] = [];
+      if (item.font.fontName) flags.push(item.font.fontName);
+      if (item.font.bold) flags.push('Bold');
+      if (item.font.italic) flags.push('Italic');
+      const fontSpec = flags.length > 0 ? '&"' + flags.join(',') + '"' : '';
+      const size = item.font.size !== undefined ? '&' + item.font.size : '';
+      text = fontSpec + size + text;
+    }
+    parts[position] += text;
+  }
+  return '&L' + parts.Left + '&C' + parts.Center + '&R' + parts.Right;
 }
 
 function resolveFreezeColumns(api: GridApi, params: ExcelExportParams): number | undefined {
@@ -582,8 +675,10 @@ function resolveSheetName(params: ExcelExportParams, api: GridApi): string {
 
 function outlineLevelFor(node: IRowNode, isGroup: boolean): number | undefined {
   if (isGroup) return node.level + 1;
+  // The invisible root node reports group=true with level -1; only real
+  // group parents contribute outline levels.
   const parent = node.parent;
-  if (parent?.group) return parent.level + 2;
+  if (parent?.group && parent.level >= 0) return parent.level + 2;
   return undefined;
 }
 
@@ -598,7 +693,7 @@ function ancestorCollapsed(
   expandState: 'expanded' | 'collapsed' | 'match',
 ): boolean {
   for (let parent = node.parent; parent; parent = parent.parent) {
-    if (parent.group && isCollapsed(parent, expandState)) return true;
+    if (parent.group && parent.level >= 0 && isCollapsed(parent, expandState)) return true;
   }
   return false;
 }

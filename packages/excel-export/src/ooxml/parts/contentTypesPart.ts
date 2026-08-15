@@ -17,6 +17,8 @@ export interface ContentTypesConfig {
   sheets: number;
   sharedStrings: boolean;
   styles: boolean;
+  coreProps?: boolean;
+  customProps?: boolean;
 }
 
 /** Build the [Content_Types].xml part. */
@@ -48,6 +50,24 @@ export function buildContentTypesXml(config: ContentTypesConfig): string {
     children.push({
       name: 'Override',
       attrs: { PartName: '/xl/styles.xml', ContentType: PART_CONTENT_TYPES.styles },
+    });
+  }
+  if (config.coreProps) {
+    children.push({
+      name: 'Override',
+      attrs: {
+        PartName: '/docProps/core.xml',
+        ContentType: 'application/vnd.openxmlformats-package.core-properties+xml',
+      },
+    });
+  }
+  if (config.customProps) {
+    children.push({
+      name: 'Override',
+      attrs: {
+        PartName: '/docProps/custom.xml',
+        ContentType: 'application/vnd.openxmlformats-officedocument.custom-properties+xml',
+      },
     });
   }
   return serializeXml({ name: 'Types', attrs: { xmlns: CONTENT_TYPES_NS }, children });

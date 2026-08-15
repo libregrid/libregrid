@@ -190,9 +190,9 @@ function borderStyle(border: ExcelBorder | undefined): string | null {
   }
 }
 
-function resolveFont(font?: ExcelFont): ResolvedFont {
-  if (!font) return DEFAULT_FONT;
-  const resolved: ResolvedFont = { ...DEFAULT_FONT };
+function resolveFont(font: ExcelFont | undefined, defaultSize = 11): ResolvedFont {
+  if (!font) return { ...DEFAULT_FONT, size: defaultSize };
+  const resolved: ResolvedFont = { ...DEFAULT_FONT, size: defaultSize };
   if (font.bold !== undefined) resolved.bold = font.bold;
   if (font.color !== undefined) resolved.color = toArgb(font.color);
   if (font.family !== undefined) resolved.family = FONT_FAMILIES[font.family] ?? 2;
@@ -269,9 +269,9 @@ function resolveProtection(protection?: ExcelProtection): ResolvedProtection | n
 }
 
 /** Resolve an ExcelStyle to a serialisable record with all defaults applied. */
-export function resolveStyle(style: ExcelStyle): ResolvedStyle {
+export function resolveStyle(style: ExcelStyle, defaultFontSize = 11): ResolvedStyle {
   return {
-    font: resolveFont(style.font),
+    font: resolveFont(style.font, defaultFontSize),
     fill: resolveFill(style.interior),
     borders: resolveBorders(style.borders),
     numberFormat: resolveNumberFormat(style.numberFormat),
@@ -303,7 +303,7 @@ export interface StyleRecord {
 export class StyleRegistry {
   private readonly records: StyleRecord[] = [];
   private readonly cellXfIndex = new Map<string, number>();
-  private readonly fonts: ResolvedFont[] = [DEFAULT_FONT];
+  private fonts: ResolvedFont[] = [DEFAULT_FONT];
   private readonly fontIndex = new Map<string, number>([[JSON.stringify(DEFAULT_FONT), 0]]);
   private readonly fills: ResolvedFill[] = [NO_FILL, GRAY125_FILL];
   private readonly fillIndex = new Map<string, number>([
@@ -313,16 +313,20 @@ export class StyleRegistry {
   private readonly borders: ResolvedBorders[] = [NO_BORDERS];
   private readonly borderIndex = new Map<string, number>([[JSON.stringify(NO_BORDERS), 0]]);
   private readonly customNumFmts = new Map<string, number>();
+  private readonly defaultFontSize: number;
 
-  constructor() {
-    const defaultStyle = resolveStyle({ id: '' });
+  constructor(defaultFontSize = 11) {
+    this.defaultFontSize = defaultFontSize;
+    this.fonts = [resolveFont(undefined, defaultFontSize)];
+    this.fontIndex.set(JSON.stringify(this.fonts[0]), 0);
+    const defaultStyle = resolveStyle({ id: '' }, defaultFontSize);
     this.cellXfIndex.set(styleSignature(defaultStyle), 0);
     this.records.push({ style: defaultStyle, fontId: 0, fillId: 0, borderId: 0 });
   }
 
   /** Register a style and return its `cellXf` index. */
   public register(style: ExcelStyle): number {
-    const resolved = resolveStyle(style);
+    const resolved = resolveStyle(style, this.defaultFontSize);
     const signature = styleSignature(resolved);
     const existing = this.cellXfIndex.get(signature);
     if (existing !== undefined) return existing;

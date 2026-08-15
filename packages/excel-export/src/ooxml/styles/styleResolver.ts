@@ -20,9 +20,10 @@ function defined(style: ExcelStyle): Partial<ExcelStyle> {
 export class StyleResolver {
   private readonly byId = new Map<string, ExcelStyle>();
   /** The registry backing styles.xml — register styles only through indexFor. */
-  public readonly registry = new StyleRegistry();
+  public readonly registry: StyleRegistry;
 
-  constructor(styles: ExcelStyle[]) {
+  constructor(styles: ExcelStyle[], defaultFontSize?: number) {
+    this.registry = new StyleRegistry(defaultFontSize ?? 11);
     for (const style of styles) this.byId.set(style.id, style);
   }
 

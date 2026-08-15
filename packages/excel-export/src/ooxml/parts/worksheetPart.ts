@@ -1,4 +1,13 @@
-import type { ExcelCell, ExcelColumn, ExcelData, ExcelRow, ExcelTable } from 'ag-grid-community';
+import type {
+  ExcelCell,
+  ExcelColumn,
+  ExcelData,
+  ExcelRow,
+  ExcelSheetMargin,
+  ExcelSheetPageSetup,
+  ExcelSheetProtection,
+  ExcelTable,
+} from 'ag-grid-community';
 import { cellRef } from '../cellRef';
 import { formatExcelSerial, isoToExcelSerial } from '../dateSerial';
 import type { SharedStringTable } from '../sharedStringTable';
@@ -88,6 +97,77 @@ export interface WorksheetLayoutOptions {
   freezeRows?: number;
   /** Render the sheet right-to-left. */
   rightToLeft?: boolean;
+  /** Print orientation and paper size (phase 5.8). */
+  pageSetup?: ExcelSheetPageSetup;
+  /** Print margins in inches (phase 5.8). */
+  margins?: ExcelSheetMargin;
+  /** Header/footer text, already in OOXML code syntax (phase 5.8). */
+  headerFooter?: ResolvedHeaderFooter;
+  /** Worksheet protection settings; absent means unprotected (phase 5.8). */
+  protectSheet?: ExcelSheetProtection;
+}
+
+/** Header/footer text in OOXML code syntax, split by page kind. */
+export interface ResolvedHeaderFooter {
+  oddHeader?: string;
+  oddFooter?: string;
+  evenHeader?: string;
+  evenFooter?: string;
+  firstHeader?: string;
+  firstFooter?: string;
+}
+
+/** Paper-size names mapped to OOXML paperSize ids (ECMA-376 ST_PaperSize). */
+const PAPER_SIZES: Record<string, number> = {
+  Letter: 1,
+  'Letter Small': 2,
+  Tabloid: 3,
+  Ledger: 4,
+  Legal: 5,
+  Statement: 6,
+  Executive: 7,
+  A3: 8,
+  A4: 9,
+  'A4 Small': 10,
+  A5: 11,
+  B4: 12,
+  B5: 13,
+  Folio: 14,
+  // The generic 'Envelope' entry maps to Envelope #10 (the common default).
+  Envelope: 20,
+  'Envelope DL': 27,
+  'Envelope C5': 28,
+  'Envelope C3': 29,
+  'Envelope C4': 30,
+  'Envelope C6': 31,
+  'Envelope B5': 34,
+  'Envelope Monarch': 37,
+  'Japanese Postcard': 43,
+  'Japanese Double Postcard': 69,
+};
+
+const DEFAULT_MARGINS: Required<ExcelSheetMargin> = {
+  top: 0.75,
+  right: 0.7,
+  bottom: 0.75,
+  left: 0.7,
+  header: 0.3,
+  footer: 0.3,
+};
+
+/** Legacy worksheet-protection password hash (15-bit rotation, 0xCE4B salt). */
+export function sheetPasswordHash(password: string): string {
+  let hash = 0;
+  for (let index = password.length - 1; index >= 0; index--) {
+    hash = rotateHash(hash) ^ password.charCodeAt(index);
+  }
+  hash = rotateHash(hash) ^ 0xce4b;
+  hash ^= password.length;
+  return hash.toString(16).toUpperCase().padStart(4, '0');
+}
+
+function rotateHash(hash: number): number {
+  return ((hash << 1) & 0x7fff) | ((hash >> 14) & 1);
 }
 
 /** Configuration for building one worksheet part. */
@@ -112,6 +192,10 @@ export function buildWorksheetXml(config: WorksheetXmlConfig): string {
   const cols = colsElement(table);
   if (cols) children.push(cols);
   children.push({ name: 'sheetData', children: rowElements });
+  if (layout?.protectSheet) children.push(sheetProtectionElement(layout.protectSheet));
+  if (layout?.margins) children.push(pageMarginsElement(layout.margins));
+  if (layout?.pageSetup) children.push(pageSetupElement(layout.pageSetup));
+  if (layout?.headerFooter) children.push(headerFooterElement(layout.headerFooter));
   const mergeCells = mergeCellsElement(table);
   if (mergeCells) children.push(mergeCells);
   return serializeXml({ name: 'worksheet', attrs: { xmlns: SHEET_NS }, children });
@@ -321,4 +405,74 @@ function buildDimension(table: ExcelTable): string {
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function sheetProtectionElement(protection: ExcelSheetProtection): XmlElement {
+  const attrs: XmlAttributes = {
+    sheet: 1,
+    objects: 1,
+    scenarios: 1,
+    formatCells: protection.formatCells ? 1 : 0,
+    formatColumns: protection.formatColumns ? 1 : 0,
+    formatRows: protection.formatRows ? 1 : 0,
+    insertColumns: protection.insertColumns ? 1 : 0,
+    insertRows: protection.insertRows ? 1 : 0,
+    insertHyperlinks: protection.insertHyperlinks ? 1 : 0,
+    deleteColumns: protection.deleteColumns ? 1 : 0,
+    deleteRows: protection.deleteRows ? 1 : 0,
+    selectLockedCells: protection.selectLockedCells === false ? 0 : 1,
+    sort: protection.autoFilter ? 1 : 0,
+    autoFilter: protection.autoFilter ? 1 : 0,
+    pivotTables: protection.pivotTables ? 1 : 0,
+    selectUnlockedCells: protection.selectUnlockedCells === false ? 0 : 1,
+  };
+  if (protection.password !== undefined) {
+    attrs.password = sheetPasswordHash(protection.password);
+  }
+  return { name: 'sheetProtection', attrs };
+}
+
+function pageMarginsElement(margins: ExcelSheetMargin): XmlElement {
+  const resolved = { ...DEFAULT_MARGINS, ...margins };
+  return {
+    name: 'pageMargins',
+    attrs: {
+      left: resolved.left,
+      right: resolved.right,
+      top: resolved.top,
+      bottom: resolved.bottom,
+      header: resolved.header,
+      footer: resolved.footer,
+    },
+  };
+}
+
+function pageSetupElement(pageSetup: ExcelSheetPageSetup): XmlElement {
+  const attrs: XmlAttributes = {};
+  if (pageSetup.orientation === 'Landscape') attrs.orientation = 'landscape';
+  if (pageSetup.pageSize !== undefined) {
+    attrs.paperSize = PAPER_SIZES[pageSetup.pageSize] ?? 1;
+  }
+  return { name: 'pageSetup', attrs };
+}
+
+function headerFooterElement(headerFooter: ResolvedHeaderFooter): XmlElement {
+  const attrs: XmlAttributes = {};
+  if (headerFooter.evenHeader !== undefined || headerFooter.evenFooter !== undefined) {
+    attrs.differentOddEven = 1;
+  }
+  if (headerFooter.firstHeader !== undefined || headerFooter.firstFooter !== undefined) {
+    attrs.differentFirst = 1;
+  }
+  const children: XmlElement[] = [];
+  const pushText = (name: string, value: string | undefined): void => {
+    children.push({ name, text: value ?? null });
+  };
+  pushText('oddHeader', headerFooter.oddHeader);
+  pushText('oddFooter', headerFooter.oddFooter);
+  pushText('evenHeader', headerFooter.evenHeader);
+  pushText('evenFooter', headerFooter.evenFooter);
+  pushText('firstHeader', headerFooter.firstHeader);
+  pushText('firstFooter', headerFooter.firstFooter);
+  return { name: 'headerFooter', attrs, children };
 }

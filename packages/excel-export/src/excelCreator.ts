@@ -50,6 +50,9 @@ export class ExcelCreator extends BeanStub implements NamedBean, IExcelCreator {
     const { bytes } = buildXlsx([sheet.worksheet], {
       styles: sheet.styles,
       worksheets: [sheet.layout],
+      ...(params?.author !== undefined ? { author: params.author } : {}),
+      ...(params?.customMetadata !== undefined ? { customMetadata: params.customMetadata } : {}),
+      ...(params?.fontSize !== undefined ? { fontSize: params.fontSize } : {}),
     });
     // fflate returns a fresh Uint8Array over a plain ArrayBuffer.
     return new Blob([bytes.buffer as ArrayBuffer], { type: params?.mimeType ?? DEFAULT_MIME_TYPE });
@@ -83,6 +86,9 @@ export class ExcelCreator extends BeanStub implements NamedBean, IExcelCreator {
         ...(params.activeSheetIndex !== undefined
           ? { activeSheetIndex: params.activeSheetIndex }
           : {}),
+        ...(params.author !== undefined ? { author: params.author } : {}),
+        ...(params.customMetadata !== undefined ? { customMetadata: params.customMetadata } : {}),
+        ...(params.fontSize !== undefined ? { fontSize: params.fontSize } : {}),
       },
     );
     return new Blob([bytes.buffer as ArrayBuffer], { type: params.mimeType ?? DEFAULT_MIME_TYPE });

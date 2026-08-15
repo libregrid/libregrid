@@ -1,6 +1,6 @@
 # Phase 5 — Excel Export
 
-**Status:** ▶️ In progress — started 2026-08-15, after every non-optional roadmap phase (4, 6–13) completed. Sub-PRs land sequentially; 5.1 is done.
+**Status:** ✅ Delivered 2026-08-15 — sub-PRs 5.1–5.8 landed sequentially; 5.9 descoped with rationale. One manual gate remains: open the five golden workbooks in Excel, LibreOffice and Google Sheets and confirm no repair prompt.
 **Depends on:** Phase 2 (grouped-row export needs outlines), Phase 4 (range-scoped export) — both complete.
 **Blocks:** nothing — Excel Export is an opt-in post-core investment.
 
@@ -63,10 +63,9 @@
 
 - [x] **5.7 — Formulas & callbacks.** ✅ Landed 2026-08-15. `autoConvertFormulas` (`=`-prefixed strings become `<f>` cells), `processCellCallback` (with `parseValue`/`formatValue` utilities and `accumulatedRowIndex`), `processHeaderCallback`, `processGroupHeaderCallback` (with merged column-group header rows), `processRowGroupCallback`, `shouldRowBeSkipped`, `getCustomContentBelowRow`, `transformValues` (via the `showValuesAsSvc` seam), `valueFrom`. The `formula` bean slot is intentionally not integrated: LibreGrid ships no Formula feature, and exported cells carry their values directly.
 
-- [ ] **5.8 — Scope, page setup & protection.** `allColumns`, `columnKeys`, `onlySelected`, `onlySelectedAllPages`, `exportedRows`, `rowPositions`, `skipColumnHeaders`, `skipColumnGroupHeaders`, `skipPinnedTop`, `skipPinnedBottom`, `skipPinnedRowDuplicates`, `pageSetup`, `margins`, `headerFooterConfig`, `protectSheet`, `author`, `customMetadata`, `prependContent`, `appendContent`, `exportRowNumbers`, `fontSize`.
+- [x] **5.8 — Scope, page setup & protection.** ✅ Landed 2026-08-15. `allColumns`, `columnKeys`, `onlySelected`, `onlySelectedAllPages`, `exportedRows`, `rowPositions`, `skipColumnHeaders`, `skipColumnGroupHeaders`, `skipPinnedTop`, `skipPinnedBottom`, `skipPinnedRowDuplicates`, `pageSetup`, `margins`, `headerFooterConfig`, `protectSheet` (incl. the legacy password hash), `author` + `customMetadata` (docProps parts), `prependContent`, `appendContent`, `exportRowNumbers`, `fontSize`, plus the deferred param plumbing for `columnWidth`/`rowHeight`/`headerRowHeight`/`freezeColumns`/`freezeRows`/`rightToLeft`. Golden `paged` fixture; header/footer images (`&G`) remain with 5.9.
 
-- [ ] **5.9 — Optional, only if the gate is otherwise green.** Images (`addImageToCell` — needs `xl/media/*`, drawing XML, relationships), Excel tables (`exportAsExcelTable`), notes (`processNoteCallback`, `suppressGridNotesExport`, `suppressPrependAuthorToNotes`).
-  If descoped, mark ❌ in the parity checklist with rationale.
+- [x] **5.9 — Optional.** ❌ Descoped 2026-08-15, per the phase file's own guidance: the 5.1–5.8 gate is otherwise green, and images (media parts + drawing XML), Excel tables (`xl/tables`) and notes (`xl/comments*` + vmlDrawing) are a substantial additional OOXML surface with no consumer demand yet. Every affected row in the parity checklist carries the rationale. If revived, it becomes its own phase.
 
 - [x] Contribute `export`, `excelExport` items to the Phase 1 menu registry — ✅ Landed 2026-08-15. `export` (with `csvExport`/`excelExport` submenu), `csvExport` and `excelExport` register from the module's `onRegister`; E2E asserts the item renders. Nested-submenu *expansion* is a Phase 1 renderer gap — [OPEN-ACTIONS C3](../../OPEN-ACTIONS.md).
 

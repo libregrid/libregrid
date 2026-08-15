@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ExcelCell, ExcelData, ExcelDataType, ExcelTable } from 'ag-grid-community';
 import { SharedStringTable } from '../sharedStringTable';
-import { collectSharedStrings, buildWorksheetXml } from './worksheetPart';
+import { buildWorksheetXml, collectSharedStrings, sheetPasswordHash } from './worksheetPart';
 import { parseXml, child, children, findAll } from '../../testing/parseXml';
 import { buildSharedStringsXml } from './sharedStringsPart';
 import { StyleResolver } from '../styles/styleResolver';
@@ -410,5 +410,89 @@ describe('buildWorksheetXml', () => {
     const sheet: ExcelTable = { columns: [], rows: [] };
     const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table }));
     expect(child(xml, 'sheetViews')).toBeUndefined();
+  });
+
+  it('writes page setup with orientation and paper size', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = { columns: [], rows: [] };
+    const xml = parseXml(
+      buildWorksheetXml({
+        table: sheet,
+        sharedStrings: table,
+        layout: { pageSetup: { orientation: 'Landscape', pageSize: 'A4' } },
+      }),
+    );
+    expect(child(xml, 'pageSetup')!.attrs).toEqual({ orientation: 'landscape', paperSize: '9' });
+  });
+
+  it('writes page margins with documented defaults filled in', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = { columns: [], rows: [] };
+    const xml = parseXml(
+      buildWorksheetXml({
+        table: sheet,
+        sharedStrings: table,
+        layout: { margins: { left: 1 } },
+      }),
+    );
+    expect(child(xml, 'pageMargins')!.attrs).toEqual({
+      left: '1',
+      right: '0.7',
+      top: '0.75',
+      bottom: '0.75',
+      header: '0.3',
+      footer: '0.3',
+    });
+  });
+
+  it('writes sheet protection flags and a hashed password', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = { columns: [], rows: [] };
+    const xml = parseXml(
+      buildWorksheetXml({
+        table: sheet,
+        sharedStrings: table,
+        layout: { protectSheet: { formatCells: true, insertRows: true, password: 'secret' } },
+      }),
+    );
+    const protection = child(xml, 'sheetProtection')!;
+    expect(protection.attrs).toMatchObject({
+      sheet: '1',
+      formatCells: '1',
+      insertRows: '1',
+      deleteRows: '0',
+      selectLockedCells: '1',
+    });
+    expect(protection.attrs.password).toMatch(/^[0-9A-F]{4}$/);
+  });
+
+  it('writes header/footer text with page-kind flags', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = { columns: [], rows: [] };
+    const xml = parseXml(
+      buildWorksheetXml({
+        table: sheet,
+        sharedStrings: table,
+        layout: {
+          headerFooter: {
+            oddHeader: '&CCompany Report',
+            oddFooter: '&LPage &P of &N',
+            firstHeader: '&CFirst Page',
+          },
+        },
+      }),
+    );
+    const headerFooter = child(xml, 'headerFooter')!;
+    expect(headerFooter.attrs.differentFirst).toBe('1');
+    expect(child(headerFooter, 'oddHeader')!.text).toBe('&CCompany Report');
+    expect(child(headerFooter, 'oddFooter')!.text).toBe('&LPage &P of &N');
+    expect(child(headerFooter, 'firstHeader')!.text).toBe('&CFirst Page');
+    expect(child(headerFooter, 'evenHeader')).toBeDefined();
+  });
+
+  it('hashes worksheet passwords deterministically', () => {
+    expect(sheetPasswordHash('secret')).toBe(sheetPasswordHash('secret'));
+    expect(sheetPasswordHash('')).toMatch(/^[0-9A-F]{4}$/);
+    expect(sheetPasswordHash('a')).not.toBe(sheetPasswordHash('b'));
   });
 });

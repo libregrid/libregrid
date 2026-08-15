@@ -1,4 +1,4 @@
-import type { ExcelStyle, ExcelWorksheet } from 'ag-grid-community';
+import type { ExcelCustomMetadata, ExcelStyle, ExcelWorksheet } from 'ag-grid-community';
 import { SharedStringTable } from './sharedStringTable';
 import { zipXlsxParts } from './zip/zipAssembler';
 import { buildContentTypesXml } from './parts/contentTypesPart';
@@ -11,6 +11,7 @@ import {
 } from './parts/workbookRelsPart';
 import { buildSharedStringsXml } from './parts/sharedStringsPart';
 import { buildStylesXml } from './parts/stylesPart';
+import { buildCorePropsXml, buildCustomPropsXml } from './parts/docPropsPart';
 import {
   buildWorksheetXml,
   collectSharedStrings,
@@ -34,6 +35,12 @@ export interface XlsxBuildOptions {
   worksheets?: ReadonlyArray<WorksheetLayoutOptions>;
   /** Zero-based index of the sheet shown when the workbook opens. */
   activeSheetIndex?: number;
+  /** Document author written to docProps/core.xml. */
+  author?: string;
+  /** Custom document metadata written to docProps/custom.xml. */
+  customMetadata?: ExcelCustomMetadata;
+  /** Default font size for the workbook's styles. */
+  fontSize?: number;
 }
 
 /**
@@ -47,7 +54,10 @@ export function buildXlsx(worksheets: ExcelWorksheet[], options: XlsxBuildOption
   for (const worksheet of worksheets) {
     collectSharedStrings(sharedStrings, worksheet.table);
   }
-  const styleResolver = options.styles?.length ? new StyleResolver(options.styles) : undefined;
+  const hasStyles = (options.styles?.length ?? 0) > 0 || options.fontSize !== undefined;
+  const styleResolver = hasStyles
+    ? new StyleResolver(options.styles ?? [], options.fontSize)
+    : undefined;
 
   const parts: Record<string, string> = {};
   const sheetRefs: WorkbookSheetRef[] = [];
@@ -81,12 +91,41 @@ export function buildXlsx(worksheets: ExcelWorksheet[], options: XlsxBuildOption
     parts['xl/styles.xml'] = buildStylesXml(styleResolver.registry);
   }
 
+  const coreProps = options.author !== undefined;
+  const customProps = options.customMetadata !== undefined;
+  if (coreProps) {
+    parts['docProps/core.xml'] = buildCorePropsXml(options.author!);
+  }
+  if (customProps) {
+    parts['docProps/custom.xml'] = buildCustomPropsXml(options.customMetadata!);
+  }
   parts['[Content_Types].xml'] = buildContentTypesXml({
     sheets: worksheets.length,
     sharedStrings: true,
     styles: styleResolver !== undefined,
+    coreProps,
+    customProps,
   });
-  parts['_rels/.rels'] = buildRootRelsXml();
+  parts['_rels/.rels'] = buildRootRelsXml([
+    ...(coreProps
+      ? [
+          {
+            id: 'rId2',
+            type: 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties',
+            target: 'docProps/core.xml',
+          },
+        ]
+      : []),
+    ...(customProps
+      ? [
+          {
+            id: 'rId3',
+            type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties',
+            target: 'docProps/custom.xml',
+          },
+        ]
+      : []),
+  ]);
   parts['xl/workbook.xml'] = buildWorkbookXml(sheetRefs, options.activeSheetIndex);
   parts['xl/_rels/workbook.xml.rels'] = buildWorkbookRelsXml(rels);
 
