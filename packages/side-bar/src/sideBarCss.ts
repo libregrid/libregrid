@@ -12,6 +12,12 @@ export const sideBarCss = `
   border-left: 1px solid var(--ag-border-color, #ddd);
 }
 
+/* AG Grid marks hidden framework components as ag-invisible (visibility: hidden).
+ * A side bar is a flex sibling of the grid body, so it must also leave the layout. */
+.lgr-side-bar.ag-invisible {
+  display: none;
+}
+
 .lgr-side-bar-left {
   flex-direction: row-reverse;
   border-left: none;

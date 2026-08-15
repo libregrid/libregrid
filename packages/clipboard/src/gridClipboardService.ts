@@ -172,7 +172,33 @@ export class GridClipboardService extends BeanStub implements NamedBean {
     this.lastCopied = typeof rows === 'string' ? rows : toDelimited(rows, this.delimiter());
     const callback = this.gos.get('sendToClipboard') as
       ((params: { data: string }) => void) | undefined;
-    if (callback) callback({ data: this.lastCopied });
+    if (callback) {
+      callback({ data: this.lastCopied });
+      return;
+    }
+    this.writeToBrowserClipboard(this.lastCopied);
+  }
+
+  private writeToBrowserClipboard(value: string): void {
+    const clipboard = globalThis.navigator?.clipboard;
+    if (clipboard?.writeText) {
+      void clipboard.writeText(value).catch(() => this.copyWithTemporaryTextarea(value));
+      return;
+    }
+    this.copyWithTemporaryTextarea(value);
+  }
+
+  private copyWithTemporaryTextarea(value: string): void {
+    const document = globalThis.document;
+    if (!document?.body) return;
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.setAttribute('aria-hidden', 'true');
+    textarea.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand?.('copy');
+    textarea.remove();
   }
   private delimiter(): string {
     return (this.gos.get('clipboardDelimiter') as string | undefined) ?? '\t';

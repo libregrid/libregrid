@@ -29,7 +29,8 @@
     "check:contamination": "node tools/check-contamination/bin.mjs",
     "check:versions": "node tools/version/check.mjs",
     "gen:version": "node tools/version/generate.mjs",
-    "docs": "npm -w apps/docs run dev"
+    "docs": "npm -w apps/docs run dev",
+    "manual:validate": "npm -w apps/docs run dev"
   },
   "devDependencies": {
     "@angular/build": "^22.1.3",

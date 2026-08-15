@@ -33,6 +33,29 @@ test.describe('Filters', () => {
     await expect(page.locator('.lgr-column-filter-popup .lgr-set-filter, .lgr-set-filter').first()).toBeVisible();
     await expect(page.getByRole('searchbox', { name: 'Search filter values' })).toBeVisible();
   });
+
+  test('applies Country and Product header Set Filters through their grid-managed controls', async ({ page }) => {
+    const grid = page.getByTestId('filters-grid');
+    const displayedRows = () => page.evaluate(() => window.ng.getComponent(document.querySelector('lgr-filters-demo'))?.api?.getDisplayedRowCount());
+
+    const countryHeader = grid.getByRole('columnheader', { name: 'Country' });
+    await countryHeader.locator('.ag-header-cell-filter-button').click();
+    const countryFilter = page.locator('.ag-filter .lgr-set-filter');
+    await expect(countryFilter).toBeVisible();
+    await expect(countryFilter.locator('.lgr-set-filter-actions')).toHaveCount(0);
+    await countryFilter.locator('.lgr-set-filter-value', { hasText: 'Germany' }).locator('input').uncheck();
+    await page.locator('.ag-filter-apply-panel').getByRole('button', { name: 'Apply' }).click();
+    await expect.poll(displayedRows).toBe(3);
+
+    await page.reload();
+    await expect(grid).toBeVisible({ timeout: 15_000 });
+    const productHeader = grid.getByRole('columnheader', { name: 'Product' });
+    await productHeader.locator('.ag-header-cell-filter-button').click();
+    const productFilter = page.locator('.ag-filter .lgr-set-filter');
+    await expect(productFilter).toBeVisible();
+    await productFilter.locator('.lgr-set-filter-value', { hasText: 'Widget' }).locator('input').uncheck();
+    await expect.poll(displayedRows).toBe(2);
+  });
 });
 
 test.describe('Filters accessibility', () => {

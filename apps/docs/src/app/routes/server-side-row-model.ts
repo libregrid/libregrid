@@ -37,8 +37,9 @@ function tradeAt(index: number): Trade {
       <h1>Server-Side Row Model</h1>
       <p>
         This grid uses <code>rowModelType: 'serverSide'</code> and a datasource instead of
-        <code>rowData</code>. It serves one million deterministic rows in 100-row blocks with a small
-        configurable mock-server delay. Scroll or sort to see fresh range requests.
+        <code>rowData</code>. It serves one million deterministic rows in 100-row blocks with a
+        small configurable mock-server delay. Use the pager to jump between server-backed pages, or
+        sort a column to see fresh range requests.
       </p>
 
       <mat-card appearance="outlined">
@@ -57,9 +58,10 @@ function tradeAt(index: number): Trade {
 
       <h2>Current Phase 7 scope</h2>
       <p>
-        Phase 7 supports flat full and lazy stores, LRU block eviction, retryable failures, transactions,
-        and identity-backed selection persistence. A stable <code>getRowId</code> is required for correct
-        transaction and selection behavior. Grouping, filtering, and pivot request semantics remain Phase 9.
+        Phase 7 supports flat full and lazy stores, LRU block eviction, retryable failures,
+        transactions, and identity-backed selection persistence. A stable <code>getRowId</code> is
+        required for correct transaction and selection behavior. Grouping, filtering, and pivot
+        request semantics remain Phase 9.
       </p>
     </div>
   `,
@@ -79,6 +81,9 @@ export class ServerSideRowModelDemo {
     cacheBlockSize: BLOCK_SIZE,
     maxBlocksInCache: 10,
     serverSideInitialRowCount: ROW_COUNT,
+    pagination: true,
+    paginationPageSize: BLOCK_SIZE,
+    paginationPageSizeSelector: [50, BLOCK_SIZE, 250],
     defaultColDef: { sortable: true, resizable: true, flex: 1 },
     getRowId: (params) => params.data.id,
     serverSideDatasource: this.datasource(),

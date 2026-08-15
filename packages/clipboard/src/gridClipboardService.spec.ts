@@ -101,6 +101,34 @@ describe('GridClipboardService paste', () => {
     expect(sent).toHaveBeenCalledWith('name\r\nAlpha');
     expect(amount.getColId()).toBe('amount');
   });
+  it('writes copied ranges to the browser clipboard when no host callback is configured', () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const previousClipboard = Object.getOwnPropertyDescriptor(globalThis.navigator, 'clipboard');
+    Object.defineProperty(globalThis.navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    const column = { getColId: () => 'name', getColDef: () => ({ field: 'name' }) };
+    const { bean } = makeBeanHarness(GridClipboardService, {
+      beans: {
+        rangeSvc: {
+          getCellRanges: () => [
+            { startRow: { rowIndex: 0 }, endRow: { rowIndex: 0 }, columns: [column] },
+          ],
+        },
+        gridApi: { getDisplayedRowAtIndex: () => ({ data: { name: 'Alpha' } }) },
+      },
+    });
+
+    try {
+      bean.copySelectedRangeToClipboard({ includeHeaders: true });
+      expect(writeText).toHaveBeenCalledWith('name\r\nAlpha');
+    } finally {
+      if (previousClipboard)
+        Object.defineProperty(globalThis.navigator, 'clipboard', previousClipboard);
+      else delete (globalThis.navigator as { clipboard?: unknown }).clipboard;
+    }
+  });
   it('honours suppression, clipboard reads, custom parsing, and per-column paste rejection', async () => {
     const readText = vi.fn().mockResolvedValue('accepted\tblocked');
     Object.defineProperty(globalThis.navigator, 'clipboard', {

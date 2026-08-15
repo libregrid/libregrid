@@ -63,7 +63,6 @@ export class SelectionDemo {
   protected readonly gridOptions: GridOptions<Row> = {
     defaultColDef: { flex: 1, editable: true },
     cellSelection: { handle: { mode: 'fill' } },
-    sendToClipboard: ({ data }: { data: string }) => this.copied.set(`Copied ${data.length} characters`),
     statusBar: {
       statusPanels: [
         { statusPanel: 'agAggregationComponent', key: 'aggregation' },
@@ -81,6 +80,7 @@ export class SelectionDemo {
   }
   copy(): void {
     this.api?.copySelectedRangeToClipboard({ includeHeaders: true });
+    this.copied.set('Copied selected range — paste it into a spreadsheet or text editor');
   }
   clear(): void {
     this.api?.clearCellSelection();

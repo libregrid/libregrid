@@ -54,8 +54,7 @@ describe('AdvancedFilterService options and module API', () => {
     click('Reset'); expect(service.getModel()).toBeNull(); expect(changed).toHaveBeenCalled();
     click('Builder'); const builder = [...document.querySelectorAll<HTMLElement>('.lgr-advanced-filter-builder')].at(-1)!;
     expect([...builder.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Add condition')?.style.minWidth).toBe('144px');
-    [...builder.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Full screen')!.click();
-    expect(builder.classList.contains('lgr-advanced-filter-fullscreen')).toBe(true);
+    expect([...builder.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Full screen')).toBeUndefined();
     service.getCtrl().toggleFilterBuilder({ source: 'api', force: false }); service.getCtrl().destroy();
     expect(unmounted).toHaveBeenCalledWith(spacer);
     expect(header.isConnected).toBe(false);

@@ -8,6 +8,7 @@ import type { Routes } from '@angular/router';
  */
 export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: '', label: 'Overview' },
+  { path: 'validation', label: 'Manual validation' },
   { path: 'grid', label: 'Grid (Community)' },
   { path: 'menus', label: 'Menus' },
   { path: 'side-bar', label: 'Side bar' },
@@ -32,6 +33,11 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./routes/overview').then((m) => m.Overview),
     title: 'LibreGrid — Overview',
+  },
+  {
+    path: 'validation',
+    loadComponent: () => import('./routes/manual-validation').then((m) => m.ManualValidation),
+    title: 'LibreGrid — Manual Validation',
   },
   {
     path: 'grid',
@@ -75,12 +81,14 @@ export const routes: Routes = [
   },
   {
     path: 'server-side',
-    loadComponent: () => import('./routes/server-side-row-model').then((m) => m.ServerSideRowModelDemo),
+    loadComponent: () =>
+      import('./routes/server-side-row-model').then((m) => m.ServerSideRowModelDemo),
     title: 'LibreGrid — Server-Side Row Model',
   },
   {
     path: 'server-side-advanced',
-    loadComponent: () => import('./routes/server-side-advanced').then((m) => m.ServerSideAdvancedDemo),
+    loadComponent: () =>
+      import('./routes/server-side-advanced').then((m) => m.ServerSideAdvancedDemo),
     title: 'LibreGrid — SSRM Advanced',
   },
   {
@@ -100,7 +108,8 @@ export const routes: Routes = [
   },
   {
     path: 'advanced-filter-find',
-    loadComponent: () => import('./routes/advanced-filter-find').then((m) => m.AdvancedFilterFindDemo),
+    loadComponent: () =>
+      import('./routes/advanced-filter-find').then((m) => m.AdvancedFilterFindDemo),
     title: 'LibreGrid — Advanced Filter & Find',
   },
   {

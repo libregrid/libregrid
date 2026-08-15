@@ -43,13 +43,96 @@ a {
 }
 
 .lgr-page {
-  padding: 1.5rem;
-  max-width: 1100px;
+  width: 100%;
+  min-width: 0;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2.25rem);
+}
+
+.lgr-page > h1 {
+  margin-top: 0;
+  letter-spacing: -0.025em;
+}
+
+.lgr-page mat-card,
+.lgr-page mat-card-content {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.lgr-page mat-card {
+  border-radius: 16px;
 }
 
 .lgr-grid-host {
-  height: 420px;
+  height: clamp(320px, 56vh, 540px);
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.lgr-grid-host > ag-grid-angular,
+.lgr-page mat-card-content > ag-grid-angular {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.lgr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.lgr-advanced-filter-toolbar {
+  margin: 0 0 1rem;
+}
+
+.lgr-find-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: min(100%, 16rem);
+}
+
+.lgr-find-control input {
+  width: 10rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.lgr-match-count {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.lgr-advanced-filter-builder-host {
+  min-width: 0;
+  margin-bottom: 1rem;
+}
+
+.lgr-advanced-filter-builder-host:empty {
+  display: none;
+}
+
+// Cell-selection is applied directly to AG Grid cell elements by
+// @libregrid/cell-selection. Keep the range visible in both Material modes.
+.ag-cell.ag-cell-range-selected {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 18%, transparent);
+}
+
+.ag-cell.ag-cell-range-top,
+.ag-cell.ag-cell-range-bottom,
+.ag-cell.ag-cell-range-left,
+.ag-cell.ag-cell-range-right,
+.ag-cell.ag-cell-range-single-cell {
+  border-color: var(--mat-sys-primary);
 }
 
 code {
@@ -57,4 +140,26 @@ code {
   background: var(--mat-sys-surface-container);
   padding: 0.1em 0.35em;
   border-radius: 4px;
+}
+
+@media (max-width: 700px) {
+  .lgr-page {
+    padding: 1rem;
+  }
+
+  .lgr-grid-host {
+    height: min(460px, 62vh);
+  }
+
+  .lgr-advanced-filter-toolbar {
+    align-items: stretch;
+  }
+
+  .lgr-find-control {
+    width: 100%;
+  }
+
+  .lgr-find-control input {
+    flex: 1;
+  }
 }

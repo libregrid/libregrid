@@ -10,9 +10,30 @@ test.describe('Cell Selection and Clipboard', () => {
     await cells.nth(0).dragTo(cells.nth(4));
     await expect(page.getByText('Ranges: 1', { exact: false })).toBeVisible();
     await page.getByRole('button', { name: 'Copy selected range' }).click();
-    await expect(page.getByText(/Copied \d+ characters/)).toBeVisible();
+    await expect(page.getByText('Copied selected range', { exact: false })).toBeVisible();
     await page.getByRole('button', { name: 'Clear range' }).click();
     await expect(page.getByText('Ranges: 0', { exact: false })).toBeVisible();
+  });
+  test('copies a pointer-dragged range to the browser clipboard', async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'Clipboard permission automation is Chromium-specific.');
+    await page.goto('/selection');
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
+      origin: new URL(page.url()).origin,
+    });
+
+    const cells = page.getByTestId('selection-grid').locator('[col-id="first"].ag-cell');
+    await cells.nth(0).dragTo(cells.nth(2));
+    await expect(page.locator('.ag-cell-range-selected')).toHaveCount(3);
+
+    await page.getByRole('button', { name: 'Copy selected range' }).click();
+    await expect(page.getByText('Copied selected range', { exact: false })).toBeVisible();
+    await expect(page.evaluate(() => navigator.clipboard.readText())).resolves.toBe(
+      'first\r\n1\r\n3\r\n5',
+    );
   });
   test('supports multiple ranges and fill-handle numeric series', async ({ page }) => {
     const cells = page.getByTestId('selection-grid').locator('.ag-cell');

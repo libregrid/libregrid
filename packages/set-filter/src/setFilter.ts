@@ -24,6 +24,19 @@ interface TreeGroup {
 }
 
 /**
+ * AG Grid gives a filter-display component these callbacks when it is paired
+ * with a filter handler. They are intentionally optional so the Set Filter
+ * remains usable as a legacy IFilter too.
+ */
+interface ManagedFilterParams {
+  model?: SetFilterModel | null;
+  state?: { model?: SetFilterModel | null };
+  onModelChange?: (model: SetFilterModel | null, additionalEventAttributes?: unknown) => void;
+  onStateChange?: (state: { model: SetFilterModel | null }) => void;
+  onUiChange?: (additionalEventAttributes?: unknown) => void;
+}
+
+/**
  * Framework-neutral, virtualised implementation of the Set Filter UI.
  *
  * The applied model is deliberately independent from the visible rows: this
@@ -58,8 +71,7 @@ export class SetFilter implements ISetFilter {
   public init(params: SetFilterParams): void {
     this.destroyed = false;
     this.params = params;
-    this.appliedKeys = params.defaultToNothingSelected && !params.excelMode ? new Set() : undefined;
-    this.uiKeys = this.cloneKeys(this.appliedKeys);
+    this.setModelsFromParams(params);
     this.loadValues();
   }
 
@@ -151,6 +163,7 @@ export class SetFilter implements ISetFilter {
 
   public refresh(params: IFilterParams): boolean {
     this.params = params as SetFilterParams;
+    this.setModelsFromParams(this.params);
     this.loadValues();
     return true;
   }
@@ -377,7 +390,10 @@ export class SetFilter implements ISetFilter {
 
   private appendActions(): void {
     const buttons = this.actionButtons();
-    if (!buttons?.length || this.params?.readOnly) return;
+    // A handler-backed filter is wrapped in AG Grid's standard apply panel.
+    // Rendering another row here duplicates the controls and, more
+    // importantly, bypasses the wrapper's staged-model lifecycle.
+    if (!buttons?.length || this.params?.readOnly || this.managedParams()) return;
     const actions = document.createElement('div');
     actions.className = 'lgr-set-filter-actions';
     for (const action of buttons) {
@@ -427,12 +443,38 @@ export class SetFilter implements ISetFilter {
 
   private onUiSelectionChanged(): void {
     this.params?.filterModifiedCallback();
+    const managed = this.managedParams();
+    managed?.onUiChange?.();
+    managed?.onStateChange?.({ model: this.getModelFromUi() });
     if (!this.actionButtons()?.includes('apply')) this.applyUi('ui');
     this.render();
   }
 
   private applyUi(source: 'api' | 'ui'): void {
+    const managed = this.managedParams();
+    if (managed) {
+      managed.onModelChange?.(this.getModelFromUi(), { source });
+      return;
+    }
     if (this.applyModel(source)) this.params?.filterChangedCallback();
+  }
+
+  private setModelsFromParams(params: SetFilterParams): void {
+    const managed = this.managedParams(params);
+    const applied = this.keysFromModel(managed?.model);
+    this.appliedKeys = applied ?? (params.defaultToNothingSelected && !params.excelMode ? new Set() : undefined);
+    this.uiKeys = managed?.state
+      ? this.keysFromModel(managed.state.model)
+      : this.cloneKeys(this.appliedKeys);
+  }
+
+  private managedParams(params = this.params): ManagedFilterParams | undefined {
+    const managed = params as SetFilterParams & ManagedFilterParams | undefined;
+    return managed?.onModelChange || managed?.onStateChange ? managed : undefined;
+  }
+
+  private keysFromModel(model: SetFilterModel | null | undefined): Set<string | null> | undefined {
+    return model ? new Set(model.values) : undefined;
   }
 
   private materialiseUiKeys(): Set<string | null> {

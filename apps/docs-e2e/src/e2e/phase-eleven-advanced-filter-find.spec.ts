@@ -26,4 +26,31 @@ test.describe('Phase 11 — Advanced Filter, Find, and Rich Select', () => {
     await expect(page.locator('html')).toHaveAttribute('data-lgr-theme', 'dark');
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   });
+
+  test('keeps the advanced-filter controls contained on a narrow viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/advanced-filter-find');
+    const grid = page.getByTestId('phase-eleven-grid');
+    await expect(grid).toBeVisible();
+    await expect(grid.locator('.lgr-advanced-filter')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Open advanced builder' }).click();
+    const builder = page.getByTestId('phase-eleven-filter-parent').getByRole('dialog', { name: 'Advanced filter builder' });
+    await expect(builder).toBeVisible();
+    const layout = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+      builderWidth: document.querySelector<HTMLElement>('.lgr-advanced-filter-builder')?.getBoundingClientRect().width,
+      hostWidth: document.querySelector<HTMLElement>('.lgr-advanced-filter-builder-host')?.getBoundingClientRect().width,
+    }));
+    expect(layout.scrollWidth).toBe(layout.clientWidth);
+    expect(layout.builderWidth).toBeLessThanOrEqual(layout.hostWidth!);
+  });
+
+  test('does not expose an unsupported fullscreen action', async ({ page }) => {
+    await page.goto('/advanced-filter-find');
+    await page.getByRole('button', { name: 'Open advanced builder' }).click();
+    const builder = page.getByRole('dialog', { name: 'Advanced filter builder' });
+    await expect(builder.getByRole('button', { name: 'Full screen' })).toHaveCount(0);
+  });
 });
