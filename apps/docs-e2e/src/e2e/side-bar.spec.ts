@@ -115,7 +115,9 @@ test.describe('Side Bar', () => {
     expect(handleBox).not.toBeNull();
     await page.mouse.move(handleBox!.x + 3, handleBox!.y + 100);
     await page.mouse.down();
-    await page.mouse.move(handleBox!.x + 500, handleBox!.y + 100);
+    // Stay within the viewport: Firefox drops mouse-move coordinates that
+    // land outside it, unlike Chromium/WebKit, which tolerate overflow.
+    await page.mouse.move(handleBox!.x + 150, handleBox!.y + 100);
     await page.mouse.up();
     await expect(panel).toHaveCSS('width', '160px');
   });
