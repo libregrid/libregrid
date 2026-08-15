@@ -27,13 +27,13 @@
 | `mimeType` | 5.6 | ⬜ | sub-PR 5.6 |
 | `author` | 5.8 | ⬜ | sub-PR 5.8 |
 | `customMetadata` | 5.8 | ⬜ | sub-PR 5.8 |
-| `columnWidth` | 5.4 | ⬜ | sub-PR 5.4 |
-| `rowHeight` | 5.4 | ⬜ | sub-PR 5.4 |
-| `headerRowHeight` | 5.4 | ⬜ | sub-PR 5.4 |
+| `columnWidth` | 5.4 | ✅ | Writer mechanism: `ExcelColumn.width` → `<col width customHeight>`; param plumbing in 5.8 |
+| `rowHeight` | 5.4 | ✅ | Writer mechanism: `ExcelRow.height` → `<row ht customHeight>`; param plumbing in 5.8 |
+| `headerRowHeight` | 5.4 | 🟡 | Writer mechanism ready (5.4); param plumbing lands in 5.8 |
 | `fontSize` | 5.8 | ⬜ | sub-PR 5.8 |
-| `freezeColumns` | 5.4 | ⬜ | sub-PR 5.4 |
-| `freezeRows` | 5.4 | ⬜ | sub-PR 5.4 |
-| `rightToLeft` | 5.4 | ⬜ | sub-PR 5.4 |
+| `freezeColumns` | 5.4 | ✅ | Writer mechanism: pane `xSplit`/`activePane`; param plumbing in 5.8 |
+| `freezeRows` | 5.4 | ✅ | Writer mechanism: pane `ySplit`/`activePane`; param plumbing in 5.8 |
+| `rightToLeft` | 5.4 | ✅ | Writer mechanism: `sheetView rightToLeft`; param plumbing in 5.8 |
 | `allColumns` | 5.8 | ⬜ | sub-PR 5.8 |
 | `columnKeys` | 5.8 | ⬜ | sub-PR 5.8 |
 | `onlySelected` | 5.8 | ⬜ | sub-PR 5.8 |

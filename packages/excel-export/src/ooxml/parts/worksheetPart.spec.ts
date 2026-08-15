@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ExcelCell, ExcelData, ExcelTable } from 'ag-grid-community';
 import { SharedStringTable } from '../sharedStringTable';
 import { collectSharedStrings, buildWorksheetXml } from './worksheetPart';
-import { parseXml, children, findAll } from '../../testing/parseXml';
+import { parseXml, child, children, findAll } from '../../testing/parseXml';
 import { buildSharedStringsXml } from './sharedStringsPart';
 import { StyleResolver } from '../styles/styleResolver';
 
@@ -247,5 +247,124 @@ describe('buildWorksheetXml', () => {
     collectSharedStrings(table, sheet);
     const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table, styleResolver: resolver }));
     expect(children(findAll(xml, 'row')[0]!, 'c')[0]!.attrs.s).toBeUndefined();
+  });
+
+  it('writes column widths, hidden and bestFit flags grouped into runs', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = {
+      columns: [
+        { width: 20.5 },
+        { width: 20.5 },
+        { width: 10, hidden: true },
+        { bestFit: true },
+      ],
+      rows: [],
+    };
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table }));
+    const cols = child(xml, 'cols')!;
+    const colNodes = children(cols, 'col');
+    expect(colNodes.map((c) => c.attrs)).toEqual([
+      { width: '20.5', customWidth: '1', min: '1', max: '2' },
+      { width: '10', customWidth: '1', hidden: '1', min: '3', max: '3' },
+      { bestFit: '1', min: '4', max: '4' },
+    ]);
+  });
+
+  it('omits the cols element when no columns are defined', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = { columns: [], rows: [] };
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table }));
+    expect(child(xml, 'cols')).toBeUndefined();
+  });
+
+  it('writes row heights and hidden flags', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = {
+      columns: [],
+      rows: [
+        { cells: [cell(stringCell('a'))], height: 22.5 },
+        { cells: [cell(stringCell('b'))], hidden: true },
+      ],
+    };
+    collectSharedStrings(table, sheet);
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table }));
+    const rows = findAll(xml, 'row');
+    expect(rows[0]!.attrs).toEqual({ r: '1', ht: '22.5', customHeight: '1' });
+    expect(rows[1]!.attrs).toEqual({ r: '2', hidden: '1' });
+  });
+
+  it('writes mergeCells for mergeAcross and skips the covered cells', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = {
+      columns: [],
+      rows: [
+        {
+          cells: [
+            { data: { type: 'String', value: 'wide' }, mergeAcross: 2 },
+            cell(null),
+            cell(null),
+            cell(stringCell('tail')),
+          ],
+        },
+      ],
+    };
+    collectSharedStrings(table, sheet);
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table }));
+    const mergeCells = child(xml, 'mergeCells')!;
+    expect(mergeCells.attrs.count).toBe('1');
+    expect(children(mergeCells, 'mergeCell')[0]!.attrs.ref).toBe('A1:C1');
+    const cellNodes = children(findAll(xml, 'row')[0]!, 'c');
+    expect(cellNodes.map((c) => c.attrs.r)).toEqual(['A1', 'D1']);
+  });
+
+  it('writes freeze panes for column, row and both-axis freezes', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = { columns: [], rows: [] };
+    const columnsOnly = parseXml(
+      buildWorksheetXml({ table: sheet, sharedStrings: table, layout: { freezeColumns: 2 } }),
+    );
+    const pane1 = child(child(child(columnsOnly, 'sheetViews')!, 'sheetView')!, 'pane')!;
+    expect(pane1.attrs).toEqual({
+      xSplit: '2',
+      topLeftCell: 'C1',
+      activePane: 'topRight',
+      state: 'frozen',
+    });
+    const rowsOnly = parseXml(
+      buildWorksheetXml({ table: sheet, sharedStrings: table, layout: { freezeRows: 1 } }),
+    );
+    const pane2 = child(child(child(rowsOnly, 'sheetViews')!, 'sheetView')!, 'pane')!;
+    expect(pane2.attrs).toEqual({
+      ySplit: '1',
+      topLeftCell: 'A2',
+      activePane: 'bottomLeft',
+      state: 'frozen',
+    });
+    const both = parseXml(
+      buildWorksheetXml({ table: sheet, sharedStrings: table, layout: { freezeColumns: 1, freezeRows: 2 } }),
+    );
+    const pane3 = child(child(child(both, 'sheetViews')!, 'sheetView')!, 'pane')!;
+    expect(pane3.attrs).toEqual({
+      xSplit: '1',
+      ySplit: '2',
+      topLeftCell: 'B3',
+      activePane: 'bottomRight',
+      state: 'frozen',
+    });
+  });
+
+  it('writes a rightToLeft sheetView', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = { columns: [], rows: [] };
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table, layout: { rightToLeft: true } }));
+    const sheetView = child(child(xml, 'sheetViews')!, 'sheetView')!;
+    expect(sheetView.attrs.rightToLeft).toBe('1');
+  });
+
+  it('omits sheetViews without layout settings', () => {
+    const table = new SharedStringTable();
+    const sheet: ExcelTable = { columns: [], rows: [] };
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table }));
+    expect(child(xml, 'sheetViews')).toBeUndefined();
   });
 });

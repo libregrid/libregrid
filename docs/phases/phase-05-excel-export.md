@@ -54,7 +54,7 @@
 
 - [x] **5.3 — Styling.** ✅ Landed 2026-08-15. `xl/styles.xml` with a **deduplicating style registry** keyed by resolved `ExcelStyle`. Maps `ExcelStyle`: `id`, `font`, `interior`, `borders`, `numberFormat`, `alignment`, `protection`; `dataType` drives cell typing in the 5.6 grid extraction. Identical styles collapse to one `cellXf`; fonts/fills/borders/numFmts dedupe by component.
 
-- [ ] **5.4 — Layout.** Column widths (`columnWidth`), row heights (`rowHeight`, `headerRowHeight`), merged cells, freeze panes (`freezeColumns`, `freezeRows`), `rightToLeft`.
+- [x] **5.4 — Layout.** ✅ Landed 2026-08-15. Column widths (`columnWidth`), row heights (`rowHeight`, `headerRowHeight`), merged cells (`mergeAcross` → `mergeCells`), freeze panes (`freezeColumns`, `freezeRows` → pane splits), `rightToLeft` (`sheetView`). Writer mechanisms only — the ExcelExportParams plumbing completes with the 5.6 API and 5.8 extraction.
 
 - [ ] **5.5 — Grouping outlines.** ⭐ Row/column `outlineLevel` + `collapsed`, driven by grid row groups. Implements `suppressRowOutline`, `suppressColumnOutline`, `rowGroupExpandState`, `skipRowGroups`, `processRowGroupCallback`.
   **This is the differentiator — no off-the-shelf library does it.**

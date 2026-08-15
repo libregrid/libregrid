@@ -88,6 +88,32 @@ const scenarios: Record<string, Scenario> = {
       ],
     },
   },
+  layout: {
+    worksheets: [
+      {
+        name: 'Layout',
+        table: {
+          columns: [{ width: 25 }, { width: 25 }, { width: 8 }],
+          rows: [
+            {
+              cells: [{ data: { type: 'String', value: 'Report' }, mergeAcross: 2 }, {}, {}],
+              height: 30,
+            },
+            {
+              cells: [
+                { data: { type: 'String', value: 'a' } },
+                { data: { type: 'Number', value: '1' } },
+                { data: { type: 'Number', value: '2' } },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+    options: {
+      worksheets: [{ freezeColumns: 1, freezeRows: 1, rightToLeft: true }],
+    },
+  },
 };
 
 function listFiles(dir: string): string[] {

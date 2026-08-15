@@ -207,4 +207,55 @@ describe('xlsx assembly (unzip-and-assert)', () => {
       formatCode: '"$"#,##0.00',
     });
   });
+
+  it('writes merged cells, column widths, row heights and freeze panes', () => {
+    const layoutSheet: ExcelWorksheet = {
+      name: 'Layout',
+      table: {
+        columns: [{ width: 25 }, { width: 25 }, { width: 8 }],
+        rows: [
+          {
+            cells: [{ data: { type: 'String', value: 'Report' }, mergeAcross: 2 }, {}, {}],
+            height: 30,
+          },
+          {
+            cells: [
+              { data: { type: 'String', value: 'a' } },
+              { data: { type: 'Number', value: '1' } },
+              { data: { type: 'Number', value: '2' } },
+            ],
+          },
+        ],
+      },
+    };
+    const { parts } = buildXlsx([layoutSheet], {
+      worksheets: [{ freezeColumns: 1, freezeRows: 1, rightToLeft: true }],
+    });
+    const sheetXml = parsePart(parts, 'xl/worksheets/sheet1.xml');
+
+    const colNodes = children(child(sheetXml, 'cols')!, 'col');
+    expect(colNodes.map((c) => c.attrs)).toEqual([
+      { width: '25', customWidth: '1', min: '1', max: '2' },
+      { width: '8', customWidth: '1', min: '3', max: '3' },
+    ]);
+
+    const rows = findAll(sheetXml, 'row');
+    expect(rows[0]!.attrs).toEqual({ r: '1', ht: '30', customHeight: '1' });
+    const secondRowCells = children(rows[1]!, 'c');
+    expect(secondRowCells.map((c) => c.attrs.r)).toEqual(['A2', 'B2', 'C2']);
+
+    const merge = child(sheetXml, 'mergeCells')!;
+    expect(merge.attrs.count).toBe('1');
+    expect(children(merge, 'mergeCell')[0]!.attrs.ref).toBe('A1:C1');
+
+    const sheetView = child(child(sheetXml, 'sheetViews')!, 'sheetView')!;
+    expect(sheetView.attrs.rightToLeft).toBe('1');
+    expect(child(sheetView, 'pane')!.attrs).toEqual({
+      xSplit: '1',
+      ySplit: '1',
+      topLeftCell: 'B2',
+      activePane: 'bottomRight',
+      state: 'frozen',
+    });
+  });
 });

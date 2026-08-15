@@ -38,8 +38,8 @@
       "maxSize": "8 KB"
     },
     "@libregrid/excel-export": {
-      "maxSize": "40 KB",
-      "note": "Includes fflate OOXML writer. Deferred (Phase 5) — budget reserved."
+      "maxSize": "64 KB",
+      "note": "OOXML writer over fflate plus the grid extraction service. Raised from the 40 KB Phase-5 placeholder during delivery: measures 42.3 KB at sub-PR 5.4, with the 5.5-5.8 extraction and API code still to land."
     },
     "@libregrid/set-filter": {
       "maxSize": "24 KB",

@@ -11,7 +11,11 @@ import {
 } from './parts/workbookRelsPart';
 import { buildSharedStringsXml } from './parts/sharedStringsPart';
 import { buildStylesXml } from './parts/stylesPart';
-import { buildWorksheetXml, collectSharedStrings } from './parts/worksheetPart';
+import {
+  buildWorksheetXml,
+  collectSharedStrings,
+  type WorksheetLayoutOptions,
+} from './parts/worksheetPart';
 import { StyleResolver } from './styles/styleResolver';
 
 /** Result of building a workbook: archive bytes plus every XML part as text. */
@@ -26,6 +30,8 @@ export interface BuiltXlsx {
 export interface XlsxBuildOptions {
   /** ExcelStyle definitions; cells reference them via `styleId`. */
   styles?: ExcelStyle[];
+  /** Per-sheet layout settings, index-aligned with `worksheets`. */
+  worksheets?: ReadonlyArray<WorksheetLayoutOptions>;
 }
 
 /**
@@ -54,10 +60,12 @@ export function buildXlsx(worksheets: ExcelWorksheet[], options: XlsxBuildOption
       type: RELATIONSHIP_TYPES.worksheet,
       target: 'worksheets/sheet' + sheetNumber + '.xml',
     });
+    const layout = options.worksheets?.[index];
     parts['xl/worksheets/sheet' + sheetNumber + '.xml'] = buildWorksheetXml({
       table: worksheet.table,
       sharedStrings,
       ...(styleResolver ? { styleResolver } : {}),
+      ...(layout ? { layout } : {}),
     });
   });
 
