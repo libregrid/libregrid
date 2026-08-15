@@ -15,3 +15,4 @@ out-tsc/
 apps/bench/bench/results/
 tools/bundle-budgets/.fixtures/
 apps/*/test-results/
+packages/excel-export/src/testing/__fixtures__/verification/
