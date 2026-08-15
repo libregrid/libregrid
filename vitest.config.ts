@@ -44,11 +44,21 @@ export default defineConfig({
         new URL('./packages/row-grouping/src/index.ts', import.meta.url),
       ),
       '@libregrid/pivot': fileURLToPath(new URL('./packages/pivot/src/index.ts', import.meta.url)),
+      '@libregrid/server-side-row-model': fileURLToPath(
+        new URL('./packages/server-side-row-model/src/index.ts', import.meta.url),
+      ),
       '@libregrid/viewport-row-model': fileURLToPath(
         new URL('./packages/viewport-row-model/src/index.ts', import.meta.url),
       ),
-      '@libregrid/tree-data': fileURLToPath(new URL('./packages/tree-data/src/index.ts', import.meta.url)),
-      '@libregrid/master-detail': fileURLToPath(new URL('./packages/master-detail/src/index.ts', import.meta.url)),
+      '@libregrid/tree-data': fileURLToPath(
+        new URL('./packages/tree-data/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/columns-tool-panel': fileURLToPath(
+        new URL('./packages/columns-tool-panel/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/master-detail': fileURLToPath(
+        new URL('./packages/master-detail/src/index.ts', import.meta.url),
+      ),
       '@libregrid/set-filter': fileURLToPath(
         new URL('./packages/set-filter/src/index.ts', import.meta.url),
       ),
@@ -67,12 +77,22 @@ export default defineConfig({
       '@libregrid/status-bar': fileURLToPath(
         new URL('./packages/status-bar/src/index.ts', import.meta.url),
       ),
-      '@libregrid/advanced-filter': fileURLToPath(new URL('./packages/advanced-filter/src/index.ts', import.meta.url)),
+      '@libregrid/advanced-filter': fileURLToPath(
+        new URL('./packages/advanced-filter/src/index.ts', import.meta.url),
+      ),
       '@libregrid/find': fileURLToPath(new URL('./packages/find/src/index.ts', import.meta.url)),
-      '@libregrid/rich-select': fileURLToPath(new URL('./packages/rich-select/src/index.ts', import.meta.url)),
-      '@libregrid/integrated-charts': fileURLToPath(new URL('./packages/integrated-charts/src/index.ts', import.meta.url)),
-      '@libregrid/sparklines': fileURLToPath(new URL('./packages/sparklines/src/index.ts', import.meta.url)),
-      '@libregrid/angular': fileURLToPath(new URL('./packages/angular/src/index.ts', import.meta.url)),
+      '@libregrid/rich-select': fileURLToPath(
+        new URL('./packages/rich-select/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/integrated-charts': fileURLToPath(
+        new URL('./packages/integrated-charts/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/sparklines': fileURLToPath(
+        new URL('./packages/sparklines/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/angular': fileURLToPath(
+        new URL('./packages/angular/src/index.ts', import.meta.url),
+      ),
       '@libregrid/all': fileURLToPath(new URL('./packages/all/src/index.ts', import.meta.url)),
     },
   },
