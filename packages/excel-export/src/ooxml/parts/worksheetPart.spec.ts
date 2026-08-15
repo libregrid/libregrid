@@ -4,10 +4,13 @@ import { SharedStringTable } from '../sharedStringTable';
 import { collectSharedStrings, buildWorksheetXml } from './worksheetPart';
 import { parseXml, children, findAll } from '../../testing/parseXml';
 import { buildSharedStringsXml } from './sharedStringsPart';
+import { StyleResolver } from '../styles/styleResolver';
 
-function cell(data?: ExcelData | null, ref?: string): ExcelCell {
-  if (data === undefined || data === null) return {};
-  return ref === undefined ? { data } : { data, ref };
+function cell(data?: ExcelData | null, ref?: string, styleId?: string | string[]): ExcelCell {
+  const base = ref === undefined ? {} : { ref };
+  const styled = styleId === undefined ? {} : { styleId };
+  if (data === undefined || data === null) return { ...base, ...styled };
+  return { data, ...base, ...styled };
 }
 
 const stringCell = (value: string): ExcelData => ({ type: 'String', value });
@@ -201,5 +204,48 @@ describe('buildWorksheetXml', () => {
     expect(() => buildWorksheetXml({ table: sheet, sharedStrings: table })).toThrow(
       'Excel data type "Formula" is not supported yet',
     );
+  });
+
+  it('applies a string styleId as the cellXf index', () => {
+    const table = new SharedStringTable();
+    const resolver = new StyleResolver([{ id: 'bold', font: { bold: true } }]);
+    const sheet: ExcelTable = {
+      columns: [],
+      rows: [{ cells: [cell(stringCell('x'), undefined, 'bold')] }],
+    };
+    collectSharedStrings(table, sheet);
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table, styleResolver: resolver }));
+    expect(children(findAll(xml, 'row')[0]!, 'c')[0]!.attrs.s).toBe('1');
+    expect(resolver.registry.styleRecords()).toHaveLength(2);
+  });
+
+  it('merges array styleIds left to right with later styles winning', () => {
+    const table = new SharedStringTable();
+    const resolver = new StyleResolver([
+      { id: 'red', interior: { pattern: 'Solid', color: 'red' } },
+      { id: 'bold', font: { bold: true } },
+    ]);
+    const sheet: ExcelTable = {
+      columns: [],
+      rows: [{ cells: [cell(stringCell('x'), undefined, ['red', 'bold'])] }],
+    };
+    collectSharedStrings(table, sheet);
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table, styleResolver: resolver }));
+    const cellNode = children(findAll(xml, 'row')[0]!, 'c')[0]!;
+    const record = resolver.registry.styleRecords()[Number(cellNode.attrs.s)]!;
+    expect(record.style.font.bold).toBe(true);
+    expect(record.style.fill.pattern).toBe('solid');
+  });
+
+  it('ignores unknown styleIds', () => {
+    const table = new SharedStringTable();
+    const resolver = new StyleResolver([{ id: 'bold', font: { bold: true } }]);
+    const sheet: ExcelTable = {
+      columns: [],
+      rows: [{ cells: [cell(stringCell('x'), undefined, 'missing')] }],
+    };
+    collectSharedStrings(table, sheet);
+    const xml = parseXml(buildWorksheetXml({ table: sheet, sharedStrings: table, styleResolver: resolver }));
+    expect(children(findAll(xml, 'row')[0]!, 'c')[0]!.attrs.s).toBeUndefined();
   });
 });

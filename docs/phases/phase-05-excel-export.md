@@ -52,7 +52,7 @@
 
 - [x] **5.2 — Data types.** ✅ Landed 2026-08-15. String, number, boolean, date, error. 1900-epoch serial numbers including the phantom-leap-day rule; pre-1900 dates fall back to text; strings truncate at Excel's 32,767-char cell limit.
 
-- [ ] **5.3 — Styling.** `xl/styles.xml` with a **deduplicating style registry** keyed by resolved `ExcelStyle`. Map `ExcelStyle`: `id`, `font`, `interior`, `borders`, `numberFormat`, `alignment`, `protection`, `dataType`.
+- [x] **5.3 — Styling.** ✅ Landed 2026-08-15. `xl/styles.xml` with a **deduplicating style registry** keyed by resolved `ExcelStyle`. Maps `ExcelStyle`: `id`, `font`, `interior`, `borders`, `numberFormat`, `alignment`, `protection`; `dataType` drives cell typing in the 5.6 grid extraction. Identical styles collapse to one `cellXf`; fonts/fills/borders/numFmts dedupe by component.
 
 - [ ] **5.4 — Layout.** Column widths (`columnWidth`), row heights (`rowHeight`, `headerRowHeight`), merged cells, freeze panes (`freezeColumns`, `freezeRows`), `rightToLeft`.
 

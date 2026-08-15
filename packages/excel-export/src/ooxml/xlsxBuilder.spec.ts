@@ -81,4 +81,49 @@ describe('buildXlsx', () => {
     expect(child(firstSheetCell, 'v')!.text).toBe('0');
     expect(child(secondSheetCell, 'v')!.text).toBe('0');
   });
+
+  it('emits styles.xml when styles are provided and resolves cell indexes', () => {
+    const styles = [
+      { id: 'bold', font: { bold: true } },
+      { id: 'red', interior: { pattern: 'Solid', color: 'red' } },
+    ];
+    const sheet: ExcelWorksheet = {
+      name: 'Styled',
+      table: {
+        columns: [],
+        rows: [
+          {
+            cells: [
+              { data: { type: 'String', value: 'bold' }, styleId: 'bold' },
+              { data: { type: 'Number', value: '7' }, styleId: 'red' },
+              { data: { type: 'String', value: 'plain' } },
+            ],
+          },
+        ],
+      },
+    };
+    const { parts } = buildXlsx([sheet], { styles });
+    expect(parts['xl/styles.xml']).toBeDefined();
+    const contentTypes = parsePart(parts, '[Content_Types].xml');
+    expect(
+      children(contentTypes, 'Override').some((node) => node.attrs.PartName === '/xl/styles.xml'),
+    ).toBe(true);
+    const rels = parsePart(parts, 'xl/_rels/workbook.xml.rels');
+    const stylesRel = children(rels, 'Relationship').find(
+      (node) => node.attrs.Type.includes('/styles'),
+    )!;
+    expect(stylesRel.attrs.Target).toBe('styles.xml');
+
+    const cells = children(findAll(parsePart(parts, 'xl/worksheets/sheet1.xml'), 'row')[0]!, 'c');
+    expect(cells.map((c) => c.attrs.s)).toEqual(['1', '2', undefined]);
+    const stylesXml = parsePart(parts, 'xl/styles.xml');
+    const xfs = children(child(stylesXml, 'cellXfs')!, 'xf');
+    expect(xfs).toHaveLength(3);
+    expect(child(children(child(stylesXml, 'fonts')!, 'font')[1]!, 'b')).toBeDefined();
+  });
+
+  it('omits styles.xml when no styles are configured', () => {
+    const { parts } = buildXlsx([emptySheet]);
+    expect(parts['xl/styles.xml']).toBeUndefined();
+  });
 });

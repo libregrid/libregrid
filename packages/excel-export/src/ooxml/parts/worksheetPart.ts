@@ -2,7 +2,8 @@ import type { ExcelCell, ExcelData, ExcelRow, ExcelTable } from 'ag-grid-communi
 import { cellRef } from '../cellRef';
 import { formatExcelSerial, isoToExcelSerial } from '../dateSerial';
 import type { SharedStringTable } from '../sharedStringTable';
-import type { XmlElement } from '../xml/xmlElement';
+import type { StyleResolver } from '../styles/styleResolver';
+import type { XmlAttributes, XmlElement } from '../xml/xmlElement';
 import { serializeXml } from '../xml/xmlSerializer';
 
 const SHEET_NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
@@ -79,15 +80,16 @@ export function collectSharedStrings(table: SharedStringTable, sheet: ExcelTable
 export interface WorksheetXmlConfig {
   table: ExcelTable;
   sharedStrings: SharedStringTable;
+  styleResolver?: StyleResolver;
 }
 
 /** Build the xl/worksheets/sheetN.xml part. */
 export function buildWorksheetXml(config: WorksheetXmlConfig): string {
-  const { table, sharedStrings } = config;
+  const { table, sharedStrings, styleResolver } = config;
   const rowElements = table.rows.map((row, rowIndex) => ({
     name: 'row',
     attrs: { r: rowIndex + 1 },
-    children: buildRowCells(row, rowIndex, sharedStrings),
+    children: buildRowCells(row, rowIndex, sharedStrings, styleResolver),
   }));
   const children: XmlElement[] = [
     { name: 'dimension', attrs: { ref: buildDimension(table) } },
@@ -96,11 +98,16 @@ export function buildWorksheetXml(config: WorksheetXmlConfig): string {
   return serializeXml({ name: 'worksheet', attrs: { xmlns: SHEET_NS }, children });
 }
 
-function buildRowCells(row: ExcelRow, rowIndex: number, strings: SharedStringTable): XmlElement[] {
+function buildRowCells(
+  row: ExcelRow,
+  rowIndex: number,
+  strings: SharedStringTable,
+  styleResolver?: StyleResolver,
+): XmlElement[] {
   const elements: XmlElement[] = [];
   let columnIndex = 0;
   for (const cell of row.cells) {
-    const element = buildCell(cell, rowIndex, columnIndex, strings);
+    const element = buildCell(cell, rowIndex, columnIndex, strings, styleResolver);
     columnIndex++;
     if (element) elements.push(element);
   }
@@ -112,22 +119,36 @@ function buildCell(
   rowIndex: number,
   columnIndex: number,
   strings: SharedStringTable,
+  styleResolver?: StyleResolver,
 ): XmlElement | null {
   if (!cell.data) return null;
   const shape = resolveCellShape(cell.data);
   if (shape.kind === 'skip') return null;
   const ref = cell.ref ?? cellRef(columnIndex, rowIndex);
+  const styleIndex = styleResolver?.indexFor(cell);
   switch (shape.kind) {
     case 'number':
-      return { name: 'c', attrs: { r: ref }, children: [{ name: 'v', text: shape.value }] };
+      return {
+        name: 'c',
+        attrs: styleAttrs(ref, styleIndex),
+        children: [{ name: 'v', text: shape.value }],
+      };
     case 'boolean':
-      return { name: 'c', attrs: { r: ref, t: 'b' }, children: [{ name: 'v', text: shape.value }] };
+      return {
+        name: 'c',
+        attrs: styleAttrs(ref, styleIndex, 'b'),
+        children: [{ name: 'v', text: shape.value }],
+      };
     case 'error':
-      return { name: 'c', attrs: { r: ref, t: 'e' }, children: [{ name: 'v', text: shape.value }] };
+      return {
+        name: 'c',
+        attrs: styleAttrs(ref, styleIndex, 'e'),
+        children: [{ name: 'v', text: shape.value }],
+      };
     case 'inlineString':
       return {
         name: 'c',
-        attrs: { r: ref, t: 'inlineStr' },
+        attrs: styleAttrs(ref, styleIndex, 'inlineStr'),
         children: [
           {
             name: 'is',
@@ -142,11 +163,18 @@ function buildCell(
       }
       return {
         name: 'c',
-        attrs: { r: ref, t: 's' },
+        attrs: styleAttrs(ref, styleIndex, 's'),
         children: [{ name: 'v', text: String(stringIndex) }],
       };
     }
   }
+}
+
+function styleAttrs(ref: string, styleIndex?: number, t?: string): XmlAttributes {
+  const attrs: XmlAttributes = { r: ref };
+  if (styleIndex !== undefined) attrs.s = styleIndex;
+  if (t !== undefined) attrs.t = t;
+  return attrs;
 }
 
 function buildDimension(table: ExcelTable): string {

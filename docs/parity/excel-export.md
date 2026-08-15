@@ -75,14 +75,14 @@
 
 | Property | Sub-PR | Status | Notes |
 |---|---|---|---|
-| `id` | 5.3 | ⬜ | Matches `cellClass` · sub-PR 5.3 |
-| `font` | 5.3 | ⬜ | sub-PR 5.3 |
-| `interior` | 5.3 | ⬜ | Fill · sub-PR 5.3 |
-| `borders` | 5.3 | ⬜ | sub-PR 5.3 |
-| `numberFormat` | 5.3 | ⬜ | sub-PR 5.3 |
-| `alignment` | 5.3 | ⬜ | sub-PR 5.3 |
-| `protection` | 5.3 | ⬜ | sub-PR 5.3 |
-| `dataType` | 5.3 | ⬜ | sub-PR 5.3 |
+| `id` | 5.3 | ✅ | Matches `cellClass` via `cell.styleId`; array ids merge, later wins |
+| `font` | 5.3 | ✅ | Deduplicated fonts; ARGB colour mapping incl. named colours |
+| `interior` | 5.3 | ✅ | Fill; all 18 AG Grid patterns mapped to OOXML patternType |
+| `borders` | 5.3 | ✅ | lineStyle × weight mapped to OOXML border styles |
+| `numberFormat` | 5.3 | ✅ | Built-in ids reused; custom formats assigned ids from 164 |
+| `alignment` | 5.3 | ✅ | Horizontal/vertical/readingOrder/indent/rotate/wrap/shrink |
+| `protection` | 5.3 | ✅ | Mapped in styles.xml; enforced together with `protectSheet` in 5.8 |
+| `dataType` | 5.3 | 🟡 | Excluded from the style-dedupe signature by design; drives cell typing during grid extraction in 5.6 |
 
 ## Correctness gates
 

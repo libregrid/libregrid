@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ExcelWorksheet } from 'ag-grid-community';
+import type { ExcelStyle, ExcelWorksheet } from 'ag-grid-community';
 import { buildXlsx } from '../ooxml/xlsxBuilder';
 import { parsePart, unzipXlsx } from './xlsx';
 import { child, children, findAll } from './parseXml';
@@ -155,5 +155,56 @@ describe('xlsx assembly (unzip-and-assert)', () => {
     const texts = children(strings, 'si').map((si) => child(si, 't')!.text);
     expect(texts[0]).toBe('emoji \ud83d\ude80 RTL \u0645\u0631\u062d\u0628\u0627');
     expect(texts[1]).toHaveLength(32767);
+  });
+
+  it('resolves cell style indexes to the intended font, fill, border and number format', () => {
+    const styles: ExcelStyle[] = [
+      {
+        id: 'header',
+        font: { bold: true, color: '#FFFFFF' },
+        interior: { pattern: 'Solid', color: '#4472C4' },
+        borders: { borderBottom: { lineStyle: 'Continuous', weight: 1 } },
+      },
+      { id: 'money', numberFormat: { format: '"$"#,##0.00' } },
+    ];
+    const styledSheet: ExcelWorksheet = {
+      name: 'Styled',
+      table: {
+        columns: [],
+        rows: [
+          {
+            cells: [
+              { data: { type: 'String', value: 'Total' }, styleId: 'header' },
+              { data: { type: 'Number', value: '1234.5' }, styleId: 'money' },
+            ],
+          },
+        ],
+      },
+    };
+    const { bytes, parts } = buildXlsx([styledSheet], { styles });
+    const unzipped = unzipXlsx(bytes);
+    expect(unzipped['xl/styles.xml']).toBe(parts['xl/styles.xml']);
+
+    const sheetCells = children(findAll(parsePart(parts, 'xl/worksheets/sheet1.xml'), 'row')[0]!, 'c');
+    expect(sheetCells.map((c) => c.attrs.s)).toEqual(['1', '2']);
+
+    const stylesXml = parsePart(parts, 'xl/styles.xml');
+    const xfs = children(child(stylesXml, 'cellXfs')!, 'xf');
+    expect(xfs).toHaveLength(3);
+    // Header style: bold white font, blue solid fill, medium bottom border.
+    expect(xfs[1]!.attrs).toMatchObject({ fontId: '1', fillId: '2', borderId: '1', numFmtId: '0' });
+    const headerFont = children(child(stylesXml, 'fonts')!, 'font')[1]!;
+    expect(child(headerFont, 'b')).toBeDefined();
+    expect(child(headerFont, 'color')!.attrs.rgb).toBe('FFFFFFFF');
+    const headerFill = children(child(stylesXml, 'fills')!, 'fill')[2]!;
+    expect(child(child(headerFill, 'patternFill')!, 'fgColor')!.attrs.rgb).toBe('FF4472C4');
+    const headerBorder = children(child(stylesXml, 'borders')!, 'border')[1]!;
+    expect(child(headerBorder, 'bottom')!.attrs.style).toBe('medium');
+    // Money style: custom number format id 164.
+    expect(xfs[2]!.attrs.numFmtId).toBe('164');
+    expect(children(child(stylesXml, 'numFmts')!, 'numFmt')[0]!.attrs).toEqual({
+      numFmtId: '164',
+      formatCode: '"$"#,##0.00',
+    });
   });
 });

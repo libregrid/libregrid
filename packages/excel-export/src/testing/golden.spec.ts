@@ -3,7 +3,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync, existsSync } from 
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ExcelWorksheet } from 'ag-grid-community';
-import { buildXlsx } from '../ooxml/xlsxBuilder';
+import { buildXlsx, type XlsxBuildOptions } from '../ooxml/xlsxBuilder';
 
 /**
  * Regression corpus (phase 5.1): golden unzipped XML for representative
@@ -15,42 +15,79 @@ const here = dirname(fileURLToPath(import.meta.url));
 const expectedRoot = join(here, '__fixtures__', 'expected');
 const update = process.env.UPDATE_GOLDEN === '1';
 
-const scenarios: Record<string, ExcelWorksheet[]> = {
-  basic: [
-    {
-      name: 'Basic',
-      table: {
-        columns: [],
-        rows: [
-          {
-            cells: [
-              { data: { type: 'String', value: 'Name' } },
-              { data: { type: 'String', value: 'Amount' } },
-            ],
-          },
-          {
-            cells: [
-              { data: { type: 'String', value: 'Widget "A" & <B>' } },
-              { data: { type: 'Number', value: '42' } },
-            ],
-          },
-          {
-            cells: [
-              { data: { type: 'String', value: '' } },
-              {},
-            ],
-          },
-          {
-            cells: [
-              { data: { type: 'Boolean', value: '1' } },
-              { data: { type: 'DateTime', value: '2020-01-01' } },
-            ],
-          },
-        ],
+interface Scenario {
+  worksheets: ExcelWorksheet[];
+  options?: XlsxBuildOptions;
+}
+
+const scenarios: Record<string, Scenario> = {
+  basic: {
+    worksheets: [
+      {
+        name: 'Basic',
+        table: {
+          columns: [],
+          rows: [
+            {
+              cells: [
+                { data: { type: 'String', value: 'Name' } },
+                { data: { type: 'String', value: 'Amount' } },
+              ],
+            },
+            {
+              cells: [
+                { data: { type: 'String', value: 'Widget "A" & <B>' } },
+                { data: { type: 'Number', value: '42' } },
+              ],
+            },
+            {
+              cells: [
+                { data: { type: 'String', value: '' } },
+                {},
+              ],
+            },
+            {
+              cells: [
+                { data: { type: 'Boolean', value: '1' } },
+                { data: { type: 'DateTime', value: '2020-01-01' } },
+              ],
+            },
+          ],
+        },
       },
+    ],
+  },
+  empty: {
+    worksheets: [{ name: 'Empty', table: { columns: [], rows: [] } }],
+  },
+  styled: {
+    worksheets: [
+      {
+        name: 'Styled',
+        table: {
+          columns: [],
+          rows: [
+            {
+              cells: [
+                { data: { type: 'String', value: 'Total' }, styleId: 'header' },
+                { data: { type: 'Number', value: '1234.5' }, styleId: 'money' },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+    options: {
+      styles: [
+        {
+          id: 'header',
+          font: { bold: true, color: '#FFFFFF' },
+          interior: { pattern: 'Solid', color: '#4472C4' },
+        },
+        { id: 'money', numberFormat: { format: '"$"#,##0.00' } },
+      ],
     },
-  ],
-  empty: [{ name: 'Empty', table: { columns: [], rows: [] } }],
+  },
 };
 
 function listFiles(dir: string): string[] {
@@ -65,9 +102,9 @@ function listFiles(dir: string): string[] {
 }
 
 describe('golden xlsx fixtures', () => {
-  for (const [scenario, worksheets] of Object.entries(scenarios)) {
+  for (const [scenario, definition] of Object.entries(scenarios)) {
     it('matches the recorded XML for scenario ' + scenario, () => {
-      const { parts } = buildXlsx(worksheets);
+      const { parts } = buildXlsx(definition.worksheets, definition.options);
       const scenarioRoot = join(expectedRoot, scenario);
       for (const [path, xml] of Object.entries(parts)) {
         const file = join(scenarioRoot, path);
