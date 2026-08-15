@@ -1,7 +1,7 @@
 # Phase 5 — Excel Export
 
-**Status:** ⏸️ Optional / deferred — intentionally held until all non-optional roadmap work is complete. It does not block 1.0.
-**Depends on:** Phase 2 (grouped-row export needs outlines), Phase 4 (range-scoped export); scheduling resumes only after Phases 4 and 8–13 are otherwise complete.
+**Status:** ▶️ In progress — started 2026-08-15, after every non-optional roadmap phase (4, 6–13) completed. Sub-PRs land sequentially; 5.1 is done.
+**Depends on:** Phase 2 (grouped-row export needs outlines), Phase 4 (range-scoped export) — both complete.
 **Blocks:** nothing — Excel Export is an opt-in post-core investment.
 
 **Package:** `@libregrid/excel-export` (`moduleName: 'ExcelExport'`)
@@ -47,8 +47,8 @@
 
 ## Todo
 
-- [ ] **5.1 — OOXML skeleton.** `fflate` zip assembly; `[Content_Types].xml`, `_rels/.rels`, `xl/workbook.xml`, `xl/_rels/workbook.xml.rels`, `xl/worksheets/sheet1.xml`, `xl/sharedStrings.xml`. Plain values only.
-  **Build the unzip-and-assert test harness here — every later PR depends on it.**
+- [x] **5.1 — OOXML skeleton.** ✅ Landed 2026-08-15. `fflate` zip assembly; `[Content_Types].xml`, `_rels/.rels`, `xl/workbook.xml`, `xl/_rels/workbook.xml.rels`, `xl/worksheets/sheet1.xml`, `xl/sharedStrings.xml`. Plain values only.
+  The unzip-and-assert test harness ships in `src/testing/` with golden `basic`/`empty` fixtures — every later PR builds on it.
 
 - [ ] **5.2 — Data types.** String, number, boolean, date. 1900-epoch serial numbers including the phantom-leap-day rule.
 
