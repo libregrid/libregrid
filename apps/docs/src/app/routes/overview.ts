@@ -23,7 +23,8 @@ import { MatChipsModule } from '@angular/material/chips';
 
       <mat-chip-set aria-label="Project status">
         <mat-chip>MIT licensed</mat-chip>
-        <mat-chip>Pre-release</mat-chip>
+        <mat-chip>Phases 0–12 complete</mat-chip>
+        <mat-chip>1.0 hardening</mat-chip>
         <mat-chip>ag-grid-community 36.1</mat-chip>
       </mat-chip-set>
 
@@ -34,8 +35,11 @@ import { MatChipsModule } from '@angular/material/chips';
           <strong>not a fork</strong> — you install both packages.
         </p>
         <p>
-          It is also <strong>not yet a drop-in replacement</strong> for AG Grid Enterprise. See the
-          roadmap below and the parity checklists in the repository.
+          Every feature on the roadmap below ships in this repository. Read the
+          <a href="https://github.com/libregrid/libregrid/blob/main/docs/guides/migration-guide.md">migration guide</a>
+          and the
+          <a href="https://github.com/libregrid/libregrid/blob/main/docs/parity/gap-list.md">honest gap list</a>
+          before adopting — they state exactly what is identical, what differs, and what is missing.
         </p>
       </div>
 
@@ -50,10 +54,19 @@ import { MatChipsModule } from '@angular/material/chips';
       <h2>Roadmap</h2>
       <div class="phases">
         <div class="phase"><span class="num done">Phase 0</span><span class="done">✅ Foundation &amp; guardrails</span></div>
-        <div class="phase"><span class="num">Phase 1</span><span>Menus &amp; side bar</span></div>
-        <div class="phase"><span class="num">Phase 2</span><span>Row grouping &amp; aggregation</span></div>
-        <div class="phase"><span class="num">Phase 3</span><span>Columns tool panel → <strong>0.1.0 ships here</strong></span></div>
-        <div class="phase"><span class="num">Phase 4+</span><span>Selection, clipboard, Excel, filters, SSRM, pivot, charts…</span></div>
+        <div class="phase"><span class="num done">Phase 1</span><span class="done">✅ Menus &amp; side bar</span></div>
+        <div class="phase"><span class="num done">Phase 2</span><span class="done">✅ Row grouping &amp; aggregation</span></div>
+        <div class="phase"><span class="num done">Phase 3</span><span class="done">✅ Columns tool panel</span></div>
+        <div class="phase"><span class="num done">Phase 4</span><span class="done">✅ Selection, clipboard &amp; status bar</span></div>
+        <div class="phase"><span class="num done">Phase 5</span><span>⏸️ Excel export — deferred, does not block 1.0</span></div>
+        <div class="phase"><span class="num done">Phase 6</span><span class="done">✅ Set/Multi filter &amp; filters tool panel</span></div>
+        <div class="phase"><span class="num done">Phase 7</span><span class="done">✅ Server-Side Row Model (core)</span></div>
+        <div class="phase"><span class="num done">Phase 8</span><span class="done">✅ Pivot</span></div>
+        <div class="phase"><span class="num done">Phase 9</span><span class="done">✅ SSRM grouping/pivot &amp; viewport model</span></div>
+        <div class="phase"><span class="num done">Phase 10</span><span class="done">✅ Tree data &amp; master/detail</span></div>
+        <div class="phase"><span class="num done">Phase 11</span><span class="done">✅ Advanced filter, find &amp; rich select</span></div>
+        <div class="phase"><span class="num done">Phase 12</span><span class="done">✅ Integrated charts &amp; sparklines</span></div>
+        <div class="phase"><span class="num">Phase 13</span><span>🟡 Long tail &amp; 1.0 hardening — in progress</span></div>
       </div>
 
       <a mat-flat-button routerLink="/grid">See the grid</a>

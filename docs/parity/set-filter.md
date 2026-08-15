@@ -1,5 +1,7 @@
 # Parity — Set Filter
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 **Source:** https://www.ag-grid.com/angular-data-grid/filter-set/ · transcribed 2026-08-11
 **Phase:** 6 · **Package:** `@libregrid/set-filter`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)

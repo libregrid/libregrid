@@ -1,4 +1,5 @@
 import type { MenuItemContribution } from './menuItemRegistry';
+import { openColumnFilterPopup } from './filterPopup';
 import { registerMenuItems } from './registryApi';
 
 /**
@@ -242,7 +243,18 @@ const builtInItems: MenuItemContribution[] = [
   },
   {
     name: 'columnFilter',
-    factory: () => null, // TODO: implement column filter
+    factory: (params) => {
+      const column = params.column;
+      if (!column?.getColDef().filter) return null;
+      return {
+        name: 'Filter',
+        // api.showColumnFilter routes through the enterprise menuSvc bean,
+        // which the menu package deliberately does not register (Community's
+        // header comp removes the column-menu button when it exists).
+        action: () => openColumnFilterPopup(params.api, column.getColId()),
+        order: 8,
+      };
+    },
     order: 8,
   },
   {

@@ -4,6 +4,8 @@
 **Phase:** 2 · **Package:** `@libregrid/row-grouping`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 ## Grid Options
 
 | Option | Status | Notes |
@@ -11,12 +13,12 @@
 | `aggFuncs` | ✅ | Custom funcs registered at init; covered by integration test |
 | `groupTotalRow` | ✅ | PR 2.4 — see `docs/parity/row-grouping.md` ("Sorting, Ordering & Totals") for the `footerSvc` implementation; integration-tested |
 | `grandTotalRow` | 🟡 | PR 2.4 — inline `'top'`/`'bottom'` only; `'pinnedTop'`/`'pinnedBottom'` deferred (needs the pinned row model). Also required `AggregationStage` to aggregate the root node whenever `grandTotalRow` is set, regardless of `alwaysAggregateAtRootLevel` — there's otherwise nothing for the grand total to show |
-| `suppressAggFuncInHeader` | ⬜ | Not a PR 2.3 item after all — it's value-column header text (`"sum(Sales)"`), unrelated to the auto group column; still open |
+| `suppressAggFuncInHeader` | ❌ | Not implemented — controls value-column header text (e.g. `"sum(Sales)"`), unrelated to the auto group column; not shipped — deferred post-1.0 |
 | `aggregateOnlyChangedColumns` | 🟡 | Not implemented — aggStage always does a full traversal (documented in code); safe but not incremental |
 | `suppressAggFilteredOnly` | ✅ | `filterAggStage` re-aggregates over all children when true; integration-tested |
-| `groupAggFiltering` | 🟡 | Option read by stages but group-value filtering lands with PR 2.5's full group filter |
+| `groupAggFiltering` | 🟡 | Option read by stages; group-value filtering shipped with PR 2.5's `GroupFilterStage` (✅ in `docs/parity/row-grouping.md` "Group Aggregate Filtering"); retained 🟡 here pending this checklist's independent ✅ re-verification |
 | `groupSuppressBlankHeader` | ✅ | PR 2.4 — free once `FooterService` links `groupNode.sibling`: Community's own `ValueService.displayIgnoresAggData` already gates on it; integration-tested |
-| `suppressStickyTotalRow` | ⬜ | No-op — total rows aren't sticky yet, see `docs/parity/row-grouping.md` |
+| `suppressStickyTotalRow` | ❌ | Not implemented — total rows aren't sticky (`stickyRowSvc` is never registered), so this option is a no-op; sticky rows are a documented post-1.0 candidate (phase-13 13A); see `docs/parity/row-grouping.md` "Sticky rows" |
 | `alwaysAggregateAtRootLevel` | ✅ | Root node aggregated when true; verified via `getRowNode(ROOT_NODE_ID)` |
 | `getGroupRowAgg` | ✅ | Overrides per-column aggs; integration-tested |
 
@@ -31,10 +33,10 @@
 | `enableValue` | ✅ | Becomes a value column with the default agg func and gates Phase 3 Values controls and native drops. |
 | `allowedAggFuncs` | ✅ | `aggFuncSvc.getFuncNames` honours it |
 | `defaultAggFunc` | ✅ | Preferred over the `'sum'` fallback |
-| `showValuesAs` | ⬜ | PR 2.5 |
-| `initialShowValuesAs` | ⬜ | PR 2.5 |
-| `showValuesAsDef` | ⬜ | PR 2.5 |
-| `enableShowValuesAs` | ⬜ | PR 2.5 — column-menu submenu |
+| `showValuesAs` | ✅ | PR 2.5 shipped — the five built-in modes are integration-tested (`packages/row-grouping/src/showValuesAs.integration.spec.ts`) and demonstrated on the live `/row-grouping` docs route (see `row-grouping.md`) |
+| `initialShowValuesAs` | ✅ | PR 2.5 shipped — create-only, per doc; implemented and integration-tested via `resolveColumn`'s `applyInitial` flag (✅ in `row-grouping.md`) |
+| `showValuesAsDef` | 🟡 | PR 2.5 shipped — `precision`/`suppressHeaderIndicator` are read, but `modes` (custom mode registry / built-in overrides) is not implemented; see `docs/parity/row-grouping.md` |
+| `enableShowValuesAs` | 🟡 | PR 2.5 shipped — read by `isMenuEligible`, but no column-menu entry point renders it yet (not wired into `@libregrid/menu`); see `docs/parity/row-grouping.md` "Column-menu integration" |
 
 ## API Methods
 

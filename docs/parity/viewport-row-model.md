@@ -1,5 +1,7 @@
 # Parity — Viewport Row Model
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 **Source:** https://www.ag-grid.com/javascript-data-grid/grid-options/ · reviewed 2026-08-13
 **Phase:** 9 · **Package:** `@libregrid/viewport-row-model`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)

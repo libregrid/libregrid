@@ -69,18 +69,47 @@ export class AdvancedFilterService extends BeanStub implements IAdvancedFilterSe
 
 class AdvancedFilterController implements IAdvancedFilterCtrl {
   private header: HTMLElement | undefined;
+  private spacer: HTMLElement | undefined;
   private host: IPinnedSectionCompHost | undefined;
   private builder: HTMLElement | undefined;
   private staged: AdvancedFilterModel | null = null;
   public constructor(private readonly service: AdvancedFilterService) {}
-  public mountTopSectionComp(host: IPinnedSectionCompHost): void { if (!this.service.isEnabled()) return; this.host?.unmountComp(this.header!); this.host = host; this.header = this.createHeader(); host.mountComp(this.header); }
+  public mountTopSectionComp(host: IPinnedSectionCompHost): void {
+    if (!this.service.isEnabled()) return;
+    this.header?.remove();
+    if (this.host && this.spacer) this.host.unmountComp(this.spacer);
+    this.host = host;
+    this.header = this.createHeader();
+    // Community mounts the panel into the pinned-top section INSIDE the
+    // grid's role=grid viewport, where axe's aria-required-children rejects
+    // any non-row content. Reserve the layout space with an invisible spacer
+    // and render the panel itself into the grid root, positioned over that
+    // space — outside the role=grid element.
+    const spacer = document.createElement('div');
+    spacer.className = 'lgr-advanced-filter-spacer';
+    spacer.setAttribute('aria-hidden', 'true');
+    spacer.style.height = `${this.getHeaderHeight()}px`;
+    this.spacer = spacer;
+    host.mountComp(spacer);
+    const root = spacer.closest<HTMLElement>('.ag-root-wrapper') ?? document.body;
+    root.append(this.header);
+    const spacerTop = spacer.getBoundingClientRect().top;
+    const rootTop = root.getBoundingClientRect().top;
+    Object.assign(this.header.style, {
+      position: 'absolute',
+      top: `${spacerTop - rootTop}px`,
+      left: '0',
+      right: '0',
+      zIndex: '3',
+    });
+  }
   public focusHeaderComp(): boolean { const input = this.header?.querySelector<HTMLInputElement>('input'); input?.focus(); return !!input; }
   public getHeaderHeight(): number { return 42; }
   public toggleFilterBuilder(params: { source: 'api' | 'ui'; force?: boolean }): void {
     const visible = !!this.builder?.isConnected;
     if (params.force === false || (params.force === undefined && visible)) this.hide(params.source); else this.show(params.source);
   }
-  public destroy(): void { if (this.header && this.host) this.host.unmountComp(this.header); this.builder?.remove(); }
+  public destroy(): void { if (this.host && this.spacer) this.host.unmountComp(this.spacer); this.header?.remove(); this.builder?.remove(); }
   public sync(): void { if (!this.header) return; const input = this.header.querySelector<HTMLInputElement>('input'); if (input && document.activeElement !== input) input.value = this.service.text(); if (this.builder?.isConnected) this.renderBuilder(); }
   private createHeader(): HTMLElement {
     const root = document.createElement('section'); root.className = 'lgr-advanced-filter'; root.setAttribute('aria-label', 'Advanced filter');

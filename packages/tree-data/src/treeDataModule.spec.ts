@@ -22,6 +22,11 @@ describe('TreeDataModule', () => {
     expect(api.getDisplayedRowAtIndex(0)?.data).toBeUndefined();
     expect(api.getDisplayedRowAtIndex(0)?.aggData?.amount).toBe(7);
     expect(api.getDisplayedRowAtIndex(2)?.data?.id).toBe('leaf');
+    // The auto group column carries the tree: group names and leaf names come
+    // from node.key (regression test — the tree column previously rendered
+    // blank names because leaf keys were never set).
+    expect(api.getDisplayedRowAtIndex(0)?.key).toBe('Root');
+    expect(api.getDisplayedRowAtIndex(2)?.key).toBe('Leaf');
   });
 
   it('builds a parent-id hierarchy with a stable visible parent/child order', async () => {

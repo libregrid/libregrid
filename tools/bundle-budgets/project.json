@@ -11,7 +11,7 @@
     },
     "consumer-fixtures": {
       "executor": "nx:run-commands",
-      "dependsOn": ["core:build", "menu:build", "side-bar:build", "material:build", "row-grouping:build", "columns-tool-panel:build", "server-side-row-model:build", "pivot:build", "advanced-filter:build", "find:build", "rich-select:build", "integrated-charts:build", "sparklines:build"],
+      "dependsOn": ["core:build", "menu:build", "side-bar:build", "material:build", "row-grouping:build", "columns-tool-panel:build", "cell-selection:build", "clipboard:build", "status-bar:build", "set-filter:build", "multi-filter:build", "filters-tool-panel:build", "server-side-row-model:build", "pivot:build", "viewport-row-model:build", "tree-data:build", "master-detail:build", "advanced-filter:build", "find:build", "rich-select:build", "integrated-charts:build", "sparklines:build"],
       "options": {
         "command": "node tools/bundle-budgets/consumer-fixtures.mjs"
       }

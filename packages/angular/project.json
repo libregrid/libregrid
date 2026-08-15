@@ -1,0 +1,20 @@
+{
+  "name": "angular",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:angular"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.lib.json",
+        "cwd": "packages/angular"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run packages/angular"
+      }
+    }
+  }
+}

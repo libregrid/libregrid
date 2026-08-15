@@ -107,13 +107,13 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 - [x] **Phase 0 — Foundation & guardrails** · [`phases/phase-00-foundation.md`](docs/phases/phase-00-foundation.md)
       Nx workspace, CI, contamination guard, conformance matrix, `@libregrid/core`, benchmark baseline. **Contains the critical seam-verification task.**
 
-- [ ] **Phase 1 — Enterprise core, menus & side bar** · [`phases/phase-01-menus-sidebar.md`](docs/phases/phase-01-menus-sidebar.md)
+- [x] **Phase 1 — Enterprise core, menus & side bar** · [`phases/phase-01-menus-sidebar.md`](docs/phases/phase-01-menus-sidebar.md)
       `@libregrid/menu`, `@libregrid/side-bar`, `@libregrid/material` v1 + theme bridge.
 
-- [ ] **Phase 2 — Row grouping & aggregation** · [`phases/phase-02-row-grouping.md`](docs/phases/phase-02-row-grouping.md)
+- [x] **Phase 2 — Row grouping & aggregation** · [`phases/phase-02-row-grouping.md`](docs/phases/phase-02-row-grouping.md)
       The largest phase. Five sequential PRs. Most later features assume it exists.
 
-- [ ] **Phase 3 — Columns tool panel** · [`phases/phase-03-columns-tool-panel.md`](docs/phases/phase-03-columns-tool-panel.md)
+- [x] **Phase 3 — Columns tool panel** · [`phases/phase-03-columns-tool-panel.md`](docs/phases/phase-03-columns-tool-panel.md)
       The implementation is complete for column visibility, pinning, search, grouped trees, internal reorder, row groups, and values.
       It also includes the shared column chooser, the standalone row-group panel, keyboard actions, and a Material CDK adapter.
       The panel shows static Pivot Mode and Column Labels placeholders for Phase 8. It does not include pivot controls or pivot mutation.
@@ -125,29 +125,29 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 > **This is the first public release**, not 1.0. It is the most-demanded Enterprise cluster and useful standalone.
 > Subsequent phases ship as `0.2`, `0.3`, `0.4` … — see [OPEN-ACTIONS D1](docs/OPEN-ACTIONS.md).
 
-- [ ] **Phase 4 — Cell selection, clipboard & status bar** · [`phases/phase-04-selection-clipboard.md`](docs/phases/phase-04-selection-clipboard.md)
+- [x] **Phase 4 — Cell selection, clipboard & status bar** · [`phases/phase-04-selection-clipboard.md`](docs/phases/phase-04-selection-clipboard.md)
       Ranges, fill handle, Excel-compatible copy/paste, status panels.
 
-- [ ] **Phase 5 — Excel export** · [`phases/phase-05-excel-export.md`](docs/phases/phase-05-excel-export.md)
+- [ ] **Phase 5 — Excel export — deferred, does not block 1.0** · [`phases/phase-05-excel-export.md`](docs/phases/phase-05-excel-export.md)
       Own OOXML writer over `fflate`. Nine sub-PRs.
 
-- [ ] **Phase 6 — Set/Multi filter & filters tool panel** · [`phases/phase-06-filters.md`](docs/phases/phase-06-filters.md)
+- [x] **Phase 6 — Set/Multi filter & filters tool panel** · [`phases/phase-06-filters.md`](docs/phases/phase-06-filters.md)
 
-- [ ] **Phase 7 — Server-Side Row Model (core)** · [`phases/phase-07-ssrm-core.md`](docs/phases/phase-07-ssrm-core.md)
+- [x] **Phase 7 — Server-Side Row Model (core)** · [`phases/phase-07-ssrm-core.md`](docs/phases/phase-07-ssrm-core.md)
       May begin under the approved SSRM exception once Phase 0's benchmark gate is complete. Stores, block loading, transactions, selection. Flat + sorted only.
 
-- [ ] **Phase 8 — Pivot** · [`phases/phase-08-pivot.md`](docs/phases/phase-08-pivot.md)
+- [x] **Phase 8 — Pivot** · [`phases/phase-08-pivot.md`](docs/phases/phase-08-pivot.md)
 
-- [ ] **Phase 9 — SSRM grouping/pivot & viewport model** · [`phases/phase-09-ssrm-advanced.md`](docs/phases/phase-09-ssrm-advanced.md)
+- [x] **Phase 9 — SSRM grouping/pivot & viewport model** · [`phases/phase-09-ssrm-advanced.md`](docs/phases/phase-09-ssrm-advanced.md)
 
-- [ ] **Phase 10 — Tree data & master/detail** · [`phases/phase-10-tree-master-detail.md`](docs/phases/phase-10-tree-master-detail.md)
+- [x] **Phase 10 — Tree data & master/detail** · [`phases/phase-10-tree-master-detail.md`](docs/phases/phase-10-tree-master-detail.md)
 
-- [ ] **Phase 11 — Advanced filter, find & rich select** · [`phases/phase-11-advanced-filter-find.md`](docs/phases/phase-11-advanced-filter-find.md)
+- [x] **Phase 11 — Advanced filter, find & rich select** · [`phases/phase-11-advanced-filter-find.md`](docs/phases/phase-11-advanced-filter-find.md)
 
 - [x] **Phase 12 — Integrated charts & sparklines** · [`phases/phase-12-charts.md`](docs/phases/phase-12-charts.md)
       On `ag-charts-community` (MIT).
 
-- [ ] **Phase 13 — Long tail & 1.0 hardening** · [`phases/phase-13-hardening.md`](docs/phases/phase-13-hardening.md)
+- [x] **Phase 13 — Long tail & 1.0 hardening** · [`phases/phase-13-hardening.md`](docs/phases/phase-13-hardening.md)
       Parity audit, a11y sweep, bundle budgets, migration guide, 1.0.0.
 
 ---

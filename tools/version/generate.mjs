@@ -28,14 +28,30 @@ export function agGridVersion(rootDir = root) {
   return JSON.parse(readFileSync(pkgPath, 'utf8')).version;
 }
 
-/** Packages that ship a generated src/version.ts */
+/** Packages that ship a generated src/version.ts — every module-shipping package. */
 export const VERSIONED_PACKAGES = [
   'core',
   'menu',
   'side-bar',
+  'material',
   'row-grouping',
   'columns-tool-panel',
+  'cell-selection',
+  'clipboard',
+  'status-bar',
+  'set-filter',
+  'multi-filter',
+  'filters-tool-panel',
   'server-side-row-model',
+  'pivot',
+  'viewport-row-model',
+  'tree-data',
+  'master-detail',
+  'advanced-filter',
+  'find',
+  'rich-select',
+  'integrated-charts',
+  'sparklines',
 ];
 
 export function generate(rootDir = root) {

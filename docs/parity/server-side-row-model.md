@@ -1,5 +1,7 @@
 # Parity — Server-Side Row Model
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 **Sources:** https://www.ag-grid.com/angular-data-grid/server-side-model/ · `/server-side-model-configuration/` · `/server-side-model-datasource/` · `/server-side-model-selection/` · `/server-side-model-updating-transactions/` · reviewed 2026-08-13
 **Phases:** 7 (core) and 9 (grouping/pivot/filter) · **Package:** `@libregrid/server-side-row-model`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)

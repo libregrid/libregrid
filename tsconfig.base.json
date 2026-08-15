@@ -12,6 +12,7 @@
     "skipLibCheck": true,
     "declaration": true,
     "sourceMap": true,
+    "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -33,12 +34,14 @@
       "@libregrid/filters-tool-panel": ["./packages/filters-tool-panel/src/index.ts"],
       "@libregrid/cell-selection": ["./packages/cell-selection/src/index.ts"],
       "@libregrid/clipboard": ["./packages/clipboard/src/index.ts"],
-      "@libregrid/status-bar": ["./packages/status-bar/src/index.ts"]
-      ,"@libregrid/advanced-filter": ["./packages/advanced-filter/src/index.ts"]
-      ,"@libregrid/find": ["./packages/find/src/index.ts"]
-      ,"@libregrid/rich-select": ["./packages/rich-select/src/index.ts"]
-      ,"@libregrid/integrated-charts": ["./packages/integrated-charts/src/index.ts"]
-      ,"@libregrid/sparklines": ["./packages/sparklines/src/index.ts"]
+      "@libregrid/status-bar": ["./packages/status-bar/src/index.ts"],
+      "@libregrid/advanced-filter": ["./packages/advanced-filter/src/index.ts"],
+      "@libregrid/find": ["./packages/find/src/index.ts"],
+      "@libregrid/rich-select": ["./packages/rich-select/src/index.ts"],
+      "@libregrid/integrated-charts": ["./packages/integrated-charts/src/index.ts"],
+      "@libregrid/sparklines": ["./packages/sparklines/src/index.ts"],
+      "@libregrid/angular": ["./packages/angular/src/index.ts"],
+      "@libregrid/all": ["./packages/all/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

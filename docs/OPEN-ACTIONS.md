@@ -10,6 +10,8 @@ Legend: ⬜ open · ✅ done · ⚠️ time-sensitive
 
 | # | Action | Status | Notes |
 |---|---|---|---|
+| A8 | **Publish 1.0.0** with npm provenance | ⚠️ externally owned | Phase 13 is complete; the release changeset (.changeset/phase-thirteen-100-release.md) bumps every package to 1.0.0. Requires an owner with npm auth and a GitHub Actions run of the changesets release workflow with --provenance. Also completes the verbatim quick-start check (phase-13 acceptance). |
+| A9 | Phase 4 external spreadsheet check | ⚠️ externally owned | The only remaining Phase 4 gate: manually copy a range out of the live docs grid and paste into Excel, LibreOffice, and Google Sheets to confirm row/column shape. Requires a machine with one of those applications. |
 | A1 | Claim GitHub org `libregrid` | ✅ **done 2026-08-11** | [github.com/libregrid](https://github.com/libregrid) — Organization, 0 repos |
 | A2 | Claim npm org `libregrid` | ✅ **done 2026-08-11** | Scope `@libregrid/*` secured. No public packages yet (expected — first publish is Phase 0/1). Verify membership with `npm org ls libregrid` when you next authenticate. |
 | A3 | Register `libregrid.dev` | ⬜ open | `.io` also available. `libregrid.org` is held by a third party. Not blocking, but cheap insurance. |
@@ -26,7 +28,7 @@ Legend: ⬜ open · ✅ done · ⚠️ time-sensitive
 |---|---|---|---|
 | B1 | Legal counsel review | ⬜ open | Review the trademark position in **G4** — specifically G4.1a (`agXxx` identifiers required for interoperability) and G4.2 (tagline wording). Cheap relative to the exposure. Recorded as guidance in G4; this is the tracked action. |
 | B2 | Open-source governance files | ✅ **scheduled** | Now **Phase 0 Task 0.13**, and a Phase 0 acceptance criterion. Must land before Task 0.14 (public push). |
-| B3 | Verify G3 attribution present | ⬜ open | Every published package needs `NOTICE` (preserving `Copyright (c) 2015-2026 AG GRID LTD` + MIT text) and the README disclaimer. Enforced per-phase, but audit once before launch. |
+| B3 | Verify G3 attribution present | ✅ **done 2026-08-14** | Every package has `NOTICE` + README with the independence disclaimer; now **enforced by CI** (`tools/bundle-budgets/check.mjs`) so it cannot regress. |
 
 ---
 

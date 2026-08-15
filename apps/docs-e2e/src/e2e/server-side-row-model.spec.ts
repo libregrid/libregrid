@@ -14,10 +14,14 @@ test.describe('server-side row model demo', () => {
     const grid = page.getByTestId('server-side-grid');
     await expect(grid.locator('[row-index="0"]')).toContainText('trade-1');
 
-    await grid.locator('.ag-center-cols-viewport').evaluate((viewport) => {
-      viewport.scrollTop = 15_000;
-      viewport.dispatchEvent(new Event('scroll', { bubbles: true }));
-    });
+    // v36's scrolling is wheel-driven; setting scrollTop programmatically
+    // does not feed the SSRM block loader. Wheel in steps so the lazy block
+    // loader has time to fetch between scrolls.
+    await grid.hover();
+    for (let step = 0; step < 5; step += 1) {
+      await page.mouse.wheel(0, 5_000);
+      await page.waitForTimeout(400);
+    }
     await expect.poll(async () =>
       grid.locator('[row-index]').evaluateAll((rows) =>
         rows.some(

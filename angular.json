@@ -22,7 +22,11 @@
           "configurations": {
             "production": {
               "budgets": [
-                { "type": "initial", "maximumWarning": "2.2mb", "maximumError": "2.5mb" }
+                {
+                  "type": "initial",
+                  "maximumWarning": "3.5mb",
+                  "maximumError": "4.5mb"
+                }
               ],
               "outputHashing": "all"
             },

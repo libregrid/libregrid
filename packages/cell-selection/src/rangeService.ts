@@ -123,6 +123,25 @@ export class RangeService extends BeanStub implements NamedBean {
     else this.setCellRange(params);
   }
   public handleCellMouseDown(event: MouseEvent, cell: CellPosition): void {
+    // Pressing the fill/range handle must not reset the selection — the
+    // handle drag is owned by RangeDragFeature.
+    const target = event.target;
+    if (
+      typeof HTMLElement !== 'undefined' &&
+      target instanceof HTMLElement &&
+      (target.closest('.lgr-fill-handle') || target.closest('.lgr-range-handle'))
+    )
+      return;
+    // Community may deliver the same mousedown twice (the cell listener and
+    // the drag-service listener both land here, on different event objects) —
+    // a ctrl+drag would otherwise append two ranges. Set a dispatch-scoped
+    // flag; RangeDragFeature's container listener checks it and skips its own
+    // initial range creation.
+    if (this.mouseDownHandled) return;
+    this.mouseDownHandled = true;
+    globalThis.setTimeout(() => {
+      this.mouseDownHandled = false;
+    }, 0);
     if (event.shiftKey && this.cellRanges.length) this.extendLatestRangeToCell(cell);
     else this.setRangeToCell(cell, (event.ctrlKey || event.metaKey) && !this.suppressMultiRanges());
   }
@@ -130,11 +149,23 @@ export class RangeService extends BeanStub implements NamedBean {
     if (event.shiftKey && this.cellRanges.length) this.extendLatestRangeToCell(cell);
     else this.setRangeToCell(cell);
   }
+  /** True while the fill/range handle owns an active drag — suppress the cell-drag path. */
+  public handleDragActive = false;
+
+  /** Set for the duration of one mousedown dispatch — dedupes the two community delivery paths. */
+  public mouseDownHandled = false;
+
+  public setHandleDragActive(active: boolean): void {
+    this.handleDragActive = active;
+  }
+
   public onDragStart(event: MouseEvent): void {
+    if (this.handleDragActive) return;
     const cell = this.domCell(event.target);
     if (cell) this.handleCellMouseDown(event, this.cellPosition(cell));
   }
   public onDragging(event: MouseEvent): void {
+    if (this.handleDragActive) return;
     const cell = this.domCell(event.target);
     if (cell && event.buttons === 1) this.extendLatestRangeToCell(this.cellPosition(cell));
   }
@@ -405,7 +436,8 @@ export class RangeService extends BeanStub implements NamedBean {
       typeof HTMLElement !== 'undefined' && target instanceof HTMLElement
         ? target.closest<HTMLElement>('.ag-cell')
         : null;
-    const row = Number(element?.parentElement?.getAttribute('row-index'));
+    const rowElement = element?.closest<HTMLElement>('.ag-row');
+    const row = rowElement ? Number(rowElement.getAttribute('row-index')) : NaN;
     const column = element?.getAttribute('col-id');
     return Number.isInteger(row) && column ? { row, column } : undefined;
   }
@@ -580,12 +612,17 @@ class RangeDragFeature extends BeanStub {
   public postConstruct(): void {
     this.addManagedElementListeners(this.container, {
       mousedown: (event) => this.startDrag(event as MouseEvent),
-      mousemove: (event) => this.extendDrag(event as MouseEvent),
+      mousemove: (event) => {
+        this.extendDragTo(this.elementUnder(event as MouseEvent));
+      },
       mouseup: (event) => this.finishDrag(event as MouseEvent),
     });
   }
   private finishDrag(event: MouseEvent): void {
-    const cell = this.cell(event.target);
+    // event.target can be a recycled row's cell mid-drag; resolve the cell
+    // actually under the pointer instead.
+    const target = this.elementUnder(event);
+    const cell = this.cell(target);
     const column = cell
       ? (this.rangeService as unknown as { columns(): Column[] })
           .columns()
@@ -605,11 +642,12 @@ class RangeDragFeature extends BeanStub {
       });
     // A short drag may not emit an intermediate mousemove over the final
     // cell, so commit the normal selection from the mouseup target as well.
-    if (this.start && !this.filling && !this.resizing) this.extendDrag(event);
+    if (this.start && !this.filling && !this.resizing) this.extendDragTo(target);
     this.filling = undefined;
     this.resizing = undefined;
     this.start = undefined;
     this.append = false;
+    this.rangeService.setHandleDragActive(false);
   }
   private isFillHandle(target: EventTarget | null): boolean {
     return (
@@ -635,8 +673,13 @@ class RangeDragFeature extends BeanStub {
           item.columns.at(-1)?.getColId() === cell.column,
         );
       });
-      if (this.isFillHandle(event.target)) this.filling = range;
-      else this.resizing = range;
+      if (this.isFillHandle(event.target)) {
+        this.filling = range;
+        this.rangeService.setHandleDragActive(true);
+      } else {
+        this.resizing = range;
+        this.rangeService.setHandleDragActive(true);
+      }
       return;
     }
     const cell = this.cell(event.target);
@@ -659,12 +702,16 @@ class RangeDragFeature extends BeanStub {
       columnStart: cell.column,
       columnEnd: cell.column,
     };
+    // RangeService.handleCellMouseDown has already created the initial range
+    // for cell mousedowns (Community calls it directly); only create it here
+    // when that path did not run (e.g. a mousedown on a non-cell surface).
+    if (this.rangeService.mouseDownHandled) return;
     if (this.append) this.rangeService.addCellRange(params);
     else this.rangeService.setCellRange(params);
   }
-  private extendDrag(event: MouseEvent): void {
+  private extendDragTo(target: EventTarget | null): void {
     if (!this.start) return;
-    const cell = this.cell(event.target);
+    const cell = this.cell(target);
     if (cell) {
       const params = {
         rowStartIndex: this.start.row,
@@ -675,12 +722,29 @@ class RangeDragFeature extends BeanStub {
       this.rangeService.extendLatestCellRange(params);
     }
   }
+  /** Resolve the drag target: prefer the element under the pointer, but only when it resolves to a cell (jsdom's elementFromPoint returns the body). */
+  private elementUnder(event: MouseEvent): EventTarget | null {
+    if (typeof document !== 'undefined' && typeof document.elementFromPoint === 'function') {
+      try {
+        const under = document.elementFromPoint(event.clientX, event.clientY);
+        if (under instanceof HTMLElement && under.closest('.ag-cell')) return under;
+      } catch {
+        /* jsdom may not implement elementFromPoint */
+      }
+    }
+    return event.target;
+  }
+
   private cell(target: EventTarget | null): { row: number; column: string } | undefined {
     const element =
       typeof HTMLElement !== 'undefined' && target instanceof HTMLElement
         ? target.closest<HTMLElement>('.ag-cell')
         : null;
-    const row = Number(element?.parentElement?.getAttribute('row-index'));
+    // v36 wraps cells inside .ag-grid-scrolling-cells; the row-index
+    // attribute lives on the .ag-row ancestor. Number(null) would silently
+    // resolve every drag to row 0.
+    const rowElement = element?.closest<HTMLElement>('.ag-row');
+    const row = rowElement ? Number(rowElement.getAttribute('row-index')) : NaN;
     const column = element?.getAttribute('col-id');
     return Number.isInteger(row) && column ? { row, column } : undefined;
   }

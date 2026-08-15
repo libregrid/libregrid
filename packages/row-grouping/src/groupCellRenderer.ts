@@ -77,13 +77,19 @@ export class GroupCellRenderer implements ICellRendererComp {
 
   private toggleExpanded(event: Event): void {
     const { node } = this.params;
-    if (!node.group || !node.childrenAfterGroup?.length) return;
+    if (!node.group) return;
+    if (!node.childrenAfterGroup?.length && !this.isServerSideGroup()) return;
     node.setExpanded(!node.expanded, event as MouseEvent | KeyboardEvent);
+  }
+
+  /** Server-side groups expand lazily — their children are not loaded yet, but they are still expandable. */
+  private isServerSideGroup(): boolean {
+    return this.params.api?.getGridOption?.('rowModelType') === 'serverSide';
   }
 
   private render(): void {
     const { node, value, suppressPadding, suppressCount, totalValueGetter } = this.params;
-    const isExpandable = !!node.group && !!node.childrenAfterGroup?.length;
+    const isExpandable = !!node.group && (!!node.childrenAfterGroup?.length || this.isServerSideGroup());
 
     this.eGui.classList.toggle('lgr-group-cell-expandable', isExpandable);
     this.eGui.classList.toggle('lgr-group-cell-total', !!node.footer);
@@ -100,6 +106,10 @@ export class GroupCellRenderer implements ICellRendererComp {
 
     this.eToggle.classList.toggle('lgr-group-cell-toggle-expanded', !!node.expanded);
     this.eToggle.classList.toggle('lgr-group-cell-toggle-hidden', !isExpandable);
+    // Community-standard disclosure-icon classes — consumers' CSS and tests
+    // target these names (ag-grid.com group cell renderer DOM contract).
+    this.eToggle.classList.toggle('ag-group-expanded', isExpandable && !!node.expanded);
+    this.eToggle.classList.toggle('ag-group-contracted', isExpandable && !node.expanded);
 
     this.eGui.style.paddingLeft = suppressPadding ? '' : `${(node.uiLevel ?? 0) * 16}px`;
 

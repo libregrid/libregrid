@@ -57,8 +57,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - name: Playwright E2E and axe
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - name: Playwright E2E and axe (Chromium, Firefox, WebKit)
         run: NX_DAEMON=false npx nx e2e docs-e2e
 
   phase-gates:

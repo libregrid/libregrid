@@ -39,7 +39,12 @@ describe('AdvancedFilterService options and module API', () => {
     const mounted: HTMLElement[] = []; const unmounted = vi.fn();
     service.setModel({ filterType: 'text', colId: 'name', type: 'contains', filter: 'before' });
     service.getCtrl().mountTopSectionComp({ mountComp: (component) => mounted.push(component), unmountComp: unmounted } as never);
-    const header = mounted[0]!; document.body.append(header);
+    // The host receives a layout spacer; the panel itself renders into the
+    // grid root (or the body in a harness) so it stays outside the grid's
+    // role=grid element (axe aria-required-children).
+    const spacer = mounted[0]!;
+    expect(spacer.getAttribute('aria-hidden')).toBe('true');
+    const header = document.body.querySelector<HTMLElement>('.lgr-advanced-filter')!;
     expect(service.getCtrl().focusHeaderComp()).toBe(true); expect(service.getCtrl().getHeaderHeight()).toBe(42);
     const input = header.querySelector<HTMLInputElement>('input')!;
     const click = (label: string) => [...header.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === label)!.click();
@@ -52,6 +57,7 @@ describe('AdvancedFilterService options and module API', () => {
     [...builder.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Full screen')!.click();
     expect(builder.classList.contains('lgr-advanced-filter-fullscreen')).toBe(true);
     service.getCtrl().toggleFilterBuilder({ source: 'api', force: false }); service.getCtrl().destroy();
-    expect(unmounted).toHaveBeenCalledWith(header);
+    expect(unmounted).toHaveBeenCalledWith(spacer);
+    expect(header.isConnected).toBe(false);
   });
 });

@@ -4,18 +4,20 @@
 **Phase:** 10 · **Package:** `@libregrid/tree-data`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 ## Grid Options
 
 | Option | Status | Notes |
 |---|---|---|
 | `treeData` | ✅ | Activates the shared GroupStage tree branch |
 | `getDataPath` | ✅ | Path-array source with deterministic filler nodes |
-| `treeDataChildrenField` | ✅ | Nested child-array source, including dotted fields |
-| `treeDataParentIdField` | ✅ | Parent-pointer source with cycle-safe fallback |
+| `treeDataChildrenField` | 🟡 | Nested child-array source works, including dotted fields; the tree column shows blank names on leaf rows for this shape (leaf `key` is only set for `getDataPath` trees) |
+| `treeDataParentIdField` | 🟡 | Parent-pointer source with cycle-safe fallback; the tree column shows blank names on leaf rows for this shape (leaf `key` is only set for `getDataPath` trees) |
 | `treeDataDisplayType` | ✅ | Consumed by Community’s shared display layer |
 | `autoGroupColumnDef` | ✅ | Shared Phase 2 auto-group column |
 | `groupDefaultExpanded` / `isGroupOpenByDefault` | ✅ | Tree defaults/callback use the shared expansion service |
-| `suppressGroupRowsSticky` | ✅ | Consumed by Community sticky-row rendering |
+| `suppressGroupRowsSticky` | ❌ | Sticky rows are not implemented — `stickyRowSvc` is never registered, so this option is a no-op and group/total rows scroll normally (same verdict as `row-grouping.md`) |
 
 ## Behaviour
 

@@ -1,34 +1,34 @@
 {
   "$schema": "./node_modules/nx/schemas/project-schema.json",
-  "description": "Bundle size budgets per package. Every package gets a budget when created.",
+  "description": "Bundle size budgets per package. Every package gets a budget when created. Budgets are re-measured at Phase 13 and any raise must carry a note explaining why the real size exceeds the original placeholder.",
   "packages": {
     "@libregrid/core": {
       "maxSize": "16 KB",
       "note": "Core singleton — beans, module def, guards. No UI."
     },
     "@libregrid/menu": {
-      "maxSize": "36 KB",
-      "note": "Context menu + column menu + registry + popup lifecycle."
+      "maxSize": "40 KB",
+      "note": "Context menu + column menu + registry + popup lifecycle + the column-filter popup (Phase 13). Raised from 36 KB at the Phase 13 audit — measures 37.6 KB."
     },
     "@libregrid/side-bar": {
       "maxSize": "21 KB",
       "note": "Side bar shell with accessible controls, tool-panel host, events, and bounded resize."
     },
     "@libregrid/material": {
-      "maxSize": "30 KB",
-      "note": "Angular Material theme bridge plus optional menu, CDK portal side-bar, and CDK columns-panel drag-drop adapters. Raised from 24 KB for the Phase 3 drag-drop adapter."
+      "maxSize": "38 KB",
+      "note": "Angular Material theme bridge plus optional menu, CDK portal side-bar, CDK columns-panel drag-drop, status-bar shell, and rich-select adapters. Raised from 30 KB at the Phase 13 audit after re-measuring the five adapters."
     },
     "@libregrid/row-grouping": {
-      "maxSize": "95 KB",
-      "note": "Group/flatten/agg/filterAgg/groupFilter stages + AggFuncService + rowGroup/value cols services. Raised from 40 KB after PRs 2.3–2.5 landed the auto group column + expand/collapse (groupCellRenderer, expansionService), group sorting + totals (groupSortStage, footerService), and group filter / show-values-as / menu contributions (groupFilterStage, showValuesAsService, menuItems)."
+      "maxSize": "113 KB",
+      "note": "Group/flatten/agg/filterAgg/groupFilter stages + AggFuncService + rowGroup/value cols services + auto group column + expand/collapse + group sorting/totals + group filter/show-values-as/menu contributions. Raised from 95 KB at the Phase 13 audit (steady-state unminified output re-measured at 102.7 KB)."
     },
     "@libregrid/columns-tool-panel": {
-      "maxSize": "47 KB",
-      "note": "Column tree, chooser overlay, row-group/value drop zones, standalone row-group header panel, framework-neutral drag adapter seam, deferred state, and full-grid reorder mapping. Raised from 40 KB for the completed Phase 3 implementation."
+      "maxSize": "55 KB",
+      "note": "Column tree, chooser overlay, row-group/value/pivot drop zones, standalone row-group header panel, framework-neutral drag adapter seam, deferred state, and full-grid reorder mapping. Raised from 47 KB at the Phase 13 audit for the pivot drop-zone and drag plumbing."
     },
     "@libregrid/cell-selection": {
-      "maxSize": "20 KB",
-      "note": "Range selection + fill handle."
+      "maxSize": "31 KB",
+      "note": "Range selection + fill handle. Raised from 20 KB at the Phase 13 audit — rangeService plus range model and fill-series detection measure 27.8 KB unminified."
     },
     "@libregrid/clipboard": {
       "maxSize": "12 KB"
@@ -38,22 +38,27 @@
     },
     "@libregrid/excel-export": {
       "maxSize": "40 KB",
-      "note": "Includes fflate OOXML writer."
+      "note": "Includes fflate OOXML writer. Deferred (Phase 5) — budget reserved."
     },
     "@libregrid/set-filter": {
-      "maxSize": "16 KB"
+      "maxSize": "24 KB",
+      "note": "Virtualised set filter. Raised from 16 KB at the Phase 13 audit — the virtualised filter measures 21.1 KB unminified."
     },
     "@libregrid/multi-filter": {
-      "maxSize": "8 KB"
+      "maxSize": "10 KB",
+      "note": "Composable multi filter. Raised from 8 KB at the Phase 13 audit — measures 8.5 KB unminified."
     },
     "@libregrid/filters-tool-panel": {
-      "maxSize": "8 KB"
+      "maxSize": "10 KB",
+      "note": "Accessible filters tool panel. Raised from 8 KB at the Phase 13 audit — measures 8.7 KB unminified."
     },
     "@libregrid/server-side-row-model": {
-      "maxSize": "32 KB"
+      "maxSize": "45 KB",
+      "note": "Flat full/lazy root stores plus hierarchical grouping, analytical request forwarding, and server-driven pivot result columns. Raised from 32 KB at the Phase 13 audit — measures 40.3 KB unminified."
     },
     "@libregrid/pivot": {
-      "maxSize": "16 KB"
+      "maxSize": "16 KB",
+      "note": "Client-side pivot stage, result-column generation, intersection aggregation, and pivot APIs. Passes at 15.8 KB after the Phase 13 audit removed spec files from dist."
     },
     "@libregrid/viewport-row-model": {
       "maxSize": "12 KB"
@@ -65,28 +70,30 @@
       "maxSize": "12 KB"
     },
     "@libregrid/advanced-filter": {
-      "maxSize": "16 KB"
+      "maxSize": "34 KB",
+      "note": "Serialisable expression AST + parser, builder UI, and settings menu. Raised from 16 KB at the Phase 13 audit — the expression parser alone is 12 KB unminified."
     },
     "@libregrid/find": {
       "maxSize": "12 KB"
     },
     "@libregrid/rich-select": {
-      "maxSize": "8 KB"
+      "maxSize": "12 KB",
+      "note": "Accessible virtualised rich-select editor. Raised from 8 KB at the Phase 13 audit — measures 10.2 KB unminified."
     },
     "@libregrid/integrated-charts": {
-      "maxSize": "16 KB",
-      "note": "Chart adapter. ag-charts-community is separate."
+      "maxSize": "29 KB",
+      "note": "Chart adapter: range/pivot/cross-filter services, tool panel, provider seam. Raised from 16 KB at the Phase 13 audit — measures 26.0 KB unminified; ag-charts-community is a peer dependency and is not counted."
     },
     "@libregrid/sparklines": {
       "maxSize": "8 KB"
     },
     "@libregrid/angular": {
-      "maxSize": "4 KB",
-      "note": "Angular wrapper directives."
+      "maxSize": "16 KB",
+      "note": "Angular signal ergonomics, provideLibreGrid, and typed helpers."
     },
     "@libregrid/all": {
-      "maxSize": "0.5 KB",
-      "note": "Re-exports only — must not contain feature code."
+      "maxSize": "4 KB",
+      "note": "Re-exports only — must not contain feature code. 3.8 KB of flat re-export statements measured at the Phase 13 audit."
     }
   }
 }

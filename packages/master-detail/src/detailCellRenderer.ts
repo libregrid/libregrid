@@ -21,7 +21,10 @@ export class DetailCellRenderer {
     const config = this.resolveConfig();
     this.gui = document.createElement('div');
     this.gui.className = 'ag-details-row';
-    this.gui.setAttribute('role', 'region');
+    // The detail row renders inside the master grid's role=row; a row may
+    // only own gridcell/columnheader/rowheader children (axe
+    // aria-required-children), so the detail content is a named gridcell.
+    this.gui.setAttribute('role', 'gridcell');
     this.gui.setAttribute('aria-label', `Details for ${params.node.parent?.id ?? params.node.id}`);
     const template = config.template;
     if (template) this.gui.innerHTML = typeof template === 'function' ? template(params as never) : template;

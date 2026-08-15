@@ -14,10 +14,21 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
+  // Cross-browser matrix (Phase 13): Chromium, Firefox, and WebKit run in
+  // CI. Edge is Chromium-based and is covered by the chromium engine; note
+  // it in the cross-browser report rather than duplicating the profile.
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
     },
   ],
   webServer: {

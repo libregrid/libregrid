@@ -1,5 +1,7 @@
 # Parity — Rich Select
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 **Source:** https://www.ag-grid.com/javascript-data-grid/provided-cell-editors-rich-select/ · reviewed 2026-08-14
 **Phase:** 11 · **Package:** `@libregrid/rich-select`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)

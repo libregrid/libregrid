@@ -4,6 +4,8 @@
 **Phase:** 2 · **Package:** `@libregrid/row-grouping`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 ## Grid Options
 
 | Option | Status | Notes |
@@ -14,27 +16,27 @@
 | `groupRowRendererParams` | ❌ | Same as `groupRowRenderer` |
 | `showOpenedGroup` | ✅ | PR 2.3 — `ShowRowGroupColsValueService.getDisplayedNode` walks a leaf row up to its nearest group ancestor; integration-tested |
 | `groupHideOpenParents` | 🟡 | PR 2.3 — `FlattenStage` hides an expanded group's own row and `ShowRowGroupColsValueService` substitutes its value onto the first child; only **one** hidden-ancestor level is substituted — a chain of 2+ consecutively-expanded hidden ancestors collapses onto one row but only the nearest one's value shows |
-| `groupHideColumnsUntilExpanded` | ⬜ | Needs per-row column suppression across the whole row, not just the auto column — deferred |
+| `groupHideColumnsUntilExpanded` | ❌ | Not implemented — needs per-row column suppression across the whole row, not just the auto column; no roadmap item — deferred post-1.0 (phase-13 hardening) |
 | `groupHideParentOfSingleChild` | ✅ | PR 2.3 — `FlattenStage.resolveDisplayNode` elides a group whose only child is itself (or, for `'leafGroupsOnly'`, whose only child is a leaf); integration-tested |
 | `initialGroupOrderComparator` | ✅ | PR 2.4 — applied in `GroupStage` at tree-build time, before filtering/aggregation exist to compare on (matches ag-grid.com: "executes before filtering and aggregation"); integration-tested |
 | `groupAllowUnbalanced` | ✅ | PR 2.3 — `GroupStage` attaches a row with a `null`/`undefined`/`''` value at a level directly under the parent instead of a `(Blanks)` bucket; integration-tested |
-| `groupMaintainOrder` | ⬜ | Needs order tracking across `refreshModel` calls (the tree is rebuilt from scratch each time) — deferred |
+| `groupMaintainOrder` | ❌ | Not implemented — requires order tracking across `refreshModel` calls, but the tree is rebuilt from scratch each pass; deferred post-1.0 |
 | `groupDefaultExpanded` | ✅ | PR 2.2 — `-1`/number levels honoured at tree creation |
 | `isGroupOpenByDefault` | ✅ | PR 2.4 — takes priority over `groupDefaultExpanded` when both are set (per ag-grid.com: "only one... should be used"); integration-tested |
 | `suppressGroupRowsSticky` | ❌ | Sticky group rows are not implemented (see "Sticky rows" below) — this option is a no-op since `stickyRowSvc` is never registered, which is a safe default (Community handles its absence gracefully) |
 | `rowGroupPanelShow` | ✅ | `RowGroupingPanelModule` supplies the header row-group zone. `always` and `onlyWhenGrouping` visibility are integration-tested; `never` hides it. |
 | `rowGroupPanelSuppressSort` | ❌ | The header row-group panel is shipped, but it has no sort behavior and does not read this option. |
-| `pivotPanelSuppressSort` | ⬜ | Pivot panel arrives Phase 8 |
-| `groupLockGroupColumns` | ⬜ | Column drag-lock pairs naturally with Phase 3's drag-and-drop tool panel — deferred |
-| `groupHierarchyConfig` | ⬜ | PR 2.5 — deferred; niche (`colDef.groupHierarchy` custom-component registry), no consumer of `colDef.groupHierarchy` exists yet |
-| `suppressDragLeaveHidesColumns` | ⬜ | |
-| `suppressGroupChangesColumnVisibility` | ⬜ | Suppresses a column-auto-hide-on-grouping behaviour we haven't implemented yet |
-| `ssrmExpandAllAffectsAllRows` | ⬜ | SSRM semantics — Phase 9 |
-| `refreshAfterGroupEdit` | ⬜ | PR 2.5 — deferred; controls re-aggregation timing after an inline cell edit, and LibreGrid has no cell-editing feature yet |
+| `pivotPanelSuppressSort` | 🟡 | Phase 8 shipped — see `docs/parity/pivoting.md`: the option is preserved as a strict-order signal, but interactive pivot-label sorting is not yet implemented |
+| `groupLockGroupColumns` | ❌ | Not implemented — column drag-lock pairs with Phase 3's drag-and-drop tool panel; deferred post-1.0 (phase-13 13A lists the columns-panel drag interactions as long tail) |
+| `groupHierarchyConfig` | ❌ | Not implemented — niche `colDef.groupHierarchy` custom-component registry with no consumer; deferred post-1.0 |
+| `suppressDragLeaveHidesColumns` | ❌ | Not implemented — controls whether dragging a column out of the grid hides it; LibreGrid has no drag-out-of-grid hide behaviour (would pair with Phase 3's drag-and-drop tool panel); deferred post-1.0 |
+| `suppressGroupChangesColumnVisibility` | ❌ | Not implemented — no column-auto-hide-on-grouping behaviour exists for this option to suppress; would only matter alongside the tool-panel drag/drop surface (phase-13 13A long tail, post-1.0) |
+| `ssrmExpandAllAffectsAllRows` | ✅ | Implemented by Phase 9's `@libregrid/server-side-row-model` (✅ in `server-side-row-model.md`): defaults apply to subsequently materialized group nodes; loaded nodes expand/collapse immediately; exercised in `serverSideRowModelModule.spec.ts` |
+| `refreshAfterGroupEdit` | ❌ | Not implemented — controls re-aggregation timing after an inline cell edit, and LibreGrid has no cell-editing feature yet; deferred post-1.0 |
 | `groupAggFiltering` | ✅ | PR 2.5 — `GroupFilterStage` reuses Community's own `FilterManager.doesRowPassAggregateFilters`; see "Group Aggregate Filtering" below; integration-tested (`true`, callback form, and interaction with normal per-leaf filtering) |
 | `groupTotalRow` | ✅ | PR 2.4 — `FooterService`; only shows while the owning group is expanded, per ag-grid.com ("to display when the group is expanded"); integration-tested |
 | `grandTotalRow` | 🟡 | PR 2.4 — `'top'`/`'bottom'` (inline) supported and integration-tested; `'pinnedTop'`/`'pinnedBottom'` are not — pinning requires routing through the pinned row model, a separate seam this PR doesn't touch |
-| `suppressStickyTotalRow` | ⬜ | No-op — total rows aren't sticky yet (see "Sticky rows" below) |
+| `suppressStickyTotalRow` | ❌ | Not implemented — total rows aren't sticky (`stickyRowSvc` is never registered), so this option is a no-op; sticky rows are a documented post-1.0 candidate (phase-13 13A; see "Sticky rows" below) |
 | `groupSuppressBlankHeader` | ✅ | PR 2.4 — free once `FooterService` links `groupNode.sibling`: Community's own `ValueService.displayIgnoresAggData` already gates on `node.sibling` existing; integration-tested |
 
 ## ColDef Properties
@@ -58,7 +60,7 @@
 | `expansionSvc` bean | ✅ | `ExpansionService` — `RowNode.setExpanded`/`.expanded`/`.isExpandable()` all delegate here; without it `setExpanded` is a silent no-op. PR 2.4: `resetExpansion` now actually resets to defaults (triggers a `group`-step refresh, since defaults are computed at tree-build time) rather than blindly collapsing; `getExpansionState`/`setExpansionState` still key off `RowNode.id`, now stamped by `GroupStage` (see below) |
 | `agGroupCellRenderer` | ✅ | `GroupCellRenderer` — expand/collapse chevron (click, double-click unless `suppressDoubleClickExpand`, Enter unless `suppressEnterExpand`), value, child count (unless `suppressCount`), indentation (unless `suppressPadding`), `aria-expanded`; PR 2.4 adds footer-row rendering (see below) |
 | `GROUP_AUTO_COLUMN_ID` | ✅ | Community's literal (`'ag-Grid-AutoColumn'`) reused verbatim — required for interoperability, not invented |
-| `cellRendererParams.innerRenderer` / `innerRendererParams` / `innerRendererSelector` | ⬜ | Not implemented |
+| `cellRendererParams.innerRenderer` / `innerRendererParams` / `innerRendererSelector` | ❌ | Not implemented — `GroupCellRenderer` has no custom inner-renderer (component/selector) support; deferred post-1.0 |
 | `cellRendererParams.checkbox` | ❌ | Deprecated upstream since v33 in favour of `rowSelection.checkboxLocation` — won't-do |
 | `cellRendererParams.totalValueGetter` | ✅ | PR 2.4 — function form only (string/expression form unsupported); `GroupCellRenderer` calls it directly for a footer row's group-column text, falling back to the literal `'Total'` (ag-grid.com documented default) |
 
@@ -69,7 +71,7 @@
 | `groupSortStage` bean | ✅ | `GroupSortStage` — Community stops calling its own `sortStage` entirely once grouping is active (`hierarchical && beans.groupSortStage \|\| beans.sortStage`), so this bean owns the root level too, not just recursion into subgroups. Recursively sorts every level's `childrenAfterAggFilter` into `childrenAfterSort` via the same `sortOptions`/`rowNodeSorter` Community itself uses; integration-tested with multi-level, per-level-independent sort by a value column |
 | `footerSvc` bean | ✅ | `FooterService` — backs `groupTotalRow`/`grandTotalRow`. A total row is `node.sibling`, built with Community's own `_createRowNodeSibling` and given the id Community's own `getRowNode` already resolves (`GROUP_TOTAL_ROW_ID_PREFIX + groupNode.id`; the root's is `GRAND_TOTAL_ROW_ID` for free). `getTotalValue`/`doesCellShowTotalPrefix`/`applyTotalPrefix` are implemented for interface completeness but have no call sites in Community or in `GroupCellRenderer` (which hardcodes the same documented default directly, having no bean access) |
 | `RowNode.id` (group nodes) | ✅ | PR 2.4 — `GroupStage` stamps `${parentId}-${colId}-${key}` on every group node and maintains an id→node map backing `getNonLeaf`, which `ClientSideRowModel.getRowNode` needs to resolve `GROUP_TOTAL_ROW_ID_PREFIX + groupId` lookups; integration-tested |
-| Sticky rows (`stickyRowSvc` / `IStickyRowService`) | ⬜ | **Not implemented.** Confirmed via `suppressGroupRowsSticky`/`suppressStickyTotalRow` docs and the `IStickyRowService`/`IStickyRowFeature` interfaces that this is a scroll-linked, viewport-pinning DOM feature requiring deep `RowRenderer`/`RowCtrl` integration (creating/destroying pinned `RowCtrl`s, tracking `extraTopHeight`/`extraBottomHeight` against live scroll position) — a distinct, self-contained feature area, not a bean-registration seam like the rest of this phase. Registering nothing for `stickyRowSvc` is a safe default: Community's `RowRenderer` already branches on its absence (`gridBodyCtrl.setStickyTopHeight(0)`). Group/total rows render correctly at their configured position; they simply scroll normally instead of sticking. Revisit as its own PR if prioritised |
+| Sticky rows (`stickyRowSvc` / `IStickyRowService`) | ❌ | **Not implemented.** Confirmed via `suppressGroupRowsSticky`/`suppressStickyTotalRow` docs and the `IStickyRowService`/`IStickyRowFeature` interfaces that this is a scroll-linked, viewport-pinning DOM feature requiring deep `RowRenderer`/`RowCtrl` integration (creating/destroying pinned `RowCtrl`s, tracking `extraTopHeight`/`extraBottomHeight` against live scroll position) — a distinct, self-contained feature area, not a bean-registration seam like the rest of this phase. Registering nothing for `stickyRowSvc` is a safe default: Community's `RowRenderer` already branches on its absence (`gridBodyCtrl.setStickyTopHeight(0)`). Group/total rows render correctly at their configured position; they simply scroll normally instead of sticking. Sticky rows are a documented post-1.0 candidate (phase-13 13A). Revisit as its own PR if prioritised |
 
 ## Group Aggregate Filtering (PR 2.5)
 
@@ -77,7 +79,7 @@
 |---|---|---|
 | `groupAggFiltering` | ✅ | `GroupFilterStage` — reuses Community's own `FilterManager.doesRowPassAggregateFilters`. When a group's own aggregated value passes, its entire subtree is included unfiltered ("also includes all of its descendent rows", per ag-grid.com). The fail case isn't documented at the algorithm level (not independently verifiable — Enterprise source is off-limits per G1); the interpretation shipped here is that a failing group simply falls through to ordinary per-leaf filtering, so aggregate-filtering is purely an *additional* way for a subtree to survive, never a way to exclude one |
 | Empirical fix | ✅ | Once a filter sits on a column FilterManager treats as aggregatable, it can register **only** in the aggregate bucket (`isAggregateFilterPresent`), not the child one (`isColumnFilterPresent`/`isChildFilterPresent`) — and both `doesRowPassFilter`/`doesRowPassAggregateFilters` "pass by default" when their own bucket is empty. A leaf must therefore pass **both** checks; gating on `isChildFilterPresent()` alone (the original PR 2.2 code, matching Community's own non-hierarchical `FilterStage`) silently stopped filtering leaf rows at all once `groupAggFiltering` was configured. Fixed by gating on `isAnyFilterPresent()` and combining both leaf checks |
-| `iGroupFilterService` (bean `groupFilter`) | ⬜ | A *separate* seam (`isGroupFilter`/`isFilterAllowed`/`isFilterActive`/`updateFilterFlags`) for showing a filter icon on the group column's header when a row-group-source column has an active filter — not implemented, no UI consumes it |
+| `iGroupFilterService` (bean `groupFilter`) | ❌ | Not implemented — this *separate* seam (`isGroupFilter`/`isFilterAllowed`/`isFilterActive`/`updateFilterFlags`) for showing a filter icon on the group column's header has no UI consumer; deferred post-1.0 |
 
 ## Show Values As (PR 2.5)
 
@@ -89,8 +91,8 @@
 | `percentOfRowTotal` | ✅ | Sum of `valueColsSvc.columns`' values on that row; integration-tested |
 | `percentOfParentRowTotal` | ✅ | Nearest group ancestor's aggregate; falls back to the grand total for a top-level row (no group parent); integration-tested |
 | `percentOfParentColumnTotal` | ❌ | Always inapplicable — `parentColumnTotal()` is documented as "null when not pivoting", and there is no pivot support. `isApplying` returns `false` for this mode, so cells show the raw value rather than a broken transform; integration-tested |
-| `showValuesAsDef.modes` (custom modes / built-in overrides) | ⬜ | Not implemented — only the five built-ins resolve |
-| `ShowValuesAsModeDef.menu` (per-mode custom submenu builder) | ⬜ | Not implemented — `getMenuItems` offers a flat mode list only |
+| `showValuesAsDef.modes` (custom modes / built-in overrides) | ❌ | Not implemented — only the five built-in modes resolve; the custom-mode registry / built-in overrides are deferred post-1.0 |
+| `ShowValuesAsModeDef.menu` (per-mode custom submenu builder) | ❌ | Not implemented — per-mode custom submenu builders are not provided; `getMenuItems` offers a flat mode list only |
 | Column-menu integration | 🟡 | `isMenuEligible`/`getMenuItems`/`setColumnShowValuesAs` are implemented and unit-testable directly, but **not wired into `@libregrid/menu`'s `ColumnMenuFactory`** — doing so would mean editing `@libregrid/menu`, which this PR's menu-item contributions are explicitly scoped to avoid. `colDef.showValuesAs` and `setColumnShowValuesAs` (called programmatically) are the two ways to select a mode this PR ships; there's no visible column-menu entry point yet |
 
 ## Menu Contributions (PR 2.5)
@@ -128,8 +130,8 @@
 
 | Event | Status | Notes |
 |---|---|---|
-| `rowGroupOpened` | ⬜ | `expandedChanged` fires on the `RowNode` itself (consumed by `GroupCellRenderer`); the grid-level `rowGroupOpened` event is not yet dispatched |
-| `expandOrCollapseAll` | ⬜ | Not dispatched — `expandAll`/`collapseAll` work (see API Methods) but don't fire this grid-level event yet |
+| `rowGroupOpened` | ❌ | Not implemented — `expandedChanged` fires on the `RowNode` itself (consumed by `GroupCellRenderer`), but the grid-level `rowGroupOpened` event is not dispatched; deferred post-1.0 |
+| `expandOrCollapseAll` | ❌ | Not implemented — `expandAll`/`collapseAll` work (see API Methods) but do not fire the grid-level `expandOrCollapseAll` event; deferred post-1.0 |
 | `columnRowGroupChanged` | ✅ | Dispatched by `RowGroupColsService.dispatchColChange`; `AutoGenColsService` and `ShowRowGroupColsService` both react to it |
 
 > The docs page did not enumerate API methods or events. The entries above are the expected surface — **verify against the live docs and the `_RowGroupingGridApi` type when working Phase 2**, and add anything missing.

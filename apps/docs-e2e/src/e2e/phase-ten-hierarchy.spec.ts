@@ -15,10 +15,10 @@ test.describe('Master Detail', () => {
   test('mounts a separately sortable detail grid and exposes it to keyboard users', async ({ page }) => {
     await page.goto('/master-detail');
     const grid = page.getByTestId('master-detail-grid');
-    await expect(grid.locator('[row-index="1"]')).toContainText('Atlas Trading');
-    await expect(grid.locator('.ag-details-grid')).toBeVisible();
-    await grid.locator('.ag-details-grid').getByRole('columnheader', { name: 'Direction' }).click();
-    await expect(grid.locator('.ag-details-grid [row-index="0"]')).toContainText(/Inbound|Outbound/);
+    await expect(grid.getByRole('row', { name: 'Atlas Trading' })).toBeVisible();
+    await expect(grid.locator('.ag-details-grid').first()).toBeVisible();
+    await grid.locator('.ag-details-grid').first().getByRole('columnheader', { name: 'Direction' }).click();
+    await expect(grid.locator('.ag-details-grid [row-index="0"]').first()).toContainText(/Inbound|Outbound/);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   });
 });

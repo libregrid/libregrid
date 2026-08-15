@@ -4,6 +4,8 @@
 **Phase:** 8 · **Package:** `@libregrid/pivot`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 ## Grid Options
 
 | Option | Status | Notes |
@@ -12,7 +14,7 @@
 | `pivotPanelShow` | ✅ | Header pivot zone honors `always`, `onlyWhenPivoting`, and `never`. |
 | `pivotPanelSuppressSort` | 🟡 | Preserved as a strict-order signal; interactive pivot-label sorting is not yet implemented. |
 | `sideBar` | ✅ | Provided by Phase 1; Columns panel pivot controls are functional. |
-| `toolbar` (`agPivotPanelToolbarItem`) | 🟡 | Deferred to Phase 13 as planned. |
+| `toolbar` (`agPivotPanelToolbarItem`) | ❌ | Not implemented — the pivot toolbar (hosting pivot-panel items; `iToolbar`/`toolbarMenuBuilder`) is a documented post-1.0 candidate in phase-13 13A; deferred as planned, not shipped |
 | `suppressAggFuncInHeader` | 🟡 | Generated headers use source display names; custom aggregate-function header formatting remains aggregation follow-up work. |
 
 ## ColDef Properties

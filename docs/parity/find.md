@@ -1,5 +1,7 @@
 # Parity — Find
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 **Source:** https://www.ag-grid.com/angular-data-grid/find/ · transcribed 2026-08-11
 **Phase:** 11 · **Package:** `@libregrid/find`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)
@@ -10,7 +12,7 @@
 |---|---|---|---|
 | `findSearchValue` | `string` | ✅ | Reactive match rebuild |
 | `findOptions` | `FindOptions` | ✅ | |
-| `toolbar` | — | ⏸️ | Quick Access Toolbar remains Phase 13 |
+| `toolbar` | — | ❌ | Not implemented — Quick Access Toolbar is a documented post-1.0 candidate (see phase-13 13A); not shipped |
 
 ## FindOptions
 

@@ -23,9 +23,14 @@ test.describe('Filters', () => {
   test('opens the Set Filter from the Country column menu', async ({ page }) => {
     const menuButton = page.getByRole('columnheader', { name: 'Country' }).locator('.ag-header-cell-menu-button');
     await menuButton.click();
-    await expect(page.locator('.lgr-column-menu')).toBeVisible();
-    await page.locator('.lgr-column-menu').getByText('Filter', { exact: true }).click();
-    await expect(page.locator('.lgr-set-filter')).toBeVisible();
+    const menu = page.locator('.lgr-column-menu');
+    await expect(menu).toBeVisible();
+    // The menu item sits under the demo's "Open Filters panel" button below
+    // the grid, so drive it with the keyboard like menus.spec does.
+    const filterItem = menu.getByRole('menuitem', { name: 'Filter' });
+    await filterItem.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.lgr-column-filter-popup .lgr-set-filter, .lgr-set-filter').first()).toBeVisible();
     await expect(page.getByRole('searchbox', { name: 'Search filter values' })).toBeVisible();
   });
 });

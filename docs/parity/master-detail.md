@@ -1,5 +1,7 @@
 # Parity — Master Detail
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 **Sources:** [Master / Detail](https://www.ag-grid.com/javascript-data-grid/master-detail/), [Detail Grids](https://www.ag-grid.com/javascript-data-grid/master-detail-grids/), and [Detail Refresh](https://www.ag-grid.com/javascript-data-grid/master-detail-refresh/) · reviewed 2026-08-13
 **Phase:** 10 · **Package:** `@libregrid/master-detail`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)

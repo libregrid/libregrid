@@ -23,6 +23,8 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'master-detail', label: 'Master / Detail' },
   { path: 'advanced-filter-find', label: 'Advanced Filter & Find' },
   { path: 'charts', label: 'Charts & Sparklines' },
+  { path: 'angular', label: 'Angular' },
+  { path: 'api', label: 'API Reference' },
 ];
 
 export const routes: Routes = [
@@ -110,6 +112,16 @@ export const routes: Routes = [
     path: 'benchmark',
     loadComponent: () => import('./routes/benchmark').then((m) => m.BenchmarkRoute),
     title: 'LibreGrid — Benchmark',
+  },
+  {
+    path: 'angular',
+    loadComponent: () => import('./routes/angular').then((m) => m.AngularDemo),
+    title: 'LibreGrid — Angular',
+  },
+  {
+    path: 'api',
+    loadComponent: () => import('./routes/api').then((m) => m.ApiReference),
+    title: 'LibreGrid — API Reference',
   },
   { path: '**', redirectTo: '' },
 ];

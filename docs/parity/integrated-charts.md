@@ -1,5 +1,7 @@
 # Parity — Integrated Charts & Sparklines
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 **Sources:** https://www.ag-grid.com/javascript-data-grid/integrated-charts/ · `/integrated-charts-api-range-chart/` · `/integrated-charts-chart-tool-panels/` · `/sparklines-overview/` · reviewed 2026-08-14
 **Phase:** 12 · **Packages:** `@libregrid/integrated-charts`, `@libregrid/sparklines`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)
@@ -64,9 +66,9 @@
 | `columnLineCombo` | ✅ | |
 | `areaColumnCombo` | ✅ | |
 | `customCombo` | ✅ | Per-series proxy configuration |
-| Polar (`radarLine`, `radarArea`, `nightingale`, `radialColumn`, `radialBar`) | ❌ | Not available in `ag-charts-community` 14.1.0; would require Enterprise chart modules |
-| Statistical/hierarchical/specialised (`boxPlot`, `rangeBar`, `rangeArea`, `treemap`, `sunburst`, `heatmap`, `waterfall`) | ❌ | Not available in `ag-charts-community` 14.1.0; would require Enterprise chart modules |
-| Funnel (`funnel`, `coneFunnel`, `pyramid`) | ❌ | Not available in `ag-charts-community` 14.1.0; would require Enterprise chart modules |
+| Polar (`radarLine`, `radarArea`, `nightingale`, `radialColumn`, `radialBar`) | ❌ | Not available in `ag-charts-community`; would require reimplementing a commercial charting product |
+| Statistical/hierarchical/specialised (`boxPlot`, `rangeBar`, `rangeArea`, `treemap`, `sunburst`, `heatmap`, `waterfall`) | ❌ | Not available in `ag-charts-community`; would require reimplementing a commercial charting product |
+| Funnel (`funnel`, `coneFunnel`, `pyramid`) | ❌ | Not available in `ag-charts-community`; would require reimplementing a commercial charting product |
 
 ## Interfaces
 

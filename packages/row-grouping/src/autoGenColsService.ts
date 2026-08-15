@@ -78,18 +78,29 @@ export class AutoGenColsService extends BeanStub implements IAutoColService, Nam
   }
 
   private isEnabled(): boolean {
+    // Tree data needs the auto group column even with no row-group columns —
+    // the tree hierarchy renders in it. Community's ValueService bypasses the
+    // showRowGroup value service for tree rows, so the column's valueGetter
+    // must produce group names and leaf keys directly.
+    if (this.gos.get('treeData')) return true;
     return (this.beans.rowGroupColsSvc?.columns.length ?? 0) > 0;
   }
 
   private createColDef(): ColDef {
     const userDef = (this.gos.get('autoGroupColumnDef') ?? {}) as ColDef & { colId?: string };
     const { colId: _ignored, ...overridable } = userDef;
+    const isTreeData = this.gos.get('treeData');
     return {
       headerName: 'Group',
       sortable: false,
       resizable: true,
       cellRenderer: 'agGroupCellRenderer',
-      valueGetter: (params) => (params.node?.group ? (params.node.key ?? null) : null),
+      valueGetter: (params) =>
+        isTreeData
+          ? (params.node?.key ?? null)
+          : params.node?.group
+            ? (params.node.key ?? null)
+            : null,
       ...overridable,
       colId: GROUP_AUTO_COLUMN_ID,
       showRowGroup: true,

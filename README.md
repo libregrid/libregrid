@@ -10,13 +10,18 @@ LibreGrid adds AG Grid Enterprise-equivalent features to **stock, unmodified [`a
 
 ---
 
-## Status: pre-release (Phase 0 complete)
+## Status: Phases 0–13 complete — 1.0.0 ready to publish
 
-Nothing is published to npm yet. The foundation is in place; feature work begins at Phase 1.
+The full feature roadmap (Phases 0–12) is implemented, tested, and validated; Phase 13
+(parity audit, accessibility, budgets, tree-shaking, attribution and dependency guards,
+cross-browser CI, migration guide) is complete. The **1.0.0 release is prepared** via
+Changesets — see [`LIBREGRID-PLAN.md`](./LIBREGRID-PLAN.md) and
+[`docs/phases/phase-13-hardening.md`](./docs/phases/phase-13-hardening.md).
 
-`0.1.0` will ship **Phases 0–3**: row grouping, aggregation, columns tool panel, menus, side bar, and a Material theme bridge. See [`LIBREGRID-PLAN.md`](./LIBREGRID-PLAN.md).
-
-**LibreGrid is not a drop-in replacement for AG Grid Enterprise today.** The roadmap and honest gap list live in [`docs/parity/`](./docs/parity/).
+Excel export (Phase 5) is **deferred** and does not block 1.0. Read the
+[migration guide](./docs/guides/migration-guide.md) and the
+[honest gap list](./docs/parity/gap-list.md) before adopting — they state exactly what is
+identical, what differs, and what is missing.
 
 ---
 
@@ -72,7 +77,8 @@ npm run check:versions        # version drift + @libregrid/core singleton
 | [`docs/reference/standards.md`](./docs/reference/standards.md) | Scaffolding, coding rules, test tiers, Definition of Done |
 | [`docs/reference/package-architecture.md`](./docs/reference/package-architecture.md) | Sharding, dependencies, tree-shaking, CSS, singleton rule |
 | [`docs/phases/`](./docs/phases/) | One self-contained file per phase |
-| [`docs/parity/`](./docs/parity/) | Living feature checklists vs. AG Grid Enterprise |
+| [`docs/parity/`](./docs/parity/) | Living feature checklists vs. AG Grid Enterprise, plus the [gap list](./docs/parity/gap-list.md) |
+| [`docs/guides/`](./docs/guides/) | [Migration guide](./docs/guides/migration-guide.md) from ag-grid-enterprise |
 
 ---
 

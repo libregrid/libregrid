@@ -5,9 +5,11 @@
  * For each package that has a dist/, checks:
  *   (a) Its size relative to the budget in bundle-budgets.json
  *   (b) That no other @libregrid/* package code appears in it (tree-shaking purity)
+ *   (c) Dist purity: no test artifacts (spec files, test bootstrap) or nested
+ *       dist/src directories ship in a published package
  *
  * Usage:  node tools/bundle-budgets/check.mjs
- * Exit:   0 = pass, 1 = budget exceeded or cross-contamination detected
+ * Exit:   0 = pass, 1 = budget exceeded, cross-contamination, or impure dist
  */
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
@@ -58,12 +60,72 @@ for (const dir of dirs) {
     continue;
   }
 
+  // G3 attribution (Phase 13): every published package carries a NOTICE and
+  // a README with the independence disclaimer (guardrail G4).
+  const noticePath = join(PACKAGES_DIR, dir, 'NOTICE');
+  const readmePath = join(PACKAGES_DIR, dir, 'README.md');
+  if (!existsSync(noticePath)) {
+    console.error(`   FAIL ${name}: missing NOTICE (G3 attribution)`);
+    failures++;
+  }
+  if (!existsSync(readmePath)) {
+    console.error(`   FAIL ${name}: missing README (G3 attribution)`);
+    failures++;
+  } else if (!/not affiliated with(, endorsed by, or sponsored by)? AG Grid Ltd/i.test(readFileSync(readmePath, 'utf8').replace(/\s+/g, ' '))) {
+    console.error(`   FAIL ${name}: README is missing the independence disclaimer (G4)`);
+    failures++;
+  }
+
+  // Dependency allowlist (standards.md §2): the only permitted runtime
+  // dependencies outside @libregrid/* are fflate and ag-charts-community;
+  // the only permitted peers are ag-grid-community, @angular/*, and
+  // ag-charts-community.
+  const badDeps = Object.keys(pkg.dependencies ?? {}).filter(
+    (dependency) =>
+      !dependency.startsWith('@libregrid/') &&
+      dependency !== 'fflate' &&
+      dependency !== 'ag-charts-community',
+  );
+  if (badDeps.length > 0) {
+    console.error(`   FAIL ${name}: non-allowlisted runtime dependencies: ${badDeps.join(', ')}`);
+    failures++;
+  }
+  const badPeers = Object.keys(pkg.peerDependencies ?? {}).filter(
+    (dependency) =>
+      dependency !== 'ag-grid-community' &&
+      !dependency.startsWith('@angular/') &&
+      dependency !== 'ag-charts-community',
+  );
+  if (badPeers.length > 0) {
+    console.error(`   FAIL ${name}: non-allowlisted peer dependencies: ${badPeers.join(', ')}`);
+    failures++;
+  }
+
   const maxBytes = parseSize(budget.maxSize);
   const distDir = join(PACKAGES_DIR, dir, 'dist');
   if (!existsSync(distDir)) {
     console.log(`   ${name}: no dist/ (not built yet)`);
     continue;
   }
+
+  // Dist purity (Phase 13): test artifacts must never ship in a published
+  // package. tsc's exclude does not remove stale outputs, so a one-off build
+  // without a clean dist would silently re-introduce them.
+  const impurity = (file) =>
+    /\.spec\.(js|mjs|d\.ts)$/.test(file) ||
+    /(^|\/)test-bootstrap\./.test(file) ||
+    file.includes('/dist/src/');
+  const walkDirs = (d) =>
+    readdirSync(d).forEach((f) => {
+      const full = join(d, f);
+      if (statSync(full).isDirectory()) return walkDirs(full);
+      const rel = relative(PACKAGES_DIR, full);
+      if (impurity(rel)) {
+        console.error(`   ❌  ${name} ships test artifact or nested output: ${rel}`);
+        failures++;
+      }
+    });
+  walkDirs(distDir);
 
   // Walk dist/ and sum JS file sizes
   let totalBytes = 0;

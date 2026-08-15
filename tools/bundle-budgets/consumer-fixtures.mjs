@@ -10,6 +10,9 @@ const { build } = await import(pathToFileURL(require.resolve('esbuild', {
   paths: [join(root, 'node_modules', '@angular', 'build')],
 })).href);
 const outputDirectory = join(root, 'tools', 'bundle-budgets', '.fixtures');
+// Every published package gets a consumer fixture (Phase 13): importing the
+// package entry must pull in exactly that package, core, and its declared
+// @libregrid dependencies — nothing else. excel-export is deferred (Phase 5).
 const packages = [
   'core',
   'menu',
@@ -17,8 +20,17 @@ const packages = [
   'material',
   'row-grouping',
   'columns-tool-panel',
+  'cell-selection',
+  'clipboard',
+  'status-bar',
+  'set-filter',
+  'multi-filter',
+  'filters-tool-panel',
   'server-side-row-model',
   'pivot',
+  'viewport-row-model',
+  'tree-data',
+  'master-detail',
   'advanced-filter',
   'find',
   'rich-select',

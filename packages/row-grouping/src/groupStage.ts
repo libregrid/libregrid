@@ -344,6 +344,12 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
         const terminal = index === path.length - 1;
         if (!node) {
           node = terminal ? source : this.createTreeFiller(pathId, key);
+          if (terminal) {
+            // The auto group column renders tree leaf names from node.key (the
+            // showRowGroup value service is bypassed for tree rows).
+            source.key = key;
+            source.field = 'treeData';
+          }
           branches.set(pathId, node);
           if (parent) (parent.childrenAfterGroup ??= []).push(node);
           else roots.push(node);
@@ -351,6 +357,8 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
           // An explicit row can replace a filler for the same path while
           // retaining any descendants already attached to that filler.
           source.childrenAfterGroup = node.childrenAfterGroup;
+          source.key = key;
+          source.field = 'treeData';
           const grandparent = node.parent;
           if (grandparent?.childrenAfterGroup) {
             const indexOfFiller = grandparent.childrenAfterGroup.indexOf(node);

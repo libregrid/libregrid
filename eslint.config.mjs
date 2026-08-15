@@ -81,11 +81,11 @@ export default tseslint.config(
     /**
      * Nx enforces the tagged LibreGrid-project graph.  This complementary
      * rule rejects direct Angular imports, which are external to that graph,
-     * from every framework-neutral source tree.  Keep @libregrid/material out
-     * of this scope: it is the one Angular integration package.
+     * from every framework-neutral source tree.  Keep the Angular integration
+     * packages (@libregrid/material, @libregrid/angular) out of this scope.
      */
     files: ['packages/**/*.ts', 'tools/**/*.ts', 'apps/bench/**/*.ts'],
-    ignores: ['packages/material/**'],
+    ignores: ['packages/material/**', 'packages/angular/**'],
     rules: {
       'no-restricted-imports': [
         'error',

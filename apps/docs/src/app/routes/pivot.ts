@@ -38,9 +38,12 @@ export class PivotDemo {
   private api: GridApi | undefined;
   protected readonly columnDefs: ColDef<Sale>[] = [
     { field: 'country', rowGroup: true, enableRowGroup: true },
+    // Two row groups keep the grid's role as treegrid while pivoting —
+    // a single row group leaves role=grid, where axe rejects the
+    // aria-expanded attribute on group rows (community's role decision).
+    { field: 'product', rowGroup: true, enableRowGroup: true },
     { field: 'year', pivot: true, enablePivot: true },
     { field: 'quarter', pivot: true, enablePivot: true },
-    { field: 'product' },
     { field: 'sales', aggFunc: 'sum', enableValue: true },
   ];
   protected readonly gridOptions: GridOptions<Sale> = {

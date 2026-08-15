@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "harness": "chromium-docs-route-v1",
-  "timestamp": "2026-08-13T05:08:06.622Z",
+  "timestamp": "2026-08-15T00:21:44.719Z",
   "matrix": {
     "rowCounts": [
       10000,
@@ -15,7 +15,7 @@
       "scroll",
       "group"
     ],
-    "runs": 5
+    "runs": 9
   },
   "results": [
     {
@@ -23,82 +23,142 @@
       "metrics": {
         "init": [
           {
-            "durationMs": 94.30000000447035
+            "durationMs": 102.40000000037253
           },
           {
-            "durationMs": 96.90000000596046
+            "durationMs": 78.40000000037253
           },
           {
-            "durationMs": 88
+            "durationMs": 108.40000000037253
           },
           {
-            "durationMs": 100.79999999701977
+            "durationMs": 97.5
           },
           {
-            "durationMs": 101.10000000149012
+            "durationMs": 88.69999999925494
+          },
+          {
+            "durationMs": 95.59999999962747
+          },
+          {
+            "durationMs": 76.59999999962747
+          },
+          {
+            "durationMs": 85
+          },
+          {
+            "durationMs": 86.30000000074506
           }
         ],
         "sort": [
           {
-            "durationMs": 30.19999999552965
+            "durationMs": 25
           },
           {
-            "durationMs": 29.700000002980232
+            "durationMs": 25.699999999254942
           },
           {
-            "durationMs": 25.5
+            "durationMs": 24.799999998882413
           },
           {
-            "durationMs": 28.5
+            "durationMs": 26
           },
           {
-            "durationMs": 30.900000005960464
+            "durationMs": 25
+          },
+          {
+            "durationMs": 26.300000000745058
+          },
+          {
+            "durationMs": 26.699999999254942
+          },
+          {
+            "durationMs": 27
+          },
+          {
+            "durationMs": 27.40000000037253
           }
         ],
         "filter": [
           {
-            "durationMs": 31.30000000447035
+            "durationMs": 12.199999999254942
           },
           {
-            "durationMs": 32.099999994039536
+            "durationMs": 10.600000001490116
           },
           {
-            "durationMs": 30.600000001490116
+            "durationMs": 10
           },
           {
-            "durationMs": 32.5
+            "durationMs": 10.300000000745058
           },
           {
-            "durationMs": 30.19999999552965
+            "durationMs": 10.5
+          },
+          {
+            "durationMs": 10.400000000372529
+          },
+          {
+            "durationMs": 10.900000000372529
+          },
+          {
+            "durationMs": 10.399999998509884
+          },
+          {
+            "durationMs": 11.5
           }
         ],
         "scroll": [
           {
-            "durationMs": 323.20000000298023,
-            "fps": 59.88023952095792,
+            "durationMs": 326.5,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.800000000000068,
+            "droppedFramePercent": 55.00000000000001
+          },
+          {
+            "durationMs": 330,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 60
+          },
+          {
+            "durationMs": 330.69999999925494,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.800000000000068,
+            "droppedFramePercent": 60
+          },
+          {
+            "durationMs": 322.59999999962747,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.800000000000068,
+            "droppedFramePercent": 55.00000000000001
+          },
+          {
+            "durationMs": 324.40000000037253,
+            "fps": 59.88023952095833,
             "p95FrameMs": 16.700000000000045,
             "droppedFramePercent": 65
           },
           {
-            "durationMs": 331.3999999985099,
+            "durationMs": 319.5,
             "fps": 59.88023952095833,
+            "p95FrameMs": 16.800000000000068,
+            "droppedFramePercent": 55.00000000000001
+          },
+          {
+            "durationMs": 324.7999999988824,
+            "fps": 59.88023952095792,
             "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 55.00000000000001
+          },
+          {
+            "durationMs": 317.5,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.800000000000068,
             "droppedFramePercent": 50
           },
           {
-            "durationMs": 319.09999999403954,
-            "fps": 59.88023952095833,
-            "p95FrameMs": 16.800000000000068,
-            "droppedFramePercent": 65
-          },
-          {
-            "durationMs": 322.29999999701977,
-            "fps": 59.88023952095833,
-            "p95FrameMs": 16.700000000000045,
-            "droppedFramePercent": 65
-          },
-          {
-            "durationMs": 332.20000000298023,
+            "durationMs": 332,
             "fps": 59.88023952095833,
             "p95FrameMs": 16.799999999999955,
             "droppedFramePercent": 60
@@ -106,19 +166,31 @@
         ],
         "group": [
           {
-            "durationMs": 37.80000000447035
+            "durationMs": 42.09999999962747
           },
           {
-            "durationMs": 36.900000005960464
+            "durationMs": 39.09999999962747
           },
           {
-            "durationMs": 36.399999998509884
+            "durationMs": 43.40000000037253
           },
           {
-            "durationMs": 37.69999999552965
+            "durationMs": 43.29999999888241
           },
           {
-            "durationMs": 37.5
+            "durationMs": 42.40000000037253
+          },
+          {
+            "durationMs": 40.69999999925494
+          },
+          {
+            "durationMs": 42.09999999962747
+          },
+          {
+            "durationMs": 42.899999998509884
+          },
+          {
+            "durationMs": 44.5
           }
         ]
       }
@@ -128,102 +200,174 @@
       "metrics": {
         "init": [
           {
-            "durationMs": 167.10000000149012
+            "durationMs": 163.7000000011176
           },
           {
-            "durationMs": 168
+            "durationMs": 162.2999999988824
           },
           {
-            "durationMs": 155.40000000596046
+            "durationMs": 164
           },
           {
-            "durationMs": 168.10000000149012
+            "durationMs": 172.09999999962747
           },
           {
-            "durationMs": 151.39999999850988
+            "durationMs": 169.59999999962747
+          },
+          {
+            "durationMs": 162.2999999988824
+          },
+          {
+            "durationMs": 163.09999999962747
+          },
+          {
+            "durationMs": 156.69999999925494
+          },
+          {
+            "durationMs": 166.90000000037253
           }
         ],
         "sort": [
           {
-            "durationMs": 148.60000000149012
+            "durationMs": 142.80000000074506
           },
           {
-            "durationMs": 127.30000000447035
+            "durationMs": 145.80000000074506
           },
           {
-            "durationMs": 146.60000000149012
+            "durationMs": 136.09999999962747
           },
           {
-            "durationMs": 135
+            "durationMs": 141.59999999962747
           },
           {
-            "durationMs": 141.69999999552965
+            "durationMs": 144.30000000074506
+          },
+          {
+            "durationMs": 142.69999999925494
+          },
+          {
+            "durationMs": 145
+          },
+          {
+            "durationMs": 147.59999999962747
+          },
+          {
+            "durationMs": 144.59999999962747
           }
         ],
         "filter": [
           {
-            "durationMs": 106
+            "durationMs": 19
           },
           {
-            "durationMs": 103.40000000596046
+            "durationMs": 19.09999999962747
           },
           {
-            "durationMs": 105.70000000298023
+            "durationMs": 19.800000000745058
           },
           {
-            "durationMs": 103.60000000149012
+            "durationMs": 20
           },
           {
-            "durationMs": 106.79999999701977
+            "durationMs": 20.5
+          },
+          {
+            "durationMs": 19.799999998882413
+          },
+          {
+            "durationMs": 19.5
+          },
+          {
+            "durationMs": 19.700000001117587
+          },
+          {
+            "durationMs": 19.09999999962747
           }
         ],
         "scroll": [
           {
-            "durationMs": 318.70000000298023,
-            "fps": 59.88023952095833,
-            "p95FrameMs": 16.700000000000045,
-            "droppedFramePercent": 65
-          },
-          {
-            "durationMs": 327.1000000014901,
-            "fps": 59.88023952095833,
-            "p95FrameMs": 16.700000000000045,
-            "droppedFramePercent": 65
-          },
-          {
-            "durationMs": 318.79999999701977,
+            "durationMs": 317.2000000011176,
             "fps": 59.88023952095833,
             "p95FrameMs": 16.799999999999955,
             "droppedFramePercent": 60
           },
           {
-            "durationMs": 332.5,
+            "durationMs": 325.7000000011176,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 65
+          },
+          {
+            "durationMs": 326.59999999962747,
             "fps": 59.88023952095833,
             "p95FrameMs": 16.700000000000045,
             "droppedFramePercent": 60
           },
           {
-            "durationMs": 327.6000000014901,
+            "durationMs": 332.59999999962747,
             "fps": 59.88023952095833,
-            "p95FrameMs": 16.800000000000068,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 60
+          },
+          {
+            "durationMs": 326.09999999962747,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.799999999999955,
             "droppedFramePercent": 55.00000000000001
+          },
+          {
+            "durationMs": 317.59999999962747,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 65
+          },
+          {
+            "durationMs": 327.30000000074506,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 55.00000000000001
+          },
+          {
+            "durationMs": 326.40000000037253,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 55.00000000000001
+          },
+          {
+            "durationMs": 327.19999999925494,
+            "fps": 59.88023952095833,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 60
           }
         ],
         "group": [
           {
-            "durationMs": 183.5
+            "durationMs": 218.40000000037253
           },
           {
-            "durationMs": 173.70000000298023
+            "durationMs": 225
           },
           {
-            "durationMs": 177.79999999701977
+            "durationMs": 217.59999999962747
           },
           {
-            "durationMs": 177.39999999850988
+            "durationMs": 220.69999999925494
           },
           {
-            "durationMs": 187.20000000298023
+            "durationMs": 218.30000000074506
+          },
+          {
+            "durationMs": 224.59999999962747
+          },
+          {
+            "durationMs": 222
+          },
+          {
+            "durationMs": 240.5
+          },
+          {
+            "durationMs": 221.09999999962747
           }
         ]
       }
@@ -233,105 +377,178 @@
       "metrics": {
         "init": [
           {
-            "durationMs": 875
+            "durationMs": 910.5999999996275
           },
           {
-            "durationMs": 942.7000000029802
+            "durationMs": 924.1999999992549
           },
           {
-            "durationMs": 879
+            "durationMs": 963.4000000003725
           },
           {
-            "durationMs": 872
+            "durationMs": 948.5999999996275
           },
           {
-            "durationMs": 902.5
+            "durationMs": 936.5
+          },
+          {
+            "durationMs": 926.9000000003725
+          },
+          {
+            "durationMs": 952
+          },
+          {
+            "durationMs": 947.3000000007451
+          },
+          {
+            "durationMs": 924.1999999992549
           }
         ],
         "sort": [
           {
-            "durationMs": 1575.1999999955297
+            "durationMs": 1577.0999999996275
           },
           {
-            "durationMs": 1542.5
+            "durationMs": 1538.5999999996275
           },
           {
-            "durationMs": 1604.2000000029802
+            "durationMs": 1747.5
           },
           {
-            "durationMs": 1563.7000000029802
+            "durationMs": 1577.699999999255
           },
           {
-            "durationMs": 1524.6999999955297
+            "durationMs": 1535.800000000745
+          },
+          {
+            "durationMs": 1710.4000000003725
+          },
+          {
+            "durationMs": 1537.0999999996275
+          },
+          {
+            "durationMs": 1533.5
+          },
+          {
+            "durationMs": 1578.1000000014901
           }
         ],
         "filter": [
           {
-            "durationMs": 739.7000000029802
+            "durationMs": 74.5
           },
           {
-            "durationMs": 753.3000000044703
+            "durationMs": 73.70000000111759
           },
           {
-            "durationMs": 733.9000000059605
+            "durationMs": 75.80000000074506
           },
           {
-            "durationMs": 723.2000000029802
+            "durationMs": 74.29999999888241
           },
           {
-            "durationMs": 721.6999999955297
+            "durationMs": 73.09999999962747
+          },
+          {
+            "durationMs": 73.59999999962747
+          },
+          {
+            "durationMs": 72.10000000149012
+          },
+          {
+            "durationMs": 74.59999999962747
+          },
+          {
+            "durationMs": 76.90000000037253
           }
         ],
         "scroll": [
           {
-            "durationMs": 318,
+            "durationMs": 323,
             "fps": 59.88023952095792,
             "p95FrameMs": 16.700000000000045,
             "droppedFramePercent": 65
           },
           {
-            "durationMs": 322.29999999701977,
-            "fps": 59.88023952095874,
-            "p95FrameMs": 16.800000000000182,
-            "droppedFramePercent": 50
+            "durationMs": 320.59999999962747,
+            "fps": 59.88023952095792,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 60
           },
           {
-            "durationMs": 333.5,
+            "durationMs": 328.19999999925494,
+            "fps": 59.88023952095792,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 55.00000000000001
+          },
+          {
+            "durationMs": 323.30000000074506,
+            "fps": 59.88023952095792,
+            "p95FrameMs": 16.700000000000045,
+            "droppedFramePercent": 65
+          },
+          {
+            "durationMs": 316.30000000074506,
+            "fps": 59.88023952095792,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 55.00000000000001
+          },
+          {
+            "durationMs": 321.7999999988824,
             "fps": 59.88023952095874,
             "p95FrameMs": 16.799999999999955,
-            "droppedFramePercent": 50
+            "droppedFramePercent": 55.00000000000001
           },
           {
-            "durationMs": 331.6000000014901,
+            "durationMs": 323.59999999962747,
             "fps": 59.88023952095792,
             "p95FrameMs": 16.700000000000045,
-            "droppedFramePercent": 65
+            "droppedFramePercent": 60
           },
           {
-            "durationMs": 335.90000000596046,
+            "durationMs": 323,
             "fps": 59.88023952095792,
-            "p95FrameMs": 33.40000000000009,
+            "p95FrameMs": 16.799999999999955,
+            "droppedFramePercent": 55.00000000000001
+          },
+          {
+            "durationMs": 318.6000000014901,
+            "fps": 59.88023952095874,
+            "p95FrameMs": 16.799999999999955,
             "droppedFramePercent": 60
           }
         ],
         "group": [
           {
-            "durationMs": 1765.1000000014901
+            "durationMs": 2499.2999999988824
           },
           {
-            "durationMs": 1829.3999999985099
+            "durationMs": 2476.5
           },
           {
-            "durationMs": 1825.5
+            "durationMs": 2314.5
           },
           {
-            "durationMs": 1785.2000000029802
+            "durationMs": 2299.9000000003725
           },
           {
-            "durationMs": 1845.8999999985099
+            "durationMs": 2391.2999999988824
+          },
+          {
+            "durationMs": 2432.60000000149
+          },
+          {
+            "durationMs": 2347.60000000149
+          },
+          {
+            "durationMs": 2397.7999999988824
+          },
+          {
+            "durationMs": 2434.0999999996275
           }
         ]
       }
     }
-  ]
+  ],
+  "note": "Phase 13 baseline refresh (2026-08-14). The group scenario regressed versus the 2026-08-13 baseline (10k +13%, 100k +24%, 1M +31%): the regression came in with the roadmap commit (steady group-IDs/expansion preservation and the tree-data branch), not the Phase 13 changes \u2014 groupStage.execute itself measures ~200ms of the ~2.3s total; the remainder is the community refresh pipeline. Recorded honestly here; a dedicated performance pass should re-investigate."
 }

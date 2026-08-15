@@ -104,10 +104,12 @@ test.describe('Columns Tool Panel', () => {
     await page.getByRole('button', { name: 'Add pivot Region' }).click();
     await expect(page.getByRole('button', { name: 'Remove Region from pivots' })).toBeVisible();
     await page.getByRole('checkbox', { name: 'Enable pivot mode' }).check();
-    await expect(page.locator('.ag-header-group-cell')).toBeVisible();
+    await expect(page.locator('.ag-header-group-cell').first()).toBeVisible();
     const search = page.getByRole('searchbox', { name: 'Search columns' });
     await search.fill('Sales');
-    await expect(page.getByRole('checkbox', { name: 'Show Sales' })).toBeVisible();
+    // Pivot mode lists the generated result columns, so 'Sales' matches
+    // several pivot intersections; the first suffices to prove the filter.
+    await expect(page.getByRole('checkbox', { name: 'Show Sales' }).first()).toBeVisible();
     await expect(page.getByRole('checkbox', { name: 'Show Country' })).not.toBeVisible();
   });
 
@@ -119,7 +121,7 @@ test.describe('Columns Tool Panel', () => {
     await dropColumn(region, pivots);
     await expect(pivots.getByRole('button', { name: 'Remove Region from pivots' })).toBeVisible();
     await page.getByRole('checkbox', { name: 'Enable pivot mode' }).check();
-    await expect(page.locator('.ag-header-group-cell')).toBeVisible();
+    await expect(page.locator('.ag-header-group-cell').first()).toBeVisible();
   });
 
   test('opens and closes the shared column chooser', async ({ page }) => {

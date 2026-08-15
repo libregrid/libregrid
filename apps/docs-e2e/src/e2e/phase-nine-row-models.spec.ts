@@ -5,7 +5,7 @@ test.describe('SSRM advanced demo', () => {
   test('lazily expands server groups, refreshes on filter, and accepts server pivot fields', async ({ page }) => {
     await page.goto('/server-side-advanced');
     const grid = page.getByTestId('server-side-advanced-grid');
-    await expect(grid.locator('[row-index="0"]')).toContainText('Commodities');
+    await expect(grid.locator('[row-index="0"]')).toContainText('Equities');
     await grid.locator('[row-index="0"] .ag-group-contracted, [row-index="0"] .ag-group-value').first().click();
     await expect(grid.locator('[row-index="1"]')).toContainText(/Arbitrage|Macro|Momentum/);
     await page.getByRole('button', { name: 'Filter Equities' }).click();
@@ -28,7 +28,7 @@ test.describe('Viewport row-model demo', () => {
     await page.goto('/viewport');
     const grid = page.getByTestId('viewport-grid');
     await expect(grid.locator('[row-index="0"]')).toContainText('quote-0');
-    await grid.locator('.ag-center-cols-viewport').evaluate((viewport) => {
+    await grid.locator('.ag-grid-viewport').evaluate((viewport) => {
       viewport.scrollTop = 5_000;
       viewport.dispatchEvent(new Event('scroll', { bubbles: true }));
     });

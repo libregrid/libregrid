@@ -1,5 +1,7 @@
 # Parity — Clipboard
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 **Source:** https://www.ag-grid.com/angular-data-grid/clipboard/ · transcribed 2026-08-11
 **Phase:** 4 · **Package:** `@libregrid/clipboard`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)

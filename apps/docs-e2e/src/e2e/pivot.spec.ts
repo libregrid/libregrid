@@ -8,11 +8,11 @@ test.describe('Pivot', () => {
   });
 
   test('renders generated nested headers and toggles pivot mode', async ({ page }) => {
-    await expect(page.locator('.ag-header-group-cell')).toBeVisible();
+    await expect(page.locator('.ag-header-group-cell').first()).toBeVisible();
     await page.getByRole('button', { name: 'Toggle pivot mode' }).click();
     await expect(page.locator('.ag-header-group-cell')).toHaveCount(0);
     await page.getByRole('button', { name: 'Toggle pivot mode' }).click();
-    await expect(page.locator('.ag-header-group-cell')).toBeVisible();
+    await expect(page.locator('.ag-header-group-cell').first()).toBeVisible();
   });
 
   test('has no axe violations in light and dark themes', async ({ page }) => {

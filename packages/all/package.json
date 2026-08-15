@@ -1,0 +1,51 @@
+{
+  "name": "@libregrid/all",
+  "version": "0.1.0",
+  "description": "Convenience re-export of every LibreGrid module — part of LibreGrid",
+  "keywords": ["libregrid", "ag-grid", "data-grid"],
+  "homepage": "https://github.com/libregrid/libregrid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libregrid/libregrid.git",
+    "directory": "packages/all"
+  },
+  "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@angular/common": ">=20.0.0",
+    "@angular/core": ">=20.0.0",
+    "@angular/cdk": ">=20.0.0",
+    "@angular/material": ">=20.0.0",
+    "ag-charts-community": ">=14.1.0 <15",
+    "ag-grid-community": ">=36.1.0 <37"
+  },
+  "dependencies": {
+    "@libregrid/advanced-filter": "^0.1.0",
+    "@libregrid/angular": "^0.1.0",
+    "@libregrid/cell-selection": "^0.1.0",
+    "@libregrid/clipboard": "^0.1.0",
+    "@libregrid/columns-tool-panel": "^0.1.0",
+    "@libregrid/core": "^0.1.0",
+    "@libregrid/filters-tool-panel": "^0.1.0",
+    "@libregrid/find": "^0.1.0",
+    "@libregrid/integrated-charts": "^0.1.0",
+    "@libregrid/master-detail": "^0.1.0",
+    "@libregrid/material": "^0.1.0",
+    "@libregrid/menu": "^0.1.0",
+    "@libregrid/multi-filter": "^0.1.0",
+    "@libregrid/pivot": "^0.1.0",
+    "@libregrid/rich-select": "^0.1.0",
+    "@libregrid/row-grouping": "^0.1.0",
+    "@libregrid/server-side-row-model": "^0.1.0",
+    "@libregrid/set-filter": "^0.1.0",
+    "@libregrid/side-bar": "^0.1.0",
+    "@libregrid/sparklines": "^0.1.0",
+    "@libregrid/status-bar": "^0.1.0",
+    "@libregrid/tree-data": "^0.1.0",
+    "@libregrid/viewport-row-model": "^0.1.0"
+  },
+  "files": ["dist", "NOTICE", "README.md"],
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+}

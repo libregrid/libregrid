@@ -1,5 +1,7 @@
 # Parity — Column Menu
 
+> Parity-audited 2026-08-14 — no unresolved ⬜ rows.
+
 **Source:** https://www.ag-grid.com/angular-data-grid/column-menu/ · transcribed 2026-08-11
 **Phase:** 1 · **Package:** `@libregrid/menu`
 **Legend:** ⬜ not started · ✅ done+tested · 🟡 partial (note gap) · ❌ won't-do (rationale required)
@@ -8,12 +10,12 @@
 
 | Option               | Status | Notes                                                                  |
 | -------------------- | ------ | ---------------------------------------------------------------------- |
-| `columnMenu`         | 🟡     | `'legacy' \| 'new'` — option parsed; both formats supported by factory |
-| `suppressMenuHide`   | 🟡     | Default behaviour differs by menu type                                 |
+| `columnMenu`         | 🟡     | `'legacy' \| 'new'` — option parsed; both formats supported by factory; UI rendering for the new format is Community-owned |
+| `suppressMenuHide`   | 🟡     | Option parsed; per-menu-type suppression behaviour is not yet aligned or tested |
 | `getColumnMenuItems` | ✅     | Applies across all menu surfaces                                       |
 | `getMainMenuItems`   | ✅     | Legacy — column menu only                                              |
 | `postProcessPopup`   | 🟡     | PopupService handles; not explicitly tested                            |
-| `popupParent`        | 🟡     | PopupService respects it                                               |
+| `popupParent`        | 🟡     | PopupService respects it; explicit E2E still pending                    |
 
 ## ColDef Properties
 
@@ -34,8 +36,8 @@
 | `showColumnMenu(colKey)`   | ✅     | Opens LibreGrid's column menu through Community's MenuService                                        |
 | `showColumnChooser()`      | ✅     | `ColumnsToolPanelModule` owns this API and opens the shared ColumnsToolPanel in a native DOM dialog. |
 | `hideColumnChooser()`      | ✅     | `ColumnsToolPanelModule` owns this API and removes the shared native DOM dialog.                     |
-| `showColumnFilter(colKey)` | 🟡     | Delegates to Community's MenuService                                                                 |
-| `hideColumnFilter()`       | 🟡     | Delegates to Community's MenuService                                                                 |
+| `showColumnFilter(colKey)` | 🟡     | Delegates to Community's MenuService; no dedicated LibreGrid coverage                                  |
+| `hideColumnFilter()`       | 🟡     | Delegates to Community's MenuService; no dedicated LibreGrid coverage                                  |
 | `hidePopupMenu()`          | ✅     | Shared with context menu                                                                             |
 
 ## Events
@@ -51,9 +53,9 @@
 | `sortAscending`    | 1            | ✅     |                                                                                                                                |
 | `sortDescending`   | 1            | ✅     |                                                                                                                                |
 | `sortUnSort`       | 1            | ✅     |                                                                                                                                |
-| `columnFilter`     | 1            | 🟡     | Stub registered                                                                                                                |
+| `columnFilter`     | 1            | 🟡     | Stub registered; column-filter UI not implemented                                                                              |
 | `columnChooser`    | 1            | ✅     | `Choose Columns` appears when `ColumnsToolPanelModule` is registered. It forwards the selected column's `columnChooserParams`. |
-| `pinSubMenu`       | 1            | 🟡     | Stub registered                                                                                                                |
+| `pinSubMenu`       | 1            | 🟡     | Stub registered; pin sub-menu not implemented                                                                                  |
 | `autoSizeThis`     | 1            | ✅     |                                                                                                                                |
 | `autoSizeAll`      | 1            | ✅     |                                                                                                                                |
 | `resetColumns`     | 1            | ✅     |                                                                                                                                |
@@ -63,8 +65,8 @@
 | `expandAll`        | 2            | 🟡     | Functional opt-in contribution. It is not in the default item arrays.                                                          |
 | `contractAll`      | 2            | 🟡     | Functional opt-in contribution. It is not in the default item arrays.                                                          |
 | `valueAggSubMenu`  | 2            | 🟡     | Functional opt-in contribution. It is not in the default item arrays.                                                          |
-| `editColumnName`   | 13           | 🟡     | Stub registered                                                                                                                |
-| `calculatedColumn` | 13           | 🟡     | Stub registered                                                                                                                |
+| `editColumnName`   | 13           | 🟡     | Stub registered; column header editing is a documented post-1.0 candidate (see phase-13 13A)                                   |
+| `calculatedColumn` | 13           | 🟡     | Stub registered; calculated-column editing not implemented                                                                     |
 
 ## Behaviour
 
