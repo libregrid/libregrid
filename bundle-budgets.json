@@ -31,7 +31,8 @@
       "note": "Range selection + fill handle. Raised from 20 KB at the Phase 13 audit — rangeService plus range model and fill-series detection measure 27.8 KB unminified."
     },
     "@libregrid/clipboard": {
-      "maxSize": "12 KB"
+      "maxSize": "13 KB",
+      "note": "Browser Clipboard API support with a temporary-textarea fallback for range copying. Re-measured after validation-app copy support: 12.5 KB unminified."
     },
     "@libregrid/status-bar": {
       "maxSize": "8 KB"
@@ -70,8 +71,8 @@
       "maxSize": "12 KB"
     },
     "@libregrid/advanced-filter": {
-      "maxSize": "34 KB",
-      "note": "Serialisable expression AST + parser, builder UI, and settings menu. Raised from 16 KB at the Phase 13 audit — the expression parser alone is 12 KB unminified."
+      "maxSize": "40 KB",
+      "note": "Serialisable expression AST + parser, reusable staged-model builder UI, and settings menu. Raised from 34 KB after the Phase 13 audit when the reusable builder landed; clean output measures 38.0 KB unminified."
     },
     "@libregrid/find": {
       "maxSize": "12 KB"
