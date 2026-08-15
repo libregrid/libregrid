@@ -7,10 +7,12 @@ in the project [README](../../README.md).
 
 1. Be an owner of the `@libregrid` npm organisation and enable npm two-factor
    authentication for **authorization and writes**.
-2. In GitHub, add a repository Actions secret named `NPM_TOKEN`. It must be an
-   npm granular access token with permission to publish the `@libregrid/*`
-   packages. The initial direct publication needs a token that can bypass 2FA.
-   Never put this token in the repository or a workflow file.
+2. Create an npm granular access token named `libregrid-first-release` with
+   **Bypass 2FA** enabled. Under **Packages and scopes**, grant **Read and
+   write** access to the `@libregrid` scope; do not grant access to every
+   package in the account. Give it a short expiry that covers this release.
+   In GitHub, add the copied value as a repository Actions secret named
+   `NPM_TOKEN`. Never put this token in the repository or a workflow file.
 3. Confirm the GitHub repository is public and that every publishable package
    has a `repository.url` pointing at `https://github.com/libregrid/libregrid`.
    This is required for npm provenance.
