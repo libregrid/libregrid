@@ -1,0 +1,35 @@
+# @libregrid/server-side-row-model
+
+## 1.0.0
+
+### Major Changes
+
+- a3b983c: Phase 13 — 1.0.0 release: parity audit, honest gap list, migration guide,
+  bundle budgets with tree-shaking fixtures, dist purity checks, dependency and
+  attribution CI checks, Angular signal ergonomics, the @libregrid/all barrel,
+  accessibility fixes, and hardened CI across Chromium, Firefox and WebKit.
+
+  Publication is externally owned: run the changesets release workflow from
+  main and publish with npm provenance (--provenance) as documented in
+  docs/phases/phase-13-hardening.md.
+
+### Minor Changes
+
+- 81a990d: Add the flat Server-Side Row Model with full and lazy root stores, range loading, bounded block caching, transactions, and durable selection state. Add the one-million-row SSRM documentation demo.
+
+### Patch Changes
+
+- 4bad79b: Add hierarchical server-side grouping, analytical request forwarding, server-driven pivot result columns, and the push-driven Viewport Row Model.
+- Updated dependencies [4bad79b]
+- Updated dependencies [4bad79b]
+- Updated dependencies [a3b983c]
+- Updated dependencies [ee4f9cc]
+- Updated dependencies [7aa7801]
+- Updated dependencies [7aa7801]
+- Updated dependencies [39bdeb0]
+- Updated dependencies [1bbfdc5]
+- Updated dependencies [1bbfdc5]
+- Updated dependencies [985c5f9]
+  - @libregrid/pivot@1.0.0
+  - @libregrid/row-grouping@1.0.0
+  - @libregrid/core@1.0.0

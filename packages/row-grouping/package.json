@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/row-grouping",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Row grouping and aggregation for AG Grid Community — part of LibreGrid",
   "keywords": ["libregrid", "ag-grid", "data-grid", "row-grouping", "aggregation"],
   "homepage": "https://github.com/libregrid/libregrid#readme",
@@ -14,7 +14,7 @@
   "type": "module",
   "sideEffects": ["./src/menuItems.ts", "./dist/menuItems.js"],
   "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
-  "dependencies": { "@libregrid/core": "^0.1.0", "@libregrid/menu": "^0.1.0" },
+  "dependencies": { "@libregrid/core": "^1.0.0", "@libregrid/menu": "^1.0.0" },
   "files": ["dist", "NOTICE", "README.md"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
 }
