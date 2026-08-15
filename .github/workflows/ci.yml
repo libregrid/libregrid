@@ -9,6 +9,43 @@ on:
 # Contamination job runs first and blocks every other job.
 # See docs/reference/guardrails.md G1 and docs/adr/0004-contamination-controls.md.
 jobs:
+  # Skips e2e and phase-gates when a push/PR touches only Markdown, LICENSE,
+  # NOTICE, or changeset files — nothing behavioral those jobs would catch.
+  # lint-test-build still runs unconditionally: check:budgets validates the
+  # README disclaimer and LICENSE/NOTICE presence, which IS what changes in
+  # a docs-only push. A skipped job counts as a pass for the workflow's
+  # overall conclusion, so release.yml's CI-must-succeed gate is unaffected.
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.check.outputs.docs_only }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Determine whether this change is docs-only
+        id: check
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            echo "No usable base commit (new branch or first push) — running full CI."
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only "$BASE_SHA" "${{ github.sha }}")
+          echo "Changed files:"
+          echo "$CHANGED"
+          # Deliberately not `grep -qv` here: combined with -v it can give
+          # order-dependent results on some grep implementations. Capture the
+          # actual non-doc lines and check whether any exist instead.
+          NON_DOC=$(echo "$CHANGED" | grep -vE '\.md$|(^|/)LICENSE$|(^|/)NOTICE$|^\.changeset/.*\.md$' | grep -v '^$' || true)
+          if [ -n "$NON_DOC" ]; then
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+          fi
+
   contamination:
     runs-on: ubuntu-latest
     steps:
@@ -48,7 +85,8 @@ jobs:
         run: npm run check:budgets
 
   e2e:
-    needs: lint-test-build
+    needs: [lint-test-build, detect-changes]
+    if: needs.detect-changes.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -62,7 +100,8 @@ jobs:
         run: NX_DAEMON=false npx nx e2e docs-e2e
 
   phase-gates:
-    needs: lint-test-build
+    needs: [lint-test-build, detect-changes]
+    if: needs.detect-changes.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
