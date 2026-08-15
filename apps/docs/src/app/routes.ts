@@ -17,6 +17,7 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'columns', label: 'Columns' },
   { path: 'filters', label: 'Filters' },
   { path: 'selection', label: 'Selection & Clipboard' },
+  { path: 'excel-export', label: 'Excel Export' },
   { path: 'server-side', label: 'Server-side rows' },
   { path: 'server-side-advanced', label: 'SSRM Advanced' },
   { path: 'viewport', label: 'Viewport rows' },
@@ -78,6 +79,11 @@ export const routes: Routes = [
     path: 'selection',
     loadComponent: () => import('./routes/selection').then((m) => m.SelectionDemo),
     title: 'LibreGrid — Selection & Clipboard',
+  },
+  {
+    path: 'excel-export',
+    loadComponent: () => import('./routes/excel-export').then((m) => m.ExcelExportDemo),
+    title: 'LibreGrid — Excel Export',
   },
   {
     path: 'server-side',

@@ -36,12 +36,24 @@ api.exportDataAsExcel();
 | --- | --- |
 | `exportDataAsExcel(params?)` | Downloads the grid data as an `.xlsx` file. |
 | `getDataAsExcel(params?)` | Returns the `.xlsx` bytes as a Blob. |
-| `getSheetDataForExcel(params?)` | Returns the raw XML for one worksheet. |
+| `getSheetDataForExcel(params?)` | Returns the data for one worksheet as an opaque string. |
 | `exportMultipleSheetsAsExcel(params)` | Downloads several worksheets in one file. |
 | `getMultipleSheetsAsExcel(params)` | Returns several worksheets in one Blob. |
 
 Pass `ExcelExportParams` to control the file name, the sheet name, styling,
 freeze panes, row-group outlines, page setup, and protection.
+
+With `@libregrid/menu` also registered, the Export item (with CSV and Excel
+entries) appears in the context menu. Exporting several sheets uses the data
+strings from `getSheetDataForExcel`:
+
+```ts
+const sheets = [
+  firstApi.getSheetDataForExcel({ sheetName: 'First' }),
+  secondApi.getSheetDataForExcel({ sheetName: 'Second' }),
+];
+firstApi.exportMultipleSheetsAsExcel({ data: sheets, fileName: 'multi.xlsx' });
+```
 
 ## License
 

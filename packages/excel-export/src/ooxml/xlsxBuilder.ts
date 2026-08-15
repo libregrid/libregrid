@@ -32,6 +32,8 @@ export interface XlsxBuildOptions {
   styles?: ExcelStyle[];
   /** Per-sheet layout settings, index-aligned with `worksheets`. */
   worksheets?: ReadonlyArray<WorksheetLayoutOptions>;
+  /** Zero-based index of the sheet shown when the workbook opens. */
+  activeSheetIndex?: number;
 }
 
 /**
@@ -85,7 +87,7 @@ export function buildXlsx(worksheets: ExcelWorksheet[], options: XlsxBuildOption
     styles: styleResolver !== undefined,
   });
   parts['_rels/.rels'] = buildRootRelsXml();
-  parts['xl/workbook.xml'] = buildWorkbookXml(sheetRefs);
+  parts['xl/workbook.xml'] = buildWorkbookXml(sheetRefs, options.activeSheetIndex);
   parts['xl/_rels/workbook.xml.rels'] = buildWorkbookRelsXml(rels);
 
   return { bytes: zipXlsxParts(parts), parts };

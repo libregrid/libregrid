@@ -13,6 +13,8 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Excel export downloads a real file in the E2E specs.
+    acceptDownloads: true,
   },
   // Cross-browser matrix (Phase 13): Chromium, Firefox, and WebKit run in
   // CI. Edge is Chromium-based and is covered by the chromium engine; note

@@ -4,7 +4,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "paths": {
-      "@libregrid/core": ["../core/dist/index.d.ts"]
+      "@libregrid/core": ["../core/dist/index.d.ts"],
+      "@libregrid/menu": ["../menu/dist/index.d.ts"]
     }
   },
   "include": ["src/**/*.ts"],

@@ -19,6 +19,7 @@ import { FiltersToolPanelModule } from '@libregrid/filters-tool-panel';
 import { CellSelectionModule } from '@libregrid/cell-selection';
 import { ClipboardModule } from '@libregrid/clipboard';
 import { StatusBarModule } from '@libregrid/status-bar';
+import { ExcelExportModule } from '@libregrid/excel-export';
 import { AdvancedFilterModule } from '@libregrid/advanced-filter';
 import { FindModule } from '@libregrid/find';
 import { RichSelectModule } from '@libregrid/rich-select';
@@ -75,6 +76,8 @@ bootstrapApplication(App, {
       CellSelectionModule,
       ClipboardModule,
       StatusBarModule,
+      // Phase 5
+      ExcelExportModule,
       // Phase 11
       AdvancedFilterModule,
       FindModule,

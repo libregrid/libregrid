@@ -12,19 +12,19 @@
 
 | Method | Sub-PR | Status | Notes |
 |---|---|---|---|
-| `exportDataAsExcel` | 5.6 | ⬜ | Delivered by sub-PR 5.6 |
-| `getDataAsExcel` | 5.6 | ⬜ | Returns a Blob · sub-PR 5.6 |
-| `getSheetDataForExcel` | 5.6 | ⬜ | sub-PR 5.6 |
-| `exportMultipleSheetsAsExcel` | 5.6 | ⬜ | sub-PR 5.6 |
-| `getMultipleSheetsAsExcel` | 5.6 | ⬜ | sub-PR 5.6 |
+| `exportDataAsExcel` | 5.6 | ✅ | Downloads via Blob + anchor; integration test asserts the file name |
+| `getDataAsExcel` | 5.6 | ✅ | Returns a Blob · unzip-and-assert integration test |
+| `getSheetDataForExcel` | 5.6 | ✅ | Opaque string; round-trips through the multi-sheet API |
+| `exportMultipleSheetsAsExcel` | 5.6 | ✅ | Multi-sheet download |
+| `getMultipleSheetsAsExcel` | 5.6 | ✅ | Two-grid round-trip test incl. merged shared strings |
 
 ## ExcelExportParams
 
 | Property | Sub-PR | Status | Notes |
 |---|---|---|---|
-| `fileName` | 5.6 | ⬜ | Delivered by sub-PR 5.6 |
-| `sheetName` | 5.6 | ⬜ | sub-PR 5.6 |
-| `mimeType` | 5.6 | ⬜ | sub-PR 5.6 |
+| `fileName` | 5.6 | ✅ | String or getter; default `export.xlsx` |
+| `sheetName` | 5.6 | ✅ | String or getter; default `ag-grid`; clamped to 31 chars |
+| `mimeType` | 5.6 | ✅ | Defaults to the OOXML mime type |
 | `author` | 5.8 | ⬜ | sub-PR 5.8 |
 | `customMetadata` | 5.8 | ⬜ | sub-PR 5.8 |
 | `columnWidth` | 5.4 | ✅ | Writer mechanism: `ExcelColumn.width` → `<col width customHeight>`; param plumbing in 5.8 |
@@ -46,9 +46,9 @@
 | `skipPinnedTop` | 5.8 | ⬜ | sub-PR 5.8 |
 | `skipPinnedBottom` | 5.8 | ⬜ | sub-PR 5.8 |
 | `skipPinnedRowDuplicates` | 5.8 | ⬜ | sub-PR 5.8 |
-| `skipRowGroups` | 5.5 | 🟡 | Writer outline mechanism landed (5.5); grid-driven mapping lands with the 5.6 extraction |
-| `rowGroupExpandState` | 5.5 | 🟡 | ⭐ outline state — writer emits `outlineLevel`/`collapsed`/`hidden` (5.5); grid-driven expansion mapping lands with 5.6 |
-| `suppressRowOutline` | 5.5 | 🟡 | ⭐ differentiator — writer mechanism landed (5.5); param plumbing lands with 5.6 |
+| `skipRowGroups` | 5.5 | ✅ | End-to-end test: group rows excluded from the export |
+| `rowGroupExpandState` | 5.5 | ✅ | ⭐ outline state — `expanded`/`collapsed`/`match` tested against a real grouped grid |
+| `suppressRowOutline` | 5.5 | ✅ | ⭐ differentiator — outline attributes suppressed end-to-end |
 | `suppressColumnOutline` | 5.5 | 🟡 | ⭐ differentiator — writer mechanism landed (5.5); param plumbing lands with 5.6 |
 | `autoConvertFormulas` | 5.7 | ⬜ | sub-PR 5.7 |
 | `processCellCallback` | 5.7 | ⬜ | sub-PR 5.7 |
@@ -83,6 +83,15 @@
 | `alignment` | 5.3 | ✅ | Horizontal/vertical/readingOrder/indent/rotate/wrap/shrink |
 | `protection` | 5.3 | ✅ | Mapped in styles.xml; enforced together with `protectSheet` in 5.8 |
 | `dataType` | 5.3 | 🟡 | Excluded from the style-dedupe signature by design; drives cell typing during grid extraction in 5.6 |
+
+## Menu contributions
+
+| Item | Status | Notes |
+|---|---|---|
+| `export` | ✅ | Registered with the `csvExport`/`excelExport` submenu; E2E asserts it renders in the context menu |
+| `csvExport` | ✅ | Delegates to Community's `exportDataAsCsv` |
+| `excelExport` | ✅ | Delegates to `exportDataAsExcel` |
+| Submenu expansion | 🟡 | Phase 1 renderer draws the arrow but does not open nested menus — tracked as [OPEN-ACTIONS C3](../../OPEN-ACTIONS.md) |
 
 ## Correctness gates
 

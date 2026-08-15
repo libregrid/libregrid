@@ -59,7 +59,7 @@
 - [x] **5.5 — Grouping outlines.** ✅ Writer landed 2026-08-15: ⭐ row/column `outlineLevel` + row `collapsed`/`hidden` (golden `grouped` fixture + unzip-and-assert integration test).
   The grid-driven mapping — `suppressRowOutline`, `suppressColumnOutline`, `rowGroupExpandState`, `skipRowGroups`, `processRowGroupCallback` — completes with the 5.6 extraction and 5.7 callbacks, where the real-grouped-grid tests live. **This is the differentiator — no off-the-shelf library does it.**
 
-- [ ] **5.6 — Multi-sheet & API.** `exportDataAsExcel`, `getDataAsExcel`, `getSheetDataForExcel`, `exportMultipleSheetsAsExcel`, `getMultipleSheetsAsExcel`; `sheetName`, `fileName`, `mimeType`.
+- [x] **5.6 — Multi-sheet & API.** ✅ Landed 2026-08-15. `exportDataAsExcel`, `getDataAsExcel`, `getSheetDataForExcel`, `exportMultipleSheetsAsExcel`, `getMultipleSheetsAsExcel`; `sheetName`, `fileName`, `mimeType`, `activeSheetIndex`. The `ExcelCreator` bean extracts grid state (grouped rows included); grouped-grid outline tests cover `rowGroupExpandState`, `suppressRowOutline`, `skipRowGroups`; docs route + Playwright spec with real downloads.
 
 - [ ] **5.7 — Formulas & callbacks.** `autoConvertFormulas`, the `formula` bean, and every `process*Callback` plus `shouldRowBeSkipped`, `getCustomContentBelowRow`, `transformValues`, `valueFrom`.
 
@@ -68,7 +68,7 @@
 - [ ] **5.9 — Optional, only if the gate is otherwise green.** Images (`addImageToCell` — needs `xl/media/*`, drawing XML, relationships), Excel tables (`exportAsExcelTable`), notes (`processNoteCallback`, `suppressGridNotesExport`, `suppressPrependAuthorToNotes`).
   If descoped, mark ❌ in the parity checklist with rationale.
 
-- [ ] Contribute `export`, `excelExport` items to the Phase 1 menu registry
+- [x] Contribute `export`, `excelExport` items to the Phase 1 menu registry — ✅ Landed 2026-08-15. `export` (with `csvExport`/`excelExport` submenu), `csvExport` and `excelExport` register from the module's `onRegister`; E2E asserts the item renders. Nested-submenu *expansion* is a Phase 1 renderer gap — [OPEN-ACTIONS C3](../../OPEN-ACTIONS.md).
 
 ---
 
