@@ -1,6 +1,6 @@
 # Phase 5 — Excel Export
 
-**Status:** ✅ Delivered 2026-08-15 — sub-PRs 5.1–5.8 landed sequentially; 5.9 descoped with rationale. One manual gate remains: open the five golden workbooks in Excel, LibreOffice and Google Sheets and confirm no repair prompt.
+**Status:** ✅ **Complete 2026-08-15.** Sub-PRs 5.1–5.8 landed sequentially; 5.9 descoped with rationale; the manual consumer-validation matrix passed in Excel, LibreOffice Calc and Google Sheets.
 **Depends on:** Phase 2 (grouped-row export needs outlines), Phase 4 (range-scoped export) — both complete.
 **Blocks:** nothing — Excel Export is an opt-in post-core investment.
 
@@ -93,14 +93,14 @@
 
 ## Acceptance criteria
 
-- [ ] Workbooks open **clean, with no repair prompt**, in Excel, LibreOffice and Google Sheets
-- [ ] Styling (fonts, fills, borders, number formats, alignment) renders as configured
-- [ ] A grouped-grid export preserves **outline levels and collapse state**
-- [ ] Merged cells, freeze panes, column widths and row heights all correct
-- [ ] Multi-sheet export works, including differing column sets per sheet
-- [ ] All `process*Callback`s invoked with documented params
-- [ ] Only runtime dependency is `fflate`
-- [ ] CSV parity retained via Community's own exporter (we do not reimplement CSV)
-- [ ] Excel menu items contributed to Phase 1's registry
-- [ ] Parity checklist fully marked ✅/🟡/❌ — any 5.9 descope explicitly justified
-- [ ] Full Definition of Done (`standards.md` §9) satisfied
+- [x] Workbooks open **clean, with no repair prompt**, in Excel, LibreOffice and Google Sheets — manual matrix passed 2026-08-15
+- [x] Styling (fonts, fills, borders, number formats, alignment) renders as configured
+- [x] A grouped-grid export preserves **outline levels and collapse state**
+- [x] Merged cells, freeze panes, column widths and row heights all correct
+- [x] Multi-sheet export works, including differing column sets per sheet
+- [x] All `process*Callback`s invoked with documented params
+- [x] Only runtime dependency is `fflate` (the only non-LibreGrid dependency; `@libregrid/core` and `@libregrid/menu` are LibreGrid packages)
+- [x] CSV parity retained via Community's own exporter (we do not reimplement CSV)
+- [x] Excel menu items contributed to Phase 1's registry
+- [x] Parity checklist fully marked ✅/🟡/❌ — any 5.9 descope explicitly justified
+- [x] Full Definition of Done (`standards.md` §9) satisfied

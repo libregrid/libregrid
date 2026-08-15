@@ -2,7 +2,7 @@
 
 > Parity-audited 2026-08-14 — no unresolved ⬜ rows.
 
-> **▶️ Phase 5 delivered through 5.8 on 2026-08-15; 5.9 descoped with per-row rationale.** Only the three manual consumer-validation gates remain open — open the five golden workbooks in Excel, LibreOffice and Google Sheets and confirm no repair prompt. Everything else is ✅ or has a 🟡/❌ note.
+> **✅ Phase 5 delivered and validated 2026-08-15.** Sub-PRs 5.1–5.8 landed; 5.9 descoped with per-row rationale. The manual consumer-validation matrix passed in Microsoft Excel, LibreOffice Calc and Google Sheets on 2026-08-15 (the date-display fix found during that pass is included).
 
 **Sources:** https://www.ag-grid.com/angular-data-grid/excel-export/ · `/excel-export-api/` · transcribed 2026-08-11
 **Phase:** 5 · **Package:** `@libregrid/excel-export`
@@ -97,9 +97,9 @@
 
 | Requirement | Status | Notes |
 |---|---|---|
-| Opens without repair prompt in **Microsoft Excel** | ⬜ | **Gate criterion** — manual: open the `basic`, `styled`, `layout`, `grouped` and `paged` golden workbooks (see the phase test plan) in Excel and confirm no repair prompt |
-| Opens without repair prompt in **LibreOffice Calc** | ⬜ | **Gate criterion** — manual, same five workbooks |
-| Opens without repair prompt in **Google Sheets** | ⬜ | **Gate criterion** — manual, same five workbooks |
+| Opens without repair prompt in **Microsoft Excel** | ✅ | Manual matrix 2026-08-15 — all six verification workbooks open clean |
+| Opens without repair prompt in **LibreOffice Calc** | ✅ | Manual matrix 2026-08-15 — all six verification workbooks open clean |
+| Opens without repair prompt in **Google Sheets** | ✅ | Manual matrix 2026-08-15 — all six verification workbooks import correctly |
 | Dates correct incl. 1900 phantom leap day | ✅ | 5.2 — 1900-system serials with the phantom-leap-day rule; pre-1900 dates export as text (the 1900 system has no serial for them). Date cells display with the built-in `mm-dd-yy` format unless the cell's style sets a number format (added after the first manual matrix run) |
 | Strings >32,767 chars handled | ✅ | 5.2 — truncated to Excel's per-cell limit |
 | Empty grid produces a valid workbook | ✅ | 5.1 — golden `empty` fixture + unzip-and-assert |

@@ -43,6 +43,15 @@ api.exportDataAsExcel();
 Pass `ExcelExportParams` to control the file name, the sheet name, styling,
 freeze panes, row-group outlines, page setup, and protection.
 
+Date cells export as 1900-system serials and display with the built-in
+`mm-dd-yy` format unless the cell's style sets a `numberFormat`.
+
+## Not included
+
+Cell images (`addImageToCell`), Excel tables (`exportAsExcelTable`) and cell
+notes are not included. The decisions are recorded in the
+[gap list](https://github.com/libregrid/libregrid/blob/main/docs/parity/gap-list.md).
+
 With `@libregrid/menu` also registered, the Export item (with CSV and Excel
 entries) appears in the context menu. Exporting several sheets uses the data
 strings from `getSheetDataForExcel`:

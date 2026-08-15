@@ -98,6 +98,8 @@ export {
   toDelimited,
 } from '@libregrid/clipboard';
 
+export { ExcelExportModule } from '@libregrid/excel-export';
+
 export {
   AggregationPanel,
   FilteredRowCountPanel,

@@ -25,6 +25,7 @@ advanced grid capabilities:
 | Large data    | Server-side row model, viewport row model, SSRM pagination               |
 | Filtering     | Set Filter, Multi Filter, Filters Tool Panel, Advanced Filter, Find      |
 | Interaction   | Cell-range selection, fill handle, clipboard copy/cut/paste, Rich Select |
+| Data out      | Excel (.xlsx) export with grouped-row outlines, styling and multi-sheet |
 | Grid UI       | Context and column menus, side bar, columns tool panel, status bar       |
 | Visualization | Integrated charts and sparklines                                         |
 | Angular       | Angular module registration helpers, signals, and Material theme bridge  |
@@ -47,8 +48,9 @@ releases.
 - Known differences and omissions: [gap list](./docs/parity/gap-list.md)
 - Migration from `ag-grid-enterprise`: [migration guide](./docs/guides/migration-guide.md)
 
-Excel export is not shipped. PDF export is not planned. Read the gap list
-before you plan a migration.
+Excel export ships in `@libregrid/excel-export` (1.1.0). Cell images, Excel
+tables and cell notes are not included — see the [gap list](./docs/parity/gap-list.md).
+PDF export is not planned. Read the gap list before you plan a migration.
 
 ## Quick start
 

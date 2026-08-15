@@ -77,7 +77,7 @@ with the commercial package for the features listed here.
 | `RichSelect` | `@libregrid/rich-select` | |
 | `IntegratedCharts` | `@libregrid/integrated-charts` | Built on MIT `ag-charts-community` — see the chart gaps below |
 | `Sparklines` | `@libregrid/sparklines` | |
-| `ExcelExport` | — | **Not shipped.** Phase 5 is deferred; see the [gap list](../parity/gap-list.md) |
+| `ExcelExport` | `@libregrid/excel-export` | `.xlsx` export; cell images, Excel tables and cell notes are not included (see the [gap list](../parity/gap-list.md)) |
 | `PdfExport` | — | **Not planned.** See the [gap list](../parity/gap-list.md) |
 | Notes, RowNumbers, Toolbar, AI toolkit | — | Post-1.0 candidates; see the [gap list](../parity/gap-list.md) |
 
