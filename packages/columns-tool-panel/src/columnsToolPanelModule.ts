@@ -3,6 +3,7 @@ import { EnterpriseCoreModule, getUntypedBean, type IColChooserFactoryShape } fr
 import { SideBarModule } from '@libregrid/side-bar';
 import { ColumnChooserFactory } from './columnChooserFactory';
 import { ColumnsToolPanelFactory } from './columnsToolPanelFactory';
+import { registerPanelToolbarItems } from './toolbarItems';
 import { ColumnsToolPanel } from './columnsToolPanel';
 import { columnsToolPanelCss } from './columnsToolPanelCss';
 import { VERSION } from './version';
@@ -27,6 +28,7 @@ export const ColumnsToolPanelModule: _ModuleWithApi<_ColumnChooserGridApi> = {
   dependsOn: [EnterpriseCoreModule, SideBarModule],
   userComponents: { agColumnsToolPanel: ColumnsToolPanel },
   css: [columnsToolPanelCss],
+  onRegister: registerPanelToolbarItems,
   apiFunctions: { showColumnChooser, hideColumnChooser },
   enterprise: true,
 };

@@ -166,6 +166,7 @@ export class ColumnsToolPanel implements IColumnToolPanel {
   private appendSearch(): void {
     const input = document.createElement('input');
     input.type = 'search';
+    input.className = 'lgr-input';
     input.value = this.search;
     input.placeholder = 'Search columns';
     input.setAttribute('aria-label', 'Search columns');
@@ -179,16 +180,16 @@ export class ColumnsToolPanel implements IColumnToolPanel {
   private appendVisibilityControls(): void {
     const toolbar = document.createElement('div');
     toolbar.className = 'lgr-columns-toolbar';
-    toolbar.append(this.createButton('Select all columns', () => this.setVisibleColumns(true)));
-    toolbar.append(this.createButton('Unselect all columns', () => this.setVisibleColumns(false)));
+    toolbar.append(this.createButton('Select all columns', () => this.setVisibleColumns(true), 'lgr-button'));
+    toolbar.append(this.createButton('Unselect all columns', () => this.setVisibleColumns(false), 'lgr-button'));
     this.gui.appendChild(toolbar);
   }
 
   private appendColumnExpandControls(): void {
     const toolbar = document.createElement('div');
     toolbar.className = 'lgr-columns-toolbar lgr-columns-expand-toolbar';
-    toolbar.append(this.createButton('Expand all column groups', () => this.expandColumnGroups()));
-    toolbar.append(this.createButton('Collapse all column groups', () => this.collapseColumnGroups()));
+    toolbar.append(this.createButton('Expand all column groups', () => this.expandColumnGroups(), 'lgr-button'));
+    toolbar.append(this.createButton('Collapse all column groups', () => this.collapseColumnGroups(), 'lgr-button'));
     this.gui.appendChild(toolbar);
   }
 
@@ -196,8 +197,8 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     const actions: ColumnToolPanelAction[] = this.params?.buttons ?? [];
     const toolbar = document.createElement('div');
     toolbar.className = 'lgr-columns-actions';
-    if (actions.includes('apply')) toolbar.append(this.createButton('Apply', () => this.applyPendingChanges()));
-    if (actions.includes('cancel')) toolbar.append(this.createButton('Cancel', () => this.cancelPendingChanges()));
+    if (actions.includes('apply')) toolbar.append(this.createButton('Apply', () => this.applyPendingChanges(), 'lgr-button'));
+    if (actions.includes('cancel')) toolbar.append(this.createButton('Cancel', () => this.cancelPendingChanges(), 'lgr-button'));
     this.gui.appendChild(toolbar);
   }
 
@@ -415,9 +416,10 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     this.gui.appendChild(section);
   }
 
-  private createButton(label: string, onClick: () => void): HTMLButtonElement {
+  private createButton(label: string, onClick: () => void, className = 'lgr-text-button'): HTMLButtonElement {
     const button = document.createElement('button');
     button.type = 'button';
+    button.className = className;
     button.textContent = label;
     button.setAttribute('aria-label', label);
     button.addEventListener('click', onClick);

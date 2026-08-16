@@ -73,7 +73,8 @@ export class FiltersToolPanel implements IFiltersToolPanel, INewFiltersToolPanel
 
   private appendSearch(): void {
     const input = document.createElement('input');
-    input.type = 'search'; input.placeholder = 'Search filters'; input.setAttribute('aria-label', 'Search filters'); input.value = this.search;
+    input.type = 'search'; input.className = 'lgr-input';
+    input.placeholder = 'Search filters'; input.setAttribute('aria-label', 'Search filters'); input.value = this.search;
     input.addEventListener('input', () => { this.search = input.value; this.render(); });
     this.gui.appendChild(input);
   }
@@ -91,6 +92,7 @@ export class FiltersToolPanel implements IFiltersToolPanel, INewFiltersToolPanel
     if (def.suppressFiltersToolPanel || !def.filter) return;
     const card = document.createElement('details');
     card.className = 'lgr-filter-card'; card.open = this.expanded.has(id); card.setAttribute('role', 'group'); card.setAttribute('aria-label', `${name} filter`);
+    card.classList.toggle('lgr-filter-card-active', !!this.pendingModel[id]);
     card.addEventListener('toggle', () => {
       if (card.open) this.expanded.add(id);
       else this.expanded.delete(id);
@@ -98,12 +100,13 @@ export class FiltersToolPanel implements IFiltersToolPanel, INewFiltersToolPanel
     });
     const summary = document.createElement('summary'); summary.textContent = name; summary.setAttribute('aria-expanded', String(card.open)); card.appendChild(summary);
     card.appendChild(this.createModeSelect(id, name));
-    const detail = document.createElement('p'); detail.textContent = this.pendingModel[id] ? 'Filter active' : 'No active filter'; card.appendChild(detail);
+    const detail = document.createElement('p'); detail.className = 'lgr-filter-card-status'; detail.textContent = this.pendingModel[id] ? 'Filter active' : 'No active filter'; card.appendChild(detail);
     this.gui.appendChild(card);
   }
 
   private createModeSelect(id: string, name: string): HTMLSelectElement {
     const select = document.createElement('select');
+    select.className = 'lgr-input lgr-filter-mode-select';
     select.setAttribute('aria-label', `${name} filter type`);
     const mode = this.modes.get(id) ?? this.defaultMode(this.columnDefs().find((def) => this.id(def) === id));
     for (const [value, label] of [['simple', 'Simple'], ['selection', 'Selection'], ['combo', 'Combo']] as const) {
@@ -132,7 +135,7 @@ export class FiltersToolPanel implements IFiltersToolPanel, INewFiltersToolPanel
   }
 
   private actionLabel(action: FilterAction): string { return action[0]!.toUpperCase() + action.slice(1); }
-  private button(label: string, action: () => void): HTMLButtonElement { const button = document.createElement('button'); button.type = 'button'; button.textContent = label; button.setAttribute('aria-label', label); button.addEventListener('click', action); return button; }
+  private button(label: string, action: () => void): HTMLButtonElement { const button = document.createElement('button'); button.type = 'button'; button.className = 'lgr-button'; button.textContent = label; button.setAttribute('aria-label', label); button.addEventListener('click', action); return button; }
   private columnDefs(): ColDef[] { return this.layout ?? this.params?.api.getColumnDefs?.() ?? []; }
   private id(def: ColDef): string { return def.colId ?? def.field ?? def.headerName ?? 'column'; }
   private defaultMode(def: ColDef | undefined): FilterMode { return def?.filter === 'agSetColumnFilter' ? 'selection' : def?.filter === 'agMultiColumnFilter' ? 'combo' : 'simple'; }

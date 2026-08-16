@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { DomPortalOutlet, ComponentPortal } from '@angular/cdk/portal';
 import { MatButtonModule } from '@angular/material/button';
+import { iconSvg } from '@libregrid/core';
 import {
   registerSideBarRenderer,
   type SideBarRenderer,
@@ -25,11 +26,15 @@ import {
         type="button"
         class="lgr-side-bar-button"
         role="tab"
-        [attr.aria-label]="panel.labelDefault || panel.labelKey || panel.id"
+        [attr.aria-label]="label(panel)"
         [attr.aria-expanded]="openedPanelId === panel.id"
+        [title]="label(panel)"
         (click)="togglePanel(panel.id)"
       >
-        {{ panel.labelDefault || panel.labelKey || panel.id }}
+        @if (icon(panel); as svg) {
+          <span class="lgr-side-bar-button-icon" aria-hidden="true" [innerHTML]="svg"></span>
+        }
+        <span class="lgr-side-bar-button-label">{{ label(panel) }}</span>
       </button>
     }
   `,
@@ -46,6 +51,14 @@ class MaterialSideBarButtonsComponent implements OnChanges {
 
   togglePanel(id: string): void {
     this.request.togglePanel(id);
+  }
+
+  label(panel: SideBarRenderRequest['panelDefs'][number]): string {
+    return panel.labelDefault || panel.labelKey || panel.id;
+  }
+
+  icon(panel: SideBarRenderRequest['panelDefs'][number]): string | null {
+    return panel.iconKey ? iconSvg(panel.iconKey as never) : null;
   }
 }
 
