@@ -9,10 +9,18 @@ test.describe('Menus — Context Menu', () => {
 
   test('right-click a cell opens context menu with expected items', async ({ page }) => {
     const cell = page.locator('.ag-cell').first();
+    const cellBox = await cell.boundingBox();
     await cell.click({ button: 'right' });
 
     const menu = page.locator('.lgr-context-menu');
     await expect(menu).toBeVisible();
+
+    // A traditional popup: anchored at the click, not stretched over the grid.
+    const menuBox = await menu.boundingBox();
+    const gridBox = await page.getByTestId('menus-grid').boundingBox();
+    expect(menuBox!.width).toBeLessThan(gridBox!.width / 2);
+    expect(menuBox!.x).toBeLessThanOrEqual(cellBox!.x + cellBox!.width + 1);
+    expect(menuBox!.y).toBeGreaterThanOrEqual(cellBox!.y - 1);
 
     // Default items should be present
     await expect(menu.locator('.lgr-menu-item').first()).toBeVisible();

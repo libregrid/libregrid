@@ -9,6 +9,9 @@
  */
 export const menuCss = `
 .lgr-menu {
+  /* Absolute so the grid's popup positioning (top/left on the child) takes
+   * effect — without it the menu flows as a full-width block over the grid. */
+  position: absolute;
   min-width: var(--ag-menu-min-width, 181px);
   max-height: 100%;
   overflow-y: auto;
