@@ -4,6 +4,7 @@ import { MenuItemMapper } from './menuItemMapper';
 import { MenuUtils } from './menuUtils';
 import { ContextMenuService } from './contextMenuSvc';
 import { menuCss } from './menuCss';
+import { registerMenuToolbarItem } from './menuToolbarItem';
 import { VERSION } from './version';
 
 function showContextMenu(beans: BeanCollection, params?: IContextMenuParams): void {
@@ -28,6 +29,7 @@ export const ContextMenuModule: _ModuleWithApi<_ContextMenuGridApi> = {
   version: VERSION,
   beans: [MenuItemMapper, MenuUtils, ContextMenuService],
   dependsOn: [EnterpriseCoreModule],
+  onRegister: registerMenuToolbarItem,
   apiFunctions: { showContextMenu },
   css: [menuCss],
 };

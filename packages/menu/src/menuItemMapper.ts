@@ -61,8 +61,8 @@ export class MenuItemMapper extends BeanStub implements NamedBean {
 
   private mapDefinition(item: MenuItemDef, params: MenuActionParams): MenuItemDef {
     if (!item.subMenu) return item;
-    const subMenu = this.mapMixed(item.subMenu, params).filter(
-      (child): child is MenuItemDef => child !== 'separator',
+    const subMenu = this.mapMixed(item.subMenu, params).map((child) =>
+      child === 'separator' ? ({ name: '__separator__' } as MenuItemDef) : child,
     );
     return { ...item, subMenu };
   }

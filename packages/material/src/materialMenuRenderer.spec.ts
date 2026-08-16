@@ -1,15 +1,17 @@
 /** @vitest-environment jsdom */
 import { ApplicationRef, EnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createMaterialMenuRenderer } from './materialMenuRenderer';
 
 describe('Material menu renderer', () => {
-  it('renders actions, keyboard navigation, submenus, and destroys its attached view', async () => {
-    const applicationRef = TestBed.inject(ApplicationRef);
-    const detachView = vi.spyOn(applicationRef, 'detachView');
+  afterEach(() => {
+    document.body.querySelectorAll('.lgr-sub-menu').forEach((el) => el.remove());
+  });
+
+  it('delegates to the shared Quartz renderer: actions, keyboard nav, body-level submenus, destroy', async () => {
     const renderer = createMaterialMenuRenderer(
-      applicationRef,
+      TestBed.inject(ApplicationRef),
       TestBed.inject(EnvironmentInjector),
     );
     const action = vi.fn();
@@ -27,25 +29,44 @@ describe('Material menu renderer', () => {
       fallback: () => document.createElement('div'),
     });
     document.body.appendChild(result.element);
-    const items = result.element.querySelectorAll<HTMLButtonElement>('.lgr-menu-item');
-    items[0]?.focus();
-    items[0]?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-    items[0]?.click();
-    items[2]?.click();
-    items[0]?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    items[3]?.click();
-    applicationRef.tick();
-    const child = result.element.querySelector<HTMLButtonElement>('.lgr-sub-menu .lgr-menu-item');
-    expect(child).toBeDefined();
-    child?.click();
+    const rows = result.element.querySelectorAll<HTMLElement>('.lgr-menu-item');
+    expect(rows).toHaveLength(4);
+    expect(rows[1]?.getAttribute('aria-disabled')).toBe('true');
 
+    // Keyboard navigation skips disabled rows.
+    rows[0]?.focus();
+    rows[0]?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(document.activeElement).toBe(rows[2]);
+
+    // Item activation + close.
+    rows[0]?.click();
+    expect(action).toHaveBeenCalledTimes(1);
+    expect(onItemSelected).toHaveBeenCalledTimes(1);
+
+    // suppressCloseOnSelect keeps the menu open.
+    rows[2]?.click();
+    expect(action).toHaveBeenCalledTimes(2);
+    expect(onItemSelected).toHaveBeenCalledTimes(1);
+
+    // Escape closes.
+    rows[0]?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(onItemSelected).toHaveBeenCalledTimes(2);
+
+    // Submenus render as body-level popups with Quartz styling.
+    rows[3]?.click();
+    const submenu = document.body.querySelector<HTMLElement>('.lgr-sub-menu');
+    expect(submenu).not.toBeNull();
+    expect(submenu?.classList.contains('lgr-menu')).toBe(true);
+    expect(rows[3]?.getAttribute('aria-expanded')).toBe('true');
+    const child = submenu?.querySelector<HTMLElement>('.lgr-menu-item');
+    expect(child?.textContent).toBe('Child');
+    child?.click();
     expect(action).toHaveBeenCalledTimes(3);
     expect(onItemSelected).toHaveBeenCalledTimes(3);
-    items[3]?.click();
-    applicationRef.tick();
-    expect(result.element.querySelector('.lgr-sub-menu')).toBeNull();
+
+    // Destroy removes body-level submenus.
     result.destroy?.();
-    expect(detachView).toHaveBeenCalledOnce();
+    expect(document.body.querySelector('.lgr-sub-menu')).toBeNull();
     result.element.remove();
   });
 });

@@ -69,6 +69,7 @@ export const ExcelExportModule: _ModuleWithApi<_ExcelExportGridApi> = {
         order: 11,
         factory: (params) => ({
           name: 'CSV Export',
+          icon: 'csvExport',
           action: () =>
             (
               params.api as unknown as {
@@ -82,6 +83,7 @@ export const ExcelExportModule: _ModuleWithApi<_ExcelExportGridApi> = {
         order: 12,
         factory: (params) => ({
           name: 'Excel Export (.xlsx)',
+          icon: 'excelExport',
           action: () =>
             (
               params.api as unknown as {

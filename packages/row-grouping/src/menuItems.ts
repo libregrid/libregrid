@@ -65,6 +65,7 @@ registerMenuItems([
       if (column.getColDef().enableRowGroup !== true) return null;
       return {
         name: `Group by ${column.getColDef().headerName ?? colId}`,
+        icon: 'menuAddRowGroup',
         action: () => api.addRowGroupColumns([colId]),
       };
     },
@@ -79,6 +80,7 @@ registerMenuItems([
       if (!isGrouped(api, colId)) return null;
       return {
         name: `Stop grouping by ${column.getColDef().headerName ?? colId}`,
+        icon: 'menuRemoveRowGroup',
         action: () => api.removeRowGroupColumns([colId]),
       };
     },
@@ -91,6 +93,7 @@ registerMenuItems([
       if (api.getRowGroupColumns().length === 0) return null;
       return {
         name: node?.group ? 'Expand All Below' : 'Expand All',
+        icon: 'groupExpanded',
         action: () => (node?.group ? setSubtreeExpanded(node, true) : api.expandAll()),
       };
     },
@@ -103,6 +106,7 @@ registerMenuItems([
       if (api.getRowGroupColumns().length === 0) return null;
       return {
         name: node?.group ? 'Collapse All Below' : 'Collapse All',
+        icon: 'groupContracted',
         action: () => (node?.group ? setSubtreeExpanded(node, false) : api.collapseAll()),
       };
     },

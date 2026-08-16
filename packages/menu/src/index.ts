@@ -13,6 +13,8 @@ export { ContextMenuModule } from './contextMenuModule';
 export { ColumnMenuModule } from './columnMenuModule';
 export { DEFAULT_CONTEXT_MENU_ITEMS, DEFAULT_COLUMN_MENU_ITEMS } from './defaultItems';
 export { registerMenuItem, registerMenuItems } from './registryApi';
+export { createMenuDom, inheritThemeTokens, normalizeSeparators, SEPARATOR_NAME } from './menuDomRenderer';
+export type { MenuDom, MenuDomOptions } from './menuDomRenderer';
 export { registerMenuRenderer } from './menuRenderer';
 export type { MenuKind, MenuRenderer, MenuRenderRequest, MenuRenderResult } from './menuRenderer';
 export { VERSION } from './version';
