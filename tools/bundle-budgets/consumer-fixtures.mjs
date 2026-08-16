@@ -37,6 +37,7 @@ const packages = [
   'rich-select',
   'integrated-charts',
   'sparklines',
+  'toolbar',
 ];
 const packageName = (name) => `@libregrid/${name}`;
 

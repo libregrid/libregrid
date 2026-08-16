@@ -26,7 +26,7 @@ advanced grid capabilities:
 | Filtering     | Set Filter, Multi Filter, Filters Tool Panel, Advanced Filter, Find      |
 | Interaction   | Cell-range selection, fill handle, clipboard copy/cut/paste, Rich Select |
 | Data out      | Excel (.xlsx) export with grouped-row outlines, styling and multi-sheet |
-| Grid UI       | Context and column menus, side bar, columns tool panel, status bar       |
+| Grid UI       | Context and column menus, side bar, columns tool panel, status bar, quick access toolbar |
 | Visualization | Integrated charts and sparklines                                         |
 | Angular       | Angular module registration helpers, signals, and Material theme bridge  |
 

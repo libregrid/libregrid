@@ -8,11 +8,14 @@ test.describe('Cell Selection and Clipboard', () => {
   test('drags a cell range and copies it through the public API', async ({ page }) => {
     const cells = page.getByTestId('selection-grid').locator('.ag-cell');
     await cells.nth(0).dragTo(cells.nth(4));
-    await expect(page.getByText('Ranges: 1', { exact: false })).toBeVisible();
+    // The aggregation status panel appears in the grid status bar once a
+    // range is selected, then hides again when the range is cleared.
+    const statusBar = page.getByTestId('selection-grid').locator('.lgr-status-bar');
+    await expect(statusBar.getByText('Count', { exact: false })).toBeVisible();
     await page.getByRole('button', { name: 'Copy selected range' }).click();
     await expect(page.getByText('Copied selected range', { exact: false })).toBeVisible();
     await page.getByRole('button', { name: 'Clear range' }).click();
-    await expect(page.getByText('Ranges: 0', { exact: false })).toBeVisible();
+    await expect(statusBar.getByText('Count', { exact: false })).toBeHidden();
   });
   test('copies a pointer-dragged range to the browser clipboard', async ({
     page,
@@ -44,7 +47,8 @@ test.describe('Cell Selection and Clipboard', () => {
     await page.keyboard.down('Control');
     await cells.nth(0).dragTo(cells.nth(2));
     await page.keyboard.up('Control');
-    await expect(page.getByText('Ranges: 2', { exact: false })).toBeVisible();
+    const statusBar = page.getByTestId('selection-grid').locator('.lgr-status-bar');
+    await expect(statusBar.getByText('Count', { exact: false })).toBeVisible();
   });
 });
 test.describe('Cell Selection accessibility', () => {

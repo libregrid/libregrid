@@ -165,6 +165,7 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 | `@libregrid/cell-selection`        | 4     | `CellSelection`                        |
 | `@libregrid/clipboard`             | 4     | `Clipboard`                            |
 | `@libregrid/status-bar`            | 4     | `StatusBar`                            |
+| `@libregrid/toolbar`              | 13    | `Toolbar`                              |
 | `@libregrid/excel-export`          | 5     | `ExcelExport`                          |
 | `@libregrid/set-filter`            | 6     | `SetFilter`                            |
 | `@libregrid/multi-filter`          | 6     | `MultiFilter`                          |

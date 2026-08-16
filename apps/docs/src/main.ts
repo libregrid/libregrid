@@ -22,6 +22,7 @@ import { StatusBarModule } from '@libregrid/status-bar';
 import { ExcelExportModule } from '@libregrid/excel-export';
 import { AdvancedFilterModule } from '@libregrid/advanced-filter';
 import { FindModule } from '@libregrid/find';
+import { ToolbarModule } from '@libregrid/toolbar';
 import { RichSelectModule } from '@libregrid/rich-select';
 import { IntegratedChartsModule } from '@libregrid/integrated-charts';
 import { SparklinesModule } from '@libregrid/sparklines';
@@ -81,6 +82,7 @@ bootstrapApplication(App, {
       // Phase 11
       AdvancedFilterModule,
       FindModule,
+      ToolbarModule,
       RichSelectModule,
       // Phase 12
       IntegratedChartsModule,

@@ -35,6 +35,10 @@ test.describe('Filters', () => {
   });
 
   test('applies Country and Product header Set Filters through their grid-managed controls', async ({ page }) => {
+    // The Filters panel opens over the grid by default; close it so the
+    // header filter buttons underneath are clickable.
+    await page.getByRole('tab', { name: 'Filters' }).click();
+    await expect(page.locator('.lgr-filters-tool-panel')).not.toBeVisible();
     const grid = page.getByTestId('filters-grid');
     const displayedRows = () => page.evaluate(() => window.ng.getComponent(document.querySelector('lgr-filters-demo'))?.api?.getDisplayedRowCount());
 
@@ -49,6 +53,8 @@ test.describe('Filters', () => {
 
     await page.reload();
     await expect(grid).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('tab', { name: 'Filters' }).click();
+    await expect(page.locator('.lgr-filters-tool-panel')).not.toBeVisible();
     const productHeader = grid.getByRole('columnheader', { name: 'Product' });
     await productHeader.locator('.ag-header-cell-filter-button').click();
     const productFilter = page.locator('.ag-filter .lgr-set-filter');

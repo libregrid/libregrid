@@ -3,16 +3,16 @@
   "description": "Bundle size budgets per package. Every package gets a budget when created. Budgets are re-measured at Phase 13 and any raise must carry a note explaining why the real size exceeds the original placeholder.",
   "packages": {
     "@libregrid/core": {
-      "maxSize": "16 KB",
-      "note": "Core singleton — beans, module def, guards. No UI."
+      "maxSize": "17 KB",
+      "note": "Core singleton — beans, module def, guards, plus the shared control stylesheet, icon set, and theme-token helper added by the 1.1.0 UX pass (measures 16.3 KB)."
     },
     "@libregrid/menu": {
-      "maxSize": "40 KB",
-      "note": "Context menu + column menu + registry + popup lifecycle + the column-filter popup (Phase 13). Raised from 36 KB at the Phase 13 audit — measures 37.6 KB."
+      "maxSize": "60 KB",
+      "note": "Context menu + column menu + registry + popup lifecycle + the column-filter popup + the 1.1.0 shared renderer (submenus, custom components, icons, keyboard nav). Raised from 40 KB after the 1.1.0 UX pass (measures 59.0 KB)."
     },
     "@libregrid/side-bar": {
-      "maxSize": "21 KB",
-      "note": "Side bar shell with accessible controls, tool-panel host, events, and bounded resize."
+      "maxSize": "24 KB",
+      "note": "Side bar shell with accessible controls, tool-panel host, events, and bounded resize. Raised from 21 KB after the 1.1.0 UX pass added icon-over-label buttons and focus styling (measures 23.0 KB)."
     },
     "@libregrid/material": {
       "maxSize": "38 KB",
@@ -35,7 +35,12 @@
       "note": "Browser Clipboard API support with a temporary-textarea fallback for range copying. Re-measured after validation-app copy support: 12.5 KB unminified."
     },
     "@libregrid/status-bar": {
-      "maxSize": "8 KB"
+      "maxSize": "16 KB",
+      "note": "Status bar shell, service, and five provided panels. Raised from 8 KB after the 1.1.0 UX pass added the shell component, alignment buckets, and label/value rendering (measures 15.1 KB)."
+    },
+    "@libregrid/toolbar": {
+      "maxSize": "18 KB",
+      "note": "Quick Access Toolbar shell, service, quick-filter and find items, and toolbar CSS. Added in the 1.1.0 UX pass (measures 17.9 KB)."
     },
     "@libregrid/excel-export": {
       "maxSize": "96 KB",
@@ -50,7 +55,8 @@
       "note": "Composable multi filter. Raised from 8 KB at the Phase 13 audit — measures 8.5 KB unminified."
     },
     "@libregrid/filters-tool-panel": {
-      "maxSize": "10 KB",
+      "maxSize": "12 KB",
+      "note": "Filter cards and deferred apply model. Raised from 10 KB after the 1.1.0 UX pass styling (measures 11.0 KB).",
       "note": "Accessible filters tool panel. Raised from 8 KB at the Phase 13 audit — measures 8.7 KB unminified."
     },
     "@libregrid/server-side-row-model": {
