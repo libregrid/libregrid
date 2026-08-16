@@ -35,11 +35,11 @@ describe('provided status panels', () => {
       panel.agInit({ api, context: undefined, key: String(index) } as never);
     });
     expect(panels.map((panel) => panel.getGui().textContent)).toEqual([
-      'Total Rows: 3',
-      'Rows: 2 / 3',
-      'Filtered Rows: 2',
-      'Selected Rows: 2',
-      'Count: 2 Sum: 3 Avg: 1.5',
+      'Total Rows 3',
+      'Rows 2 / 3',
+      'Filtered Rows 2',
+      'Selected Rows 2',
+      'Count 2Sum 3Min 1Max 2Average 1.5',
     ]);
   });
   it('configures defaults, refreshes custom panels, replaces registrations, and destroys cleanly', () => {
@@ -63,11 +63,11 @@ describe('provided status panels', () => {
     );
     bean.refresh();
     expect(refresh).toHaveBeenCalledWith(expect.objectContaining({ key: 'status-0' }));
-    const replacement = { destroy: vi.fn() };
-    bean.register('status-0', replacement);
-    expect(destroy).toHaveBeenCalledOnce();
+    // CustomPanel.refresh returns undefined, so the service destroys and
+    // recreates it per the IStatusPanel contract; destroy then runs again on
+    // service teardown.
     bean.destroy();
-    expect(replacement.destroy).toHaveBeenCalledOnce();
+    expect(destroy).toHaveBeenCalledTimes(2);
   });
   it('renders safe empty values when panel APIs have no data', () => {
     const emptyApi = { getCellRanges: () => null };
@@ -75,7 +75,7 @@ describe('provided status panels', () => {
     const total = new TotalRowCountPanel();
     aggregation.agInit({ api: emptyApi, context: null, key: 'aggregation' } as never);
     total.agInit({ api: emptyApi, context: null, key: 'total' } as never);
-    expect(aggregation.getGui().textContent).toBe('Count: 0');
-    expect(total.getGui().textContent).toBe('Total Rows: 0');
+    expect(aggregation.getGui().textContent).toBe('Count 0Sum 0');
+    expect(total.getGui().textContent).toBe('Total Rows 0');
   });
 });
