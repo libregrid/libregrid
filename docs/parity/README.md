@@ -35,6 +35,7 @@ We transcribed these lists from the AG Grid documentation pages named in each fi
 | [`cell-selection.md`](cell-selection.md) | 4 | `@libregrid/cell-selection` |
 | [`clipboard.md`](clipboard.md) | 4 | `@libregrid/clipboard` |
 | [`status-bar.md`](status-bar.md) | 4 | `@libregrid/status-bar` |
+| [`toolbar.md`](toolbar.md) | 13 | `@libregrid/toolbar` |
 | [`excel-export.md`](excel-export.md) | 5 | `@libregrid/excel-export` |
 | [`side-bar.md`](side-bar.md) | 1 | `@libregrid/side-bar` |
 | [`columns-tool-panel.md`](columns-tool-panel.md) | 3 | `@libregrid/columns-tool-panel` |

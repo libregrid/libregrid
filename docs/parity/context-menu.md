@@ -40,7 +40,10 @@
 | `cssClasses` | ✅     | Use `lgr-` prefix (G4)                                              |
 | `disabled`   | ✅     |                                                                     |
 | `tooltip`    | ✅     |                                                                     |
-| `subMenu`    | ✅     | Nested Material menu items open and invoke registered child actions |
+| `subMenu`    | ✅     | Nested menus open on hover/click/ArrowRight with viewport clamping and invoke registered child actions |
+| `subMenuRole` | 🟡     | Retained on the definition; the rendered submenu keeps the default menu role |
+| `menuItem`     | ✅     | Custom menu item components instantiate via the grid component factory; agInit, configureDefaults, setActive/setExpanded/select honored (1.1.0 UX pass) |
+| `menuItemParams` | ✅   | Forwarded to the custom component through agInit |
 | `icon`       | ✅     |                                                                     |
 | `shortcut`   | ✅     | Display only                                                        |
 | `checked`    | ✅     |                                                                     |

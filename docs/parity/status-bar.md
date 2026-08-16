@@ -10,7 +10,7 @@
 
 | Option                   | Status | Notes                                                            |
 | ------------------------ | ------ | ---------------------------------------------------------------- |
-| `statusBar`              | ✅     | Configured panel definitions are instantiated by `statusBarSvc`. |
+| `statusBar`              | ✅     | Configured panel definitions are instantiated by `statusBarSvc` and rendered into the `.lgr-status-bar` shell below the grid. |
 | `statusBar.statusPanels` | ✅     | Array of provided or custom `StatusPanelDef`s.                   |
 
 ## StatusPanelDef
@@ -18,7 +18,7 @@
 | Property            | Status | Notes                                                                     |
 | ------------------- | ------ | ------------------------------------------------------------------------- |
 | `statusPanel`       | ✅     | Provided name or custom class.                                            |
-| `align`             | 🟡     | Retained by the definition; a multi-panel layout host is not yet shipped. |
+| `align`             | ✅     | Panels render into left / center / right buckets (default right).          |
 | `key`               | ✅     | Used by `getStatusPanel`.                                                 |
 | `statusPanelParams` | ✅     | Merged into init parameters.                                              |
 
@@ -36,7 +36,8 @@
 
 | Interface / property                        | Status | Notes                                                                             |
 | ------------------------------------------- | ------ | --------------------------------------------------------------------------------- |
-| `IProvidedStatusPanelParams.valueFormatter` | 🟡     | Built-in text formatting is available; custom value formatter is not applied yet. |
+| `IProvidedStatusPanelParams.valueFormatter` | ✅     | Applied to every numeric value; falls back to locale number formatting.   |
+| `IAggregationStatusPanelParams.aggFuncs`      | ✅     | Aggregation panel honors configured funcs (default count/sum/min/max/avg). |
 | `IStatusPanelParams.key`                    | ✅     | Supplied during init/refresh.                                                     |
 | `IStatusPanelParams.api`                    | ✅     | Supplied during init/refresh.                                                     |
 | `IStatusPanelParams.context`                | ✅     | Supplied during init/refresh.                                                     |
@@ -58,6 +59,9 @@
 
 | Requirement                                 | Status | Notes                                                                               |
 | ------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| Status bar shell renders below the grid     | ✅     | `StatusBarComponent` registers the `AG-STATUS-BAR` selector; hides when no option. |
+| Label/value pair structure                  | ✅     | Panels emit `lgr-status-name-value` pairs; values get 500-weight tabular numerals. |
 | Counts update live under filtering          | ✅     | Service refreshes on `filterChanged`/`modelUpdated`.                                |
-| Aggregation panel tracks cell selection     | ✅     | Service refreshes on `rangeSelectionChanged`.                                       |
-| `aria-live` announcements for count changes | ✅     | Each provided panel uses polite live output; Material demo shell has `role=status`. |
+| Aggregation panel tracks cell selection     | ✅     | Service refreshes on `rangeSelectionChanged`; panel hides without a selection.      |
+| `refresh` false/absent destroys and recreates | ✅   | Custom panel contract honored; the panel is rebuilt from its definition.            |
+| `aria-live` announcements for count changes | ✅     | Each provided panel uses polite live output; the shell has `role=status`.           |
