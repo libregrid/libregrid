@@ -49,3 +49,11 @@ export interface IColChooserFactoryShape {
 export interface ISsrmStoreFactoryShape {
   createStore(level: number): unknown;
 }
+
+/** Phase 13 — `toolbarSvc` */
+export interface IToolbarSvcShape {
+  /** Attached by the toolbar shell component; called on reconfiguration. */
+  comp: { refresh(): void } | undefined;
+  getEntries(): unknown[];
+  getToolbarItemInstance(key: string): unknown;
+}
