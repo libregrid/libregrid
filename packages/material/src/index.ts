@@ -9,6 +9,8 @@ export {
   provideLibreGridMaterialTheme,
 } from './themeBridge';
 export type { ThemeMode } from './themeBridge';
+export { GRID_DENSITIES, spacingForDensity } from './themeParams';
+export type { GridDensityId } from './themeParams';
 export { installMaterialSideBarRenderer } from './materialSideBarRenderer';
 export { MaterialStatusBarComponent } from './materialStatusBar';
 export {
