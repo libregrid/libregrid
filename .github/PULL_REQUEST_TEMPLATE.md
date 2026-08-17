@@ -1,7 +1,6 @@
-## Phase / Task
+## Task
 
-<!-- Link the phase file, e.g. `docs/phases/phase-01-menus-sidebar.md` -->
-<!-- Tick the todo items this PR completes -->
+<!-- Link the issue and/or parity doc, e.g. `docs/parity/columns-tool-panel.md` -->
 
 ## G1 & G4 attestation
 
@@ -20,4 +19,4 @@
 - [ ] Unit tests pass, ≥85% coverage on new code
 - [ ] At least one integration test per feature against a real grid
 - [ ] `npm run verify` green (lint + test + build + guardrails)
-- [ ] A Changeset added
+- [ ] A Changeset added (or N/A — docs/tooling only)

@@ -13,8 +13,8 @@ labels: enhancement
 
 ## Alternatives considered
 
-## Which phase does this belong to?
+## Area
 
-<!-- See docs/phases/ — or say "new work" if it fits no existing phase. -->
+<!-- Which package or surface? e.g. menu, excel-export, docs, tooling -->
 
 > For a feature AG Grid Enterprise already has, use the **Parity gap** template instead.
