@@ -3,7 +3,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridApi, GridOptions } from 'ag-grid-community';
-import { LibreGridThemeService, MaterialStatusBarComponent } from '@libregrid/material';
+import { LibreGridThemeService } from '@libregrid/material';
 
 interface Row {
   name: string;
@@ -21,7 +21,7 @@ const rows: Row[] = [
 @Component({
   selector: 'lgr-selection-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, MaterialStatusBarComponent],
+  imports: [AgGridAngular, MatButtonModule, MatCardModule],
   template: ` <div class="lgr-page">
     <h1>Cell Selection & Clipboard</h1>
     <p>
@@ -45,20 +45,22 @@ const rows: Row[] = [
     </p>
     <p aria-live="polite">{{ copied() }}</p>
     <h2>Status</h2>
-    <lgr-material-status-bar [text]="statusText()" />
+    <p>
+      The grid status bar below the table is provided by
+      <code>&#64;libregrid/status-bar</code>. Select a range to see the
+      aggregation panel appear next to the row count.
+    </p>
   </div>`,
 })
 export class SelectionDemo {
   protected readonly theme = inject(LibreGridThemeService);
   protected readonly rowData = rows;
   protected readonly copied = signal('Nothing copied');
-  protected readonly rangeCount = signal(0);
-  protected readonly statusText = signal('Ranges: 0');
   private api: GridApi | undefined;
   protected readonly columnDefs: ColDef<Row>[] = [
     { field: 'name' },
-    { field: 'first' },
-    { field: 'second' },
+    { field: 'first', type: 'numericColumn' },
+    { field: 'second', type: 'numericColumn' },
   ];
   protected readonly gridOptions: GridOptions<Row> = {
     defaultColDef: { flex: 1, editable: true },
@@ -72,11 +74,6 @@ export class SelectionDemo {
   } as never;
   ready(api: GridApi): void {
     this.api = api;
-    api.addEventListener('rangeSelectionChanged', () => {
-      this.rangeCount.set(api.getCellRanges()?.length ?? 0);
-      this.updateStatus();
-    });
-    this.updateStatus();
   }
   copy(): void {
     this.api?.copySelectedRangeToClipboard({ includeHeaders: true });
@@ -84,15 +81,5 @@ export class SelectionDemo {
   }
   clear(): void {
     this.api?.clearCellSelection();
-    this.rangeCount.set(0);
-  }
-  private updateStatus(): void {
-    const aggregation =
-      this.api?.getStatusPanel<{ getGui(): HTMLElement }>('aggregation')?.getGui().textContent ??
-      'Count: 0';
-    const total =
-      this.api?.getStatusPanel<{ getGui(): HTMLElement }>('total')?.getGui().textContent ??
-      'Total Rows: 0';
-    this.statusText.set(`Ranges: ${this.rangeCount()} · ${aggregation} · ${total}`);
   }
 }

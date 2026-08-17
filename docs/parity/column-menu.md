@@ -46,6 +46,16 @@
 | -------------------------- | ------ | --------------------------------------------------- |
 | `columnMenuVisibleChanged` | ✅     | Fired when LibreGrid's column popup opens or closes |
 
+## MenuItemDef
+
+| Property        | Status | Notes                                                                                          |
+| --------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| `name`/`action`/`disabled`/`tooltip`/`cssClasses`/`shortcut`/`checked`/`icon` | ✅ | Rendered by the shared menu renderer with Quartz metrics, icons, and focus rings (1.1.0 UX pass) |
+| `subMenu`       | ✅     | Functional nested menus with hover/click/arrow-key opening and viewport clamping                |
+| `separator`     | ✅     | Preserved and rendered between item groups                                                        |
+| `menuItem`      | ✅     | Custom menu item components with the full agInit/configureDefaults/setActive/select contract     |
+| `menuItemParams`| ✅     | Forwarded to the custom component                                                               |
+
 ## Default Menu Items
 
 | Item               | Owning phase | Status | Notes                                                                                                                          |

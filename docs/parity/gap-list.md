@@ -8,10 +8,11 @@ Audited 2026-08-14. Legend: ✅ done+tested · 🟡 partial (note names the miss
 
 ## The headline gaps
 
-1. **Excel export is not shipped.** The whole Phase 5 checklist is deferred with a
-   rationale (see [`excel-export.md`](excel-export.md) and
-   [`../phases/phase-05-excel-export.md`](../phases/phase-05-excel-export.md)): the OOXML writer is a
-   large, self-contained effort that does not block 1.0.
+1. **Excel export ships, minus three optional sub-features.** Phase 5 delivered the
+   OOXML writer and the full export API; sub-PR 5.9 was descoped, so cell images
+   (`addImageToCell`), Excel tables (`exportAsExcelTable`) and cell notes are ❌ with
+   rationale (see [`excel-export.md`](excel-export.md)). Nested-submenu expansion in the
+   Phase 1 context menu is tracked as OPEN-ACTIONS C3.
 2. **PDF export is not planned.** No equivalent of AG Grid Enterprise's PDF export;
    documented as out of scope (see the 13A long-tail list below).
 3. **Charts are built on MIT ag-charts-community.** Chart types that exist only in the
@@ -64,7 +65,7 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 | Columns tool panel | 45 | 5 | 5 | [`columns-tool-panel.md`](columns-tool-panel.md) |
 | Integrated charts | 55 | 2 | 5 | [`integrated-charts.md`](integrated-charts.md) |
 | Sparklines | 3 | 0 | 0 | [`sparklines.md`](sparklines.md) |
-| Excel export | 2 | 1 | 71 | [`excel-export.md`](excel-export.md) — deferred with Phase 5 |
+| Excel export | 60 | 8 | 5 | [`excel-export.md`](excel-export.md) — shipped; images, tables and notes descoped (5.9) |
 
 The menu domains carry the most 🟡 rows: their checklists track per-item state, and each 🟡
 names the exact missing item. Read the domain file before treating a 🟡 count as a

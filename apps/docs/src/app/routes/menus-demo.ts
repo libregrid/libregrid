@@ -18,6 +18,38 @@ const COUNTRIES = ['United States', 'France', 'Japan', 'Brazil', 'Germany'] as c
 const REGIONS = ['North', 'South', 'East', 'West'] as const;
 const PRODUCTS = ['Widget', 'Gadget', 'Doohickey'] as const;
 
+/**
+ * Custom menu item component (MenuItemDef.menuItem): shows the live row count
+ * and boldens itself while active. configureDefaults() keeps the grid's
+ * styling and interaction handling.
+ */
+class RowStatusMenuItem {
+  private gui: HTMLElement | undefined;
+  private onItemActivated: (() => void) | undefined;
+
+  public agInit(params: { onItemActivated: () => void; api: GridApi }): void {
+    this.onItemActivated = params.onItemActivated;
+    this.gui = document.createElement('span');
+    this.gui.textContent = 'Displayed rows: ' + String(params.api.getDisplayedRowCount());
+  }
+
+  public configureDefaults(): boolean {
+    return true;
+  }
+
+  public setActive(active: boolean): void {
+    if (this.gui) this.gui.style.fontWeight = active ? '700' : '500';
+  }
+
+  public select(): void {
+    this.onItemActivated?.();
+  }
+
+  public getGui(): HTMLElement {
+    return this.gui ?? document.createElement('span');
+  }
+}
+
 function makeRows(n: number): Row[] {
   const rows: Row[] = [];
   for (let i = 0; i < n; i++) {
@@ -71,14 +103,14 @@ function makeRows(n: number): Row[] {
 
       <h2>How it works</h2>
       <p>
-        The context menu is provided by <code>&#64;libregrid/menu</code> (ContextMenuModule).
-        It registers a <code>contextMenuSvc</code> bean that Community's CellCtrl calls
-        on right-click. Menu items come from an extensible registry — later phases
-        contribute items without editing this package.
+        Register <code>ContextMenuModule</code> and <code>ColumnMenuModule</code> from
+        <code>&#64;libregrid/menu</code> and the menus appear — right-click for the context
+        menu, or use the icon in a column header for the column menu.
       </p>
       <p>
-        The column menu is provided by ColumnMenuModule. It registers a
-        <code>colMenuFactory</code> bean that builds the menu content.
+        Menu items come from an extensible registry, so other LibreGrid packages (and your own
+        app) contribute items without forking the menu. This demo adds an <em>Inspect Cell</em>
+        action and a live row-count item on top of the defaults.
       </p>
     </div>
   `,
@@ -105,6 +137,8 @@ export class MenusDemo {
     defaultColDef: { sortable: true, filter: true, resizable: true, flex: 1 },
     rowSelection: { mode: 'multiRow' },
     getContextMenuItems: (params) => [
+      ...(params.defaultItems ?? []),
+      'separator',
       {
         name: 'Inspect Cell',
         action: () => this.lastAction.set(String(params.value ?? 'empty')),
@@ -112,6 +146,11 @@ export class MenusDemo {
       {
         name: 'Clear Inspection',
         action: () => this.lastAction.set('none'),
+      },
+      {
+        name: 'Row status (custom component)',
+        menuItem: RowStatusMenuItem,
+        suppressCloseOnSelect: true,
       },
     ],
     allowContextMenuWithControlKey: true,

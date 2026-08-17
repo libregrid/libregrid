@@ -11,7 +11,9 @@ import {
 import type { MenuItemMapper } from './menuItemMapper';
 import type { MenuActionParams } from './menuItemRegistry';
 import { DEFAULT_COLUMN_MENU_ITEMS } from './defaultItems';
+import { createMenuDom, instantiateMenuItemComponent, normalizeSeparators, type MenuDom } from './menuDomRenderer';
 import { getMenuRenderer } from './menuRenderer';
+import { withViewportPopupParent } from './menuUtils';
 
 /**
  * Column menu factory — builds the column menu content.
@@ -24,6 +26,7 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
 
   private mapper!: MenuItemMapper;
   private activeMenuHideFunc: (() => void) | null = null;
+  private fallbackDom: MenuDom | null = null;
 
   public postConstruct(): void {
     this.mapper = this.beans.menuItemMapper as unknown as MenuItemMapper;
@@ -39,7 +42,7 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     const api = this.beans.gridApi as GridApi | undefined;
     if (!api) return [];
 
-    const params: MenuActionParams = { column, node: null, value: null, api };
+    const params: MenuActionParams = { column, node: null, value: null, api, context: this.gos.get('context') };
 
     const userCallback = this.gos.get('getColumnMenuItems');
     if (userCallback && typeof userCallback === 'function') {
@@ -52,7 +55,7 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
       } as never);
       if (Array.isArray(userItems)) {
         const mapped = this.mapper.mapMixed(userItems as (string | MenuItemDef)[], params);
-        return mapped.filter((item): item is MenuItemDef => item !== 'separator');
+        return normalizeSeparators(mapped);
       }
     }
 
@@ -66,7 +69,7 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
       } as never);
       if (Array.isArray(legacyItems)) {
         const mapped = this.mapper.mapMixed(legacyItems as (string | MenuItemDef)[], params);
-        return mapped.filter((item): item is MenuItemDef => item !== 'separator');
+        return normalizeSeparators(mapped);
       }
     }
 
@@ -75,12 +78,11 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
       const colItems = colDef?.columnMenuItems;
       if (Array.isArray(colItems)) {
         const mapped = this.mapper.mapMixed(colItems as (string | MenuItemDef)[], params);
-        return mapped.filter((item): item is MenuItemDef => item !== 'separator');
+        return normalizeSeparators(mapped);
       }
     }
 
-    const items = this.mapper.mapItems(DEFAULT_COLUMN_MENU_ITEMS, params);
-    return items.filter((item): item is MenuItemDef => item !== 'separator');
+    return normalizeSeparators(this.mapper.mapItems(DEFAULT_COLUMN_MENU_ITEMS, params));
   }
 
   public isMenuEnabled(column: Column): boolean {
@@ -122,6 +124,10 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
         type: 'columnMenu',
         mouseEvent,
         ePopup: menuEl,
+        // See contextMenuSvc.ts: skip the resize observer so a late re-position
+        // does not anchor to the grid root after the viewport-popup override is
+        // restored.
+        skipObserver: true,
       });
     }, mouseEvent.target instanceof HTMLElement ? mouseEvent.target : undefined);
   }
@@ -157,7 +163,7 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     if (!popupSvc) return false;
 
     this.hideActiveMenu();
-    const params: MenuActionParams = { column, node: null, value: null, api: this.beans.gridApi as GridApi };
+    const params: MenuActionParams = { column, node: null, value: null, api: this.beans.gridApi as GridApi, context: this.gos.get('context') };
     const items = this.buildColumnMenuItems(column);
     const rendered = getMenuRenderer()?.render({
       kind: 'column',
@@ -167,7 +173,8 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
       fallback: () => this.createMenuElement(items, params),
     });
     const menuEl = rendered?.element ?? this.createMenuElement(items, params);
-    const popup = popupSvc.addPopup({
+    this.fallbackDom?.focusFirst?.();
+    const popupOptions = {
       eChild: menuEl,
       modal: true,
       closeOnEsc: true,
@@ -179,12 +186,22 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
       closedCallback: (event) => {
         this.activeMenuHideFunc = null;
         rendered?.destroy?.();
+        this.fallbackDom?.destroy();
+        this.fallbackDom = null;
         this.dispatchVisibleChanged(column, false);
         onClosedCallback?.(event);
       },
       positionCallback: () => position(popupSvc, menuEl),
+    } satisfies Parameters<PopupService['addPopup']>[0];
+
+    let popup: { hideFunc: () => void } | undefined;
+    // Render in a viewport-level popup by default so the menu is not clipped
+    // at the grid edge (an app-set popupParent is still honoured).
+    withViewportPopupParent(this.beans.gridApi as GridApi | undefined, () => {
+      popup = popupSvc.addPopup(popupOptions);
     });
-    this.activeMenuHideFunc = popup.hideFunc;
+
+    this.activeMenuHideFunc = popup!.hideFunc;
     this.dispatchVisibleChanged(column, true);
     return true;
   }
@@ -201,46 +218,13 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
   }
 
   private createMenuElement(items: MenuItemDef[], params: MenuActionParams): HTMLElement {
-    const menuEl = document.createElement('div');
-    menuEl.className = 'lgr-menu lgr-column-menu';
-    menuEl.setAttribute('role', 'menu');
-    menuEl.tabIndex = -1;
-
-    for (const item of items) {
-      const itemEl = document.createElement('div');
-      itemEl.className = 'lgr-menu-item';
-      itemEl.setAttribute('role', 'menuitem');
-      itemEl.tabIndex = 0;
-      itemEl.textContent = item.name;
-      if (item.disabled) {
-        itemEl.classList.add('lgr-menu-item-disabled');
-        itemEl.setAttribute('aria-disabled', 'true');
-      } else if (item.action) {
-        itemEl.addEventListener('click', () => {
-          item.action!(params as never);
-          this.hideActiveMenu();
-        });
-      }
-      menuEl.appendChild(itemEl);
-    }
-
-    menuEl.addEventListener('keydown', (event) => {
-      const menuItems = Array.from(menuEl.querySelectorAll<HTMLElement>('.lgr-menu-item:not(.lgr-menu-item-disabled)'));
-      const index = menuItems.indexOf(document.activeElement as HTMLElement);
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-        event.preventDefault();
-        const next = event.key === 'ArrowDown' ? index + 1 : index - 1;
-        menuItems[(next + menuItems.length) % menuItems.length]?.focus();
-      } else if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        (document.activeElement as HTMLElement)?.click();
-      } else if (event.key === 'Escape') {
-        event.preventDefault();
-        this.hideActiveMenu();
-      }
+    this.fallbackDom?.destroy();
+    this.fallbackDom = createMenuDom('column', items, params, {
+      closeAll: () => this.hideActiveMenu(),
+      resolveComponent: (component, initParams) =>
+        instantiateMenuItemComponent(this.beans.userCompFactory, component, initParams),
     });
-
-    return menuEl;
+    return this.fallbackDom.element;
   }
 }
 

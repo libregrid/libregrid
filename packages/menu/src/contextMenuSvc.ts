@@ -2,7 +2,9 @@ import { BeanStub, type NamedBean, type IContextMenuService, type MenuItemDef, t
 import type { MenuItemMapper } from './menuItemMapper';
 import type { MenuActionParams } from './menuItemRegistry';
 import { DEFAULT_CONTEXT_MENU_ITEMS } from './defaultItems';
+import { createMenuDom, instantiateMenuItemComponent, type MenuDom } from './menuDomRenderer';
 import { getMenuRenderer } from './menuRenderer';
+import { withViewportPopupParent } from './menuUtils';
 
 /**
  * Context menu service — implements IContextMenuService.
@@ -16,6 +18,7 @@ export class ContextMenuService extends BeanStub implements NamedBean, IContextM
   private mapper!: MenuItemMapper;
   private activeMenuHideFunc: (() => void) | null = null;
   private activeMenuTrigger: HTMLElement | null = null;
+  private fallbackDom: MenuDom | null = null;
 
   public postConstruct(): void {
     this.mapper = this.beans.menuItemMapper as unknown as MenuItemMapper;
@@ -123,7 +126,7 @@ export class ContextMenuService extends BeanStub implements NamedBean, IContextM
     const api = this.beans.gridApi as GridApi | undefined;
     if (!api) return;
 
-    const params: MenuActionParams = { column, node, value, api };
+    const params: MenuActionParams = { column, node, value, api, context: this.gos.get('context') };
     const items = this.buildMenuItems(params);
     if (items.length === 0) return;
 
@@ -208,7 +211,7 @@ export class ContextMenuService extends BeanStub implements NamedBean, IContextM
     const menuEl = rendered?.element ?? this.createMenuElement(items, params);
     this.activeMenuTrigger = trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
 
-    const popup = popupSvc.addPopup({
+    const popupOptions = {
       eChild: menuEl,
       closeOnEsc: true,
       modal: true,
@@ -220,133 +223,44 @@ export class ContextMenuService extends BeanStub implements NamedBean, IContextM
         this.activeMenuTrigger?.focus({ preventScroll: true });
         this.activeMenuTrigger = null;
         rendered?.destroy?.();
+        this.fallbackDom?.destroy();
+        this.fallbackDom = null;
       },
       positionCallback: () => {
         popupSvc.positionPopupUnderMouseEvent({
           type: 'contextMenu',
           mouseEvent: new MouseEvent('contextmenu', { clientX: x, clientY: y }),
           ePopup: menuEl,
+          // The viewport-popup override is restored right after `addPopup`
+          // returns, but `positionPopupUnderMouseEvent` re-reads the popup
+          // parent on every resize-driven re-position — so a late re-position
+          // would anchor to the grid root instead of the body. Skip the
+          // observer: the menu is fully rendered before positioning and does
+          // not need a second pass.
+          skipObserver: true,
         });
       },
       ariaLabel: 'Context Menu',
+    } satisfies Parameters<PopupService['addPopup']>[0];
+
+    let popup: { hideFunc: () => void } | undefined;
+    // Render in a viewport-level popup by default so the menu is not clipped
+    // at the grid edge (an app-set popupParent is still honoured).
+    withViewportPopupParent(this.beans.gridApi as GridApi | undefined, () => {
+      popup = popupSvc.addPopup(popupOptions);
     });
 
-    this.activeMenuHideFunc = popup.hideFunc;
+    this.activeMenuHideFunc = popup!.hideFunc;
   }
 
   private createMenuElement(items: MenuItemDef[], params: MenuActionParams): HTMLElement {
-    const menuEl = document.createElement('div');
-    menuEl.className = 'lgr-menu lgr-context-menu';
-    menuEl.setAttribute('role', 'menu');
-    menuEl.tabIndex = -1;
-
-    for (const item of items) {
-      if (item.name === '__separator__') {
-        const sep = document.createElement('div');
-        sep.className = 'lgr-menu-separator';
-        sep.setAttribute('role', 'separator');
-        menuEl.appendChild(sep);
-        continue;
-      }
-
-      const itemEl = document.createElement('div');
-      itemEl.className = 'lgr-menu-item';
-      itemEl.setAttribute('role', 'menuitem');
-      itemEl.tabIndex = 0;
-
-      if (item.icon) {
-        const iconEl = document.createElement('span');
-        iconEl.className = 'lgr-menu-item-icon';
-        if (typeof item.icon === 'string') {
-          iconEl.innerHTML = item.icon;
-        } else {
-          iconEl.appendChild(item.icon);
-        }
-        itemEl.appendChild(iconEl);
-      }
-
-      const nameEl = document.createElement('span');
-      nameEl.className = 'lgr-menu-item-name';
-      nameEl.textContent = item.name;
-      itemEl.appendChild(nameEl);
-
-      if (item.shortcut) {
-        const shortcutEl = document.createElement('span');
-        shortcutEl.className = 'lgr-menu-item-shortcut';
-        shortcutEl.textContent = item.shortcut;
-        itemEl.appendChild(shortcutEl);
-      }
-
-      if (item.checked) {
-        itemEl.classList.add('lgr-menu-item-checked');
-      }
-
-      if (item.disabled) {
-        itemEl.classList.add('lgr-menu-item-disabled');
-        itemEl.setAttribute('aria-disabled', 'true');
-      }
-
-      if (item.tooltip) {
-        itemEl.title = item.tooltip;
-      }
-
-      if (item.cssClasses) {
-        itemEl.classList.add(...item.cssClasses);
-      }
-
-      if (item.action && !item.disabled) {
-        itemEl.addEventListener('click', (e) => {
-          e.stopPropagation();
-          item.action!(params as never);
-          if (!item.suppressCloseOnSelect) {
-            this.hideActiveMenu();
-          }
-        });
-      }
-
-      if (item.subMenu && item.subMenu.length > 0) {
-        const arrowEl = document.createElement('span');
-        arrowEl.className = 'lgr-menu-item-arrow';
-        arrowEl.textContent = '▶';
-        itemEl.appendChild(arrowEl);
-        itemEl.setAttribute('aria-haspopup', 'true');
-      }
-
-      menuEl.appendChild(itemEl);
-    }
-
-    menuEl.addEventListener('keydown', (e) => {
-      this.handleMenuKeydown(e, menuEl);
+    this.fallbackDom?.destroy();
+    this.fallbackDom = createMenuDom('context', items, params, {
+      closeAll: () => this.hideActiveMenu(),
+      resolveComponent: (component, initParams) =>
+        instantiateMenuItemComponent(this.beans.userCompFactory, component, initParams),
     });
-
-    return menuEl;
-  }
-
-  private handleMenuKeydown(e: KeyboardEvent, menuEl: HTMLElement): void {
-    const items = Array.from(
-      menuEl.querySelectorAll('.lgr-menu-item:not(.lgr-menu-item-disabled)'),
-    ) as HTMLElement[];
-    const currentIndex = items.indexOf(document.activeElement as HTMLElement);
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        items[(currentIndex + 1) % items.length]?.focus();
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        items[(currentIndex - 1 + items.length) % items.length]?.focus();
-        break;
-      case 'Enter':
-      case ' ':
-        e.preventDefault();
-        (document.activeElement as HTMLElement)?.click();
-        break;
-      case 'Escape':
-        e.preventDefault();
-        this.hideActiveMenu();
-        break;
-    }
+    return this.fallbackDom.element;
   }
 
   public override destroy(): void {

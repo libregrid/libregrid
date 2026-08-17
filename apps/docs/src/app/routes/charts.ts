@@ -43,7 +43,7 @@ export class ChartsDemo {
   @ViewChild('chartContainer') private chartContainer!: ElementRef<HTMLElement>;
   protected status = 'No chart yet'; private api: GridApi<ChartRow> | undefined; private ref: ChartRef | undefined; private saved: ChartModel | undefined;
   protected readonly columnDefs: ColDef<ChartRow>[] = [
-    { field: 'country' }, { field: 'sales', editable: true, cellDataType: 'number' }, { field: 'profit', editable: true, cellDataType: 'number' },
+    { field: 'country' }, { field: 'sales', editable: true, cellDataType: 'number', type: 'numericColumn' }, { field: 'profit', editable: true, cellDataType: 'number', type: 'numericColumn' },
     { field: 'trend', headerName: 'Trend', cellRenderer: 'agSparklineCellRenderer', cellRendererParams: { sparklineOptions: { type: 'area', tooltip: { enabled: true }, axis: { type: 'number' } } } },
   ];
   protected readonly gridOptions: GridOptions<ChartRow> = { enableCharts: true, cellSelection: true };

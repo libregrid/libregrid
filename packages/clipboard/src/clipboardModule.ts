@@ -60,6 +60,7 @@ export const ClipboardModule: _ModuleWithApi<_ClipboardGridApi> = {
         order: 0,
         factory: (params) => ({
           name: 'Copy',
+          icon: 'clipboardCopy',
           action: () =>
             (
               params.api as unknown as { copySelectedRangeToClipboard?: () => void }
@@ -71,6 +72,7 @@ export const ClipboardModule: _ModuleWithApi<_ClipboardGridApi> = {
         order: 1,
         factory: (params) => ({
           name: 'Copy with headers',
+          icon: 'clipboardCopy',
           action: () =>
             (
               params.api as unknown as {
@@ -84,6 +86,7 @@ export const ClipboardModule: _ModuleWithApi<_ClipboardGridApi> = {
         order: 2,
         factory: (params) => ({
           name: 'Copy with group headers',
+          icon: 'clipboardCopy',
           action: () =>
             (
               params.api as unknown as {
@@ -100,6 +103,7 @@ export const ClipboardModule: _ModuleWithApi<_ClipboardGridApi> = {
         order: 3,
         factory: (params) => ({
           name: 'Cut',
+          icon: 'clipboardCut',
           action: () =>
             (params.api as unknown as { cutToClipboard?: () => void }).cutToClipboard?.(),
         }),
@@ -109,6 +113,7 @@ export const ClipboardModule: _ModuleWithApi<_ClipboardGridApi> = {
         order: 4,
         factory: (params) => ({
           name: 'Paste',
+          icon: 'clipboardPaste',
           action: () =>
             (params.api as unknown as { pasteFromClipboard?: () => void }).pasteFromClipboard?.(),
         }),

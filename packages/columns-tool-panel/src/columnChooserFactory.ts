@@ -1,4 +1,5 @@
 import { BeanStub, type GridApi, type NamedBean, type ColumnChooserParams } from 'ag-grid-community';
+import { inheritThemeTokens } from '@libregrid/core';
 import { ColumnsToolPanel } from './columnsToolPanel';
 
 export class ColumnChooserFactory extends BeanStub implements NamedBean {
@@ -15,9 +16,11 @@ export class ColumnChooserFactory extends BeanStub implements NamedBean {
     dialog.setAttribute('role', 'dialog');
     dialog.setAttribute('aria-modal', 'true');
     dialog.setAttribute('aria-label', 'Column chooser');
+    const title = document.createElement('h2');
+    title.textContent = 'Column chooser';
     const close = document.createElement('button');
     close.type = 'button';
-    close.className = 'lgr-column-chooser-close';
+    close.className = 'lgr-column-chooser-close lgr-button';
     close.textContent = 'Close';
     close.setAttribute('aria-label', 'Close column chooser');
     this.addManagedElementListeners(close, { click: () => this.hideColumnChooser() });
@@ -33,9 +36,15 @@ export class ColumnChooserFactory extends BeanStub implements NamedBean {
       onStateUpdated: () => {},
     });
     if (params.columnLayout) panel.setColumnLayout(params.columnLayout);
-    dialog.append(close, panel.getGui());
+    dialog.append(title, close, panel.getGui());
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
+    // The dialog lives on document.body, outside the themed grid root, so
+    // copy the theme's --ag-* tokens across to keep light/dark mode intact.
+    const gridRoot = (
+      this.beans.gridApi as unknown as { getGridRootElement?: () => HTMLElement | undefined }
+    ).getGridRootElement?.();
+    if (gridRoot) inheritThemeTokens(gridRoot, overlay);
     this.overlay = overlay;
     this.panel = panel;
     this.addManagedElementListeners(document, { keydown: (event?: KeyboardEvent) => {

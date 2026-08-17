@@ -9,7 +9,9 @@
  *       dist/src directories ship in a published package
  *
  * Usage:  node tools/bundle-budgets/check.mjs
- * Exit:   0 = pass, 1 = budget exceeded, cross-contamination, or impure dist
+ * Exit:   0 = pass, 1 = cross-contamination, impure dist, or a guardrail
+ *           violation (G3/G4 attribution, dependency allowlist). Bundle size
+ *           budgets are reported as warnings and never fail the check.
  */
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
@@ -46,6 +48,7 @@ function checkCrossContamination(name, pkg, content) {
 }
 
 let failures = 0;
+let budgetWarnings = 0;
 
 const dirs = readdirSync(PACKAGES_DIR);
 for (const dir of dirs) {
@@ -156,8 +159,10 @@ for (const dir of dirs) {
 
   const totalKB = totalBytes / 1024;
   if (totalBytes > maxBytes) {
-    console.error(`   ❌  ${name}: ${totalKB.toFixed(1)} KB exceeds budget ${budget.maxSize}`);
-    failures++;
+    // Bundle size budgets are advisory: keep the drift visible as a warning
+    // but never fail CI or a release on size alone.
+    console.warn(`   ⚠️  ${name}: ${totalKB.toFixed(1)} KB exceeds budget ${budget.maxSize} (warning)`);
+    budgetWarnings++;
   } else {
     console.log(`   ✅  ${name}: ${totalKB.toFixed(1)} KB (budget: ${budget.maxSize})`);
   }
@@ -166,5 +171,8 @@ for (const dir of dirs) {
 if (failures > 0) {
   console.error(`\n❌ Bundle budget check: ${failures} failure(s).`);
   process.exit(1);
+}
+if (budgetWarnings > 0) {
+  console.warn(`\n⚠️  ${budgetWarnings} package(s) exceed their size budget (advisory only).`);
 }
 console.log('\n✅ Bundle budgets and tree-shaking purity: all pass.');

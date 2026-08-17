@@ -150,7 +150,7 @@ const builtInItems: MenuItemContribution[] = [
           });
         }
       },
-      icon: '↑',
+      icon: 'sortAscending',
       order: 0,
     }),
     order: 0,
@@ -167,7 +167,7 @@ const builtInItems: MenuItemContribution[] = [
           });
         }
       },
-      icon: '↓',
+      icon: 'sortDescending',
       order: 1,
     }),
     order: 1,
@@ -184,6 +184,7 @@ const builtInItems: MenuItemContribution[] = [
           });
         }
       },
+      icon: 'sortUnSort',
       order: 2,
     }),
     order: 2,
@@ -235,6 +236,7 @@ const builtInItems: MenuItemContribution[] = [
       if (!api.isModuleRegistered('ColumnsToolPanel')) return null;
       return {
         name: 'Choose Columns',
+        icon: 'columns',
         action: () => params.api.showColumnChooser(params.column?.getColDef().columnChooserParams),
         order: 7,
       };
@@ -248,6 +250,7 @@ const builtInItems: MenuItemContribution[] = [
       if (!column?.getColDef().filter) return null;
       return {
         name: 'Filter',
+        icon: 'filter',
         // api.showColumnFilter routes through the enterprise menuSvc bean,
         // which the menu package deliberately does not register (Community's
         // header comp removes the column-menu button when it exists).

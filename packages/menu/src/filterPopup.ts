@@ -1,4 +1,5 @@
 import type { GridApi, IFilter } from 'ag-grid-community';
+import { inheritThemeTokens } from './menuDomRenderer';
 
 /** Filter instances returned by the filter manager carry the comp GUI. */
 type FilterWithGui = IFilter & { getGui(): HTMLElement };
@@ -29,13 +30,17 @@ export function openColumnFilterPopup(api: GridApi, columnId: string): void {
       position: 'fixed',
       zIndex: '1000',
       background: 'var(--ag-background-color, #fff)',
-      color: 'var(--ag-foreground-color, #000)',
+      color: 'var(--ag-foreground-color, #181d1f)',
       padding: '8px',
-      border: '1px solid var(--ag-border-color, #ccc)',
-      borderRadius: '6px',
-      boxShadow: 'var(--ag-popup-shadow, 0 3px 14px rgba(0,0,0,.3))',
-      minWidth: '240px',
+      border: 'var(--ag-borders, solid 1px) var(--ag-border-color, #babfc7)',
+      borderRadius: 'var(--ag-card-radius, var(--ag-border-radius, 4px))',
+      boxShadow: 'var(--ag-popup-shadow, 0 0 16px 0 rgba(0,0,0,.15))',
+      minWidth: 'calc(var(--ag-menu-min-width, 181px) - 2px)',
     });
+    // The popup lives on document.body, outside the themed grid root, so copy
+    // the theme's --ag-* tokens across to keep light/dark mode intact.
+    const themedAncestor = header?.closest<HTMLElement>('.ag-root-wrapper');
+    if (themedAncestor) inheritThemeTokens(themedAncestor, popup);
     if (rect) {
       popup.style.top = `${rect.bottom + 4}px`;
       popup.style.left = `${Math.max(8, rect.left)}px`;

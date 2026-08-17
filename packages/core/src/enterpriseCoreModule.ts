@@ -1,5 +1,6 @@
 import type { Module } from 'ag-grid-community';
 
+import { coreCss } from './coreCss';
 import { assertSingleCoreInstance } from './singletonGuard';
 import { VERSION } from './version';
 
@@ -20,6 +21,7 @@ import { VERSION } from './version';
 export const EnterpriseCoreModule: Module = {
   moduleName: 'EnterpriseCore',
   version: VERSION,
+  css: [coreCss],
   onRegister: () => {
     // Fires on every registration call and must be idempotent (iModule.ts).
     assertSingleCoreInstance();

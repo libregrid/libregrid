@@ -12,6 +12,9 @@ interface Row {
   product: string;
   sales: number;
   units: number;
+  category: string;
+  discount: number;
+  stock: number;
 }
 
 const COUNTRIES = ['United States', 'France', 'Japan', 'Brazil', 'Germany'] as const;
@@ -27,6 +30,9 @@ function makeRows(n: number): Row[] {
       product: PRODUCTS[i % PRODUCTS.length]!,
       sales: Math.round(((i * 7919) % 10000) + 100),
       units: ((i * 31) % 50) + 1,
+      category: PRODUCTS[(i + 1) % PRODUCTS.length]!,
+      discount: (i * 7) % 30,
+      stock: ((i * 53) % 200) + 10,
     });
   }
   return rows;
@@ -40,8 +46,11 @@ function makeRows(n: number): Row[] {
     <div class="lgr-page">
       <h1>Side Bar</h1>
       <p>
-        The side bar hosts tool panels. This demo shows a stub panel —
-        the real panels (columns, filters) arrive in Phases 3 and 6.
+        The side bar hosts tool panels. Register the
+        <code>ColumnsToolPanelModule</code> and
+        <code>FiltersToolPanelModule</code> modules and list the panel ids in
+        <code>sideBar.toolPanels</code>. This demo opens the real Columns and
+        Filters panels.
       </p>
 
       <mat-card appearance="outlined">
@@ -63,7 +72,8 @@ function makeRows(n: number): Row[] {
       <h2>API</h2>
       <div class="lgr-actions">
         <button mat-stroked-button (click)="toggleSideBar()">Toggle side bar</button>
-        <button mat-stroked-button (click)="openPanel()">Open stub panel</button>
+        <button mat-stroked-button (click)="openPanel('columns')">Open columns panel</button>
+        <button mat-stroked-button (click)="openPanel('filters')">Open filters panel</button>
         <button mat-stroked-button (click)="closePanel()">Close panel</button>
         <button mat-stroked-button (click)="setPosition('left')">Left</button>
         <button mat-stroked-button (click)="setPosition('right')">Right</button>
@@ -77,10 +87,10 @@ function makeRows(n: number): Row[] {
 
       <h2>How it works</h2>
       <p>
-        The side bar is provided by <code>&#64;libregrid/side-bar</code> (SideBarModule).
-        It registers a <code>sideBar</code> bean that manages state and a
-        <code>AG-SIDE-BAR</code> component selector for the UI shell.
-        Feature packages register tool panels via <code>registerToolPanel()</code>.
+        Register <code>&#64;libregrid/side-bar</code> and list the panel ids in
+        <code>sideBar.toolPanels</code>. Feature packages contribute their own panels, so
+        <em>Columns</em> and <em>Filters</em> appear here automatically once their modules
+        are installed.
       </p>
     </div>
   `,
@@ -97,18 +107,8 @@ export class SideBarDemo {
   private api: GridApi | null = null;
 
   private readonly sideBarDef: SideBarDef = {
-    toolPanels: [
-      {
-        id: 'stub',
-        labelKey: 'stub',
-        labelDefault: 'Stub Panel',
-        iconKey: 'columns',
-        width: 200,
-        minWidth: 160,
-        maxWidth: 280,
-      },
-    ],
-    defaultToolPanel: 'stub',
+    toolPanels: ['columns', 'filters'],
+    defaultToolPanel: 'columns',
   };
 
   protected readonly columnDefs: ColDef<Row>[] = [
@@ -117,6 +117,9 @@ export class SideBarDemo {
     { field: 'product', minWidth: 130 },
     { field: 'sales', type: 'numericColumn', minWidth: 110 },
     { field: 'units', type: 'numericColumn', minWidth: 100 },
+    { field: 'category', minWidth: 150 },
+    { field: 'discount', type: 'numericColumn', minWidth: 130 },
+    { field: 'stock', type: 'numericColumn', minWidth: 130 },
   ];
 
   protected readonly gridOptions: GridOptions<Row> = {
@@ -136,9 +139,9 @@ export class SideBarDemo {
     this.isVisible.set(!current);
   }
 
-  openPanel(): void {
-    this.api?.openToolPanel('stub');
-    this.openPanelId.set('stub');
+  openPanel(id: string): void {
+    this.api?.openToolPanel(id);
+    this.openPanelId.set(id);
   }
 
   closePanel(): void {

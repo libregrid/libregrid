@@ -71,7 +71,7 @@ function makeRows(count: number): Row[] {
       <h2>How it works</h2>
       <p>
         <code>&#64;libregrid/columns-tool-panel</code> registers the standard
-        <code>columns</code> tool panel with the Phase 1 side-bar host. The
+        <code>columns</code> tool panel with the side bar. The
         chooser uses that same panel implementation through
         <code>api.showColumnChooser()</code>.
       </p>
@@ -93,8 +93,8 @@ export class ColumnsDemo {
     { field: 'country', enableRowGroup: true, minWidth: 160 },
     { field: 'region', enableRowGroup: true, enablePivot: true, minWidth: 110 },
     { field: 'product', minWidth: 130 },
-    { field: 'sales', enableValue: true, minWidth: 110 },
-    { field: 'units', enableValue: true, minWidth: 100 },
+    { field: 'sales', enableValue: true, type: 'numericColumn', minWidth: 110 },
+    { field: 'units', enableValue: true, type: 'numericColumn', minWidth: 100 },
     { field: 'internalId', hide: true, suppressColumnsToolPanel: true },
   ];
 

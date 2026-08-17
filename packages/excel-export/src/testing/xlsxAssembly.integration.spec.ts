@@ -1,0 +1,322 @@
+import { describe, expect, it } from 'vitest';
+import type { ExcelStyle, ExcelWorksheet } from 'ag-grid-community';
+import { buildXlsx } from '../ooxml/xlsxBuilder';
+import { parsePart, unzipXlsx } from './xlsx';
+import { child, children, findAll } from './parseXml';
+
+/**
+ * Unzip-and-assert tier (phase 5.1): a real ZIP round-trip plus structural
+ * assertions on every part the skeleton writes.
+ */
+
+const fixture: ExcelWorksheet = {
+  name: 'Export',
+  table: {
+    columns: [],
+    rows: [
+      {
+        cells: [
+          { data: { type: 'String', value: 'Name' } },
+          { data: { type: 'String', value: 'Amount' } },
+        ],
+      },
+      {
+        cells: [
+          { data: { type: 'String', value: 'Widget "A" & <B>' } },
+          { data: { type: 'Number', value: '42' } },
+        ],
+      },
+      {
+        cells: [
+          { data: { type: 'String', value: 'Widget "A" & <B>' } },
+          { data: { type: 'Number', value: '43.5' } },
+        ],
+      },
+    ],
+  },
+};
+
+const EXPECTED_PARTS = [
+  '[Content_Types].xml',
+  '_rels/.rels',
+  'xl/_rels/workbook.xml.rels',
+  'xl/sharedStrings.xml',
+  'xl/workbook.xml',
+  'xl/worksheets/sheet1.xml',
+];
+
+describe('xlsx assembly (unzip-and-assert)', () => {
+  it('unzips to exactly the expected part set', () => {
+    const { bytes, parts } = buildXlsx([fixture]);
+    const unzipped = unzipXlsx(bytes);
+    expect(Object.keys(unzipped).sort()).toEqual(EXPECTED_PARTS);
+    // The ZIP must contain byte-for-byte what the parts map says it does.
+    for (const path of EXPECTED_PARTS) {
+      expect(unzipped[path], path).toBe(parts[path]);
+    }
+  });
+
+  it('declares content types for every part kind', () => {
+    const { parts } = buildXlsx([fixture]);
+    const types = parsePart(parts, '[Content_Types].xml');
+    expect(children(types, 'Default').map((node) => node.attrs.Extension)).toEqual(['rels', 'xml']);
+    const overrides = children(types, 'Override');
+    expect(
+      overrides.find((node) => node.attrs.PartName === '/xl/workbook.xml')!.attrs.ContentType,
+    ).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml');
+    expect(
+      overrides.find((node) => node.attrs.PartName === '/xl/worksheets/sheet1.xml')!.attrs
+        .ContentType,
+    ).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml');
+    expect(
+      overrides.find((node) => node.attrs.PartName === '/xl/sharedStrings.xml')!.attrs.ContentType,
+    ).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml');
+  });
+
+  it('links the package, workbook and worksheet relationships', () => {
+    const { parts } = buildXlsx([fixture]);
+    const rootRels = parsePart(parts, '_rels/.rels');
+    const officeDocument = child(rootRels, 'Relationship')!;
+    expect(officeDocument.attrs.Target).toBe('xl/workbook.xml');
+
+    const workbook = parsePart(parts, 'xl/workbook.xml');
+    const sheet = child(child(workbook, 'sheets')!, 'sheet')!;
+    expect(sheet.attrs.name).toBe('Export');
+    expect(sheet.attrs.sheetId).toBe('1');
+    expect(sheet.attrs['r:id']).toBe('rId1');
+
+    const workbookRels = parsePart(parts, 'xl/_rels/workbook.xml.rels');
+    const worksheetRel = children(workbookRels, 'Relationship').find(
+      (node) => node.attrs.Id === 'rId1',
+    )!;
+    expect(worksheetRel.attrs.Target).toBe('worksheets/sheet1.xml');
+  });
+
+  it('writes cells with correct refs, types and shared-string indexes', () => {
+    const { parts } = buildXlsx([fixture]);
+    const sheet = parsePart(parts, 'xl/worksheets/sheet1.xml');
+    expect(child(sheet, 'dimension')!.attrs.ref).toBe('A1:B3');
+
+    const rows = findAll(sheet, 'row');
+    expect(rows.map((row) => row.attrs.r)).toEqual(['1', '2', '3']);
+
+    const header = children(rows[0]!, 'c');
+    expect(header.map((c) => c.attrs.r)).toEqual(['A1', 'B1']);
+    expect(header.every((c) => c.attrs.t === 's')).toBe(true);
+
+    const second = children(rows[1]!, 'c');
+    expect(second[0]!.attrs).toMatchObject({ r: 'A2', t: 's' });
+    expect(child(second[0]!, 'v')!.text).toBe('2');
+    expect(second[1]!.attrs).toEqual({ r: 'B2' });
+    expect(child(second[1]!, 'v')!.text).toBe('42');
+
+    // Duplicate strings must reuse the same shared-string index.
+    const third = children(rows[2]!, 'c');
+    expect(child(third[0]!, 'v')!.text).toBe('2');
+    expect(child(third[1]!, 'v')!.text).toBe('43.5');
+  });
+
+  it('round-trips special characters through shared strings', () => {
+    const { parts } = buildXlsx([fixture]);
+    const strings = parsePart(parts, 'xl/sharedStrings.xml');
+    expect(strings.attrs.count).toBe('4');
+    expect(strings.attrs.uniqueCount).toBe('3');
+    const texts = children(strings, 'si').map((si) => child(si, 't')!.text);
+    expect(texts).toEqual(['Name', 'Amount', 'Widget "A" & <B>']);
+  });
+
+  it('handles booleans, dates, errors, unicode and strings over the cell limit', () => {
+    const long = 'y'.repeat(40000);
+    const typesSheet: ExcelWorksheet = {
+      name: 'Types',
+      table: {
+        columns: [],
+        rows: [
+          {
+            cells: [
+              { data: { type: 'Boolean', value: 'true' } },
+              { data: { type: 'DateTime', value: '1900-03-01' } },
+              { data: { type: 'Error', value: '#N/A' } },
+              { data: { type: 'String', value: 'emoji \ud83d\ude80 RTL \u0645\u0631\u062d\u0628\u0627' } },
+              { data: { type: 'String', value: long } },
+            ],
+          },
+        ],
+      },
+    };
+    const { parts } = buildXlsx([typesSheet]);
+    const sheetXml = parsePart(parts, 'xl/worksheets/sheet1.xml');
+    const cells = children(findAll(sheetXml, 'row')[0]!, 'c');
+    expect(cells.map((c) => c.attrs.t)).toEqual(['b', undefined, 'e', 's', 's']);
+    expect(child(cells[0]!, 'v')!.text).toBe('1');
+    expect(child(cells[1]!, 'v')!.text).toBe('61');
+    expect(child(cells[2]!, 'v')!.text).toBe('#N/A');
+    const strings = parsePart(parts, 'xl/sharedStrings.xml');
+    const texts = children(strings, 'si').map((si) => child(si, 't')!.text);
+    expect(texts[0]).toBe('emoji \ud83d\ude80 RTL \u0645\u0631\u062d\u0628\u0627');
+    expect(texts[1]).toHaveLength(32767);
+  });
+
+  it('resolves cell style indexes to the intended font, fill, border and number format', () => {
+    const styles: ExcelStyle[] = [
+      {
+        id: 'header',
+        font: { bold: true, color: '#FFFFFF' },
+        interior: { pattern: 'Solid', color: '#4472C4' },
+        borders: { borderBottom: { lineStyle: 'Continuous', weight: 1 } },
+      },
+      { id: 'money', numberFormat: { format: '"$"#,##0.00' } },
+    ];
+    const styledSheet: ExcelWorksheet = {
+      name: 'Styled',
+      table: {
+        columns: [],
+        rows: [
+          {
+            cells: [
+              { data: { type: 'String', value: 'Total' }, styleId: 'header' },
+              { data: { type: 'Number', value: '1234.5' }, styleId: 'money' },
+            ],
+          },
+        ],
+      },
+    };
+    const { bytes, parts } = buildXlsx([styledSheet], { styles });
+    const unzipped = unzipXlsx(bytes);
+    expect(unzipped['xl/styles.xml']).toBe(parts['xl/styles.xml']);
+
+    const sheetCells = children(findAll(parsePart(parts, 'xl/worksheets/sheet1.xml'), 'row')[0]!, 'c');
+    expect(sheetCells.map((c) => c.attrs.s)).toEqual(['1', '2']);
+
+    const stylesXml = parsePart(parts, 'xl/styles.xml');
+    const xfs = children(child(stylesXml, 'cellXfs')!, 'xf');
+    expect(xfs).toHaveLength(3);
+    // Header style: bold white font, blue solid fill, medium bottom border.
+    expect(xfs[1]!.attrs).toMatchObject({ fontId: '1', fillId: '2', borderId: '1', numFmtId: '0' });
+    const headerFont = children(child(stylesXml, 'fonts')!, 'font')[1]!;
+    expect(child(headerFont, 'b')).toBeDefined();
+    expect(child(headerFont, 'color')!.attrs.rgb).toBe('FFFFFFFF');
+    const headerFill = children(child(stylesXml, 'fills')!, 'fill')[2]!;
+    expect(child(child(headerFill, 'patternFill')!, 'fgColor')!.attrs.rgb).toBe('FF4472C4');
+    const headerBorder = children(child(stylesXml, 'borders')!, 'border')[1]!;
+    expect(child(headerBorder, 'bottom')!.attrs.style).toBe('medium');
+    // Money style: custom number format id 164.
+    expect(xfs[2]!.attrs.numFmtId).toBe('164');
+    expect(children(child(stylesXml, 'numFmts')!, 'numFmt')[0]!.attrs).toEqual({
+      numFmtId: '164',
+      formatCode: '"$"#,##0.00',
+    });
+  });
+
+  it('writes merged cells, column widths, row heights and freeze panes', () => {
+    const layoutSheet: ExcelWorksheet = {
+      name: 'Layout',
+      table: {
+        columns: [{ width: 25 }, { width: 25 }, { width: 8 }],
+        rows: [
+          {
+            cells: [{ data: { type: 'String', value: 'Report' }, mergeAcross: 2 }, {}, {}],
+            height: 30,
+          },
+          {
+            cells: [
+              { data: { type: 'String', value: 'a' } },
+              { data: { type: 'Number', value: '1' } },
+              { data: { type: 'Number', value: '2' } },
+            ],
+          },
+        ],
+      },
+    };
+    const { parts } = buildXlsx([layoutSheet], {
+      worksheets: [{ freezeColumns: 1, freezeRows: 1, rightToLeft: true }],
+    });
+    const sheetXml = parsePart(parts, 'xl/worksheets/sheet1.xml');
+
+    const colNodes = children(child(sheetXml, 'cols')!, 'col');
+    expect(colNodes.map((c) => c.attrs)).toEqual([
+      { width: '25', customWidth: '1', min: '1', max: '2' },
+      { width: '8', customWidth: '1', min: '3', max: '3' },
+    ]);
+
+    const rows = findAll(sheetXml, 'row');
+    expect(rows[0]!.attrs).toEqual({ r: '1', ht: '30', customHeight: '1' });
+    const secondRowCells = children(rows[1]!, 'c');
+    expect(secondRowCells.map((c) => c.attrs.r)).toEqual(['A2', 'B2', 'C2']);
+
+    const merge = child(sheetXml, 'mergeCells')!;
+    expect(merge.attrs.count).toBe('1');
+    expect(children(merge, 'mergeCell')[0]!.attrs.ref).toBe('A1:C1');
+
+    const sheetView = child(child(sheetXml, 'sheetViews')!, 'sheetView')!;
+    expect(sheetView.attrs.rightToLeft).toBe('1');
+    expect(child(sheetView, 'pane')!.attrs).toEqual({
+      xSplit: '1',
+      ySplit: '1',
+      topLeftCell: 'B2',
+      activePane: 'bottomRight',
+      state: 'frozen',
+    });
+  });
+
+  it('preserves grouped-row outline levels and collapse state', () => {
+    const groupedSheet: ExcelWorksheet = {
+      name: 'Grouped',
+      table: {
+        columns: [{ width: 20, outlineLevel: 1 }, { width: 20, outlineLevel: 1 }],
+        rows: [
+          {
+            cells: [
+              { data: { type: 'String', value: 'Europe' } },
+              { data: { type: 'String', value: '' } },
+            ],
+            outlineLevel: 1,
+            collapsed: true,
+          },
+          {
+            cells: [
+              { data: { type: 'String', value: 'Germany' } },
+              { data: { type: 'Number', value: '10' } },
+            ],
+            outlineLevel: 2,
+            hidden: true,
+          },
+          {
+            cells: [
+              { data: { type: 'String', value: 'Asia' } },
+              { data: { type: 'String', value: '' } },
+            ],
+            outlineLevel: 1,
+            collapsed: false,
+          },
+          {
+            cells: [
+              { data: { type: 'String', value: 'Japan' } },
+              { data: { type: 'Number', value: '20' } },
+            ],
+            outlineLevel: 2,
+          },
+        ],
+      },
+    };
+    const { bytes, parts } = buildXlsx([groupedSheet]);
+    const unzipped = unzipXlsx(bytes);
+    expect(unzipped['xl/worksheets/sheet1.xml']).toBe(parts['xl/worksheets/sheet1.xml']);
+    const sheetXml = parsePart(parts, 'xl/worksheets/sheet1.xml');
+    const rows = findAll(sheetXml, 'row');
+    expect(rows.map((row) => row.attrs)).toEqual([
+      { r: '1', outlineLevel: '1', collapsed: '1' },
+      { r: '2', outlineLevel: '2', hidden: '1' },
+      { r: '3', outlineLevel: '1' },
+      { r: '4', outlineLevel: '2' },
+    ]);
+    const colNodes = children(child(sheetXml, 'cols')!, 'col');
+    expect(colNodes[0]!.attrs).toEqual({
+      width: '20',
+      customWidth: '1',
+      outlineLevel: '1',
+      min: '1',
+      max: '2',
+    });
+  });
+});

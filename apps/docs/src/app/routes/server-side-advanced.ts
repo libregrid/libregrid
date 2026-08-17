@@ -52,7 +52,7 @@ export class ServerSideAdvancedDemo {
     { field: 'desk', rowGroup: true, hide: true, enableRowGroup: true },
     { field: 'strategy', rowGroup: true, hide: true, enableRowGroup: true },
     { field: 'month', pivot: true, hide: true, enablePivot: true },
-    { field: 'quantity', aggFunc: 'sum', enableValue: true, sortable: true, filter: true },
+    { field: 'quantity', aggFunc: 'sum', enableValue: true, type: 'numericColumn', sortable: true, filter: true },
   ];
   protected readonly gridOptions: GridOptions<Trade> = {
     rowModelType: 'serverSide',

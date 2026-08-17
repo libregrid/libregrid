@@ -36,7 +36,10 @@ describe('ColumnMenuFactory', () => {
     });
     const column = createColumn(false, ['column']) as never;
 
-    expect(bean.buildColumnMenuItems(column, 'columnChooser')).toEqual([{ name: 'Custom item' }]);
+    expect(bean.buildColumnMenuItems(column, 'columnChooser')).toEqual([
+      { name: '__separator__' },
+      { name: 'Custom item' },
+    ]);
     expect(mapMixed).toHaveBeenCalledWith(['custom'], expect.objectContaining({ column }));
     expect(bean.isMenuEnabled(createColumn(false) as never)).toBe(true);
     expect(bean.isMenuEnabled(createColumn(true) as never)).toBe(false);
@@ -51,9 +54,15 @@ describe('ColumnMenuFactory', () => {
       beans: { gridApi: {}, menuItemMapper: { mapMixed, mapItems } as unknown as MenuItemMapper },
     });
 
-    expect(bean.buildColumnMenuItems(column)).toEqual([{ name: 'Column item' }]);
+    expect(bean.buildColumnMenuItems(column)).toEqual([
+      { name: 'Column item' },
+      { name: '__separator__' },
+    ]);
     gos.set('getColumnMenuItems', undefined);
-    expect(bean.buildColumnMenuItems(null)).toEqual([{ name: 'Default item' }]);
+    expect(bean.buildColumnMenuItems(null)).toEqual([
+      { name: 'Default item' },
+      { name: '__separator__' },
+    ]);
     expect(mapItems).toHaveBeenCalledOnce();
   });
 

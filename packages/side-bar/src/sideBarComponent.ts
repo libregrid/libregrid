@@ -1,4 +1,5 @@
 import { Component, type ISideBar, type SideBarDef, type IToolPanel, type SideBarState, type ComponentSelector } from 'ag-grid-community';
+import { iconSvg } from '@libregrid/core';
 import type { SideBarService } from './sideBarSvc';
 import { renderSideBar } from './sideBarRenderer';
 
@@ -25,8 +26,10 @@ export class SideBarComponent extends Component implements ISideBar {
     this.setTemplate(`
         <div class="lgr-side-bar" role="complementary" aria-label="Side bar">
           <div class="lgr-side-bar-buttons" role="tablist"></div>
-          <div class="lgr-side-bar-resize-handle" role="separator" aria-label="Resize side bar" aria-orientation="vertical"></div>
-          <div class="lgr-side-bar-panel" role="tabpanel"></div>
+          <div class="lgr-side-bar-panel" role="tabpanel">
+            <div class="lgr-side-bar-resize-handle" role="separator" aria-label="Resize side bar" aria-orientation="vertical"></div>
+            <div class="lgr-side-bar-panel-content"></div>
+          </div>
       </div>
     `);
   }
@@ -48,6 +51,8 @@ export class SideBarComponent extends Component implements ISideBar {
       (panel as IToolPanel & { destroy?: () => void }).destroy?.();
     }
     this.panels.clear();
+    this.openedPanelId = null;
+    this.applyGridInset();
     super.destroy();
   }
 
@@ -78,6 +83,11 @@ export class SideBarComponent extends Component implements ISideBar {
   public override setDisplayed(show: boolean): void {
     this._displayed = show;
     this.setVisible(show);
+    // A hidden bar must not leave its scroll inset on the grid.
+    if (!show) {
+      this.openedPanelId = null;
+    }
+    this.applyGridInset();
     this.refreshRenderer();
   }
 
@@ -85,6 +95,7 @@ export class SideBarComponent extends Component implements ISideBar {
     this.position = position ?? 'right';
     this.toggleCss('lgr-side-bar-left', this.position === 'left');
     this.toggleCss('lgr-side-bar-right', this.position === 'right');
+    this.applyGridInset();
     this.refreshRenderer();
   }
 
@@ -97,6 +108,7 @@ export class SideBarComponent extends Component implements ISideBar {
     this.openedPanelId = key;
     this.panelWidth = this.panelWidths.get(key) ?? this.initialPanelWidth(key);
     this.renderPanel(key, _parent);
+    this.getGui().querySelector('.lgr-side-bar-panel')?.classList.add('lgr-side-bar-panel-open');
     this.applyPanelWidth();
     this.refreshRenderer();
     if (previousPanelId !== key) {
@@ -114,6 +126,10 @@ export class SideBarComponent extends Component implements ISideBar {
     this.openedPanelId = null;
     this.activePanelHost?.replaceChildren();
     this.activePanelHost = null;
+    const panelEl = this.getGui().querySelector<HTMLElement>('.lgr-side-bar-panel');
+    panelEl?.classList.remove('lgr-side-bar-panel-open');
+    panelEl?.setAttribute('aria-hidden', 'true');
+    this.applyGridInset();
     this.refreshRenderer();
     if (previousPanelId) this.dispatchToolPanelVisibleChanged(previousPanelId, false);
   }
@@ -147,18 +163,32 @@ export class SideBarComponent extends Component implements ISideBar {
     this.setDisplayed(state.visible);
   }
 
+  private panelButtonId(key: string): string {
+    return `lgr-side-bar-${key}-button`;
+  }
+
+  private panelHostId(key: string): string {
+    return `lgr-side-bar-${key}-panel`;
+  }
+
   private renderPanel(key: string, parent?: HTMLElement | null): void {
-    const panelEl = this.getGui().querySelector('.lgr-side-bar-panel');
-    if (!panelEl) return;
+    const panelEl = this.getGui().querySelector<HTMLElement>('.lgr-side-bar-panel');
+    const contentEl = this.getGui().querySelector<HTMLElement>('.lgr-side-bar-panel-content');
+    if (!panelEl || !contentEl) return;
+    // Mirror the enterprise panel host wiring: the tabpanel is labelled by
+    // the active tab button and hidden from the tree while closed.
+    panelEl.id = this.panelHostId(key);
+    panelEl.setAttribute('aria-labelledby', this.panelButtonId(key));
+    panelEl.setAttribute('aria-hidden', 'false');
 
     // Find the panel definition
     const panelDef = this.sideBarSvc.getToolPanelDefs().find((d) => d.id === key);
     if (!panelDef) {
-      panelEl.innerHTML = `<div class="lgr-tool-panel-missing">Panel '${key}' not found</div>`;
+      contentEl.innerHTML = `<div class="lgr-tool-panel-missing">Panel '${key}' not found</div>`;
       return;
     }
 
-    const target = parent ?? panelDef.parent ?? panelEl as HTMLElement;
+    const target = parent ?? panelDef.parent ?? contentEl;
     this.activePanelHost?.replaceChildren();
     target.innerHTML = '';
     this.activePanelHost = target;
@@ -206,6 +236,84 @@ export class SideBarComponent extends Component implements ISideBar {
     const panelEl = this.getGui().querySelector<HTMLElement>('.lgr-side-bar-panel');
     if (!panelEl) return;
     panelEl.style.width = `${this.clampPanelWidth(this.panelWidth)}px`;
+    this.applyGridInset();
+  }
+
+  /**
+   * Keep the grid's scrollbars in sync with the open panel.
+   *
+   * The panel overlays the columns, and the columns never re-layout or
+   * shift. The grid's own horizontal-scroll math is
+   * contentWidth - viewport.clientWidth, so the viewport's flex width is
+   * reduced by the panel width through a margin (no JS resize fires), while
+   * the rows container keeps its grid-assigned width with flex-shrink: 0 —
+   * the columns stay put, the scroll range grows, and the grid's scrollbar
+   * service renders the thumb and syncs natively. The scrollbars themselves
+   * are pinned beside the panel: the vertical scrollbar shifts left of the
+   * panel and the horizontal scrollbar shortens to the panel's edge. All
+   * originals are restored when the panel closes.
+   */
+  private applyGridInset(): void {
+    const wrapper = this.getGui().closest<HTMLElement>('.ag-root-wrapper');
+    const viewport = wrapper?.querySelector<HTMLElement>('.ag-grid-viewport');
+    if (!viewport) {
+      // The side bar is not attached to the grid DOM yet (panel opened via
+      // defaultToolPanel during grid construction) — retry next frame.
+      if (this.openedPanelId) {
+        requestAnimationFrame(() => this.applyGridInset());
+      }
+      return;
+    }
+    const rowsContainer = wrapper?.querySelector<HTMLElement>('.ag-grid-scrolling-container');
+    const vertical = wrapper?.querySelector<HTMLElement>('.ag-body-vertical-scroll');
+    const horizontal = wrapper?.querySelector<HTMLElement>('.ag-body-horizontal-scroll');
+
+    if (viewport.dataset['lgrSaved'] !== 'true') {
+      viewport.dataset['lgrMarginLeft'] = viewport.style.marginLeft;
+      viewport.dataset['lgrMarginRight'] = viewport.style.marginRight;
+      if (rowsContainer) rowsContainer.dataset['lgrFlexShrink'] = rowsContainer.style.flexShrink;
+      if (vertical) vertical.dataset['lgrMarginRight'] = vertical.style.marginRight;
+      if (horizontal) {
+        horizontal.dataset['lgrWidth'] = horizontal.style.width;
+        horizontal.dataset['lgrMarginLeft'] = horizontal.style.marginLeft;
+      }
+      viewport.dataset['lgrSaved'] = 'true';
+    }
+
+    const width = this.openedPanelId ? this.clampPanelWidth(this.panelWidth) : 0;
+    if (width === 0) {
+      viewport.style.marginLeft = viewport.dataset['lgrMarginLeft'] ?? '';
+      viewport.style.marginRight = viewport.dataset['lgrMarginRight'] ?? '';
+      if (rowsContainer) rowsContainer.style.flexShrink = rowsContainer.dataset['lgrFlexShrink'] ?? '';
+      if (vertical) vertical.style.marginRight = vertical.dataset['lgrMarginRight'] ?? '';
+      if (horizontal) {
+        horizontal.style.width = horizontal.dataset['lgrWidth'] ?? '';
+        horizontal.style.marginLeft = horizontal.dataset['lgrMarginLeft'] ?? '';
+      }
+      return;
+    }
+
+    if (this.position === 'left') {
+      viewport.style.marginLeft = `${width}px`;
+      viewport.style.marginRight = '';
+    } else {
+      viewport.style.marginLeft = '';
+      viewport.style.marginRight = `${width}px`;
+    }
+    if (rowsContainer) rowsContainer.style.flexShrink = '0';
+    if (vertical) {
+      // Right-positioned panel: pin the vertical scrollbar left of the
+      // panel. Left-positioned panel: the scrollbar stays at the grid's
+      // right edge, uncovered — restore its original margin.
+      vertical.style.marginRight =
+        this.position === 'left'
+          ? (vertical.dataset['lgrMarginRight'] ?? '')
+          : `${width}px`;
+    }
+    if (horizontal) {
+      horizontal.style.width = `calc(100% - ${width}px)`;
+      horizontal.style.marginLeft = this.position === 'left' ? `${width}px` : '';
+    }
   }
 
   private clampPanelWidth(width: number): number {
@@ -217,7 +325,7 @@ export class SideBarComponent extends Component implements ISideBar {
 
   private initialPanelWidth(key: string): number {
     const panel = this.sideBarSvc.getToolPanelDefs().find((item) => item.id === key);
-    return this.clampPanelWidth(panel?.width ?? 200);
+    return this.clampPanelWidth(panel?.width ?? 250);
   }
 
   private renderButtons(): void {
@@ -230,9 +338,24 @@ export class SideBarComponent extends Component implements ISideBar {
       button.className = 'lgr-side-bar-button';
       button.type = 'button';
       button.setAttribute('role', 'tab');
-      button.setAttribute('aria-label', panel.labelDefault ?? panel.labelKey ?? panel.id);
+      button.id = this.panelButtonId(panel.id);
+      button.setAttribute('aria-controls', this.panelHostId(panel.id));
+      const label = panel.labelDefault ?? panel.labelKey ?? panel.id;
+      button.setAttribute('aria-label', label);
       button.setAttribute('aria-expanded', String(this.openedPanelId === panel.id));
-      button.textContent = panel.labelDefault ?? panel.labelKey ?? panel.id;
+      button.title = label;
+      const svg = panel.iconKey ? iconSvg(panel.iconKey as never) : null;
+      if (svg) {
+        const icon = document.createElement('span');
+        icon.className = 'lgr-side-bar-button-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.innerHTML = svg;
+        button.appendChild(icon);
+      }
+      const labelEl = document.createElement('span');
+      labelEl.className = 'lgr-side-bar-button-label';
+      labelEl.textContent = label;
+      button.appendChild(labelEl);
       button.addEventListener('click', () => {
         if (this.openedPanelId === panel.id) {
           this.sideBarSvc.close('sideBarButtonClicked');

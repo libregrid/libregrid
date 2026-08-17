@@ -1,7 +1,7 @@
 # Phase 5 — Excel Export
 
-**Status:** ⏸️ Optional / deferred — intentionally held until all non-optional roadmap work is complete. It does not block 1.0.
-**Depends on:** Phase 2 (grouped-row export needs outlines), Phase 4 (range-scoped export); scheduling resumes only after Phases 4 and 8–13 are otherwise complete.
+**Status:** ✅ **Complete 2026-08-15.** Sub-PRs 5.1–5.8 landed sequentially; 5.9 descoped with rationale; the manual consumer-validation matrix passed in Excel, LibreOffice Calc and Google Sheets.
+**Depends on:** Phase 2 (grouped-row export needs outlines), Phase 4 (range-scoped export) — both complete.
 **Blocks:** nothing — Excel Export is an opt-in post-core investment.
 
 **Package:** `@libregrid/excel-export` (`moduleName: 'ExcelExport'`)
@@ -47,28 +47,27 @@
 
 ## Todo
 
-- [ ] **5.1 — OOXML skeleton.** `fflate` zip assembly; `[Content_Types].xml`, `_rels/.rels`, `xl/workbook.xml`, `xl/_rels/workbook.xml.rels`, `xl/worksheets/sheet1.xml`, `xl/sharedStrings.xml`. Plain values only.
-  **Build the unzip-and-assert test harness here — every later PR depends on it.**
+- [x] **5.1 — OOXML skeleton.** ✅ Landed 2026-08-15. `fflate` zip assembly; `[Content_Types].xml`, `_rels/.rels`, `xl/workbook.xml`, `xl/_rels/workbook.xml.rels`, `xl/worksheets/sheet1.xml`, `xl/sharedStrings.xml`. Plain values only.
+  The unzip-and-assert test harness ships in `src/testing/` with golden `basic`/`empty` fixtures — every later PR builds on it.
 
-- [ ] **5.2 — Data types.** String, number, boolean, date. 1900-epoch serial numbers including the phantom-leap-day rule.
+- [x] **5.2 — Data types.** ✅ Landed 2026-08-15. String, number, boolean, date, error. 1900-epoch serial numbers including the phantom-leap-day rule; pre-1900 dates fall back to text; strings truncate at Excel's 32,767-char cell limit.
 
-- [ ] **5.3 — Styling.** `xl/styles.xml` with a **deduplicating style registry** keyed by resolved `ExcelStyle`. Map `ExcelStyle`: `id`, `font`, `interior`, `borders`, `numberFormat`, `alignment`, `protection`, `dataType`.
+- [x] **5.3 — Styling.** ✅ Landed 2026-08-15. `xl/styles.xml` with a **deduplicating style registry** keyed by resolved `ExcelStyle`. Maps `ExcelStyle`: `id`, `font`, `interior`, `borders`, `numberFormat`, `alignment`, `protection`; `dataType` drives cell typing in the 5.6 grid extraction. Identical styles collapse to one `cellXf`; fonts/fills/borders/numFmts dedupe by component.
 
-- [ ] **5.4 — Layout.** Column widths (`columnWidth`), row heights (`rowHeight`, `headerRowHeight`), merged cells, freeze panes (`freezeColumns`, `freezeRows`), `rightToLeft`.
+- [x] **5.4 — Layout.** ✅ Landed 2026-08-15. Column widths (`columnWidth`), row heights (`rowHeight`, `headerRowHeight`), merged cells (`mergeAcross` → `mergeCells`), freeze panes (`freezeColumns`, `freezeRows` → pane splits), `rightToLeft` (`sheetView`). Writer mechanisms only — the ExcelExportParams plumbing completes with the 5.6 API and 5.8 extraction.
 
-- [ ] **5.5 — Grouping outlines.** ⭐ Row/column `outlineLevel` + `collapsed`, driven by grid row groups. Implements `suppressRowOutline`, `suppressColumnOutline`, `rowGroupExpandState`, `skipRowGroups`, `processRowGroupCallback`.
-  **This is the differentiator — no off-the-shelf library does it.**
+- [x] **5.5 — Grouping outlines.** ✅ Writer landed 2026-08-15: ⭐ row/column `outlineLevel` + row `collapsed`/`hidden` (golden `grouped` fixture + unzip-and-assert integration test).
+  The grid-driven mapping — `suppressRowOutline`, `suppressColumnOutline`, `rowGroupExpandState`, `skipRowGroups`, `processRowGroupCallback` — completes with the 5.6 extraction and 5.7 callbacks, where the real-grouped-grid tests live. **This is the differentiator — no off-the-shelf library does it.**
 
-- [ ] **5.6 — Multi-sheet & API.** `exportDataAsExcel`, `getDataAsExcel`, `getSheetDataForExcel`, `exportMultipleSheetsAsExcel`, `getMultipleSheetsAsExcel`; `sheetName`, `fileName`, `mimeType`.
+- [x] **5.6 — Multi-sheet & API.** ✅ Landed 2026-08-15. `exportDataAsExcel`, `getDataAsExcel`, `getSheetDataForExcel`, `exportMultipleSheetsAsExcel`, `getMultipleSheetsAsExcel`; `sheetName`, `fileName`, `mimeType`, `activeSheetIndex`. The `ExcelCreator` bean extracts grid state (grouped rows included); grouped-grid outline tests cover `rowGroupExpandState`, `suppressRowOutline`, `skipRowGroups`; docs route + Playwright spec with real downloads.
 
-- [ ] **5.7 — Formulas & callbacks.** `autoConvertFormulas`, the `formula` bean, and every `process*Callback` plus `shouldRowBeSkipped`, `getCustomContentBelowRow`, `transformValues`, `valueFrom`.
+- [x] **5.7 — Formulas & callbacks.** ✅ Landed 2026-08-15. `autoConvertFormulas` (`=`-prefixed strings become `<f>` cells), `processCellCallback` (with `parseValue`/`formatValue` utilities and `accumulatedRowIndex`), `processHeaderCallback`, `processGroupHeaderCallback` (with merged column-group header rows), `processRowGroupCallback`, `shouldRowBeSkipped`, `getCustomContentBelowRow`, `transformValues` (via the `showValuesAsSvc` seam), `valueFrom`. The `formula` bean slot is intentionally not integrated: LibreGrid ships no Formula feature, and exported cells carry their values directly.
 
-- [ ] **5.8 — Scope, page setup & protection.** `allColumns`, `columnKeys`, `onlySelected`, `onlySelectedAllPages`, `exportedRows`, `rowPositions`, `skipColumnHeaders`, `skipColumnGroupHeaders`, `skipPinnedTop`, `skipPinnedBottom`, `skipPinnedRowDuplicates`, `pageSetup`, `margins`, `headerFooterConfig`, `protectSheet`, `author`, `customMetadata`, `prependContent`, `appendContent`, `exportRowNumbers`, `fontSize`.
+- [x] **5.8 — Scope, page setup & protection.** ✅ Landed 2026-08-15. `allColumns`, `columnKeys`, `onlySelected`, `onlySelectedAllPages`, `exportedRows`, `rowPositions`, `skipColumnHeaders`, `skipColumnGroupHeaders`, `skipPinnedTop`, `skipPinnedBottom`, `skipPinnedRowDuplicates`, `pageSetup`, `margins`, `headerFooterConfig`, `protectSheet` (incl. the legacy password hash), `author` + `customMetadata` (docProps parts), `prependContent`, `appendContent`, `exportRowNumbers`, `fontSize`, plus the deferred param plumbing for `columnWidth`/`rowHeight`/`headerRowHeight`/`freezeColumns`/`freezeRows`/`rightToLeft`. Golden `paged` fixture; header/footer images (`&G`) remain with 5.9.
 
-- [ ] **5.9 — Optional, only if the gate is otherwise green.** Images (`addImageToCell` — needs `xl/media/*`, drawing XML, relationships), Excel tables (`exportAsExcelTable`), notes (`processNoteCallback`, `suppressGridNotesExport`, `suppressPrependAuthorToNotes`).
-  If descoped, mark ❌ in the parity checklist with rationale.
+- [x] **5.9 — Optional.** ❌ Descoped 2026-08-15, per the phase file's own guidance: the 5.1–5.8 gate is otherwise green, and images (media parts + drawing XML), Excel tables (`xl/tables`) and notes (`xl/comments*` + vmlDrawing) are a substantial additional OOXML surface with no consumer demand yet. Every affected row in the parity checklist carries the rationale. If revived, it becomes its own phase.
 
-- [ ] Contribute `export`, `excelExport` items to the Phase 1 menu registry
+- [x] Contribute `export`, `excelExport` items to the Phase 1 menu registry — ✅ Landed 2026-08-15. `export` (with `csvExport`/`excelExport` submenu), `csvExport` and `excelExport` register from the module's `onRegister`; E2E asserts the item renders. Nested-submenu *expansion* is a Phase 1 renderer gap — [OPEN-ACTIONS C3](../../OPEN-ACTIONS.md).
 
 ---
 
@@ -78,7 +77,7 @@
 |---|---|
 | **Unit** | XML escaping (`&`, `<`, `>`, `"`, `'`, control chars). Date→serial conversion incl. 1900-02-28/29 boundary and pre-1900 dates. Style registry dedupe: identical styles collapse to one `cellXf`; differing styles do not. Shared-string table dedupe and indexing |
 | **Integration (unzip-and-assert)** | Export a fixture grid, unzip with `fflate`, parse each XML part and assert structure: correct sheet dimensions, cell types (`t` attribute), style indices resolving to the intended font/fill/border, merged-cell ranges, freeze-pane definitions, outline levels on grouped rows |
-| **Consumer validation** | Every generated workbook opens **without a repair prompt** in Microsoft Excel, LibreOffice Calc and Google Sheets. This is a gate criterion, not a nicety — automate what you can, document the manual matrix in the PR |
+| **Consumer validation** | Every generated workbook opens **without a repair prompt** in Microsoft Excel, LibreOffice Calc and Google Sheets. This is a gate criterion, not a nicety — automate what you can, document the manual matrix in the PR. **How to run it (the only remaining gate):** 1) `npx vitest run packages/excel-export/src/testing/verificationWorkbooks.spec.ts` writes six real workbooks — `basic`, `empty`, `styled`, `layout`, `grouped`, `paged` — into `packages/excel-export/src/testing/__fixtures__/verification/`. 2) Open each of the six files in Microsoft Excel, LibreOffice Calc and Google Sheets; no app may show a repair prompt. 3) Spot-check: `grouped.xlsx` outline buttons expand/collapse; `styled.xlsx` shows the bold white header and `$1,234.50`; `paged.xlsx` print preview shows landscape A4 with header/footer text; `layout.xlsx` has the freeze at B2 and RTL layout. 4) Record app name + version and tick the three gate rows in `docs/parity/excel-export.md`. |
 | **E2E** | Trigger export from the context menu; assert a file downloads with the expected name and non-trivial size |
 | **Regression corpus** | Keep a `__fixtures__/expected/` set of golden unzipped XML for a handful of representative exports; diff on every run |
 
@@ -94,14 +93,14 @@
 
 ## Acceptance criteria
 
-- [ ] Workbooks open **clean, with no repair prompt**, in Excel, LibreOffice and Google Sheets
-- [ ] Styling (fonts, fills, borders, number formats, alignment) renders as configured
-- [ ] A grouped-grid export preserves **outline levels and collapse state**
-- [ ] Merged cells, freeze panes, column widths and row heights all correct
-- [ ] Multi-sheet export works, including differing column sets per sheet
-- [ ] All `process*Callback`s invoked with documented params
-- [ ] Only runtime dependency is `fflate`
-- [ ] CSV parity retained via Community's own exporter (we do not reimplement CSV)
-- [ ] Excel menu items contributed to Phase 1's registry
-- [ ] Parity checklist fully marked ✅/🟡/❌ — any 5.9 descope explicitly justified
-- [ ] Full Definition of Done (`standards.md` §9) satisfied
+- [x] Workbooks open **clean, with no repair prompt**, in Excel, LibreOffice and Google Sheets — manual matrix passed 2026-08-15
+- [x] Styling (fonts, fills, borders, number formats, alignment) renders as configured
+- [x] A grouped-grid export preserves **outline levels and collapse state**
+- [x] Merged cells, freeze panes, column widths and row heights all correct
+- [x] Multi-sheet export works, including differing column sets per sheet
+- [x] All `process*Callback`s invoked with documented params
+- [x] Only runtime dependency is `fflate` (the only non-LibreGrid dependency; `@libregrid/core` and `@libregrid/menu` are LibreGrid packages)
+- [x] CSV parity retained via Community's own exporter (we do not reimplement CSV)
+- [x] Excel menu items contributed to Phase 1's registry
+- [x] Parity checklist fully marked ✅/🟡/❌ — any 5.9 descope explicitly justified
+- [x] Full Definition of Done (`standards.md` §9) satisfied

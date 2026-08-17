@@ -12,11 +12,13 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'grid', label: 'Grid (Community)' },
   { path: 'menus', label: 'Menus' },
   { path: 'side-bar', label: 'Side bar' },
+  { path: 'toolbar', label: 'Toolbar' },
   { path: 'row-grouping', label: 'Row Grouping' },
   { path: 'pivot', label: 'Pivot' },
   { path: 'columns', label: 'Columns' },
   { path: 'filters', label: 'Filters' },
   { path: 'selection', label: 'Selection & Clipboard' },
+  { path: 'excel-export', label: 'Excel Export' },
   { path: 'server-side', label: 'Server-side rows' },
   { path: 'server-side-advanced', label: 'SSRM Advanced' },
   { path: 'viewport', label: 'Viewport rows' },
@@ -55,6 +57,11 @@ export const routes: Routes = [
     title: 'LibreGrid — Side Bar',
   },
   {
+    path: 'toolbar',
+    loadComponent: () => import('./routes/toolbar').then((m) => m.ToolbarDemo),
+    title: 'LibreGrid — Toolbar',
+  },
+  {
     path: 'row-grouping',
     loadComponent: () => import('./routes/row-grouping').then((m) => m.RowGroupingDemo),
     title: 'LibreGrid — Row Grouping',
@@ -78,6 +85,11 @@ export const routes: Routes = [
     path: 'selection',
     loadComponent: () => import('./routes/selection').then((m) => m.SelectionDemo),
     title: 'LibreGrid — Selection & Clipboard',
+  },
+  {
+    path: 'excel-export',
+    loadComponent: () => import('./routes/excel-export').then((m) => m.ExcelExportDemo),
+    title: 'LibreGrid — Excel Export',
   },
   {
     path: 'server-side',

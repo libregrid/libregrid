@@ -6,6 +6,7 @@ export interface MenuActionParams {
   node: IRowNode | null;
   value: unknown;
   api: GridApi;
+  context?: unknown;
 }
 
 /** Factory that produces a MenuItemDef (or null to hide the item). */

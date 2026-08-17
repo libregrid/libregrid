@@ -26,6 +26,8 @@ export interface LibreGridMaterialThemeOptions {
   root?: HTMLElement;
   /** Angular Material's Sass-time density scale. It cannot be read from CSS at runtime. */
   density?: number;
+  /** Initial accent theme name, exposed as `data-lgr-accent`. */
+  accent?: string;
 }
 
 const MATERIAL_THEME_OPTIONS = new InjectionToken<LibreGridMaterialThemeOptions>(
@@ -51,6 +53,10 @@ export class LibreGridThemeService {
   private frame: number | undefined;
 
   readonly mode = signal<ThemeMode>('light');
+  /** Selected accent theme name, reflected as `data-lgr-accent`. */
+  readonly accent = signal<string>(this.options.accent ?? 'violet');
+  /** Runtime grid density (numeric scale). Comfortable=0, compact=-2, dense=-4. */
+  readonly density = signal<number>(this.options.density ?? 0);
   readonly gridTheme = signal<Theme>(themeQuartz);
 
   constructor() {
@@ -58,13 +64,15 @@ export class LibreGridThemeService {
 
     effect(() => {
       this.root.setAttribute('data-lgr-theme', this.mode());
+      this.root.setAttribute('data-lgr-accent', this.accent());
+      this.root.setAttribute('data-lgr-density', String(this.density()));
       this.scheduleRefresh();
     });
 
     const observer = new MutationObserver(() => this.scheduleRefresh());
     observer.observe(this.root, {
       attributes: true,
-      attributeFilter: ['class', 'style', 'data-lgr-theme'],
+      attributeFilter: ['class', 'style', 'data-lgr-theme', 'data-lgr-accent'],
     });
     this.destroyRef.onDestroy(() => {
       observer.disconnect();
@@ -92,8 +100,20 @@ export class LibreGridThemeService {
     this.mode.update((mode) => (mode === 'light' ? 'dark' : 'light'));
   }
 
+  setMode(mode: ThemeMode): void {
+    this.mode.set(mode);
+  }
+
+  setAccent(accent: string): void {
+    this.accent.set(accent);
+  }
+
+  setDensity(density: number): void {
+    this.density.set(density);
+  }
+
   refresh(): void {
-    this.gridTheme.set(buildGridTheme(this.root, this.options.density));
+    this.gridTheme.set(buildGridTheme(this.root, this.density()));
   }
 
   private scheduleRefresh(): void {

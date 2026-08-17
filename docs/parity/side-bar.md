@@ -19,7 +19,7 @@
 | `toolPanels` | `(ToolPanelDef \| string)[]` | ✅ | |
 | `defaultToolPanel` | `string` | ✅ | |
 | `hiddenByDefault` | `boolean` | ✅ | |
-| `position` | `'left' \| 'right'` | ✅ | |
+| `position` | `'left' \| 'right'` | ✅ | The whole bar moves to the chosen side of the grid (left uses order -1 in the root wrapper flex row); the button strip stays on the inner edge (1.1.0 fix) |
 | `hideButtons` | `boolean` | ✅ | Runtime grid-option update and E2E tested |
 
 ## ToolPanelDef
@@ -44,7 +44,7 @@
 | `getSideBar` | ✅ | Returns SideBarDef |
 | `setSideBarVisible(boolean)` | ✅ | |
 | `isSideBarVisible` | ✅ | |
-| `setSideBarPosition('left' \| 'right')` | ✅ | |
+| `setSideBarPosition('left' \| 'right')` | ✅ | E2E asserts the bar's geometry against the grid header on both sides |
 | `openToolPanel(id, parent?)` | ✅ | |
 | `closeToolPanel` | ✅ | |
 | `getOpenedToolPanel` | ✅ | Returns id or `null` |

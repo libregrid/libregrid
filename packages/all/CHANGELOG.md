@@ -1,5 +1,23 @@
 # @libregrid/all
 
+## 1.1.0
+
+### Minor Changes
+
+- Re-export the new `ExcelExportModule` from `@libregrid/excel-export` (Phase 5).
+
+### Patch Changes
+
+- Updated dependencies [7312462]
+- Updated dependencies [d3dee30]
+- Updated dependencies [f93785a]
+- Updated dependencies [dd13ee4]
+- Updated dependencies [850d64f]
+- Updated dependencies [51865cd]
+- Updated dependencies [1dad6a3]
+- Updated dependencies [1317045]
+  - @libregrid/excel-export@1.1.0
+
 ## 1.0.1
 
 ### Patch Changes

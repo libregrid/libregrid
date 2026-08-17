@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/row-grouping",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Row grouping and aggregation for AG Grid Community — part of LibreGrid",
   "keywords": ["libregrid", "ag-grid", "data-grid", "row-grouping", "aggregation"],
   "homepage": "https://github.com/libregrid/libregrid#readme",

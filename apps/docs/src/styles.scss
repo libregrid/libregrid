@@ -1,60 +1,224 @@
 @use '@angular/material' as mat;
 
-// Material 3 system tokens. The Phase 1 theme bridge reads these
+/* ════════════════════════════════════════════════════════════════
+   LibreGrid Design System — Global Styles
+   ════════════════════════════════════════════════════════════════ */
+
+// ── Base theme (violet brand) ──────────────────────────────────
+// Material 3 system tokens. The theme bridge reads these
 // (--mat-sys-primary, --mat-sys-surface, …) and maps them onto the grid's
-// Theming API params — see docs/reference/api-seams.md §8.
+// Theming API params.
 html {
   color-scheme: light dark;
-  @include mat.theme(
-    (
-      color: (
-        primary: mat.$violet-palette,
-        tertiary: mat.$cyan-palette,
-      ),
-      typography: Roboto,
-      density: 0,
-    )
-  );
+  @include mat.theme((
+    color: (
+      primary: mat.$violet-palette,
+      tertiary: mat.$cyan-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+// ── Accent themes ───────────────────────────────────────────────
+// Each accent theme re-emits only the color system tokens. Because every
+// Material component token falls back to `--mat-sys-*` (and the grid bridge
+// reads the same tokens), switching `data-lgr-accent` restyles the whole
+// app and every grid without a reload.
+html[data-lgr-accent='azure'] {
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$rose-palette,
+    ),
+  ));
+}
+
+html[data-lgr-accent='emerald'] {
+  @include mat.theme((
+    color: (
+      primary: mat.$green-palette,
+      tertiary: mat.$blue-palette,
+    ),
+  ));
+}
+
+html[data-lgr-accent='rose'] {
+  @include mat.theme((
+    color: (
+      primary: mat.$rose-palette,
+      tertiary: mat.$blue-palette,
+    ),
+  ));
+}
+
+html[data-lgr-accent='amber'] {
+  @include mat.theme((
+    color: (
+      primary: mat.$orange-palette,
+      tertiary: mat.$cyan-palette,
+    ),
+  ));
+}
+
+html[data-lgr-accent='magenta'] {
+  @include mat.theme((
+    color: (
+      primary: mat.$magenta-palette,
+      tertiary: mat.$yellow-palette,
+    ),
+  ));
 }
 
 // Explicit dark override so the toggle wins over the OS preference.
-html[data-lgr-theme='dark'] {
-  color-scheme: dark;
-}
-html[data-lgr-theme='light'] {
-  color-scheme: light;
-}
+html[data-lgr-theme='dark'] { color-scheme: dark; }
+html[data-lgr-theme='light'] { color-scheme: light; }
 
-* {
+/* ── Reset & base ─────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html,
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
 body {
-  height: 100%;
   margin: 0;
+  font-family: 'Inter', 'Roboto', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
   background: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
-  font-family: Roboto, system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
+
+/* ── Typography ───────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', 'Roboto', system-ui, sans-serif;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--mat-sys-on-surface);
+}
+
+h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); letter-spacing: -0.03em; }
+h2 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); margin-top: 2rem; }
+h3 { font-size: 1.1rem; font-weight: 500; }
+
+p { margin: 0 0 0.75rem; }
+
+small { font-size: 0.85em; opacity: 0.8; }
 
 a {
   color: var(--mat-sys-primary);
+  text-decoration: none;
+  transition: opacity 180ms ease;
+}
+a:hover { opacity: 0.85; }
+
+/* Links inside a paragraph must be distinguishable from the surrounding text
+ * without relying on color alone (axe `link-in-text-block`). */
+p a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
+code {
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+  font-size: 0.875em;
+  background: var(--mat-sys-surface-container);
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 40%, transparent);
+}
+
+kbd {
+  font-family: inherit;
+  padding: 0.15em 0.45em;
+  border-radius: 6px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container);
+  font-size: 0.85em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--mat-sys-outline-variant);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mat-sys-outline);
+  background-clip: content-box;
+}
+
+/* ── Selection ───────────────────────────────────────────────── */
+::selection {
+  background: color-mix(in srgb, var(--mat-sys-primary) 28%, transparent);
+  color: inherit;
+}
+
+/* ── Focus ────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Page layout ─────────────────────────────────────────────── */
 .lgr-page {
   width: 100%;
   min-width: 0;
-  max-width: 1240px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: clamp(1rem, 3vw, 2.25rem);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  padding-top: clamp(1rem, 2vw, 1.5rem);
+  animation: lgr-page-in 320ms ease-out both;
 }
 
-.lgr-page > h1 {
+@keyframes lgr-page-in {
+  from {
+    transform: translateY(6px);
+  }
+  to {
+    /* `none`, not `translateY(0)` — a lingering transform would establish a
+     * containing block for `position: fixed` descendants (menus, popups) and
+     * break their viewport-relative positioning. No opacity fade here: fading
+     * content in leaves text at partial opacity mid-animation, which trips
+     * contrast checks. */
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lgr-page { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+.lgr-page > h1:first-child {
   margin-top: 0;
-  letter-spacing: -0.025em;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
 }
 
+.lgr-page > p:first-of-type {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+/* ── Cards ────────────────────────────────────────────────────── */
 .lgr-page mat-card,
 .lgr-page mat-card-content {
   min-width: 0;
@@ -63,14 +227,24 @@ a {
 
 .lgr-page mat-card {
   border-radius: 16px;
+  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container-low);
 }
 
+.lgr-page mat-card:hover {
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
+}
+
+/* ── Grid host ────────────────────────────────────────────────── */
 .lgr-grid-host {
   height: clamp(320px, 56vh, 540px);
   width: 100%;
   min-width: 0;
   max-width: 100%;
   border-radius: 12px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface);
 }
 
 .lgr-grid-host > ag-grid-angular,
@@ -81,6 +255,7 @@ a {
   max-width: 100%;
 }
 
+/* ── Action row ──────────────────────────────────────────────── */
 .lgr-actions {
   display: flex;
   flex-wrap: wrap;
@@ -89,9 +264,8 @@ a {
   margin: 1rem 0;
 }
 
-.lgr-advanced-filter-toolbar {
-  margin: 0 0 1rem;
-}
+/* ── Advanced filter ─────────────────────────────────────────── */
+.lgr-advanced-filter-toolbar { margin: 0 0 1rem; }
 
 .lgr-find-control {
   display: inline-flex;
@@ -116,17 +290,12 @@ a {
   min-width: 0;
   margin-bottom: 1rem;
 }
+.lgr-advanced-filter-builder-host:empty { display: none; }
 
-.lgr-advanced-filter-builder-host:empty {
-  display: none;
-}
-
-// Cell-selection is applied directly to AG Grid cell elements by
-// @libregrid/cell-selection. Keep the range visible in both Material modes.
+/* ── Cell selection overrides ────────────────────────────────── */
 .ag-cell.ag-cell-range-selected {
   background-color: color-mix(in srgb, var(--mat-sys-primary) 18%, transparent);
 }
-
 .ag-cell.ag-cell-range-top,
 .ag-cell.ag-cell-range-bottom,
 .ag-cell.ag-cell-range-left,
@@ -135,31 +304,54 @@ a {
   border-color: var(--mat-sys-primary);
 }
 
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  background: var(--mat-sys-surface-container);
-  padding: 0.1em 0.35em;
-  border-radius: 4px;
+/* ════════════════════════════════════════════════════════════════
+   AG Grid polish — subtle refinements over the mapped Quartz theme
+   ════════════════════════════════════════════════════════════════ */
+
+/* Headers: crisper, quieter, aligned to Material's label style. */
+.ag-header-cell-text {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  font-size: 0.72em;
 }
 
+.ag-header-icon {
+  opacity: 0.7;
+}
+
+/* Give grouped rows a touch of breathing room and a clearer chevron. */
+.ag-group-expanded,
+.ag-group-contracted {
+  color: var(--mat-sys-primary);
+}
+
+/* Cells: comfortable vertical rhythm without hardcoded pixels. */
+.ag-cell {
+  line-height: 1.5;
+}
+
+/* Numeric cells: tabular figures so columns scan cleanly. */
+.ag-numeric-cell,
+.ag-right-aligned-cell {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status bar: quiet, structured. */
+.ag-status-bar {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  font-size: 0.85rem;
+}
+
+.ag-status-bar .ag-status-name-value-value {
+  font-weight: 600;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 700px) {
-  .lgr-page {
-    padding: 1rem;
-  }
-
-  .lgr-grid-host {
-    height: min(460px, 62vh);
-  }
-
-  .lgr-advanced-filter-toolbar {
-    align-items: stretch;
-  }
-
-  .lgr-find-control {
-    width: 100%;
-  }
-
-  .lgr-find-control input {
-    flex: 1;
-  }
+  .lgr-page { padding: 1rem; }
+  .lgr-grid-host { height: min(460px, 62vh); }
+  .lgr-advanced-filter-toolbar { align-items: stretch; }
+  .lgr-find-control { width: 100%; }
+  .lgr-find-control input { flex: 1; }
 }

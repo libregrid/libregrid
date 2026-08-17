@@ -18,6 +18,8 @@ export class MenuItemMapper extends BeanStub implements NamedBean {
   /**
    * Resolve a list of item names to MenuItemDef objects.
    * 'separator' items are passed through as-is (they have no factory).
+   * Registered items with string `subMenu` entries get those resolved
+   * recursively, so feature packages can contribute submenus by name.
    */
   public mapItems(names: string[], params: MenuActionParams): (MenuItemDef | 'separator')[] {
     const result: (MenuItemDef | 'separator')[] = [];
@@ -28,7 +30,7 @@ export class MenuItemMapper extends BeanStub implements NamedBean {
       }
       const item = this.registry.getItem(name, params);
       if (item) {
-        result.push(item);
+        result.push(this.mapDefinition(item, params));
       }
     }
     return result;
@@ -50,7 +52,7 @@ export class MenuItemMapper extends BeanStub implements NamedBean {
         }
         const resolved = this.registry.getItem(item, params);
         if (resolved) {
-          result.push(resolved);
+          result.push(this.mapDefinition(resolved, params));
         }
       } else {
         result.push(this.mapDefinition(item, params));
@@ -61,8 +63,8 @@ export class MenuItemMapper extends BeanStub implements NamedBean {
 
   private mapDefinition(item: MenuItemDef, params: MenuActionParams): MenuItemDef {
     if (!item.subMenu) return item;
-    const subMenu = this.mapMixed(item.subMenu, params).filter(
-      (child): child is MenuItemDef => child !== 'separator',
+    const subMenu = this.mapMixed(item.subMenu, params).map((child) =>
+      child === 'separator' ? ({ name: '__separator__' } as MenuItemDef) : child,
     );
     return { ...item, subMenu };
   }

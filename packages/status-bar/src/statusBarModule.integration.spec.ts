@@ -32,9 +32,13 @@ describe('StatusBarModule', () =>
     expect(typeof api.getStatusPanel).toBe('function');
     await vi.waitFor(() =>
       expect(api?.getStatusPanel<{ getGui(): HTMLElement }>('total')?.getGui().textContent).toBe(
-        'Total Rows: 1',
+        'Total Rows 1',
       ),
     );
     expect(api.getStatusPanel<CustomPanel>('custom')?.initialized).toBe(true);
     expect(api.getStatusPanel('missing')).toBeUndefined();
+    // The status bar shell renders into the grid with role=status.
+    const shell = host.querySelector('.lgr-status-bar');
+    await vi.waitFor(() => expect(shell).not.toBeNull());
+    expect(shell?.getAttribute('role')).toBe('status');
   }));

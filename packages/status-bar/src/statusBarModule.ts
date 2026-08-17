@@ -8,6 +8,8 @@ import {
   TotalAndFilteredRowCountPanel,
   TotalRowCountPanel,
 } from './statusPanels';
+import { StatusBarComponent } from './statusBarComponent';
+import { statusBarCss } from './statusBarCss';
 import { StatusBarService } from './statusBarService';
 function getStatusPanel(beans: BeanCollection, key: string) {
   return (beans.statusBarSvc as StatusBarService | undefined)?.getStatusPanel(key);
@@ -20,6 +22,8 @@ export const StatusBarModule: _ModuleWithApi<_StatusBarGridApi> = {
   enterprise: true,
   dependsOn: [EnterpriseCoreModule],
   beans: [StatusBarService],
+  selectors: [StatusBarComponent.getSelector()],
+  css: [statusBarCss],
   userComponents: {
     agTotalRowCountComponent: TotalRowCountPanel,
     agTotalAndFilteredRowCountComponent: TotalAndFilteredRowCountPanel,

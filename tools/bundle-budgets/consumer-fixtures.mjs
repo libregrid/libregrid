@@ -12,7 +12,7 @@ const { build } = await import(pathToFileURL(require.resolve('esbuild', {
 const outputDirectory = join(root, 'tools', 'bundle-budgets', '.fixtures');
 // Every published package gets a consumer fixture (Phase 13): importing the
 // package entry must pull in exactly that package, core, and its declared
-// @libregrid dependencies — nothing else. excel-export is deferred (Phase 5).
+// @libregrid dependencies — nothing else.
 const packages = [
   'core',
   'menu',
@@ -23,6 +23,7 @@ const packages = [
   'cell-selection',
   'clipboard',
   'status-bar',
+  'excel-export',
   'set-filter',
   'multi-filter',
   'filters-tool-panel',
@@ -36,6 +37,7 @@ const packages = [
   'rich-select',
   'integrated-charts',
   'sparklines',
+  'toolbar',
 ];
 const packageName = (name) => `@libregrid/${name}`;
 

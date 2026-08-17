@@ -1,4 +1,5 @@
 import { Component, type ColDef, type Column, type GridApi } from 'ag-grid-community';
+import { iconSvg } from '@libregrid/core';
 
 type RowGroupApi = Pick<GridApi, 'getColumn'> & Partial<Pick<GridApi,
   'getDisplayNameForColumn' | 'getGridOption' | 'getRowGroupColumns' | 'removeRowGroupColumns' |
@@ -58,36 +59,45 @@ export class RowGroupDropZone extends Component {
 
   private createColumnMember(column: Column, index: number, count: number): HTMLElement {
     const member = document.createElement('div');
-    member.className = 'lgr-row-group-drop-zone-member';
+    member.className = 'lgr-chip lgr-row-group-drop-zone-member';
     const name = this.getColumnName(column);
     const label = document.createElement('span');
     label.textContent = name;
-    const up = this.createButton(`Move ${name} up`, () => this.moveColumn(index, index - 1));
-    const down = this.createButton(`Move ${name} down`, () => this.moveColumn(index, index + 1));
+    const up = this.createIconButton(`Move ${name} up`, 'sortAscending', () => this.moveColumn(index, index - 1));
+    const down = this.createIconButton(`Move ${name} down`, 'sortDescending', () => this.moveColumn(index, index + 1));
     up.disabled = index === 0 || this.isFunctionsReadOnly();
     down.disabled = index === count - 1 || this.isFunctionsReadOnly();
-    const remove = this.createButton(`Remove ${name} from row groups`, () => this.removeColumn(column));
+    const remove = this.createIconButton(`Remove ${name} from row groups`, 'close', () => this.removeColumn(column));
     remove.disabled = this.isFunctionsReadOnly();
     member.append(label, up, down, remove);
     return member;
   }
 
-  private createButton(label: string, action: () => void): HTMLButtonElement {
+  private createIconButton(label: string, icon: 'sortAscending' | 'sortDescending' | 'close', action: () => void): HTMLButtonElement {
     const button = document.createElement('button');
     button.type = 'button';
+    button.className = 'lgr-icon-button';
     button.setAttribute('aria-label', label);
-    button.textContent = label;
+    button.title = label;
+    button.innerHTML = iconSvg(icon) ?? '×';
     button.addEventListener('click', action);
     return button;
   }
 
   private addDropListeners(): void {
     const gui = this.getGui();
+    gui.addEventListener('dragenter', () => gui.classList.add('lgr-drop-zone-drag-over'));
+    gui.addEventListener('dragleave', (event) => {
+      if (!(event.relatedTarget instanceof Node) || !gui.contains(event.relatedTarget)) {
+        gui.classList.remove('lgr-drop-zone-drag-over');
+      }
+    });
     gui.ondragover = (event) => {
       if (!this.isFunctionsReadOnly()) event.preventDefault();
     };
     gui.ondrop = (event) => {
       event.preventDefault();
+      gui.classList.remove('lgr-drop-zone-drag-over');
       const id = event.dataTransfer?.getData('text/plain');
       if (id && this.canAddColumn(id)) this.api?.addRowGroupColumns?.([id]);
     };

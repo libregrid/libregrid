@@ -1,73 +1,158 @@
 /**
- * LibreGrid menu styles.
- * Injected as inline CSS via Module.css — keeps sideEffects: false valid.
+ * LibreGrid menu styles — theme-native Quartz metrics.
+ *
+ * Geometry, colors, and states follow the native menu recipe documented in
+ * docs/design/ux-2-menus.md: table layout (icon / name / shortcut / arrow
+ * cells), 8px list padding, 36px rows, 17px separators, `--ag-card-shadow`,
+ * `--ag-menu-*` surface tokens, and the inset focus ring from
+ * `--ag-input-focus-border-color`.
+ *
+ * Structure:
+ *   .lgr-menu           → positioning only (absolute, flex column, max-height)
+ *   .lgr-menu-scroll    → the visual surface: bg/border/radius/shadow + overflow-y
+ *   .lgr-menu-list      → the table of rows
+ *   .lgr-sub-menu       → a nested menu positioned absolutely off the parent row
+ *
+ * The surface lives on `.lgr-menu-scroll` (not `.lgr-menu`) so submenus — which
+ * are appended to `.lgr-menu` — escape the scroll clipping while the parent menu
+ * itself still scrolls when its content exceeds the viewport.
  */
 export const menuCss = `
 .lgr-menu {
-  min-width: 180px;
-  padding: 4px 0;
-  background: var(--ag-background-color, #fff);
-  border: 1px solid var(--ag-border-color, #ddd);
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  font-family: var(--ag-font-family, inherit);
-  font-size: var(--ag-font-size, 14px);
+  /* Absolute so the grid's popup positioning (top/left on the child) takes
+   * effect — without it the menu flows as a full-width block over the grid. */
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
   z-index: 1000;
 }
 
+.lgr-menu-scroll {
+  min-width: var(--ag-menu-min-width, 181px);
+  min-height: 0;
+  overflow-y: auto;
+  background-color: var(--ag-menu-background-color, var(--ag-background-color, #fff));
+  border: var(--ag-borders, solid 1px) var(--ag-menu-border-color, var(--ag-border-color, #babfc7));
+  border-radius: var(--ag-card-radius, var(--ag-border-radius, 4px));
+  box-shadow: var(--ag-card-shadow, 0 1px 4px 1px rgba(186, 191, 199, 0.4));
+  font-family: var(--ag-font-family, inherit);
+  font-size: var(--ag-font-size, 14px);
+  color: var(--ag-foreground-color, #181d1f);
+  user-select: none;
+}
+
+.lgr-menu-list {
+  display: table;
+  width: 100%;
+  padding: var(--ag-grid-size, 8px) 0;
+  cursor: default;
+}
+
 .lgr-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  cursor: pointer;
-  color: var(--ag-foreground-color, #000);
-  outline: none;
+  display: table-row;
+  position: relative;
+  font-weight: 500;
+}
+
+.lgr-menu-item-icon,
+.lgr-menu-item-name,
+.lgr-menu-item-shortcut,
+.lgr-menu-item-arrow {
+  display: table-cell;
+  vertical-align: middle;
+  padding: calc(var(--ag-grid-size, 8px) + 2px) 0;
+  line-height: var(--ag-icon-size, 16px);
+}
+
+.lgr-menu-item-icon {
+  width: var(--ag-icon-size, 16px);
+  padding-left: calc(var(--ag-grid-size, 8px) * 1.5);
+  color: var(--ag-icon-font-color, currentColor);
+}
+
+.lgr-menu-item-icon svg,
+.lgr-menu-item-arrow svg {
+  display: block;
+  width: var(--ag-icon-size, 16px);
+  height: var(--ag-icon-size, 16px);
+  fill: currentColor;
+}
+
+.lgr-menu-item-name {
+  padding-left: calc(var(--ag-grid-size, 8px) * 2);
+  padding-right: calc(var(--ag-grid-size, 8px) * 2);
+  white-space: nowrap;
+}
+
+.lgr-menu-item-shortcut {
+  padding-right: var(--ag-grid-size, 8px);
+  color: var(--ag-secondary-foreground-color, var(--ag-foreground-color, #181d1f));
+}
+
+.lgr-menu-item-arrow {
+  width: var(--ag-icon-size, 16px);
+  padding-right: var(--ag-grid-size, 8px);
+  color: var(--ag-secondary-foreground-color, var(--ag-foreground-color, #181d1f));
 }
 
 .lgr-menu-item:hover,
+.lgr-menu-item-active,
+.lgr-menu-item-submenu-open {
+  background-color: var(--ag-row-hover-color, color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 12%));
+}
+
 .lgr-menu-item:focus {
-  background: var(--ag-row-hover-color, rgba(0, 0, 0, 0.04));
+  outline: none;
+}
+
+.lgr-menu-item:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  display: block;
+  border: 1px solid var(--ag-input-focus-border-color, var(--ag-active-color, #2196f3));
+  background-color: transparent;
+  pointer-events: none;
 }
 
 .lgr-menu-item-disabled {
   opacity: 0.5;
   cursor: default;
-  pointer-events: none;
-}
-
-.lgr-menu-item-checked::before {
-  content: '✓';
-  margin-right: 4px;
-}
-
-.lgr-menu-item-icon {
-  width: 16px;
-  height: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lgr-menu-item-name {
-  flex: 1;
-}
-
-.lgr-menu-item-shortcut {
-  margin-left: 16px;
-  opacity: 0.6;
-  font-size: 0.85em;
-}
-
-.lgr-menu-item-arrow {
-  margin-left: 8px;
-  font-size: 0.75em;
-  opacity: 0.6;
 }
 
 .lgr-menu-separator {
-  height: 1px;
-  margin: 4px 0;
-  background: var(--ag-border-color, #ddd);
+  display: table-row;
+  height: calc(var(--ag-grid-size, 8px) * 2 + 1px);
+}
+
+.lgr-menu-separator-part {
+  display: table-cell;
+}
+
+.lgr-menu-separator-part::after {
+  content: '';
+  display: block;
+  border-top: var(--ag-borders-critical, solid 1px) var(--ag-border-color, #babfc7);
+}
+
+.lgr-sub-menu {
+  /* Absolute, not fixed: position:fixed breaks when a host app applies a
+   * transform/filter/contain to an ancestor of the grid (very common — modals,
+   * entrance animations, backdrop-filter). Absolute is relative to the parent
+   * .lgr-menu (already positioned), so it stays anchored regardless. */
+  position: absolute;
+  z-index: 1001;
+}
+
+/* Custom menu item components participate in the table-row layout: the
+ * wrapper has display:contents, so the component's root becomes a cell. */
+.lgr-menu-item-custom {
+  display: contents;
+}
+
+.lgr-column-filter-popup {
+  font-family: var(--ag-font-family, inherit);
+  font-size: var(--ag-font-size, 14px);
 }
 `;

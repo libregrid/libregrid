@@ -27,8 +27,15 @@ const rowData: Sale[] = [
       </mat-card-content></mat-card>
       <p><button mat-stroked-button (click)="toggle()">Toggle pivot mode</button> <button mat-stroked-button (click)="openColumns()">Open Columns panel</button></p>
       <h2>How it works</h2>
-      <p><code>&#64;libregrid/pivot</code> provides <code>pivotStage</code>, which generates deterministic result columns before the aggregation stage. Use <code>getPivotResultColumn(['2025', 'Q1'], 'sales')</code> to retrieve a particular intersection.</p>
-      <p>The Columns panel supports the Pivot Mode switch and Column Labels drop zone. Set <code>pivotMaxGeneratedColumns</code> to cap generated columns when pivot values have high cardinality.</p>
+      <p>
+        Register <code>&#64;libregrid/pivot</code>, set <code>pivot: true</code> on a column,
+        and enable pivot mode. Result columns are generated deterministically, and you can
+        retrieve any intersection with <code>getPivotResultColumn(['2025', 'Q1'], 'sales')</code>.
+      </p>
+      <p>
+        The Columns panel has the Pivot Mode switch and Column Labels drop zone. Cap generated
+        columns with <code>pivotMaxGeneratedColumns</code> when pivot values have high cardinality.
+      </p>
     </div>
   `,
 })
@@ -44,7 +51,7 @@ export class PivotDemo {
     { field: 'product', rowGroup: true, enableRowGroup: true },
     { field: 'year', pivot: true, enablePivot: true },
     { field: 'quarter', pivot: true, enablePivot: true },
-    { field: 'sales', aggFunc: 'sum', enableValue: true },
+    { field: 'sales', aggFunc: 'sum', enableValue: true, type: 'numericColumn' },
   ];
   protected readonly gridOptions: GridOptions<Sale> = {
     pivotMode: true,
