@@ -122,11 +122,124 @@ export const coreCss = `
 .lgr-chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--ag-grid-size, 8px);
-  padding: calc(var(--ag-grid-size, 8px) * 0.25) calc(var(--ag-grid-size, 8px) * 0.75);
+  gap: calc(var(--ag-grid-size, 8px) * 0.5);
+  max-width: 100%;
+  min-height: calc(var(--ag-grid-size, 8px) * 3);
+  padding: 0 var(--ag-grid-size, 8px);
   border: 1px solid var(--ag-chip-border-color, color-mix(in srgb, var(--ag-header-background-color, #f8f8f8), var(--ag-foreground-color, #181d1f) 13%));
-  border-radius: var(--ag-border-radius, 4px);
+  border-radius: calc(var(--ag-grid-size, 8px) * 3);
   background: var(--ag-chip-background-color, var(--ag-background-color, #fff));
   color: var(--ag-foreground-color, #181d1f);
+}
+
+/* Checkbox — painted 16px box matching the native theme (the input itself
+ * stays for semantics, keyboard and screen-reader access). */
+.lgr-checkbox {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  width: var(--ag-icon-size, 16px);
+  height: var(--ag-icon-size, 16px);
+  background-color: var(--ag-checkbox-background-color, var(--ag-background-color, #fff));
+  border: 1px solid var(--ag-checkbox-unchecked-color, color-mix(in srgb, var(--ag-background-color, #fff), var(--ag-foreground-color, #181d1f) 30%));
+  border-radius: var(--ag-checkbox-border-radius, var(--ag-border-radius, 4px));
+}
+
+.lgr-checkbox input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.lgr-checkbox::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lgr-checkbox:has(input:checked) {
+  background-color: var(--ag-checkbox-checked-color, var(--ag-active-color, #2196f3));
+  border-color: var(--ag-checkbox-checked-color, var(--ag-active-color, #2196f3));
+}
+
+.lgr-checkbox:has(input:checked)::after {
+  background-color: var(--ag-checkbox-background-color, var(--ag-background-color, #fff));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+}
+
+.lgr-checkbox:has(input:indeterminate)::after {
+  left: 3px;
+  right: 3px;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background-color: var(--ag-checkbox-indeterminate-color, var(--ag-checkbox-unchecked-color, #babfc7));
+}
+
+.lgr-checkbox:focus-within {
+  outline: none;
+  box-shadow: var(--ag-input-focus-box-shadow, 0 0 0 3px color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 47%));
+}
+
+.lgr-checkbox:has(input:disabled) {
+  opacity: 0.5;
+}
+
+/* Toggle switch — native labeled toggle (pivot mode). */
+.lgr-toggle {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  width: var(--ag-toggle-button-width, 28px);
+  height: var(--ag-toggle-button-height, 18px);
+  background-color: var(--ag-toggle-button-off-background-color, var(--ag-checkbox-unchecked-color, #babfc7));
+  border: var(--ag-toggle-button-border-width, 2px) solid var(--ag-toggle-button-off-border-color, var(--ag-checkbox-unchecked-color, #babfc7));
+  border-radius: calc(var(--ag-toggle-button-height, 18px) * 0.5);
+}
+
+.lgr-toggle input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.lgr-toggle::before {
+  content: '';
+  position: absolute;
+  top: calc(0px - var(--ag-toggle-button-border-width, 2px));
+  left: calc(0px - var(--ag-toggle-button-border-width, 2px));
+  box-sizing: border-box;
+  width: var(--ag-toggle-button-height, 18px);
+  height: var(--ag-toggle-button-height, 18px);
+  background-color: var(--ag-toggle-button-switch-background-color, var(--ag-background-color, #fff));
+  border: var(--ag-toggle-button-border-width, 2px) solid var(--ag-toggle-button-switch-border-color, var(--ag-checkbox-unchecked-color, #babfc7));
+  border-radius: 100%;
+  transition: left 100ms;
+}
+
+.lgr-toggle:has(input:checked) {
+  background-color: var(--ag-toggle-button-on-background-color, var(--ag-checkbox-checked-color, var(--ag-active-color, #2196f3)));
+  border-color: var(--ag-toggle-button-on-border-color, var(--ag-checkbox-checked-color, var(--ag-active-color, #2196f3)));
+}
+
+.lgr-toggle:has(input:checked)::before {
+  left: calc(100% - var(--ag-toggle-button-height, 18px) + var(--ag-toggle-button-border-width, 2px));
+}
+
+.lgr-toggle:focus-within {
+  outline: none;
+  box-shadow: var(--ag-input-focus-box-shadow, 0 0 0 3px color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 47%));
+}
+
+.lgr-toggle:has(input:disabled) {
+  opacity: 0.5;
 }
 `;
