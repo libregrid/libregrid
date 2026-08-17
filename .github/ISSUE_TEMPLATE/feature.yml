@@ -3,24 +3,24 @@ description: Request a new feature or enhancement
 labels: [enhancement]
 body:
   - type: dropdown
-    id: phase
+    id: area
     attributes:
-      label: Phase
-      description: Which phase does this belong to?
+      label: Area
+      description: Which package or surface does this belong to?
       options:
-        - Phase 1 (Menus / Side bar / Material)
-        - Phase 2 (Row grouping)
-        - Phase 3 (Columns tool panel)
-        - Phase 4 (Selection / Clipboard / Status bar)
-        - Phase 5 (Excel export)
-        - Phase 6 (Filters)
-        - Phase 7 (SSRM core)
-        - Phase 8 (Pivot)
-        - Phase 9 (SSRM advanced)
-        - Phase 10 (Tree / Master-detail)
-        - Phase 11 (Advanced filter / Find / Rich select)
-        - Phase 12 (Charts)
-        - Post-1.0
+        - core / material
+        - menu / side-bar / toolbar / status-bar
+        - row-grouping / columns-tool-panel / pivot
+        - cell-selection / clipboard
+        - excel-export
+        - set-filter / multi-filter / filters-tool-panel / advanced-filter
+        - server-side-row-model / viewport-row-model
+        - tree-data / master-detail
+        - find / rich-select
+        - integrated-charts / sparklines
+        - angular / docs
+        - tooling / CI / release
+        - other
     validations:
       required: true
   - type: textarea

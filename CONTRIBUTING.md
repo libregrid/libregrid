@@ -16,7 +16,7 @@ LibreGrid is a **clean-room implementation**. We build against the MIT-licensed 
 - Copying from blog posts, Stack Overflow answers or AI output that quotes Enterprise source
 - Installing a trial Enterprise build to compare behavior — its EULA restricts reverse engineering
 
-**Permitted sources, exclusively:** MIT source under `packages/ag-grid-community/`, `packages/ag-stack/`, `packages/ag-grid-angular/`, `community-modules/`; public documentation at ag-grid.com; `ag-charts-community`; `write-excel-file` (Phase 5 OOXML reference only).
+**Permitted sources, exclusively:** MIT source under `packages/ag-grid-community/`, `packages/ag-stack/`, `packages/ag-grid-angular/`, `community-modules/`; public documentation at ag-grid.com; `ag-charts-community`; `write-excel-file` (OOXML reference only).
 
 `npm run check:contamination` enforces this rule on every commit. If you are unsure whether something is allowed, **ask before doing it**. A contaminated contribution cannot be merged and may require rewriting history.
 
@@ -47,17 +47,66 @@ Read, in order:
 3. [`docs/reference/api-seams.md`](./docs/reference/api-seams.md) — how modules attach to the grid
 4. [`docs/reference/standards.md`](./docs/reference/standards.md) — coding and test conventions
 5. [`docs/reference/package-architecture.md`](./docs/reference/package-architecture.md) — package boundaries and tree-shaking
-6. The relevant file in [`docs/phases/`](./docs/phases/)
+6. The relevant file in [`docs/parity/`](./docs/parity/) for the feature you are changing
+
+Historical phase files live in [`docs/phases/`](./docs/phases/) for reference. New work is not gated on them.
 
 ---
 
 ## How work is organized
 
-Development proceeds in **phases**. Each phase has its own file with context, a todo list, a test plan, and acceptance criteria. Phases are ordered by dependency.
+Work is organized around features, fixes, and chores. Prefer small, reviewable PRs over large ones.
 
-- **Do not start a phase until the previous one's acceptance criteria are met.**
-- Large phases ship as **sequential sub-PRs** (Phase 2 has five, Phase 5 has nine). Never one giant PR.
-- Pick up work by claiming a task in the relevant phase file.
+- Open or claim a GitHub issue when the change is non-trivial.
+- Update the matching [`docs/parity/<domain>.md`](./docs/parity/) checklist when behavior changes.
+- Follow the Definition of Done below on every PR.
+
+---
+
+## Branching and versioning
+
+### Branches (GitHub Flow)
+
+`main` is the only long-lived branch. Open a short-lived branch from `main`, open a PR back to `main`, and delete the branch after merge.
+
+| Prefix | Use | Example |
+| --- | --- | --- |
+| `feat/<slug>` | New feature or package | `feat/toolbar-find-item` |
+| `fix/<slug>` | Bug fix | `fix/find-dark-contrast` |
+| `chore/<slug>` | Tooling, docs, refactors, deps | `chore/update-deps` |
+
+Do not push directly to `main`. Do not keep long-lived feature branches.
+
+### Versioning (lockstep SemVer)
+
+All `@libregrid/*` packages share one version (lockstep). That keeps `@libregrid/core` a singleton at runtime.
+
+| Bump | When |
+| --- | --- |
+| **Major** (`x.0.0`) | Breaking API or bean change; removed option; peer-dep bump that needs user action |
+| **Minor** (`1.x.0`) | New feature, new package, or new option with backward compatibility |
+| **Patch** (`1.1.x`) | Bug fix, internal refactor, docs, tests, dependency update |
+
+Add a Changeset on every PR that affects published packages:
+
+```bash
+npx changeset
+```
+
+Pick the bump type from the table above. Docs-only PRs that must not publish can use an empty changeset (`npx changeset add --empty`) or omit one when the PR template allows it.
+
+### Releases
+
+Release is automatic from `main`:
+
+1. Merge a PR that includes a Changeset.
+2. CI on `main` must pass.
+3. The release workflow opens or updates a **Version Packages** PR.
+4. Merge that PR to publish every `@libregrid/*` package at the new lockstep version.
+
+You can also run the release workflow manually via `workflow_dispatch` on `main`.
+
+Full detail: [`docs/guides/publishing.md`](./docs/guides/publishing.md).
 
 ---
 
@@ -74,7 +123,7 @@ A change is complete when **all** of these hold — see [`standards.md`](./docs/
 - [ ] Bundle budgets met; tree-shaking fixture shows no other `@libregrid/*` package leaking in
 - [ ] axe-core: 0 violations, light and dark
 - [ ] `NOTICE` + README attribution present in any new package
-- [ ] A Changeset added
+- [ ] A Changeset added (unless the change does not affect published packages)
 
 **Never mark a parity item ✅ without a passing test.** An option that exists in a type definition but the grid does not honor at runtime is ⬜, not ✅.
 
@@ -111,8 +160,8 @@ All writing a user reads follows the sentence-construction rules of
 The rules: one idea per sentence, active voice, short sentences, imperative
 instructions, one term per concept, no idioms. Defined technical and API
 terms (`bean`, `pivot`, `module`) are always allowed — the rule is about
-sentence construction, not a fixed word list. Internal-only writing (phase
-files, ADRs, code comments) is exempt.
+sentence construction, not a fixed word list. Internal-only writing (ADRs,
+code comments, historical phase files) is exempt.
 
 See [`standards.md`](./docs/reference/standards.md) §10 for the full rules
 with examples.
@@ -121,10 +170,10 @@ with examples.
 
 ## Pull requests
 
-- Branch: `phase-N/short-description`
-- Reference the phase file and tick the todo items your PR completes
-- Include a Changeset (`npx changeset`)
-- Keep PRs reviewable — split large work into the sub-PRs the phase file defines
+- Branch from `main` using `feat/`, `fix/`, or `chore/` (see above)
+- Link the issue and/or parity doc your PR touches
+- Include a Changeset when published packages change (`npx changeset`)
+- Keep PRs reviewable — split large work into sequential PRs
 
 ## Reporting bugs
 

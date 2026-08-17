@@ -1,6 +1,6 @@
 # Standards — scaffolding, code, tests, Definition of Done
 
-Applies to every phase. Read once; refer back constantly.
+Applies to every change. Read once; refer back constantly.
 
 ---
 
@@ -334,7 +334,14 @@ npx nx serve docs                      # live demo site
 
 ## 12. Git workflow
 
-- Branch per PR: `phase-N/short-description`
-- Large phases ship as **sequential** sub-PRs (see the phase file) — never one giant PR
-- Every PR includes a Changeset
-- PR description references the phase file and ticks the todo items it completes
+Trunk-based development on `main` (GitHub Flow). See [`CONTRIBUTING.md`](../../CONTRIBUTING.md) for the full branching and versioning guide.
+
+- Branch per PR: `feat/<slug>`, `fix/<slug>`, or `chore/<slug>`
+- Keep PRs small and sequential — never one giant PR
+- Every PR that changes a published package includes a Changeset
+- PR description links the issue and/or `docs/parity/<domain>.md` it updates
+- All `@libregrid/*` packages share one lockstep SemVer version
+  - **major** — breaking API change
+  - **minor** — new feature or package
+  - **patch** — bug fix, refactor, docs
+- Merge to `main` with a Changeset → CI green → Version Packages PR → publish
