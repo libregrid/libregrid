@@ -231,6 +231,13 @@ export class ContextMenuService extends BeanStub implements NamedBean, IContextM
           type: 'contextMenu',
           mouseEvent: new MouseEvent('contextmenu', { clientX: x, clientY: y }),
           ePopup: menuEl,
+          // The viewport-popup override is restored right after `addPopup`
+          // returns, but `positionPopupUnderMouseEvent` re-reads the popup
+          // parent on every resize-driven re-position — so a late re-position
+          // would anchor to the grid root instead of the body. Skip the
+          // observer: the menu is fully rendered before positioning and does
+          // not need a second pass.
+          skipObserver: true,
         });
       },
       ariaLabel: 'Context Menu',

@@ -123,6 +123,13 @@ a {
 }
 a:hover { opacity: 0.85; }
 
+/* Links inside a paragraph must be distinguishable from the surrounding text
+ * without relying on color alone (axe `link-in-text-block`). */
+p a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 code {
   font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
   font-size: 0.875em;
@@ -236,7 +243,6 @@ kbd {
   min-width: 0;
   max-width: 100%;
   border-radius: 12px;
-  overflow: hidden;
   border: 1px solid var(--mat-sys-outline-variant);
   background: var(--mat-sys-surface);
 }

@@ -9,7 +9,10 @@
 export const findCss = `
 .lgr-find-match {
   background: var(--ag-find-match-background-color, #ffff00);
-  color: inherit;
+  /* The highlight is always a light amber/orange, so keep the text dark in
+   * both light and dark themes — inheriting would pick up the dark theme's
+   * light foreground and fail WCAG contrast. */
+  color: var(--ag-find-match-color, #1d1b20);
 }
 
 .lgr-find-match-active {

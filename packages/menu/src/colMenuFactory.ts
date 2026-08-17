@@ -124,6 +124,10 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
         type: 'columnMenu',
         mouseEvent,
         ePopup: menuEl,
+        // See contextMenuSvc.ts: skip the resize observer so a late re-position
+        // does not anchor to the grid root after the viewport-popup override is
+        // restored.
+        skipObserver: true,
       });
     }, mouseEvent.target instanceof HTMLElement ? mouseEvent.target : undefined);
   }
