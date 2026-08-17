@@ -114,7 +114,18 @@ export type { StatusMetrics } from '@libregrid/status-bar';
 
 export { SetFilter, SetFilterHandler, SetFilterModule } from '@libregrid/set-filter';
 export { MultiFilter, MultiFilterHandler, MultiFilterModule } from '@libregrid/multi-filter';
-export { FiltersToolPanel, FiltersToolPanelModule } from '@libregrid/filters-tool-panel';
+export {
+  FiltersToolPanel,
+  FiltersToolPanelModule,
+  SelectableFilter,
+  SimpleFilter,
+} from '@libregrid/filters-tool-panel';
+export type {
+  SelectableFilterModel,
+  SimpleFilterModel,
+  SimpleFilterParams,
+  SimpleFilterType,
+} from '@libregrid/filters-tool-panel';
 
 export {
   ServerSideLoadingCellRenderer,
@@ -139,7 +150,11 @@ export {
 
 export { ViewportRowModel, ViewportRowModelModule } from '@libregrid/viewport-row-model';
 export { TreeDataModule, TreeDataService } from '@libregrid/tree-data';
-export { DetailCellRenderer, MasterDetailModule, MasterDetailService } from '@libregrid/master-detail';
+export {
+  DetailCellRenderer,
+  MasterDetailModule,
+  MasterDetailService,
+} from '@libregrid/master-detail';
 
 export {
   AdvancedFilterExpressionService,

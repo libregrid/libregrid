@@ -36,21 +36,27 @@
 
 | Feature | Status | Notes |
 |---|---|---|
-| Column selection within the panel | ✅ | Filtered cards preserve the active grid columns |
-| Filter-type configuration (Simple) | ✅ | |
-| Filter-type configuration (Selection) | ✅ | |
-| Filter-type configuration (Combo) | ✅ | |
-| Global **Apply** button | ✅ | Applies staged model changes |
-| Global **Clear** button | ✅ | Stages an empty model |
-| Global **Reset** button | ✅ | Stages the initial empty model |
-| Global **Cancel** button | ✅ | Restores the last applied model |
+| No pre-added columns | ✅ | The panel opens empty; columns are added on demand via the Add Filter type-ahead. |
+| Add Filter type-ahead | ✅ | A searchable dropdown below the cards lists the remaining filterable columns; picking one drops in a card. |
+| Card per column | ✅ | Each added column renders an expandable card embedding its real filter UI. |
+| Single card version | ✅ | Every filterable column renders the same selectable card — Simple Filter / Selection Filter — regardless of its grid filter type. |
+| Filter mode selector | ✅ | A **Simple Filter / Selection Filter** dropdown; new cards default to **Simple Filter**. |
+| Simple Filter mode | ✅ | Operator select with the value input stacked beneath; the AND/OR join and second condition appear only once the first value is entered (max two conditions). |
+| Filter-type configuration (Simple) | ✅ | Community text/number filters mount through `getColumnFilterInstance`. |
+| Filter-type configuration (Selection) | ✅ | LibreGrid's Set Filter is constructed directly with a real grid-apply path (its `filterParams.buttons` Apply/Clear/Cancel render in the card). |
+| Filter-type configuration (Combo) | ✅ | The multi filter component mounts through `getColumnFilterInstance`. |
+| Global **Apply** button | ✅ | Pinned at the panel bottom; re-applies the current filter model |
+| Global **Clear** button | ✅ | Clears all filters immediately |
+| Global **Reset** button | ✅ | Clears all filters immediately (initial model is empty) |
+| Global **Cancel** button | ✅ | Re-syncs embedded filters with the applied model |
 
 ## Behaviour
 
 | Requirement | Status | Notes |
 |---|---|---|
 | Registers with the Phase 1 side-bar host | ✅ | |
-| Filter search box | ✅ | |
-| Expand/collapse all | ✅ | |
+| Filter search box | ✅ | Type-ahead search within the Add Filter dropdown |
+| Expand/collapse all | ✅ | Expansion APIs target the cards currently present |
+| Pinned Cancel/Apply row | ✅ | Bottom buttons stay put while cards scroll |
 | Legacy `iFiltersToolPanel` still satisfied | ✅ | |
 | `aria-expanded` on filter groups | ✅ | |
