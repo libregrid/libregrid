@@ -16,6 +16,8 @@ export class ColumnChooserFactory extends BeanStub implements NamedBean {
     dialog.setAttribute('role', 'dialog');
     dialog.setAttribute('aria-modal', 'true');
     dialog.setAttribute('aria-label', 'Column chooser');
+    const title = document.createElement('h2');
+    title.textContent = 'Column chooser';
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'lgr-column-chooser-close lgr-button';
@@ -34,7 +36,7 @@ export class ColumnChooserFactory extends BeanStub implements NamedBean {
       onStateUpdated: () => {},
     });
     if (params.columnLayout) panel.setColumnLayout(params.columnLayout);
-    dialog.append(close, panel.getGui());
+    dialog.append(title, close, panel.getGui());
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
     // The dialog lives on document.body, outside the themed grid root, so

@@ -9,7 +9,9 @@ import type {
   IColumnToolPanel,
   IToolPanelParams,
   IToolPanelColumnCompParams,
+  IconName,
 } from 'ag-grid-community';
+import { iconSvg } from '@libregrid/core';
 import {
   attachColumnsToolPanelDragDrop,
   detachColumnsToolPanelDragDrop,
@@ -144,45 +146,62 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     const api = this.api;
     if (!api) return;
     this.gui.replaceChildren();
-    this.appendHeading();
-    if (!this.params?.suppressColumnFilter) this.appendSearch();
-    if (!this.params?.suppressColumnSelectAll) this.appendVisibilityControls();
+    this.appendHeaderControls();
     if (!this.params?.suppressColumnExpandAll && this.getGroups().length > 0) this.appendColumnExpandControls();
+    if (!this.params?.suppressPivotMode && this.isVisible('pivot-mode')) this.appendPivotMode();
     this.appendColumnList();
     if (!this.params?.suppressRowGroups && this.isVisible('row-groups')) this.appendFunctionSection('Row Groups', 'group');
     if (!this.params?.suppressValues && this.isVisible('values')) this.appendFunctionSection('Values', 'value');
-    if (!this.params?.suppressPivotMode && this.isVisible('pivot-mode')) this.appendPivotMode();
     if (!this.params?.suppressPivots && this.isVisible('pivots')) this.appendFunctionSection('Column Labels (Pivot)', 'pivot');
     if (this.isDeferredActionsEnabled()) this.appendActionButtons();
     attachColumnsToolPanelDragDrop(this.gui);
   }
 
-  private appendHeading(): void {
-    const heading = document.createElement('h2');
-    heading.textContent = 'Columns';
-    this.gui.appendChild(heading);
-  }
-
-  private appendSearch(): void {
-    const input = document.createElement('input');
-    input.type = 'search';
-    input.className = 'lgr-input';
-    input.value = this.search;
-    input.placeholder = 'Search columns';
-    input.setAttribute('aria-label', 'Search columns');
-    input.addEventListener('input', () => {
-      this.search = input.value;
-      this.render();
-    });
-    this.gui.appendChild(input);
-  }
-
-  private appendVisibilityControls(): void {
-    const toolbar = document.createElement('div');
-    toolbar.className = 'lgr-columns-toolbar';
-    toolbar.append(this.createButton('Select all columns', () => this.setVisibleColumns(true), 'lgr-button'));
-    toolbar.append(this.createButton('Unselect all columns', () => this.setVisibleColumns(false), 'lgr-button'));
-    this.gui.appendChild(toolbar);
+  /**
+   * Top area: the select-all checkbox and the search input share one row,
+   * like the native panel header. Each control is suppressed independently.
+   */
+  private appendHeaderControls(): void {
+    const header = document.createElement('div');
+    header.className = 'lgr-columns-header';
+    if (!this.params?.suppressColumnSelectAll) {
+      const columns = this.getColumnsMatchingSearch();
+      const visible = columns.filter((column) => this.isColumnVisible(column)).length;
+      const { wrapper, input } = this.createCheckbox(
+        'Select all columns',
+        visible === columns.length && visible > 0,
+        (checked) => this.setVisibleColumns(checked),
+      );
+      input.indeterminate = visible > 0 && visible < columns.length;
+      input.title = 'Select all columns';
+      header.appendChild(wrapper);
+    }
+    if (!this.params?.suppressColumnFilter) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lgr-search';
+      const icon = document.createElement('span');
+      icon.className = 'lgr-search-icon';
+      icon.innerHTML = iconSvg('search') ?? '';
+      const input = document.createElement('input');
+      input.type = 'search';
+      input.className = 'lgr-input';
+      input.value = this.search;
+      input.placeholder = 'Search...';
+      input.setAttribute('aria-label', 'Search columns');
+      input.addEventListener('input', () => {
+        const caret = input.selectionStart;
+        this.search = input.value;
+        this.render();
+        // render() rebuilds the input — restore focus and the caret so typing
+        // never drops out of the search box.
+        const next = this.gui.querySelector<HTMLInputElement>('.lgr-search input');
+        next?.focus();
+        if (caret !== null) next?.setSelectionRange(caret, caret);
+      });
+      wrapper.append(icon, input);
+      header.appendChild(wrapper);
+    }
+    if (header.children.length > 0) this.gui.appendChild(header);
   }
 
   private appendColumnExpandControls(): void {
@@ -259,23 +278,27 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     row.setAttribute('aria-level', String(depth));
     row.setAttribute('aria-expanded', String(expanded));
     row.style.setProperty('--lgr-column-depth', String(depth - 1));
-    const toggle = this.createButton(`${expanded ? 'Collapse' : 'Expand'} ${group.label}`, () => {
-      this.groupExpansion.set(group.id, !this.isGroupExpanded(group));
-      this.params?.onStateUpdated();
-      this.render();
-    });
-    toggle.className = 'lgr-columns-group-toggle';
+    const toggle = this.createIconButton(
+      `${expanded ? 'Collapse' : 'Expand'} ${group.label}`,
+      expanded ? 'columnGroupOpened' : 'columnGroupClosed',
+      () => {
+        this.groupExpansion.set(group.id, !this.isGroupExpanded(group));
+        this.params?.onStateUpdated();
+        this.render();
+      },
+    );
+    toggle.className = 'lgr-icon-button lgr-columns-group-toggle';
     toggle.setAttribute('aria-expanded', String(expanded));
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
     const visible = group.leaves.filter((column) => this.isColumnVisible(column)).length;
-    checkbox.checked = visible === group.leaves.length && visible > 0;
-    checkbox.indeterminate = visible > 0 && visible < group.leaves.length;
-    checkbox.setAttribute('aria-label', `Show ${group.label}`);
-    checkbox.addEventListener('change', () => this.setColumnsVisible(group.leaves, checkbox.checked));
+    const { wrapper, input } = this.createCheckbox(
+      `Show ${group.label}`,
+      visible === group.leaves.length && visible > 0,
+      (checked) => this.setColumnsVisible(group.leaves, checked),
+    );
+    input.indeterminate = visible > 0 && visible < group.leaves.length;
     const label = document.createElement('span');
     label.textContent = group.label;
-    row.append(toggle, checkbox, label);
+    row.append(toggle, wrapper, label);
     return row;
   }
 
@@ -290,37 +313,45 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     row.style.setProperty('--lgr-column-depth', String(depth - 1));
     const colDef = this.getColDef(column);
     this.applyToolPanelClass(row, column, colDef);
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = this.isColumnVisible(column);
-    checkbox.id = `lgr-column-${this.panelId}-${this.getColumnId(column)}`;
-    checkbox.setAttribute('aria-label', `Show ${this.getColumnName(column)}`);
-    checkbox.addEventListener('change', () => this.setColumnsVisible([column], checkbox.checked));
+    const name = this.getColumnName(column);
+    const { wrapper, input } = this.createCheckbox(`Show ${name}`, this.isColumnVisible(column), (checked) =>
+      this.setColumnsVisible([column], checked),
+    );
+    input.id = `lgr-column-${this.panelId}-${this.getColumnId(column)}`;
     const label = document.createElement('label');
-    label.htmlFor = checkbox.id;
-    label.textContent = this.getColumnName(column);
-    row.append(checkbox, label);
-    this.addColumnPinControls(row, column);
+    label.htmlFor = input.id;
+    label.textContent = name;
+    row.append(wrapper, label);
+    const actions = document.createElement('span');
+    actions.className = 'lgr-columns-row-actions';
+    this.addColumnPinControls(actions, column);
     if (!this.params?.suppressColumnMove) {
       row.dataset['columnMovable'] = 'true';
-      this.addColumnMoveControls(row, column);
+      this.addColumnDragListeners(row, column);
+      this.addColumnMoveControls(actions, column);
     }
+    if (actions.children.length > 0) row.appendChild(actions);
+    const grip = document.createElement('span');
+    grip.className = 'lgr-columns-drag-handle';
+    grip.setAttribute('aria-hidden', 'true');
+    grip.innerHTML = iconSvg('columnDrag') ?? '';
+    row.appendChild(grip);
     return row;
   }
 
-  private addColumnPinControls(row: HTMLElement, column: Column): void {
+  private addColumnPinControls(container: HTMLElement, column: Column): void {
     const name = this.getColumnName(column);
     if (this.getColumnPinned(column) === null) {
-      row.append(
-        this.createButton(`Pin ${name} left`, () => this.setColumnPinned(column, 'left')),
-        this.createButton(`Pin ${name} right`, () => this.setColumnPinned(column, 'right')),
+      container.append(
+        this.createIconButton(`Pin ${name} left`, 'menuPin', () => this.setColumnPinned(column, 'left')),
+        this.createIconButton(`Pin ${name} right`, 'menuPin', () => this.setColumnPinned(column, 'right')),
       );
       return;
     }
-    row.append(this.createButton(`Unpin ${name}`, () => this.setColumnPinned(column, null)));
+    container.append(this.createIconButton(`Unpin ${name}`, 'rowUnpin', () => this.setColumnPinned(column, null)));
   }
 
-  private addColumnMoveControls(row: HTMLElement, column: Column): void {
+  private addColumnDragListeners(row: HTMLElement, column: Column): void {
     row.draggable = true;
     row.addEventListener('dragstart', (event) => {
       this.draggedColumn = column;
@@ -338,13 +369,16 @@ export class ColumnsToolPanel implements IColumnToolPanel {
       if (dragged && dragged !== column) this.moveColumn(dragged, this.getAllColumns().indexOf(column));
       this.draggedColumn = undefined;
     });
+  }
+
+  private addColumnMoveControls(container: HTMLElement, column: Column): void {
     const index = this.getAllColumns().indexOf(column);
     const name = this.getColumnName(column);
-    const up = this.createButton(`Move ${name} up`, () => this.moveColumn(column, index - 1));
-    const down = this.createButton(`Move ${name} down`, () => this.moveColumn(column, index + 1));
+    const up = this.createIconButton(`Move ${name} up`, 'sortAscending', () => this.moveColumn(column, index - 1));
+    const down = this.createIconButton(`Move ${name} down`, 'sortDescending', () => this.moveColumn(column, index + 1));
     up.disabled = index <= 0;
     down.disabled = index < 0 || index >= this.getAllColumns().length - 1;
-    row.append(up, down);
+    container.append(up, down);
   }
 
   private appendFunctionSection(title: string, kind: 'group' | 'value' | 'pivot'): void {
@@ -359,20 +393,44 @@ export class ColumnsToolPanel implements IColumnToolPanel {
         event.preventDefault();
         if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
       };
-      section.addEventListener('dragenter', acceptDrop);
+      section.addEventListener('dragenter', (event) => {
+        section.classList.add('lgr-drop-zone-drag-over');
+        acceptDrop(event);
+      });
       section.addEventListener('dragover', acceptDrop);
+      section.addEventListener('dragleave', (event) => {
+        if (!(event.relatedTarget instanceof Node) || !section.contains(event.relatedTarget)) {
+          section.classList.remove('lgr-drop-zone-drag-over');
+        }
+      });
       section.addEventListener('drop', (event) => {
         event.preventDefault();
+        section.classList.remove('lgr-drop-zone-drag-over');
         const dragged = this.getDraggedColumn(event);
         if (dragged) this.addFunctionColumn(dragged, kind);
         this.draggedColumn = undefined;
       });
     }
-    const heading = document.createElement('h3');
+    const heading = document.createElement('h2');
     heading.textContent = title;
     section.appendChild(heading);
     const current = this.getFunctionColumns(kind);
-    for (const column of current) section.append(this.createFunctionMember(column, kind));
+    if (current.length === 0) {
+      // Native-style dashed empty state.
+      const empty = document.createElement('div');
+      empty.className = 'lgr-columns-drop-empty';
+      empty.textContent = kind === 'group'
+        ? 'Drag here to set row groups'
+        : kind === 'value'
+          ? 'Drag here to aggregate'
+          : 'Drag here to set column labels';
+      section.appendChild(empty);
+    } else {
+      const members = document.createElement('div');
+      members.className = 'lgr-columns-members';
+      for (const column of current) members.append(this.createFunctionMember(column, kind));
+      section.appendChild(members);
+    }
     const eligible = this.getColumns().filter((column) => this.isEligible(column, kind) && !current.includes(column));
     for (const column of eligible) {
       section.append(this.createButton(
@@ -380,38 +438,36 @@ export class ColumnsToolPanel implements IColumnToolPanel {
         () => this.addFunctionColumn(column, kind),
       ));
     }
-    if (current.length === 0 && eligible.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'lgr-columns-status';
-      empty.textContent = 'No eligible columns';
-      section.appendChild(empty);
-    }
     this.gui.appendChild(section);
   }
 
   private createFunctionMember(column: Column, kind: 'group' | 'value' | 'pivot'): HTMLElement {
     const member = document.createElement('div');
-    member.className = 'lgr-columns-member';
+    member.className = 'lgr-chip lgr-columns-member';
+    const name = this.getColumnName(column);
     const label = document.createElement('span');
-    label.textContent = this.getColumnName(column);
+    label.textContent = name;
     const section = kind === 'group' ? 'row groups' : kind === 'value' ? 'values' : 'pivots';
-    member.append(label, this.createButton(`Remove ${this.getColumnName(column)} from ${section}`, () => this.removeFunctionColumn(column, kind)));
+    member.append(label, this.createIconButton(`Remove ${name} from ${section}`, 'close', () => this.removeFunctionColumn(column, kind)));
     return member;
   }
 
   private appendPivotMode(): void {
     const section = document.createElement('section');
     section.className = 'lgr-columns-section';
-    const heading = document.createElement('h3');
+    const heading = document.createElement('h2');
     heading.textContent = 'Pivot Mode';
     const label = document.createElement('label');
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.checked = this.api?.getGridOption?.('pivotMode') === true;
-    input.setAttribute('aria-label', 'Enable pivot mode');
+    label.className = 'lgr-pivot-mode';
+    const text = document.createElement('span');
+    text.textContent = 'Enable pivot mode';
+    const { wrapper, input } = this.createToggle(
+      'Enable pivot mode',
+      this.api?.getGridOption?.('pivotMode') === true,
+      (checked) => this.api?.setGridOption?.('pivotMode', checked),
+    );
     input.disabled = this.isFunctionsReadOnly();
-    input.addEventListener('change', () => this.api?.setGridOption?.('pivotMode', input.checked));
-    label.append(input, ' Enable pivot mode');
+    label.append(text, wrapper);
     section.append(heading, label);
     this.gui.appendChild(section);
   }
@@ -424,6 +480,52 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     button.setAttribute('aria-label', label);
     button.addEventListener('click', onClick);
     return button;
+  }
+
+  /** Icon-only control; the accessible name comes from the aria-label/title. */
+  private createIconButton(label: string, icon: IconName, onClick: () => void): HTMLButtonElement {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'lgr-icon-button';
+    button.setAttribute('aria-label', label);
+    button.title = label;
+    button.innerHTML = iconSvg(icon) ?? '';
+    button.addEventListener('click', onClick);
+    return button;
+  }
+
+  /** Painted checkbox; the input stays for semantics, keyboard, and a11y. */
+  private createCheckbox(
+    ariaLabel: string,
+    checked: boolean,
+    onChange: (checked: boolean) => void,
+  ): { wrapper: HTMLElement; input: HTMLInputElement } {
+    const wrapper = document.createElement('span');
+    wrapper.className = 'lgr-checkbox';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = checked;
+    input.setAttribute('aria-label', ariaLabel);
+    input.addEventListener('change', () => onChange(input.checked));
+    wrapper.appendChild(input);
+    return { wrapper, input };
+  }
+
+  /** Switch-style toggle (pivot mode). */
+  private createToggle(
+    ariaLabel: string,
+    checked: boolean,
+    onChange: (checked: boolean) => void,
+  ): { wrapper: HTMLElement; input: HTMLInputElement } {
+    const wrapper = document.createElement('span');
+    wrapper.className = 'lgr-toggle';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = checked;
+    input.setAttribute('aria-label', ariaLabel);
+    input.addEventListener('change', () => onChange(input.checked));
+    wrapper.appendChild(input);
+    return { wrapper, input };
   }
 
   private setVisibleColumns(visible: boolean): void {

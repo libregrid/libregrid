@@ -14,7 +14,7 @@
 | `suppressPivots`             | ✅     | Hides the inert Column Labels (Pivot) section.                                                                                                                                        |
 | `suppressPivotMode`          | ✅     | Hides the inert Pivot Mode section.                                                                                                                                                   |
 | `suppressColumnFilter`       | ✅     | Hides the column search box.                                                                                                                                    |
-| `suppressColumnSelectAll`    | ✅     | Hides Select all and Unselect all controls.                                                                                                                     |
+| `suppressColumnSelectAll`    | ✅     | Hides the header select-all checkbox.                                                                                                                     |
 | `suppressColumnExpandAll`    | ✅     | Hides the labelled expand-all and collapse-all controls.                                                                                                                              |
 | `contractColumnSelection`    | ✅     | Column groups start collapsed.                                                                                                                                                        |
 | `suppressSyncLayoutWithGrid` | ✅     | `syncLayoutWithGrid()` retains a custom layout when set.                                                                                                      |
@@ -75,7 +75,7 @@
 | Standalone row-group panel                        | ✅     | Supports `always`, `onlyWhenGrouping`, remove, reorder, native drop, and `functionsReadOnly`.                                                            |
 | Cleanup                                           | ✅     | Side-bar, drag-adapter, and grid-listener cleanup are tested.                                                                    |
 | Native fallback                                   | ✅     | Native HTML drag supports internal reorder and Row Groups or Values drops when no UI adapter is active.                                                  |
-| Search-scoped visibility actions                  | ✅     | Select All and Unselect All use the current column-label or group-label search result.                                                                   |
+| Search-scoped visibility actions                  | ✅     | The header select-all checkbox (indeterminate when mixed) applies to the current column-label or group-label search result.                                                                   |
 | Pinning controls                                  | ✅     | Leaf rows expose pin-left, pin-right, and unpin actions through the public Grid API.                                                                     |
 | Deferred external synchronization                 | ✅     | Grid events refresh deferred snapshots before a later Apply action.                                                                                      |
 | Reorder existing Row Groups and Values members    | 🟡     | The main panel can add or remove members but cannot reorder them. The standalone row-group panel can reorder row groups.                                 |

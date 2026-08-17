@@ -94,7 +94,7 @@ describe('ColumnsToolPanel', () => {
     expect(panel.getGui().textContent).toContain('Display athlete');
     expect(panel.getGui().textContent).not.toContain('secret');
     expect(panel.getGui().querySelector('.custom-row')).not.toBeNull();
-    const checkbox = panel.getGui().querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    const checkbox = panel.getGui().querySelector<HTMLInputElement>('input[aria-label="Show Display athlete"]')!;
     checkbox.checked = false;
     checkbox.dispatchEvent(new Event('change'));
     expect(api.setColumnsVisible).toHaveBeenCalledWith([athlete], false);
@@ -111,7 +111,9 @@ describe('ColumnsToolPanel', () => {
 
     expect(panel.getGui().textContent).toContain('Display athlete');
     expect(panel.getGui().textContent).not.toContain('Display year');
-    panel.getGui().querySelector<HTMLButtonElement>('[aria-label="Select all columns"]')!.click();
+    const selectAll = panel.getGui().querySelector<HTMLInputElement>('input[aria-label="Select all columns"]')!;
+    selectAll.checked = true;
+    selectAll.dispatchEvent(new Event('change'));
     expect(api.setColumnsVisible).toHaveBeenLastCalledWith([athlete], true);
   });
 
@@ -186,7 +188,9 @@ describe('ColumnsToolPanel', () => {
     search.value = 'personal';
     search.dispatchEvent(new Event('input'));
     expect(panel.getGui().textContent).toContain('Display age');
-    panel.getGui().querySelector<HTMLButtonElement>('[aria-label="Select all columns"]')!.click();
+    const selectAll = panel.getGui().querySelector<HTMLInputElement>('input[aria-label="Select all columns"]')!;
+    selectAll.checked = true;
+    selectAll.dispatchEvent(new Event('change'));
     expect(api.setColumnsVisible).toHaveBeenLastCalledWith([age], true);
   });
 
@@ -240,6 +244,37 @@ describe('ColumnsToolPanel', () => {
     checkbox.checked = true;
     checkbox.dispatchEvent(new Event('change'));
     expect(api.setColumnsVisible).toHaveBeenCalledWith([shown, hidden], true);
+  });
+
+  it('renders a native-style header, chip members, dashed empty states, and the pivot toggle', () => {
+    const country = createColumn({ id: 'country', enableRowGroup: true });
+    const gold = createColumn({ id: 'gold', enableValue: true });
+    const api = createApi([country, gold]);
+    const panel = initPanel(api);
+    const gui = panel.getGui();
+
+    // Header: one painted select-all checkbox sharing a row with the search box.
+    const selectAll = gui.querySelector<HTMLInputElement>('input[aria-label="Select all columns"]')!;
+    expect(selectAll.closest('.lgr-checkbox')).not.toBeNull();
+    expect(selectAll.closest('.lgr-columns-header')?.querySelector('.lgr-search')).not.toBeNull();
+    expect(gui.querySelector('.lgr-search input')?.getAttribute('placeholder')).toBe('Search...');
+
+    // Function sections show the native dashed empty affordances.
+    expect(gui.textContent).toContain('Drag here to set row groups');
+    expect(gui.textContent).toContain('Drag here to aggregate');
+
+    // Pivot mode is a labeled switch toggle.
+    const pivot = gui.querySelector<HTMLInputElement>('input[aria-label="Enable pivot mode"]')!;
+    expect(pivot.closest('.lgr-toggle')).not.toBeNull();
+    expect(gui.textContent).toContain('Pivot Mode');
+
+    // Adding a row group renders a chip member with an icon-only remove control.
+    gui.querySelector<HTMLButtonElement>('[aria-label="Group by Display country"]')!.click();
+    api.listeners.get('columnRowGroupChanged')?.();
+    const member = gui.querySelector('.lgr-columns-member')!;
+    expect(member.classList.contains('lgr-chip')).toBe(true);
+    const remove = member.querySelector<HTMLButtonElement>('[aria-label="Remove Display country from row groups"]')!;
+    expect(remove.classList.contains('lgr-icon-button')).toBe(true);
   });
 
   it('moves columns with buttons and native drag and drop', () => {
@@ -420,5 +455,20 @@ describe('ColumnsToolPanel', () => {
     const throwing = createColumn({ id: 'throwing', toolPanelClass: () => { throw new Error('no class'); } });
     const throwingPanel = initPanel(createApi([throwing]));
     expect(throwingPanel.getGui().textContent).toContain('Display throwing');
+  });
+
+  it('keeps focus and caret in the search box across re-renders', () => {
+    const athlete = createColumn({ id: 'athlete' });
+    const panel = initPanel(createApi([athlete]));
+    const search = panel.getGui().querySelector<HTMLInputElement>('input[aria-label="Search columns"]')!;
+    search.focus();
+    search.value = 'ath';
+    search.setSelectionRange(2, 2);
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+
+    const active = document.activeElement as HTMLInputElement;
+    expect(active?.getAttribute('aria-label')).toBe('Search columns');
+    expect(active.value).toBe('ath');
+    expect(active.selectionStart).toBe(2);
   });
 });
