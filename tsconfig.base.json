@@ -35,6 +35,7 @@
       "@libregrid/cell-selection": ["./packages/cell-selection/src/index.ts"],
       "@libregrid/clipboard": ["./packages/clipboard/src/index.ts"],
       "@libregrid/status-bar": ["./packages/status-bar/src/index.ts"],
+      "@libregrid/toolbar": ["./packages/toolbar/src/index.ts"],
       "@libregrid/excel-export": ["./packages/excel-export/src/index.ts"],
       "@libregrid/advanced-filter": ["./packages/advanced-filter/src/index.ts"],
       "@libregrid/find": ["./packages/find/src/index.ts"],

@@ -39,6 +39,7 @@ export const VERSIONED_PACKAGES = [
   'cell-selection',
   'clipboard',
   'status-bar',
+  'toolbar',
   'excel-export',
   'set-filter',
   'multi-filter',

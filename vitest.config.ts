@@ -77,6 +77,9 @@ export default defineConfig({
       '@libregrid/status-bar': fileURLToPath(
         new URL('./packages/status-bar/src/index.ts', import.meta.url),
       ),
+      '@libregrid/toolbar': fileURLToPath(
+        new URL('./packages/toolbar/src/index.ts', import.meta.url),
+      ),
       '@libregrid/excel-export': fileURLToPath(
         new URL('./packages/excel-export/src/index.ts', import.meta.url),
       ),
