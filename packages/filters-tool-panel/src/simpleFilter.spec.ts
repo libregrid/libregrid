@@ -156,3 +156,89 @@ describe('SimpleFilter', () => {
     filter.getGui().remove();
   });
 });
+
+describe('text matching helpers', () => {
+  it('covers every operator, including case-sensitive and blank handling', () => {
+    // case-sensitive path keeps both sides unlowercased
+    expect(textConditionMatches('equals', 'UK', 'UK', true)).toBe(true);
+    expect(textConditionMatches('equals', 'UK', 'uk', true)).toBe(false);
+
+    expect(textConditionMatches('notEqual', 'uk', 'us', false)).toBe(true);
+    expect(textConditionMatches('notEqual', 'uk', 'uk', false)).toBe(false);
+    expect(textConditionMatches('notContains', 'wid', 'Widget', false)).toBe(false);
+    expect(textConditionMatches('notContains', 'xyz', 'Widget', false)).toBe(true);
+    expect(textConditionMatches('endsWith', 'get', 'Widget', false)).toBe(true);
+    expect(textConditionMatches('endsWith', 'wid', 'Widget', false)).toBe(false);
+    expect(textConditionMatches('notBlank', null, 'Widget', false)).toBe(true);
+    expect(textConditionMatches('notBlank', null, '   ', false)).toBe(false);
+    expect(textConditionMatches('blank', null, 'Widget', false)).toBe(false);
+  });
+
+  it('handles null models, null values, empty conditions, and AND joins', () => {
+    expect(textModelMatches(null, 'anything')).toBe(true);
+    expect(textModelMatches({ filterType: 'text', type: 'blank', filter: null }, null)).toBe(true);
+    expect(
+      textModelMatches(
+        { filterType: 'text', operator: 'AND', conditions: [{ type: 'equals', filter: '' }] },
+        'Widget',
+      ),
+    ).toBe(true);
+    expect(
+      textModelMatches(
+        {
+          filterType: 'text',
+          operator: 'AND',
+          conditions: [
+            { type: 'equals', filter: 'Widget' },
+            { type: 'endsWith', filter: 'et' },
+          ],
+        },
+        'Widget',
+      ),
+    ).toBe(true);
+    expect(
+      textModelMatches(
+        {
+          filterType: 'text',
+          operator: 'AND',
+          conditions: [
+            { type: 'equals', filter: 'Widget' },
+            { type: 'equals', filter: 'Doohickey' },
+          ],
+        },
+        'Widget',
+      ),
+    ).toBe(false);
+    // a missing type/filter falls back to 'contains'/''
+    expect(textModelMatches({ filterType: 'text' }, 'Widget')).toBe(true);
+  });
+});
+
+describe('SimpleFilter model hydration', () => {
+  it('rehydrates single-condition and empty models without throwing', () => {
+    const filter = initFilter();
+
+    filter.setModel({ filterType: 'text', type: 'equals', filter: 'A' });
+    expect(filter.getModel()).toEqual({ filterType: 'text', type: 'equals', filter: 'A' });
+
+    filter.setModel({ filterType: 'text', operator: 'AND', conditions: [] });
+    expect(filter.getModel()).toBeNull();
+
+    filter.setModel({
+      filterType: 'text',
+      operator: 'AND',
+      conditions: [{ type: 'equals', filter: null }],
+    });
+    expect(filter.getModel()).toBeNull();
+
+    filter.setModel({ filterType: 'text' });
+    expect(filter.getModel()).toBeNull();
+  });
+
+  it('matches when no getValue is supplied, coercing the cell value to empty', () => {
+    const filter = new SimpleFilter();
+    filter.init({});
+    filter.setModel({ filterType: 'text', type: 'blank', filter: null });
+    expect(filter.doesFilterPass({ node: {}, data: {} } as never)).toBe(true);
+  });
+});

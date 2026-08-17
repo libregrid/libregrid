@@ -112,3 +112,84 @@ describe('SelectableFilter', () => {
     expect(innerModelPasses(null, 'anything')).toBe(true);
   });
 });
+
+describe('innerModelPasses edge cases', () => {
+  it('coerces set-filter null and undefined values', () => {
+    expect(innerModelPasses({ filterType: 'set', values: [null] }, null)).toBe(true);
+    expect(
+      innerModelPasses({ filterType: 'set', values: ['__libregrid_undefined__'] }, undefined),
+    ).toBe(true);
+  });
+
+  it('covers number blank/notBlank across null, undefined, empty, and real values', () => {
+    expect(innerModelPasses({ filterType: 'number', type: 'blank' }, null)).toBe(true);
+    expect(innerModelPasses({ filterType: 'number', type: 'blank' }, undefined)).toBe(true);
+    expect(innerModelPasses({ filterType: 'number', type: 'blank' }, '')).toBe(true);
+    expect(innerModelPasses({ filterType: 'number', type: 'blank' }, 'x')).toBe(false);
+    expect(innerModelPasses({ filterType: 'number', type: 'notBlank' }, null)).toBe(false);
+    expect(innerModelPasses({ filterType: 'number', type: 'notBlank' }, undefined)).toBe(false);
+    expect(innerModelPasses({ filterType: 'number', type: 'notBlank' }, '')).toBe(false);
+    expect(innerModelPasses({ filterType: 'number', type: 'notBlank' }, 'x')).toBe(true);
+  });
+
+  it('covers NaN guards, inRange, ordering operators, and the default branch', () => {
+    expect(innerModelPasses({ filterType: 'number', type: 'equals', filter: 5 }, 'abc')).toBe(false);
+    expect(innerModelPasses({ filterType: 'number', type: 'equals', filter: 'abc' }, 5)).toBe(false);
+
+    expect(
+      innerModelPasses({ filterType: 'number', type: 'inRange', filter: 5, filterTo: 10 }, 7),
+    ).toBe(true);
+    expect(
+      innerModelPasses({ filterType: 'number', type: 'inRange', filter: 5, filterTo: 10 }, 20),
+    ).toBe(false);
+    expect(
+      innerModelPasses({ filterType: 'number', type: 'inRange', filter: 5, filterTo: 'x' }, 7),
+    ).toBe(false);
+
+    expect(innerModelPasses({ filterType: 'number', type: 'equals', filter: 5 }, 5)).toBe(true);
+    expect(innerModelPasses({ filterType: 'number', type: 'notEqual', filter: 5 }, 6)).toBe(true);
+    expect(innerModelPasses({ filterType: 'number', type: 'notEqual', filter: 5 }, 5)).toBe(false);
+    expect(innerModelPasses({ filterType: 'number', type: 'lessThanOrEqual', filter: 5 }, 5)).toBe(
+      true,
+    );
+    expect(innerModelPasses({ filterType: 'number', type: 'lessThanOrEqual', filter: 5 }, 6)).toBe(
+      false,
+    );
+    expect(
+      innerModelPasses({ filterType: 'number', type: 'greaterThanOrEqual', filter: 5 }, 5),
+    ).toBe(true);
+    expect(
+      innerModelPasses({ filterType: 'number', type: 'greaterThanOrEqual', filter: 5 }, 4),
+    ).toBe(false);
+
+    // missing type defaults to 'equals'; date/bigint route through the number path
+    expect(innerModelPasses({ filterType: 'number', filter: 5 }, 5)).toBe(true);
+    expect(innerModelPasses({ filterType: 'date', type: 'equals', filter: 5 }, 5)).toBe(true);
+    expect(innerModelPasses({ filterType: 'bigint', type: 'equals', filter: 5 }, 5)).toBe(true);
+
+    // falsy or non-object models always pass
+    expect(innerModelPasses('text', 'x')).toBe(true);
+    expect(innerModelPasses(0, 'x')).toBe(true);
+  });
+});
+
+describe('SelectableFilter defaults and null model', () => {
+  it('falls back to text + set defs when no filters are supplied', () => {
+    const filter = new SelectableFilter();
+    filter.init({} as never);
+    const select = filter
+      .getGui()
+      .querySelector<HTMLSelectElement>('select[aria-label="Filter type"]')!;
+    expect([...select.options].map((option) => option.textContent)).toEqual([
+      'Simple Filter',
+      'Selection Filter',
+    ]);
+  });
+
+  it('clears and deactivates when given a null model', () => {
+    const filter = initFilter();
+    filter.setModel(null);
+    expect(filter.getModel()).toBeNull();
+    expect(filter.isFilterActive()).toBe(false);
+  });
+});
