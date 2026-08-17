@@ -9,7 +9,7 @@ describe('Material menu renderer', () => {
     document.body.querySelectorAll('.lgr-sub-menu').forEach((el) => el.remove());
   });
 
-  it('delegates to the shared Quartz renderer: actions, keyboard nav, body-level submenus, destroy', async () => {
+  it('delegates to the shared Quartz renderer: actions, keyboard nav, nested submenus, destroy', async () => {
     const renderer = createMaterialMenuRenderer(
       TestBed.inject(ApplicationRef),
       TestBed.inject(EnvironmentInjector),
@@ -52,9 +52,9 @@ describe('Material menu renderer', () => {
     rows[0]?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(onItemSelected).toHaveBeenCalledTimes(2);
 
-    // Submenus render as body-level popups with Quartz styling.
+    // Submenus render inside the menu element with Quartz styling.
     rows[3]?.click();
-    const submenu = document.body.querySelector<HTMLElement>('.lgr-sub-menu');
+    const submenu = result.element.querySelector<HTMLElement>('.lgr-sub-menu');
     expect(submenu).not.toBeNull();
     expect(submenu?.classList.contains('lgr-menu')).toBe(true);
     expect(rows[3]?.getAttribute('aria-expanded')).toBe('true');
@@ -64,9 +64,9 @@ describe('Material menu renderer', () => {
     expect(action).toHaveBeenCalledTimes(3);
     expect(onItemSelected).toHaveBeenCalledTimes(3);
 
-    // Destroy removes body-level submenus.
+    // Destroy removes nested submenus.
     result.destroy?.();
-    expect(document.body.querySelector('.lgr-sub-menu')).toBeNull();
+    expect(result.element.querySelector('.lgr-sub-menu')).toBeNull();
     result.element.remove();
   });
 });

@@ -103,7 +103,7 @@ Per native CSS (ag-grid.css) the menu option has three visual states:
 ### 1.5 Positioning & clamping
 
 - Native: the menu is "displayed inside a popup"; `postProcessPopup(params)` repositions it, and `popupParent` is the fix when a large menu is clipped inside a small grid — "the element must … cover the same area as the grid (or simply be a parent of the grid)" (both pages § Menu Popup / Popup Parent).
-- LibreGrid delegates position+clamp to Community's `PopupService` (see §4); the column menu uses `position:'under', keepWithinBounds:true`, the context menu uses `positionPopupUnderMouseEvent` (which clamps to viewport).
+- LibreGrid delegates position+clamp to Community's `PopupService` (see §4); the column menu uses `position:'under', keepWithinBounds:true`, the context menu uses `positionPopupUnderMouseEvent`. LibreGrid menus open in a **body-level popup by default** (an app-set `popupParent` is honoured), so clamping applies to the viewport and menus can extend past the grid edge instead of being clipped at the grid's boundary.
 
 ### 1.6 Closing behavior
 
@@ -188,9 +188,9 @@ Package `@libregrid/menu` (`packages/menu/src`).
 | File | Role | Notes |
 |---|---|---|
 | `colMenuFactory.ts` | Column menu bean (`enterpriseMenuFactory`), builds items, opens popup, inline DOM fallback renderer | Precedence chain implemented (columnMenuItems → getColumnMenuItems → mainMenuItems → getMainMenuItems). Popup uses `popupSvc.positionPopupByComponent({position:'under', keepWithinBounds:true})`. Header right-click via `showMenuAfterContextMenuEvent`. **No tabs / `columnMenu` option / `menuTabs` handling.** Its inline `createMenuElement` renders only `item.name` — no icon/shortcut/checked/submenu/tooltip/cssClasses. |
-| `contextMenuSvc.ts` | Context menu bean (`contextMenuSvc`), builds items, filters separators, opens popup, inline DOM fallback renderer | Inline `createMenuElement` renders icon/shortcut/checked(`lgr-menu-item-checked`)/tooltip/cssClasses and a submenu **arrow** (`▶`) + `aria-haspopup`, but **does not open submenus**. Handles Ctrl+right-click (browser fallback) and `allowContextMenuWithControlKey`. Focus returns to trigger on close. |
+| `contextMenuSvc.ts` | Context menu bean (`contextMenuSvc`), builds items, filters separators, opens popup, inline DOM fallback renderer | Inline `createMenuElement` renders icon/shortcut/checked(`lgr-menu-item-checked`)/tooltip/cssClasses and a submenu **arrow** + `aria-haspopup`, and **opens submenus** (hover, click, ArrowRight/Left; see OPEN-ACTIONS C3). Handles Ctrl+right-click (browser fallback) and `allowContextMenuWithControlKey`. Focus returns to trigger on close. |
 | `menuCss.ts` | Inline CSS (`css: [menuCss]`) | Only injected by `ContextMenuModule` (see gap). Values differ from Quartz (see gap list). |
-| `menuItemMapper.ts` | Name→MenuItemDef resolution via registry | Maps `subMenu` children recursively, **drops `'separator'` inside submenus**. |
+| `menuItemMapper.ts` | Name→MenuItemDef resolution via registry | Maps `subMenu` children recursively (string entries resolve through the registry; separators become sentinel `__separator__` items). |
 | `menuItemRegistry.ts` + `registryApi.ts` | Extensibility point | Global store; feature packages call `registerMenuItem(s)` at module scope. |
 | `defaultItems.ts` | Default item name arrays + built-in factories | Column: sort×3, pinSubMenu(stub), autoSizeThis/All, resetColumns, columnChooser, columnFilter. Context: copy/copyWithHeaders/copyWithGroupHeaders/paste/export. `pinSubMenu`, `rowGroup`-family, clipboard, export, `note`, `pinRowSubMenu` etc. are **stubs returning `null`** (hidden). Sort/auto-size/reset are real; `columnFilter` opens `filterPopup.ts`. |
 | `filterPopup.ts` | Filter popup for the column-menu "Filter" item | Manual fixed-position popup; clamps `maxHeight` to viewport; uses `var(--ag-popup-shadow)` and hardcoded `borderRadius:6px`, `minWidth:240px`. |

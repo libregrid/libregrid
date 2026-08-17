@@ -1,8 +1,9 @@
-import type { MenuItemDef, PopupService } from 'ag-grid-community';
+import type { GridApi, MenuItemDef, PopupService } from 'ag-grid-community';
 import { iconSvg } from '@libregrid/core';
 import { createMenuDom } from './menuDomRenderer';
 import { _readGlobalStore } from './menuItemRegistry';
 import type { MenuActionParams } from './menuItemRegistry';
+import { withViewportPopupParent } from './menuUtils';
 
 /**
  * Toolbar menu item contribution — a dropdown button that opens a menu of
@@ -15,7 +16,7 @@ import type { MenuActionParams } from './menuItemRegistry';
 const REGISTRY_KEY = Symbol.for('libregrid.toolbarItems');
 
 interface ToolbarItemParams {
-  api: never;
+  api: GridApi;
   popupSvc?: unknown;
   label?: string;
   tooltip?: string;
@@ -75,26 +76,31 @@ export function registerMenuToolbarItem(): void {
     const menu = createMenuDom('column', items, { column: null, node: null, value: null, api: params.api }, {
       closeAll: () => hideFunc?.(),
     });
-    const popup = popupSvc.addPopup({
-      eChild: menu.element,
-      modal: true,
-      closeOnEsc: true,
-      ariaLabel: 'Toolbar Menu',
-      afterGuiAttached: () => menu.focusFirst(),
-      closedCallback: () => {
-        menu.destroy();
-        hideFunc = null;
-      },
-      positionCallback: () =>
-        popupSvc.positionPopupByComponent({
-          type: 'columnMenu',
-          eventSource: button,
-          ePopup: menu.element,
-          position: 'under',
-          keepWithinBounds: true,
-        }),
+    let popup: { hideFunc: () => void } | undefined;
+    // Render in a viewport-level popup by default so the menu is not clipped
+    // at the grid edge (an app-set popupParent is still honoured).
+    withViewportPopupParent(params.api, () => {
+      popup = popupSvc.addPopup({
+        eChild: menu.element,
+        modal: true,
+        closeOnEsc: true,
+        ariaLabel: 'Toolbar Menu',
+        afterGuiAttached: () => menu.focusFirst(),
+        closedCallback: () => {
+          menu.destroy();
+          hideFunc = null;
+        },
+        positionCallback: () =>
+          popupSvc.positionPopupByComponent({
+            type: 'columnMenu',
+            eventSource: button,
+            ePopup: menu.element,
+            position: 'under',
+            keepWithinBounds: true,
+          }),
+      });
     });
-    hideFunc = popup.hideFunc;
+    hideFunc = popup!.hideFunc;
   });
 
   return {
@@ -105,7 +111,7 @@ export function registerMenuToolbarItem(): void {
   });
 }
 
-function resolveItems(items: (MenuItemDef | string)[], api: never): MenuItemDef[] {
+function resolveItems(items: (MenuItemDef | string)[], api: GridApi): MenuItemDef[] {
   const actionParams: MenuActionParams = { column: null, node: null, value: null, api };
   const store = _readGlobalStore();
   return items.flatMap((item): MenuItemDef[] => {

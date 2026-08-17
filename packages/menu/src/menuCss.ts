@@ -6,16 +6,32 @@
  * cells), 8px list padding, 36px rows, 17px separators, `--ag-card-shadow`,
  * `--ag-menu-*` surface tokens, and the inset focus ring from
  * `--ag-input-focus-border-color`.
+ *
+ * Structure:
+ *   .lgr-menu           → positioning only (absolute, flex column, max-height)
+ *   .lgr-menu-scroll    → the visual surface: bg/border/radius/shadow + overflow-y
+ *   .lgr-menu-list      → the table of rows
+ *   .lgr-sub-menu       → a nested menu positioned absolutely off the parent row
+ *
+ * The surface lives on `.lgr-menu-scroll` (not `.lgr-menu`) so submenus — which
+ * are appended to `.lgr-menu` — escape the scroll clipping while the parent menu
+ * itself still scrolls when its content exceeds the viewport.
  */
 export const menuCss = `
 .lgr-menu {
   /* Absolute so the grid's popup positioning (top/left on the child) takes
    * effect — without it the menu flows as a full-width block over the grid. */
   position: absolute;
-  min-width: var(--ag-menu-min-width, 181px);
+  display: flex;
+  flex-direction: column;
   max-height: 100%;
+  z-index: 1000;
+}
+
+.lgr-menu-scroll {
+  min-width: var(--ag-menu-min-width, 181px);
+  min-height: 0;
   overflow-y: auto;
-  padding: 0;
   background-color: var(--ag-menu-background-color, var(--ag-background-color, #fff));
   border: var(--ag-borders, solid 1px) var(--ag-menu-border-color, var(--ag-border-color, #babfc7));
   border-radius: var(--ag-card-radius, var(--ag-border-radius, 4px));
@@ -24,7 +40,6 @@ export const menuCss = `
   font-size: var(--ag-font-size, 14px);
   color: var(--ag-foreground-color, #181d1f);
   user-select: none;
-  z-index: 1000;
 }
 
 .lgr-menu-list {
@@ -82,7 +97,8 @@ export const menuCss = `
 }
 
 .lgr-menu-item:hover,
-.lgr-menu-item-active {
+.lgr-menu-item-active,
+.lgr-menu-item-submenu-open {
   background-color: var(--ag-row-hover-color, color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 12%));
 }
 
@@ -121,7 +137,11 @@ export const menuCss = `
 }
 
 .lgr-sub-menu {
-  position: fixed;
+  /* Absolute, not fixed: position:fixed breaks when a host app applies a
+   * transform/filter/contain to an ancestor of the grid (very common — modals,
+   * entrance animations, backdrop-filter). Absolute is relative to the parent
+   * .lgr-menu (already positioned), so it stays anchored regardless. */
+  position: absolute;
   z-index: 1001;
 }
 

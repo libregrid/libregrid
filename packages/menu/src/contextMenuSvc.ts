@@ -4,6 +4,7 @@ import type { MenuActionParams } from './menuItemRegistry';
 import { DEFAULT_CONTEXT_MENU_ITEMS } from './defaultItems';
 import { createMenuDom, instantiateMenuItemComponent, type MenuDom } from './menuDomRenderer';
 import { getMenuRenderer } from './menuRenderer';
+import { withViewportPopupParent } from './menuUtils';
 
 /**
  * Context menu service — implements IContextMenuService.
@@ -210,7 +211,7 @@ export class ContextMenuService extends BeanStub implements NamedBean, IContextM
     const menuEl = rendered?.element ?? this.createMenuElement(items, params);
     this.activeMenuTrigger = trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
 
-    const popup = popupSvc.addPopup({
+    const popupOptions = {
       eChild: menuEl,
       closeOnEsc: true,
       modal: true,
@@ -233,9 +234,16 @@ export class ContextMenuService extends BeanStub implements NamedBean, IContextM
         });
       },
       ariaLabel: 'Context Menu',
+    } satisfies Parameters<PopupService['addPopup']>[0];
+
+    let popup: { hideFunc: () => void } | undefined;
+    // Render in a viewport-level popup by default so the menu is not clipped
+    // at the grid edge (an app-set popupParent is still honoured).
+    withViewportPopupParent(this.beans.gridApi as GridApi | undefined, () => {
+      popup = popupSvc.addPopup(popupOptions);
     });
 
-    this.activeMenuHideFunc = popup.hideFunc;
+    this.activeMenuHideFunc = popup!.hideFunc;
   }
 
   private createMenuElement(items: MenuItemDef[], params: MenuActionParams): HTMLElement {

@@ -13,6 +13,7 @@ import type { MenuActionParams } from './menuItemRegistry';
 import { DEFAULT_COLUMN_MENU_ITEMS } from './defaultItems';
 import { createMenuDom, instantiateMenuItemComponent, normalizeSeparators, type MenuDom } from './menuDomRenderer';
 import { getMenuRenderer } from './menuRenderer';
+import { withViewportPopupParent } from './menuUtils';
 
 /**
  * Column menu factory — builds the column menu content.
@@ -169,7 +170,7 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     });
     const menuEl = rendered?.element ?? this.createMenuElement(items, params);
     this.fallbackDom?.focusFirst?.();
-    const popup = popupSvc.addPopup({
+    const popupOptions = {
       eChild: menuEl,
       modal: true,
       closeOnEsc: true,
@@ -187,8 +188,16 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
         onClosedCallback?.(event);
       },
       positionCallback: () => position(popupSvc, menuEl),
+    } satisfies Parameters<PopupService['addPopup']>[0];
+
+    let popup: { hideFunc: () => void } | undefined;
+    // Render in a viewport-level popup by default so the menu is not clipped
+    // at the grid edge (an app-set popupParent is still honoured).
+    withViewportPopupParent(this.beans.gridApi as GridApi | undefined, () => {
+      popup = popupSvc.addPopup(popupOptions);
     });
-    this.activeMenuHideFunc = popup.hideFunc;
+
+    this.activeMenuHideFunc = popup!.hideFunc;
     this.dispatchVisibleChanged(column, true);
     return true;
   }

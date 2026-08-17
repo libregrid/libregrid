@@ -57,7 +57,7 @@ export interface MenuDom {
 }
 
 const SUBMENU_OPEN_DELAY_MS = 150;
-const SUBMENU_CLOSE_DELAY_MS = 250;
+const SUBMENU_CLOSE_DELAY_MS = 150;
 const TYPEAHEAD_RESET_MS = 500;
 
 /**
@@ -81,11 +81,24 @@ export function createMenuDom(
   root.setAttribute('role', 'menu');
   root.tabIndex = -1;
 
+  const scroll = document.createElement('div');
+  scroll.className = 'lgr-menu-scroll';
   const list = document.createElement('div');
   list.className = 'lgr-menu-list';
-  root.appendChild(list);
+  scroll.appendChild(list);
+  root.appendChild(scroll);
 
-  let openSubmenu: { element: HTMLElement; parentRow: HTMLElement } | null = null;
+  // Column presence is menu-wide, not per-row: every row renders the shortcut
+  // and arrow cells (empty when absent) so all rows span the full table width
+  // and the hover highlight reaches the menu edge.
+  const menuHasShortcut = resolved.some((item) => Boolean(item.shortcut));
+  const menuHasSubmenu = resolved.some(
+    (item) =>
+      (item.subMenu?.filter((child): child is MenuItemDef => typeof child !== 'string') ?? [])
+        .length > 0,
+  );
+
+  let openSubmenu: { element: HTMLElement; parentRow: HTMLElement; dom: MenuDom } | null = null;
   let openTimer: number | undefined;
   let closeTimer: number | undefined;
   let typeahead = '';
@@ -96,12 +109,16 @@ export function createMenuDom(
 
   const closeSubmenu = (): void => {
     if (!openSubmenu) return;
-    const { element, parentRow } = openSubmenu;
-    element.remove();
+    const { element, parentRow, dom } = openSubmenu;
     openSubmenu = null;
+    element.remove();
     parentRow.setAttribute('aria-expanded', 'false');
-    parentRow.classList.remove('lgr-menu-item-submenu-open');
-    rowCustomInstances.get(parentRow)?.setExpanded?.(false);
+    parentRow.classList.remove('lgr-menu-item-submenu-open', 'lgr-menu-item-active');
+    const parentInstance = rowCustomInstances.get(parentRow);
+    parentInstance?.setExpanded?.(false);
+    parentInstance?.setActive?.(false);
+    // destroy() removes any deeper levels and their custom item instances.
+    dom.destroy();
   };
 
   const openSubmenuFor = (row: HTMLElement, item: MenuItemDef): void => {
@@ -125,8 +142,13 @@ export function createMenuDom(
     );
     const submenuEl = submenu.element;
     submenuEl.classList.add('lgr-sub-menu');
-    document.body.appendChild(submenuEl);
-    openSubmenu = { element: submenuEl, parentRow: row };
+    // The submenu lives inside the root menu element so the grid's popup
+    // service treats clicks in it as inside the popup (its outside-click
+    // detection only recognises the registered popup child and its
+    // descendants). It is position:fixed, so it still renders outside the
+    // root's overflow box.
+    root.appendChild(submenuEl);
+    openSubmenu = { element: submenuEl, parentRow: row, dom: submenu };
     row.setAttribute('aria-expanded', 'true');
     row.classList.add('lgr-menu-item-submenu-open');
     rowCustomInstances.get(row)?.setExpanded?.(true);
@@ -154,17 +176,33 @@ export function createMenuDom(
   };
 
   const positionSubmenu = (submenuEl: HTMLElement, row: HTMLElement): void => {
+    // Submenus are position:absolute relative to the root `.lgr-menu`, so all
+    // coordinates are computed root-relative (not viewport-relative). This
+    // keeps them anchored even when a host app applies a transform/filter/
+    // contain to an ancestor of the grid — that transform affects the root
+    // menu too, but the delta between the row and the root is unchanged.
+    const rootRect = root.getBoundingClientRect();
     const rect = row.getBoundingClientRect();
     const menuWidth = submenuEl.offsetWidth;
     const menuHeight = submenuEl.offsetHeight;
-    let left = rect.right - 4;
-    if (left + menuWidth > window.innerWidth - 4) {
-      left = Math.max(4, rect.left - menuWidth + 4);
+    const margin = 4;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Horizontal: prefer to the right of the row; flip left when it overflows.
+    let left = rect.right - rootRect.left - margin;
+    if (rootRect.left + left + menuWidth > viewportWidth - margin) {
+      left = rect.left - rootRect.left - menuWidth + margin;
     }
-    let top = rect.top;
-    if (top + menuHeight > window.innerHeight - 4) {
-      top = Math.max(4, window.innerHeight - menuHeight - 4);
+    left = Math.max(margin - rootRect.left, left);
+
+    // Vertical: align with the row top; clamp to the viewport.
+    let top = rect.top - rootRect.top;
+    if (rootRect.top + top + menuHeight > viewportHeight - margin) {
+      top = viewportHeight - margin - menuHeight - rootRect.top;
     }
+    top = Math.max(margin - rootRect.top, top);
+
     submenuEl.style.left = `${left}px`;
     submenuEl.style.top = `${top}px`;
   };
@@ -176,6 +214,8 @@ export function createMenuDom(
     const children = item.subMenu?.filter((child): child is MenuItemDef => typeof child !== 'string') ?? [];
     if (children.length > 0) {
       openSubmenuFor(row, item);
+      // Keyboard activation moves focus into the submenu (native behavior).
+      enabledRows(openSubmenu?.element ?? list)[0]?.focus();
       return;
     }
     row.click();
@@ -187,9 +227,14 @@ export function createMenuDom(
       const sep = document.createElement('div');
       sep.className = 'lgr-menu-separator';
       sep.setAttribute('role', 'separator');
-      const part = document.createElement('div');
-      part.className = 'lgr-menu-separator-part';
-      sep.appendChild(part);
+      // One part per option column (icon / name / shortcut / arrow) so the
+      // border-top on each cell spans the full menu width.
+      for (let column = 0; column < 4; column++) {
+        const part = document.createElement('div');
+        part.className = 'lgr-menu-separator-part';
+        part.setAttribute('aria-hidden', 'true');
+        sep.appendChild(part);
+      }
       list.appendChild(sep);
       continue;
     }
@@ -225,17 +270,17 @@ export function createMenuDom(
     nameCell.textContent = item.name;
     row.appendChild(nameCell);
 
-    if (item.shortcut) {
+    if (menuHasShortcut) {
       const shortcutCell = document.createElement('span');
       shortcutCell.className = 'lgr-menu-item-shortcut';
-      shortcutCell.textContent = item.shortcut;
+      shortcutCell.textContent = item.shortcut ?? '';
       row.appendChild(shortcutCell);
     }
 
-    if (hasSubmenu) {
+    if (menuHasSubmenu) {
       const arrowCell = document.createElement('span');
       arrowCell.className = 'lgr-menu-item-arrow';
-      arrowCell.innerHTML = iconSvg('subMenuOpen') ?? '›';
+      arrowCell.innerHTML = hasSubmenu ? iconSvg('subMenuOpen') ?? '›' : '';
       row.appendChild(arrowCell);
     }
 
@@ -264,11 +309,18 @@ export function createMenuDom(
       if (closeTimer !== undefined) window.clearTimeout(closeTimer);
       setActiveRow(row);
       if (hasSubmenu) {
-        openTimer = window.setTimeout(() => openSubmenuFor(row, item), SUBMENU_OPEN_DELAY_MS);
+        if (openSubmenu?.parentRow !== row) {
+          openTimer = window.setTimeout(() => openSubmenuFor(row, item), SUBMENU_OPEN_DELAY_MS);
+        }
+      } else if (openSubmenu) {
+        // Hovering a plain item closes an open submenu after the grace delay.
+        closeTimer = window.setTimeout(() => closeSubmenu(), SUBMENU_CLOSE_DELAY_MS);
       }
     });
     row.addEventListener('mouseleave', () => {
       if (openTimer !== undefined) window.clearTimeout(openTimer);
+      // Keep the row highlighted while its submenu is open.
+      if (openSubmenu?.parentRow === row) return;
       row.classList.remove('lgr-menu-item-active');
     });
 
@@ -296,7 +348,7 @@ export function createMenuDom(
       openSubMenu: (activateFirstItem?: boolean) => {
         openSubmenuFor(row, item);
         if (activateFirstItem) {
-          enabledRows(openSubmenu?.element ?? root)[0]?.focus();
+          enabledRows(openSubmenu?.element ?? list)[0]?.focus();
         }
       },
       closeSubMenu: () => closeSubmenu(),
@@ -355,17 +407,17 @@ export function createMenuDom(
     customCell.appendChild(instance.getGui());
     row.appendChild(customCell);
 
-    if (item.shortcut) {
+    if (menuHasShortcut) {
       const shortcutCell = document.createElement('span');
       shortcutCell.className = 'lgr-menu-item-shortcut';
-      shortcutCell.textContent = item.shortcut;
+      shortcutCell.textContent = item.shortcut ?? '';
       row.appendChild(shortcutCell);
     }
 
-    if (hasSubmenu) {
+    if (menuHasSubmenu) {
       const arrowCell = document.createElement('span');
       arrowCell.className = 'lgr-menu-item-arrow';
-      arrowCell.innerHTML = iconSvg('subMenuOpen') ?? '›';
+      arrowCell.innerHTML = hasSubmenu ? iconSvg('subMenuOpen') ?? '›' : '';
       row.appendChild(arrowCell);
     }
 
@@ -377,11 +429,17 @@ export function createMenuDom(
         setActiveRow(row);
         instance.setActive?.(true);
         if (hasSubmenu) {
-          openTimer = window.setTimeout(() => openSubmenuFor(row, item), SUBMENU_OPEN_DELAY_MS);
+          if (openSubmenu?.parentRow !== row) {
+            openTimer = window.setTimeout(() => openSubmenuFor(row, item), SUBMENU_OPEN_DELAY_MS);
+          }
+        } else if (openSubmenu) {
+          closeTimer = window.setTimeout(() => closeSubmenu(), SUBMENU_CLOSE_DELAY_MS);
         }
       });
       row.addEventListener('mouseleave', () => {
         if (openTimer !== undefined) window.clearTimeout(openTimer);
+        // Keep the row highlighted while its submenu is open.
+        if (openSubmenu?.parentRow === row) return;
         row.classList.remove('lgr-menu-item-active');
         instance.setActive?.(false);
       });
@@ -413,21 +471,30 @@ export function createMenuDom(
   };
 
   const setActiveRow = (row: HTMLElement): void => {
-    for (const other of enabledRows(root)) {
+    // Scope to this level's own rows — submenu rows manage their own state.
+    for (const other of enabledRows(list)) {
       other.classList.toggle('lgr-menu-item-active', other === row);
     }
   };
 
   root.addEventListener('focusin', () => {
     const active = document.activeElement;
-    if (active instanceof HTMLElement && active.classList.contains('lgr-menu-item')) {
+    if (!(active instanceof HTMLElement)) return;
+    // Rows inside an open submenu are handled by that submenu's listeners.
+    if (openSubmenu?.element.contains(active)) return;
+    if (active.classList.contains('lgr-menu-item')) {
       setActiveRow(active);
+      rowCustomInstances.get(active)?.setActive?.(true);
     }
   });
 
   root.addEventListener('keydown', (event) => {
-    const scope = currentLevel(root);
-    const rows = enabledRows(scope);
+    // Events from an open submenu are processed by that submenu's own
+    // keydown handler as they bubble; ancestors must not double-handle them.
+    if (openSubmenu && event.target instanceof Node && openSubmenu.element.contains(event.target)) {
+      return;
+    }
+    const rows = enabledRows(list);
     const currentIndex = rows.indexOf(document.activeElement as HTMLElement);
     switch (event.key) {
       case 'ArrowDown':
@@ -462,13 +529,22 @@ export function createMenuDom(
           const item = row && rows.includes(row) ? findItem(row) : undefined;
           if (row && item) {
             const children = item.subMenu?.filter((child): child is MenuItemDef => typeof child !== 'string') ?? [];
-            if (children.length > 0) openSubmenuFor(row, item);
+            if (children.length > 0) activate(row, item);
           }
         }
         break;
       case 'ArrowLeft':
         event.preventDefault();
         if (openSubmenu) {
+          // Close the deeper level first and keep focus in this one.
+          closeSubmenu();
+          const active = document.activeElement;
+          if (active instanceof HTMLElement && list.contains(active)) {
+            setActiveRow(active);
+          }
+        } else {
+          // No deeper level: hand back to the parent menu (submenu levels
+          // have closeLevel; the root menu does not).
           options.closeLevel?.();
         }
         break;
@@ -499,21 +575,10 @@ export function createMenuDom(
     return resolved.find((item) => item.name === nameCell?.textContent);
   };
 
-  const currentLevel = (menuEl: HTMLElement): HTMLElement => {
-    const active = document.activeElement;
-    if (active instanceof HTMLElement) {
-      const activeList = active.closest<HTMLElement>('.lgr-menu-list');
-      if (activeList && menuEl.contains(activeList) === false && openSubmenu?.element.contains(activeList)) {
-        return openSubmenu.element;
-      }
-    }
-    return menuEl;
-  };
-
   return {
     element: root,
     focusFirst(): void {
-      enabledRows(root)[0]?.focus();
+      enabledRows(list)[0]?.focus();
     },
     destroy(): void {
       if (destroyed) return;

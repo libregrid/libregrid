@@ -127,4 +127,62 @@ describe('ContextMenuService', () => {
     expect(bean.getContextMenuPosition()).toEqual({ x: 60, y: 40 });
     trigger.remove();
   });
+
+  it('opens the popup with the popup parent defaulted to the document body', () => {
+    const calls: string[] = [];
+    const setGridOption = vi.fn((key: string, value: unknown) => {
+      calls.push(`set:${key}:${value === document.body ? 'body' : String(value)}`);
+    });
+    const addPopup = vi.fn((popup: PopupOptions) => {
+      calls.push('addPopup');
+      document.body.appendChild(popup.eChild);
+      return { hideFunc: vi.fn() };
+    });
+    const { bean } = makeBeanHarness(ContextMenuService, {
+      beans: {
+        gridApi: { getGridOption: () => null, setGridOption },
+        menuItemMapper: { mapItems: vi.fn(() => [{ name: 'Item' }]) },
+        popupSvc: { addPopup, positionPopupUnderMouseEvent: vi.fn() },
+      },
+    });
+
+    bean.showContextMenu({
+      column: null,
+      rowNode: null,
+      value: null,
+      source: 'api',
+      mouseEvent: new MouseEvent('contextmenu', { clientX: 5, clientY: 6 }),
+    });
+
+    // body parent is set just around addPopup and restored straight after,
+    // so other popups keep the grid default.
+    expect(calls).toEqual(['set:popupParent:body', 'addPopup', 'set:popupParent:null']);
+  });
+
+  it('honours an app-configured popupParent', () => {
+    const parent = document.createElement('div');
+    const setGridOption = vi.fn();
+    const addPopup = vi.fn((popup: PopupOptions) => {
+      document.body.appendChild(popup.eChild);
+      return { hideFunc: vi.fn() };
+    });
+    const { bean } = makeBeanHarness(ContextMenuService, {
+      beans: {
+        gridApi: { getGridOption: () => parent, setGridOption },
+        menuItemMapper: { mapItems: vi.fn(() => [{ name: 'Item' }]) },
+        popupSvc: { addPopup, positionPopupUnderMouseEvent: vi.fn() },
+      },
+    });
+
+    bean.showContextMenu({
+      column: null,
+      rowNode: null,
+      value: null,
+      source: 'api',
+      mouseEvent: new MouseEvent('contextmenu', { clientX: 5, clientY: 6 }),
+    });
+
+    expect(addPopup).toHaveBeenCalledOnce();
+    expect(setGridOption).not.toHaveBeenCalled();
+  });
 });

@@ -40,6 +40,24 @@ describe('MenuItemMapper', () => {
       { name: 'Parent', subMenu: [{ name: 'Child' }] },
     ]);
   });
+
+  it('resolves string subMenu entries on registered items, for mapItems and mapMixed', () => {
+    const { bean: mapper } = makeBeanHarness(MenuItemMapper);
+    mapper.registry.register({ name: 'child', factory: () => ({ name: 'Child' }) });
+    mapper.registry.register({
+      name: 'parent',
+      factory: () => ({ name: 'Parent', subMenu: ['child', 'separator', 'missing'] }),
+    });
+
+    // mapItems: the default context/column menu paths resolve by name.
+    expect(mapper.mapItems(['parent'], params)).toEqual([
+      { name: 'Parent', subMenu: [{ name: 'Child' }, { name: '__separator__' }] },
+    ]);
+    // mapMixed: string entries in user callbacks resolve the same way.
+    expect(mapper.mapMixed(['parent'], params)).toEqual([
+      { name: 'Parent', subMenu: [{ name: 'Child' }, { name: '__separator__' }] },
+    ]);
+  });
 });
 
 describe('MenuItemRegistry', () => {
