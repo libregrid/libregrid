@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/multi-filter",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Composable Multi Filter for AG Grid Community — part of LibreGrid",
   "keywords": ["libregrid", "ag-grid", "data-grid", "multi-filter", "filter"],
   "homepage": "https://github.com/libregrid/libregrid#readme",
