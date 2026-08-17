@@ -50,6 +50,11 @@ export function buildGridTheme(root: HTMLElement = document.documentElement, den
     rangeSelectionBackgroundColor: resolveColor(root, '--mat-sys-primary-container', '#e9ddff'),
     rangeSelectionBorderColor: resolveColor(root, '--mat-sys-primary', '#6750a4'),
 
+    // Find highlights are always light yellow/orange; dark ink keeps contrast
+    // when the grid palette is dark (Quartz dark color-scheme does the same).
+    findMatchColor: '#1d1b20',
+    findActiveMatchColor: '#1d1b20',
+
     // Typography
     fontFamily: typography.fontFamily,
     fontSize: typography.fontSize,
