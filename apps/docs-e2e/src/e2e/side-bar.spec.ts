@@ -152,7 +152,7 @@ test.describe('Side Bar', () => {
 
     // Open a panel: it overlays the grid inward; the grid width is untouched.
     await page.getByRole('button', { name: 'Open filters panel' }).click();
-    await expect(page.locator('.lgr-filters-tool-panel')).toBeVisible();
+    await expect(page.locator('.lgr-filter-panel')).toBeVisible();
     const openGridBox = await grid.boundingBox();
     expect(openGridBox!.width).toBe(closedBox!.width);
     const panelBox = await page.locator('.lgr-side-bar-panel').boundingBox();

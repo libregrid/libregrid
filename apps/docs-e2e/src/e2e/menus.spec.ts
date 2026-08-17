@@ -26,6 +26,98 @@ test.describe('Menus — Context Menu', () => {
     await expect(menu.locator('.lgr-menu-item').first()).toBeVisible();
   });
 
+  test('separators span the full menu width', async ({ page }) => {
+    const cell = page.locator('.ag-cell').first();
+    await cell.click({ button: 'right' });
+
+    const menu = page.locator('.lgr-context-menu');
+    await expect(menu).toBeVisible();
+
+    // One part per option column (icon/name/shortcut/arrow), so the combined
+    // border line spans the whole row instead of just the icon column.
+    const separator = menu.locator('.lgr-menu-separator').first();
+    await expect(separator.locator('.lgr-menu-separator-part')).toHaveCount(4);
+    const menuBox = await menu.boundingBox();
+    const sepBox = await separator.boundingBox();
+    expect(sepBox!.width).toBeGreaterThan(menuBox!.width * 0.9);
+  });
+
+  test('Export opens a submenu; a child click runs the item and closes the menu', async ({ page }) => {
+    const cell = page.locator('.ag-cell').first();
+    await cell.click({ button: 'right' });
+
+    const menu = page.locator('.lgr-context-menu');
+    await expect(menu).toBeVisible();
+
+    const exportRow = menu.locator('.lgr-menu-item', { hasText: /^Export/ });
+    await exportRow.hover();
+    const submenu = page.locator('.lgr-sub-menu');
+    await expect(submenu).toBeVisible();
+    await expect(submenu.locator('.lgr-menu-item', { hasText: 'CSV Export' })).toBeVisible();
+    await expect(submenu.locator('.lgr-menu-item', { hasText: 'Excel Export' })).toBeVisible();
+
+    // The parent row stays highlighted while its submenu is open, and moving
+    // into the submenu must not dismiss the popup.
+    await expect(exportRow).toHaveClass(/lgr-menu-item-submenu-open/);
+    await submenu.locator('.lgr-menu-item', { hasText: 'Excel Export' }).hover();
+    await expect(submenu).toBeVisible();
+
+    // Selecting a child item closes the whole menu (the CSV export runs as a
+    // download, which the e2e runner accepts and discards).
+    await submenu.locator('.lgr-menu-item', { hasText: 'CSV Export' }).click();
+    await expect(menu).not.toBeVisible();
+  });
+
+  test('keyboard: ArrowRight opens the Export submenu; ArrowLeft returns to the parent', async ({ page }) => {
+    const cell = page.locator('.ag-cell').first();
+    await cell.click({ button: 'right' });
+
+    const menu = page.locator('.lgr-context-menu');
+    await expect(menu).toBeVisible();
+    await expect(menu.locator('.lgr-menu-item:not(.lgr-menu-item-disabled)').first()).toBeFocused();
+
+    // Walk down to the Export item (order varies with registered modules).
+    for (let i = 0; i < 10; i++) {
+      const focused = await page.evaluate(() => document.activeElement?.textContent?.trim() ?? '');
+      if (focused.startsWith('Export')) break;
+      await page.keyboard.press('ArrowDown');
+    }
+    await expect(page.locator('.lgr-context-menu .lgr-menu-item', { hasText: /^Export/ })).toBeFocused();
+
+    await page.keyboard.press('ArrowRight');
+    const submenu = page.locator('.lgr-sub-menu');
+    await expect(submenu).toBeVisible();
+    await expect(submenu.locator('.lgr-menu-item').first()).toBeFocused();
+
+    await page.keyboard.press('ArrowDown');
+    await expect(submenu.locator('.lgr-menu-item').nth(1)).toBeFocused();
+
+    await page.keyboard.press('ArrowLeft');
+    await expect(submenu).toHaveCount(0);
+    await expect(menu.locator('.lgr-menu-item', { hasText: /^Export/ })).toBeFocused();
+  });
+
+  test('a menu opened at the grid edge renders outside the grid footprint', async ({ page }) => {
+    const grid = page.getByTestId('menus-grid');
+    const gridBox = await grid.boundingBox();
+
+    // Right-click the cell in the last column — the menu would previously be
+    // clamped (and with small grids, clipped) inside the grid rectangle.
+    const cell = grid.locator('.ag-row').first().locator('.ag-cell').last();
+    await cell.click({ button: 'right' });
+
+    const menu = page.locator('.ag-popup-child.lgr-context-menu');
+    await expect(menu).toBeVisible();
+    const menuBox = await menu.boundingBox();
+
+    // The menu extends past the grid's right edge…
+    expect(menuBox!.x + menuBox!.width).toBeGreaterThan(gridBox!.x + gridBox!.width);
+    // …but never past the viewport: it is viewport-clamped, not clipped.
+    const viewport = page.viewportSize()!;
+    expect(menuBox!.x).toBeGreaterThanOrEqual(0);
+    expect(menuBox!.x + menuBox!.width).toBeLessThanOrEqual(viewport.width);
+  });
+
   test('Escape closes the context menu', async ({ page }) => {
     const cell = page.locator('.ag-cell').first();
     await cell.click({ button: 'right' });

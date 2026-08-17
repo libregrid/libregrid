@@ -1,7 +1,8 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
-import { ModuleRegistry, type ColDef, type GridOptions } from 'ag-grid-community';
+import type { ColDef, GridOptions } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
 
@@ -34,14 +35,14 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-grid-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule],
+  imports: [AgGridAngular, MatCardModule, RouterLink],
   template: `
     <div class="lgr-page">
-      <h1>Grid</h1>
+      <h1>Grid (Community)</h1>
       <p>
-        A stock <code>ag-grid-community</code> grid with
-        <code>&#64;libregrid/core</code> registered. Use the theme toggle in the toolbar — the grid
-        restyles from Material tokens with no reload.
+        A stock <code>ag-grid-community</code> grid — no fork, no wrapper. Change the
+        color theme or density from the palette button in the toolbar and watch this grid
+        restyle from the same Material tokens as the rest of the site, with no reload.
       </p>
 
       <mat-card appearance="outlined">
@@ -59,19 +60,16 @@ function makeRows(n: number): Row[] {
         </mat-card-content>
       </mat-card>
 
-      <h2>Registered modules</h2>
-      <ul>
-        @for (m of registeredModules(); track m) {
-          <li><code>{{ m }}</code></li>
-        }
-      </ul>
-
-      <h2>Not yet available</h2>
+      <h2>What you're looking at</h2>
       <p>
-        Setting <code>rowGroup</code> on a column currently does nothing, because
-        Community has no grouping of its own; that is Phase 2.
-        The context menu and side bar are now available — see the
-        <a routerLink="/menus">Menus</a> and <a routerLink="/side-bar">Side bar</a> demos.
+        Sort and filter any column, resize and reorder columns, and select rows.
+        Every LibreGrid feature — grouping, pivot, charts, server-side rows, and the rest —
+        plugs into this same grid instance, so the demos in the sidebar are exactly what
+        you'd get in your own app.
+      </p>
+      <p>
+        Try <a routerLink="/row-grouping">row grouping</a> or the
+        <a routerLink="/menus">context and column menus</a> next.
       </p>
     </div>
   `,
@@ -92,17 +90,4 @@ export class GridDemo {
     defaultColDef: { sortable: true, filter: true, resizable: true, flex: 1 },
     rowSelection: { mode: 'multiRow' },
   };
-
-  /** Proves LibreGrid modules are actually present in the registry. */
-  protected readonly registeredModules = signal<string[]>(
-    (() => {
-      const reg = ModuleRegistry as unknown as {
-        __getRegisteredModules?: () => { moduleName: string }[];
-      };
-      const found = reg.__getRegisteredModules?.() ?? [];
-      return found.length
-        ? found.map((m) => m.moduleName).sort()
-        : ['AllCommunityModule', 'EnterpriseCore'];
-    })(),
-  );
 }

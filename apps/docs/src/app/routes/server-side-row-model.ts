@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridOptions, IServerSideDatasource } from 'ag-grid-community';
@@ -31,7 +32,7 @@ function tradeAt(index: number): Trade {
 @Component({
   selector: 'lgr-server-side-row-model-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule],
+  imports: [AgGridAngular, MatCardModule, RouterLink],
   template: `
     <div class="lgr-page">
       <h1>Server-Side Row Model</h1>
@@ -56,12 +57,13 @@ function tradeAt(index: number): Trade {
         </mat-card-content>
       </mat-card>
 
-      <h2>Current Phase 7 scope</h2>
+      <h2>What's supported</h2>
       <p>
-        Phase 7 supports flat full and lazy stores, LRU block eviction, retryable failures,
-        transactions, and identity-backed selection persistence. A stable <code>getRowId</code> is
-        required for correct transaction and selection behavior. Grouping, filtering, and pivot
-        request semantics remain Phase 9.
+        The Server-Side Row Model supports flat full and lazy stores, LRU block eviction,
+        retryable failures, transactions, and identity-backed selection persistence. A stable
+        <code>getRowId</code> is required for correct transaction and selection behavior.
+        Grouping, filtering, and pivot request semantics are covered in the
+        <a routerLink="/server-side-advanced">advanced SSRM demo</a>.
       </p>
     </div>
   `,

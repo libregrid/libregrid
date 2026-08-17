@@ -20,7 +20,7 @@ interface Quote { id: string; symbol: string; price: number; updatedAt: string; 
 })
 export class ViewportRowModelDemo {
   protected readonly theme = inject(LibreGridThemeService);
-  protected readonly columnDefs: ColDef<Quote>[] = [{ field: 'id' }, { field: 'symbol' }, { field: 'price' }, { field: 'updatedAt' }];
+  protected readonly columnDefs: ColDef<Quote>[] = [{ field: 'id' }, { field: 'symbol' }, { field: 'price', type: 'numericColumn' }, { field: 'updatedAt' }];
   protected readonly gridOptions: GridOptions<Quote> = { rowModelType: 'viewport', viewportRowModelPageSize: 20, viewportRowModelBufferSize: 10, defaultColDef: { flex: 1, minWidth: 120 }, getRowId: ({ data }) => data.id, viewportDatasource: this.datasource() };
   private datasource(): IViewportDatasource {
     let timer: number | undefined;

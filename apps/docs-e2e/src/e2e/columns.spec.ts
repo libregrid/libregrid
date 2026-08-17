@@ -10,8 +10,11 @@ async function dragByPointer(source: Locator, target: Locator): Promise<void> {
   const to = { x: targetBox.x + targetBox.width / 2, y: targetBox.y + targetBox.height * 0.75 };
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
+  // Give the CDK drag ref a beat to arm before the threshold-crossing move.
+  await page.waitForTimeout(100);
   await page.mouse.move(from.x + 8, from.y + 8, { steps: 3 });
   await page.mouse.move(to.x, to.y, { steps: 12 });
+  await page.waitForTimeout(100);
   await page.mouse.up();
 }
 
@@ -65,13 +68,15 @@ test.describe('Columns Tool Panel', () => {
 
     await dragByPointer(country, product);
 
-    await expect(page.locator('.lgr-columns-list > [role="treeitem"]')).toHaveText([
-      'RegionPin Region leftPin Region rightMove Region upMove Region down',
-      'ProductPin Product leftPin Product rightMove Product upMove Product down',
-      'CountryPin Country leftPin Country rightMove Country upMove Country down',
-      'SalesPin Sales leftPin Sales rightMove Sales upMove Sales down',
-      'UnitsPin Units leftPin Units rightMove Units upMove Units down',
-    ]);
+    // The CDK adapter reorders one step per click with a scheduled pause
+    // between steps, so poll until the sequence settles.
+    await expect
+      .poll(() =>
+        page
+          .locator('.lgr-columns-list > [role="treeitem"]')
+          .evaluateAll((rows) => rows.map((row) => (row as HTMLElement).dataset['columnId'])),
+      )
+      .toEqual(['region', 'product', 'country', 'sales', 'units']);
   });
 
   test('adds an eligible column dropped into the Values zone', async ({ page }) => {

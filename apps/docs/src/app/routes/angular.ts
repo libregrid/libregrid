@@ -73,7 +73,7 @@ export class AngularDemo {
   protected readonly gridOptions = defineGridOptions<Row>({
     columnDefs: createColumnDefs<Row>([
       { field: 'name', filter: 'agTextColumnFilter', checkboxSelection: true, headerCheckboxSelection: true },
-      { field: 'score' },
+      { field: 'score', type: 'numericColumn' },
     ]),
     rowData: ROW_DATA,
     rowSelection: { mode: 'multiRow' },

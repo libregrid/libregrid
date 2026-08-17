@@ -74,7 +74,7 @@ export class ExcelExportDemo {
   protected readonly columnDefs: ColDef<Trade>[] = [
     { field: 'country', rowGroup: true },
     { field: 'product' },
-    { field: 'amount', cellClass: 'money' },
+    { field: 'amount', type: 'numericColumn', cellClass: 'money' },
     { field: 'date' },
   ];
   protected readonly scoreColumnDefs: ColDef<{ label: string; score: number }>[] = [

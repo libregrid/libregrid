@@ -103,14 +103,14 @@ function makeRows(n: number): Row[] {
 
       <h2>How it works</h2>
       <p>
-        The context menu is provided by <code>&#64;libregrid/menu</code> (ContextMenuModule).
-        It registers a <code>contextMenuSvc</code> bean that Community's CellCtrl calls
-        on right-click. Menu items come from an extensible registry — later phases
-        contribute items without editing this package.
+        Register <code>ContextMenuModule</code> and <code>ColumnMenuModule</code> from
+        <code>&#64;libregrid/menu</code> and the menus appear — right-click for the context
+        menu, or use the icon in a column header for the column menu.
       </p>
       <p>
-        The column menu is provided by ColumnMenuModule. It registers a
-        <code>colMenuFactory</code> bean that builds the menu content.
+        Menu items come from an extensible registry, so other LibreGrid packages (and your own
+        app) contribute items without forking the menu. This demo adds an <em>Inspect Cell</em>
+        action and a live row-count item on top of the defaults.
       </p>
     </div>
   `,

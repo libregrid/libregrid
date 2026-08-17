@@ -334,20 +334,20 @@ Derived: `--ag-widget-container-vertical-padding` = `grid-size*1.5` = 12px (L88)
 
 | File | Role | Assessment |
 |---|---|---|
-| `columnsToolPanel.ts` | `IColumnToolPanel` — tree, search, select-all, function sections, deferred buttons | Full semantics (per `docs/parity/columns-tool-panel.md`). **Visual gaps:** every control is a bare native `<button>`/`<input>`/`<input type=checkbox>` with no class; `.lgr-columns-list` capped `max-height:160px` (native column-select-list is full-height flex, scrolls); drag affordance is only a dashed outline via `:has([draggable])`. |
-| `columnsToolPanelCss.ts` | Inline CSS | 8px-padding grid; drop-zone outline `1px dashed var(--ag-border-color)`; chooser overlay hardcoded `rgba(0,0,0,.45)` + `0 8px 24px` shadow + `z-index:10000`. |
-| `rowGroupingPanel.ts` + `rowGroupDropZone.ts` + `pivotDropZone.ts` | Standalone header row-group/pivot panel + drop zones | Members = bordered pills with **word-buttons** ("Move up"/"Move down"/"Remove"); empty state `opacity:.75` text (native = centered dashed box); `.lgr-pivot-drop-zone` permanently `opacity:.75`. |
-| `rowGroupingPanelCss.ts` | Inline CSS | Pill radius `3px` (native `grid-size*3`=24px); `--ag-chip-*` unused. |
+| `columnsToolPanel.ts` | `IColumnToolPanel` — tree, search, select-all, function sections, deferred buttons | Full semantics (per `docs/parity/columns-tool-panel.md`). **Now native-styled:** header row with a painted select-all checkbox (`lgr-checkbox`, indeterminate when mixed) beside a search input with a leading search icon and `Search...` placeholder; pivot mode rendered as a labeled switch (`lgr-toggle`) directly under the header; 24px list rows with 24px-per-level indentation; pin/move controls are icon buttons revealed on hover; rows carry a grip drag handle; function-section members are pills (`lgr-chip`) with icon-only remove controls; empty sections show the native dashed message (`Drag here to set row groups` / `Drag here to aggregate` / `Drag here to set column labels`); drop zones highlight while dragging over. |
+| `columnsToolPanelCss.ts` | Inline CSS | Native metrics: `--ag-list-item-height` rows, `--ag-column-select-indent-size` indentation, dashed empty boxes (12px/16px margin, 16px padding), `--ag-modal-overlay-background-color` overlay, `--ag-popup-shadow` dialog. |
+| `rowGroupingPanel.ts` + `rowGroupDropZone.ts` + `pivotDropZone.ts` | Standalone header row-group/pivot panel + drop zones | Members are pills (`lgr-chip`, native 24px radius via core) with icon remove buttons and a drag-over highlight; empty state shows a dashed affordance. |
+| `rowGroupingPanelCss.ts` | Inline CSS | Pill metrics now come from the shared `lgr-chip` core styles (radius `grid-size*3`). |
 | `rowGroupPanelBuilder.ts` | `_IRowGroupPanelBuilder` bean | Already exposes `createRowGroupDropZone(horizontal, embedded)` / `createPivotDropZone(horizontal, embedded)` — **this is the seam `agRowGroupPanelToolbarItem`/`agPivotPanelToolbarItem` should reuse** (embedded horizontal drop zones). |
 
-**Already matches:** all `IColumnToolPanel` API, suppression params, deferred updates, search-scoped select-all, indeterminate group checkbox, keyboard alternative to drag, material drag adapter, column chooser (per parity doc).
+**Already matches:** all `IColumnToolPanel` API, suppression params, deferred updates, search-scoped select-all, indeterminate group checkbox, keyboard alternative to drag, material drag adapter, column chooser (per parity doc). Shared control styling (`lgr-button`/`lgr-text-button`/`lgr-icon-button`/`lgr-input`/`lgr-chip`/`lgr-checkbox`/`lgr-toggle`) lives in `@libregrid/core`'s `coreCss.ts` and drives hover/focus/active/disabled states from `--ag-*` tokens.
 
 ### 3.3 `@libregrid/filters-tool-panel` (`packages/filters-tool-panel/src`)
 
 | File | Role | Assessment |
 |---|---|---|
-| `filtersToolPanel.ts` | `IFiltersToolPanel` + `INewFiltersToolPanel` card panel | Semantics complete (per parity doc). **Visual gaps:** `<details>/<summary>` raw browser markers, native `<select>` for mode, bare text buttons for Expand/Collapse and Apply/Clear/Reset/Cancel, hardcoded English strings. |
-| `filtersToolPanelCss.ts` | Inline CSS | `.lgr-filter-card { border:1px solid var(--ag-border-color); border-radius:4px; padding:8px }` — no card shadow, no active-filter chip, apply button not using `--ag-filter-panel-apply-button-*`. |
+| `filtersToolPanel.ts` | `IFiltersToolPanel` + `INewFiltersToolPanel` card panel | Semantics complete (per parity doc). **Native v34 card anatomy + real filters:** each card has a header row — an expand button holding the title (active-filter dot when applied) and a chevron, plus an icon-only delete — and a body that embeds the column's **actual filter UI**: LibreGrid's Set Filter is constructed directly with a real grid-apply path (its own Apply/Clear/Cancel buttons from `filterParams.buttons`, or immediate apply without them), and community text/number/date/multi filters mount through `getColumnFilterInstance`. Filtering from the panel updates the grid (verified 40→34 rows on the demo). Cards are reused across renders; active state follows the grid model via `filterChanged`. Also re-renders when the grid loads columns after panel creation. |
+| `filtersToolPanelCss.ts` | Inline CSS | Native card metrics: border `--ag-border-color`, radius `--ag-border-radius`, surface `--ag-background-color`, header padding-top 8px, heading 12px/4px padding, delete icon 16px with 12px end margin, 12px panel padding/gap; Apply uses `--ag-filter-panel-apply-button-*`. |
 
 ### 3.4 `@libregrid/find` (`packages/find/src`)
 
@@ -383,6 +383,40 @@ Cross-cutting defect themes are inventoried in `docs/design/ux-4-current-state-a
 11. **Split `findCss.ts`** into readable rules and align with the Quartz find tokens (drop `#ffe082`/`#ff9800` fallbacks).
 12. **Responsive toolbar overflow** = horizontal scroll, thin scrollbar, no wrap (§1.6) — implement when building #1.
 13. **a11y**: tree roving focus / arrow-key traversal for `role=tree` (`columnsToolPanel.ts`), focus trap for the chooser, and `prefers-reduced-motion` for any slide animation (`sideBarPanelAnimationDuration`). Source these from WAI-ARIA (G2 — not enterprise observation).
+
+### 4b. Status (2026-08-16)
+
+Columns tool panel UI/UX pass complete (this spec's §1.3 + §2.5 look, verified against the
+live https://www.ag-grid.com/angular-data-grid/tool-panel-columns/ example):
+
+- ✅ Gap 2 (columns panel): all controls use shared `lgr-*` core styles incl. new painted `lgr-checkbox` and switch `lgr-toggle`.
+- ✅ Gap 4 (columns panel): chooser uses `--ag-modal-overlay-background-color`/`--ag-popup-shadow`/`--ag-wrapper-border-radius`; pills use `--ag-chip-*`.
+- ✅ Gap 5: function-section members and header drop-zone members are native pills (`lgr-chip`, radius `grid-size*3`, height `grid-size*3`) with icon-only remove controls.
+- ✅ Gap 6: Row Groups / Values / Column Labels sections show the native dashed empty message (12px/16px margin, 16px padding).
+- ✅ Gap 7: columns list scrolls full-height (no max-height cap).
+- ✅ Header: select-all is a single painted checkbox (indeterminate when mixed) beside the search input with leading icon and `Search...` placeholder; pivot mode is a labeled switch right under the header; rows are 24px list items with 24px indentation, hover-revealed pin/move icons, and a grip drag handle; drop zones highlight while dragging over.
+- Remaining for later surfaces: filters panel cards (gap 8), find CSS split (gap 11), tree roving focus (gap 13).
+
+### 4c. Status — filters panel pass (2026-08-16)
+
+Filters tool panel UI/UX pass complete (native v34 "new" panel look, verified against the live
+https://www.ag-grid.com/angular-data-grid/tool-panel-filters-new/ example):
+
+- ✅ No pre-added columns: the panel opens empty and grows cards on demand via an **Add Filter**
+  type-ahead (search + listbox) that stays below the cards; picking a column drops in an expanded
+  card and removes it from the available list. Cards float in a scrollable container and a pinned
+  **Cancel/Apply** row sits at the bottom. `initialState.filters` seeds the ordered card list.
+- ✅ Selectable filter + Simple Filter: **every** filterable column renders the one card version — a
+  **filter-type selector** (Simple Filter / Selection Filter) at the top, defaulting to Simple Filter.
+  The Simple Filter is a rule-based comparison: operator select with the value input stacked beneath,
+  and the AND/OR join + one secondary condition revealed only once the first value is entered (max two
+  conditions). Selection Filter mounts the Set Filter. The selectable model wraps the active inner model
+  and the card applies it through the grid's filter manager; typing updates the card without re-rendering
+  the panel, so the input keeps focus.
+- ✅ Gap 8: cards rebuilt to the native anatomy — header row (expand button with title + chevron, 16px icon-only delete), body embedding the column's **real filter component** (Set Filter with search/values/Apply, community text/number filters, the multi filter), active-filter dot on the title, `--ag-filter-panel-apply-button-*` Apply button, leading search icon with `Search...` placeholder, 12px panel padding/gap.
+- ✅ Fixed the empty-panel race: the panel re-renders on `newColumnsLoaded`/`columnEverythingChanged` plus a deferred repaint when created before the host binds column defs.
+- ✅ Filtering from the panel now actually filters the grid (set-filter selections apply through `setFilterModel`/`onFilterChanged`).
+- Remaining for later surfaces: find CSS split (gap 11), tree roving focus (gap 13). The embedded multi filter mirrors the header component's own staging semantics (no per-card apply panel).
 
 ---
 

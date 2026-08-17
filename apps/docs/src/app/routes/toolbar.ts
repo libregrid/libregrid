@@ -68,11 +68,10 @@ function makeRows(n: number): Row[] {
 
       <h2>How it works</h2>
       <p>
-        The toolbar shell renders through the same selector seam as the side
-        bar and status bar. Built-in items are thin wrappers around existing
-        services: quick filter uses the <code>quickFilterText</code> grid
-        option, Find uses the <code>&#64;libregrid/find</code> API, and the
-        Row Group / Pivot panel items embed the shared drop zones.
+        Register <code>ToolbarModule</code> and list items in the <code>toolbar</code> grid
+        option. The quick filter drives <code>quickFilterText</code>, Find uses
+        <code>&#64;libregrid/find</code>, and the Row Group / Pivot items embed the shared
+        drop zones — so the toolbar composes from the same features as the side bar.
       </p>
     </div>
   `,

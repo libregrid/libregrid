@@ -87,10 +87,10 @@ function makeRows(n: number): Row[] {
 
       <h2>How it works</h2>
       <p>
-        The side bar is provided by <code>&#64;libregrid/side-bar</code> (SideBarModule).
-        It registers a <code>sideBar</code> bean that manages state and a
-        <code>AG-SIDE-BAR</code> component selector for the UI shell.
-        Feature packages register tool panels via <code>registerToolPanel()</code>.
+        Register <code>&#64;libregrid/side-bar</code> and list the panel ids in
+        <code>sideBar.toolPanels</code>. Feature packages contribute their own panels, so
+        <em>Columns</em> and <em>Filters</em> appear here automatically once their modules
+        are installed.
       </p>
     </div>
   `,

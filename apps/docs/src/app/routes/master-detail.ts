@@ -23,6 +23,6 @@ export class MasterDetailDemo {
     treeData: true, getDataPath: ({ path }) => path, groupDefaultExpanded: -1,
     masterDetail: true, masterDefaultExpanded: 2, keepDetailRows: true, keepDetailRowsCount: 2, getRowId: ({ data }) => data.id,
     detailRowHeight: 220, defaultColDef: { flex: 1, minWidth: 140 },
-    detailCellRendererParams: { detailGridOptions: { columnDefs: [{ field: 'direction', sortable: true }, { field: 'duration', sortable: true }], defaultColDef: { flex: 1 }, getRowId: ({ data }: GetRowIdParams<DetailCall>) => data.id }, getDetailRowData: ({ data, successCallback }: GetDetailRowDataParams<Call, DetailCall>) => window.setTimeout(() => successCallback(data.calls), 25), refreshStrategy: 'rows' },
+    detailCellRendererParams: { detailGridOptions: { columnDefs: [{ field: 'direction', sortable: true }, { field: 'duration', sortable: true, type: 'numericColumn' }], defaultColDef: { flex: 1 }, getRowId: ({ data }: GetRowIdParams<DetailCall>) => data.id }, getDetailRowData: ({ data, successCallback }: GetDetailRowDataParams<Call, DetailCall>) => window.setTimeout(() => successCallback(data.calls), 25), refreshStrategy: 'rows' },
   };
 }

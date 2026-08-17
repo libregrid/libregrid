@@ -59,8 +59,8 @@ export class SelectionDemo {
   private api: GridApi | undefined;
   protected readonly columnDefs: ColDef<Row>[] = [
     { field: 'name' },
-    { field: 'first' },
-    { field: 'second' },
+    { field: 'first', type: 'numericColumn' },
+    { field: 'second', type: 'numericColumn' },
   ];
   protected readonly gridOptions: GridOptions<Row> = {
     defaultColDef: { flex: 1, editable: true },

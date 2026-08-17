@@ -20,6 +20,6 @@ const files: FileNode[] = [
 export class TreeDataDemo {
   protected readonly theme = inject(LibreGridThemeService);
   protected readonly rows = files;
-  protected readonly columnDefs: ColDef<FileNode>[] = [{ field: 'size', aggFunc: 'sum', enableValue: true }];
+  protected readonly columnDefs: ColDef<FileNode>[] = [{ field: 'size', aggFunc: 'sum', enableValue: true, type: 'numericColumn' }];
   protected readonly gridOptions: GridOptions<FileNode> = { treeData: true, getDataPath: ({ path }) => path, groupDefaultExpanded: -1, rowDragManaged: true, suppressMoveWhenRowDragging: true, autoGroupColumnDef: { headerName: 'File', rowDrag: true, minWidth: 280 }, defaultColDef: { flex: 1, minWidth: 120 } };
 }
