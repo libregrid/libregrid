@@ -1,5 +1,12 @@
 # @libregrid/rich-select
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [8735c38]
+  - @libregrid/core@1.1.1
+
 ## 1.0.1
 
 ### Patch Changes

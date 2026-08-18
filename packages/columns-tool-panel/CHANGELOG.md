@@ -1,5 +1,14 @@
 # @libregrid/columns-tool-panel
 
+## 1.1.1
+
+### Patch Changes
+
+- 8735c38: Fix toolbar and header drop zones so row-group/pivot targets accept header and Columns-panel drags, and restyle drop-zone chips as compact Quartz pills with order badges.
+- Updated dependencies [8735c38]
+  - @libregrid/core@1.1.1
+  - @libregrid/side-bar@1.1.1
+
 ## 1.0.1
 
 ### Patch Changes
