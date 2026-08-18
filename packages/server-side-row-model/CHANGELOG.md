@@ -1,5 +1,14 @@
 # @libregrid/server-side-row-model
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [8735c38]
+  - @libregrid/core@1.1.1
+  - @libregrid/pivot@1.1.1
+  - @libregrid/row-grouping@1.1.1
+
 ## 1.0.1
 
 ### Patch Changes

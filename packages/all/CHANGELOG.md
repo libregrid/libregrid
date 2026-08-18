@@ -1,5 +1,35 @@
 # @libregrid/all
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [8735c38]
+  - @libregrid/columns-tool-panel@1.1.1
+  - @libregrid/core@1.1.1
+  - @libregrid/material@1.1.1
+  - @libregrid/advanced-filter@1.1.1
+  - @libregrid/angular@1.1.1
+  - @libregrid/cell-selection@1.1.1
+  - @libregrid/clipboard@1.1.1
+  - @libregrid/excel-export@1.1.1
+  - @libregrid/filters-tool-panel@1.1.1
+  - @libregrid/find@1.1.1
+  - @libregrid/integrated-charts@1.1.1
+  - @libregrid/master-detail@1.1.1
+  - @libregrid/menu@1.1.1
+  - @libregrid/multi-filter@1.1.1
+  - @libregrid/pivot@1.1.1
+  - @libregrid/rich-select@1.1.1
+  - @libregrid/row-grouping@1.1.1
+  - @libregrid/server-side-row-model@1.1.1
+  - @libregrid/set-filter@1.1.1
+  - @libregrid/side-bar@1.1.1
+  - @libregrid/sparklines@1.1.1
+  - @libregrid/status-bar@1.1.1
+  - @libregrid/tree-data@1.1.1
+  - @libregrid/viewport-row-model@1.1.1
+
 ## 1.1.0
 
 ### Minor Changes

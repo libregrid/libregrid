@@ -1,5 +1,13 @@
 # @libregrid/multi-filter
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [8735c38]
+  - @libregrid/core@1.1.1
+  - @libregrid/set-filter@1.1.1
+
 ## 1.0.1
 
 ### Patch Changes
