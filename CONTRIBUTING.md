@@ -31,10 +31,10 @@ git clone https://github.com/libregrid/libregrid.git
 cd libregrid
 npm install
 npm run gen:version
-npm run verify          # lint + test + build + guardrails
+npm run verify          # lint + test + build + contamination/version/budget checks
 ```
 
-Requires Node ≥ 20.19.
+Requires Node.js `>=20.19.0`.
 
 ---
 
@@ -118,7 +118,7 @@ Full detail: [`docs/guides/publishing.md`](./docs/guides/publishing.md).
 
 A change is complete when **all** of these hold — see [`standards.md`](./docs/reference/standards.md) §9:
 
-- [ ] Unit tests pass, ≥85% coverage on new code
+- [ ] Unit tests pass, coverage thresholds met (85% statements, 75% branches — see [`standards.md`](./docs/reference/standards.md) §7.4)
 - [ ] At least one **integration test against a real grid** per feature — unit tests do not prove the seam works
 - [ ] Playwright E2E for anything mouse-driven
 - [ ] A working route in `apps/docs`

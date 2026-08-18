@@ -6,7 +6,7 @@ Tree-shaking is not a Phase 13 concern. Choices made in Phase 1 either preserve 
 
 ---
 
-## 1. Why LibreGrid is sharded into ~25 packages
+## 1. Why LibreGrid is sharded into 26 packages
 
 **One package would be wrong.** A user who wants row grouping must not download the Excel writer, the charting adapter and the SSRM store machinery.
 
@@ -21,7 +21,7 @@ The rule: **a consumer's bundle contains exactly the features they imported, and
 | Tier | Packages | May depend on |
 |---|---|---|
 | **Core** | `@libregrid/core` | nothing in LibreGrid |
-| **Feature** | `row-grouping`, `pivot`, `side-bar`, `cell-selection`, `excel-export`, … (21 packages) | `core`, and *sparingly* other feature packages (§4) |
+| **Feature** | `row-grouping`, `pivot`, `side-bar`, `cell-selection`, `excel-export`, … (22 packages) | `core`, and *sparingly* other feature packages (§4) |
 | **Integration** | `material`, `angular`, `all` | anything |
 
 ---

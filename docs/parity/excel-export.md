@@ -91,7 +91,7 @@
 | `export` | ✅ | Registered with the `csvExport`/`excelExport` submenu; E2E asserts it renders in the context menu |
 | `csvExport` | ✅ | Delegates to Community's `exportDataAsCsv` |
 | `excelExport` | ✅ | Delegates to `exportDataAsExcel` |
-| Submenu expansion | 🟡 | Phase 1 renderer draws the arrow but does not open nested menus — tracked as [OPEN-ACTIONS C3](../../OPEN-ACTIONS.md) |
+| Submenu expansion | 🟡 | Phase 1 renderer draws the arrow but does not open nested menus — tracked as [OPEN-ACTIONS C3](../OPEN-ACTIONS.md) |
 
 ## Correctness gates
 
