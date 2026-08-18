@@ -28,11 +28,9 @@ It has two outcomes:
 2. When no changesets remain, a successful CI run on `main` runs the release
    checks. It publishes every unpublished package with the `latest` dist-tag.
 
-The first successful CI run after the Release workflow reaches `main` creates
-the Version Packages pull request from the prepared 1.0.0 Changeset. To retry
-it, open **GitHub → Actions → Release → Run workflow**. Select `main`.
-Merging the version pull request starts CI. After CI succeeds, the workflow
-publishes the packages.
+To run the release workflow manually, open **GitHub → Actions → Release →
+Run workflow** and select `main`. Merging the version pull request starts CI.
+After CI succeeds, the workflow publishes the packages.
 
 The workflow runs `npm run verify` before publishing. It uses
 `NPM_CONFIG_PROVENANCE=true`. Changesets supplies `--access public` from the

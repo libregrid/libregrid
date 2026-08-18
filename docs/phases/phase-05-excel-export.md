@@ -67,7 +67,7 @@
 
 - [x] **5.9 — Optional.** ❌ Descoped 2026-08-15, per the phase file's own guidance: the 5.1–5.8 gate is otherwise green, and images (media parts + drawing XML), Excel tables (`xl/tables`) and notes (`xl/comments*` + vmlDrawing) are a substantial additional OOXML surface with no consumer demand yet. Every affected row in the parity checklist carries the rationale. If revived, it becomes its own phase.
 
-- [x] Contribute `export`, `excelExport` items to the Phase 1 menu registry — ✅ Landed 2026-08-15. `export` (with `csvExport`/`excelExport` submenu), `csvExport` and `excelExport` register from the module's `onRegister`; E2E asserts the item renders. Nested-submenu *expansion* is a Phase 1 renderer gap — [OPEN-ACTIONS C3](../../OPEN-ACTIONS.md).
+- [x] Contribute `export`, `excelExport` items to the Phase 1 menu registry — ✅ Landed 2026-08-15. `export` (with `csvExport`/`excelExport` submenu), `csvExport` and `excelExport` register from the module's `onRegister`; E2E asserts the item renders. Nested-submenu *expansion* is a Phase 1 renderer gap — [OPEN-ACTIONS C3](../OPEN-ACTIONS.md).
 
 ---
 

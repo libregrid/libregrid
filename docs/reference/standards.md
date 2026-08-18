@@ -95,20 +95,27 @@ Angular packages (`material`, `angular`) additionally declare:
 
 ## 3. Root dev dependencies (pinned)
 
+Key versions in the root `package.json` (current as of 2026-08-18 — the root
+manifest is the source of truth; it may drift forward within the ranges):
+
 ```json
 "devDependencies": {
   "ag-grid-community": "36.1.0",
-  "ag-grid-angular": "36.1.0",
-  "@angular/core": "^22.0.0",
-  "@angular/material": "^22.0.0",
   "nx": "^21.0.0",
-  "vitest": "^3.0.0",
-  "@playwright/test": "^1.50.0",
-  "@axe-core/playwright": "^4.10.0",
-  "@changesets/cli": "^2.27.0",
-  "typescript": "~5.9.0"
+  "vitest": "^4.1.10",
+  "@vitest/coverage-v8": "^4.1.10",
+  "@playwright/test": "^1.62.1",
+  "@axe-core/playwright": "^4.13.0",
+  "@changesets/cli": "^3.0.0",
+  "typescript": "~6.0.3",
+  "eslint": "^9.39.5",
+  "prettier": "^3.9.6"
 }
 ```
+
+`ag-grid-angular` (pinned to `36.1.0`) is a dev dependency of `apps/docs`,
+not of the root workspace. Angular packages (`material`, `angular`) declare
+their own `@angular/*` peer dependencies.
 
 ---
 
@@ -127,10 +134,23 @@ Angular packages (`material`, `angular`) additionally declare:
     "target": "es2022",
     "lib": ["es2022", "dom"],
     "skipLibCheck": true,
-    "paths": { "@libregrid/*": ["packages/*/src/index.ts"] }
+    "declaration": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "paths": {
+      "@libregrid/core": ["./packages/core/src/index.ts"],
+      "@libregrid/core/testing": ["./packages/core/src/testing/index.ts"],
+      "@libregrid/row-grouping": ["./packages/row-grouping/src/index.ts"]
+    }
   }
 }
 ```
+
+Paths are listed **explicitly per package** in `tsconfig.base.json` — not as a
+wildcard — so the `@libregrid/core/testing` subpath resolves to its own entry.
 
 `exactOptionalPropertyTypes` is deliberate: the CSRM stage-bean slots are optional properties, and this catches accidental `undefined` assignment that would silently disable a stage.
 
@@ -228,7 +248,10 @@ Drag-drop, fill handle, clipboard, menus, resizing. One spec per docs route.
 
 ### 7.4 Coverage
 
-≥85% statements on new code, enforced in CI. Coverage is a floor, not a goal — the integration test matters more than the percentage.
+Global v8 thresholds in `vitest.config.ts`, enforced in CI across
+`packages/*/src` (specs, `testing/`, `version.ts`, and `index.ts` excluded):
+statements 85, branches 75, functions 85, lines 85. Coverage is a floor, not
+a goal — the integration test matters more than the percentage.
 
 ---
 
@@ -260,7 +283,7 @@ A phase is complete only when **every** item is true:
 - [ ] `npx nx run conformance:matrix` green
 - [ ] axe-core: 0 violations on the new route, light **and** dark
 - [ ] `npx nx run bench:compare` shows no regression vs. Phase-0 baseline
-- [ ] `npx nx run tools:check-contamination` green
+- [ ] `npx nx run check-contamination:test` green
 - [ ] **Bundle budgets met; tree-shaking fixture proves no other `@libregrid/*` package leaks in** ([`package-architecture.md`](package-architecture.md) §5)
 - [ ] `NOTICE` + README attribution present in any new package (G3)
 - [ ] A Changeset added
