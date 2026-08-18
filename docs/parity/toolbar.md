@@ -20,8 +20,8 @@
 | --------------------------- | ------ | ---------------------------------------------------------------------- |
 | `agQuickFilterToolbarItem`  | ✅     | Input bound to `quickFilterText`; search icon; theme-native styling.   |
 | `agFindToolbarItem`         | ✅     | Input bound to `findSearchValue`, match count, previous/next buttons. |
-| `agRowGroupPanelToolbarItem`| ✅     | Embeds the shared row group drop zone (registered by columns-tool-panel). |
-| `agPivotPanelToolbarItem`   | ✅     | Embeds the shared pivot drop zone (registered by columns-tool-panel).   |
+| `agRowGroupPanelToolbarItem`| ✅     | Embeds the shared row group drop zone. Accepts header drags (grid DragAndDropService) and Columns-panel CDK drags (Material adapter bridge). |
+| `agPivotPanelToolbarItem`   | ✅     | Embeds the shared pivot drop zone. Same header + panel drag paths as the row group item. |
 | `agMenuToolbarItem`         | ✅     | Dropdown of menu items via the shared menu renderer (registered by menu). |
 | `separator`                 | ✅     | Vertical divider.                                                      |
 

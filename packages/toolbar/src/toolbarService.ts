@@ -42,20 +42,36 @@ export class ToolbarService extends BeanStub {
 
   private entries: ToolbarEntry[] = [];
   private instances = new Map<string, unknown>();
+  private configured = false;
 
   public postConstruct(): void {
-    this.configure(this.gos.get('toolbar') as ToolbarConfig);
     this.addManagedPropertyListener('toolbar', () => {
-      this.configure(this.gos.get('toolbar') as ToolbarConfig);
+      this.configured = false;
+      this.configureIfNeeded();
+      this.comp?.refresh();
     });
   }
 
   public getEntries(): ToolbarEntry[] {
+    this.configureIfNeeded();
     return this.entries;
   }
 
   public getToolbarItemInstance<T>(key: string): T | undefined {
+    this.configureIfNeeded();
     return this.instances.get(key) as T | undefined;
+  }
+
+  /**
+   * Bean postConstruct runs before AG Grid wires module API functions onto the
+   * grid api, so item factories (which subscribe and read grid state) must not
+   * run there. Defer until the shell component — created with the grid UI,
+   * after wiring — first asks for entries.
+   */
+  private configureIfNeeded(): void {
+    if (this.configured) return;
+    this.configured = true;
+    this.configure(this.gos.get('toolbar') as ToolbarConfig);
   }
 
   public override destroy(): void {
@@ -77,7 +93,6 @@ export class ToolbarService extends BeanStub {
       this.entries.push(entry);
       if (entry.key && entry.instance) this.instances.set(entry.key, entry.instance);
     }
-    this.comp?.refresh();
   }
 
   private buildEntry(

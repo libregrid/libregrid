@@ -1,5 +1,6 @@
 import { Component, type ColDef, type Column, type GridApi } from 'ag-grid-community';
 import { iconSvg } from '@libregrid/core';
+import { DROP_ZONE_DRAG_OVER_CLASS, registerDropZone } from './dropZoneRegistry';
 
 type RowGroupApi = Pick<GridApi, 'getColumn'> & Partial<Pick<GridApi,
   'getDisplayNameForColumn' | 'getGridOption' | 'getRowGroupColumns' | 'removeRowGroupColumns' |
@@ -13,12 +14,14 @@ export class RowGroupDropZone extends Component {
   private readonly horizontal: boolean;
   private readonly embedded: boolean;
   private readonly onColumnsChanged = () => this.render();
+  private unregisterDropZone: (() => void) | undefined;
 
   public constructor(horizontal: boolean, embedded = false) {
     super();
     this.horizontal = horizontal;
     this.embedded = embedded;
-    this.setTemplate('<section class="lgr-row-group-drop-zone" role="region" aria-label="Row Groups"></section>');
+    const label = embedded ? 'Toolbar Row Groups' : 'Row Groups';
+    this.setTemplate(`<section class="lgr-row-group-drop-zone" role="region" aria-label="${label}"></section>`);
   }
 
   public postConstruct(): void {
@@ -31,12 +34,37 @@ export class RowGroupDropZone extends Component {
     this.api = api;
     api.addEventListener?.('columnRowGroupChanged', this.onColumnsChanged);
     this.addDropListeners();
+    this.unregisterDropZone?.();
+    this.unregisterDropZone = registerDropZone({
+      element: this.getGui(),
+      kind: 'group',
+      canDrop: (id) => this.canAddColumn(id),
+      dropColumns: (ids) => this.acceptColumns(ids),
+    });
     this.render();
   }
 
   public override destroy(): void {
+    this.unregisterDropZone?.();
+    this.unregisterDropZone = undefined;
     this.removeApiListener();
     super.destroy();
+  }
+
+  /** True when the column is eligible for this zone (native drop validation). */
+  public canDropColumn(id: string): boolean {
+    return this.canAddColumn(id);
+  }
+
+  /**
+   * Drops columns from an external drag source (grid DragAndDropService
+   * header drags, Material CDK adapter) through the same validation as native
+   * drops. Returns how many columns were added.
+   */
+  public acceptColumns(ids: string[]): number {
+    const eligible = ids.filter((id) => this.canAddColumn(id));
+    if (eligible.length > 0) this.api?.addRowGroupColumns?.(eligible);
+    return eligible.length;
   }
 
   private render(): void {
@@ -61,15 +89,29 @@ export class RowGroupDropZone extends Component {
     const member = document.createElement('div');
     member.className = 'lgr-chip lgr-row-group-drop-zone-member';
     const name = this.getColumnName(column);
+    const order = document.createElement('span');
+    order.className = 'lgr-chip-index';
+    order.setAttribute('aria-hidden', 'true');
+    order.textContent = String(index + 1);
     const label = document.createElement('span');
+    label.className = 'lgr-chip-label';
     label.textContent = name;
-    const up = this.createIconButton(`Move ${name} up`, 'sortAscending', () => this.moveColumn(index, index - 1));
-    const down = this.createIconButton(`Move ${name} down`, 'sortDescending', () => this.moveColumn(index, index + 1));
-    up.disabled = index === 0 || this.isFunctionsReadOnly();
-    down.disabled = index === count - 1 || this.isFunctionsReadOnly();
+    label.title = name;
     const remove = this.createIconButton(`Remove ${name} from row groups`, 'close', () => this.removeColumn(column));
+    remove.classList.add('lgr-chip-remove');
     remove.disabled = this.isFunctionsReadOnly();
-    member.append(label, up, down, remove);
+    member.append(order, label);
+    if (count > 1 && !this.isFunctionsReadOnly()) {
+      const actions = document.createElement('span');
+      actions.className = 'lgr-chip-actions';
+      const up = this.createIconButton(`Move ${name} up`, 'sortAscending', () => this.moveColumn(index, index - 1));
+      const down = this.createIconButton(`Move ${name} down`, 'sortDescending', () => this.moveColumn(index, index + 1));
+      up.disabled = index === 0;
+      down.disabled = index === count - 1;
+      actions.append(up, down);
+      member.append(actions);
+    }
+    member.append(remove);
     return member;
   }
 
@@ -86,10 +128,10 @@ export class RowGroupDropZone extends Component {
 
   private addDropListeners(): void {
     const gui = this.getGui();
-    gui.addEventListener('dragenter', () => gui.classList.add('lgr-drop-zone-drag-over'));
+    gui.addEventListener('dragenter', () => gui.classList.add(DROP_ZONE_DRAG_OVER_CLASS));
     gui.addEventListener('dragleave', (event) => {
       if (!(event.relatedTarget instanceof Node) || !gui.contains(event.relatedTarget)) {
-        gui.classList.remove('lgr-drop-zone-drag-over');
+        gui.classList.remove(DROP_ZONE_DRAG_OVER_CLASS);
       }
     });
     gui.ondragover = (event) => {
@@ -97,9 +139,9 @@ export class RowGroupDropZone extends Component {
     };
     gui.ondrop = (event) => {
       event.preventDefault();
-      gui.classList.remove('lgr-drop-zone-drag-over');
+      gui.classList.remove(DROP_ZONE_DRAG_OVER_CLASS);
       const id = event.dataTransfer?.getData('text/plain');
-      if (id && this.canAddColumn(id)) this.api?.addRowGroupColumns?.([id]);
+      if (id) this.acceptColumns([id]);
     };
   }
 

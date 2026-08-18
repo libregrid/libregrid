@@ -102,8 +102,7 @@ export const columnsToolPanelCss = `
   background: var(--ag-row-hover-color, color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 12%));
 }
 
-.lgr-columns-row label,
-.lgr-columns-member span {
+.lgr-columns-row label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -183,19 +182,9 @@ export const columnsToolPanelCss = `
 .lgr-columns-members {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: calc(var(--ag-grid-size, 8px) * 0.5);
-}
-
-.lgr-columns-member .lgr-icon-button {
-  width: var(--ag-icon-size, 16px);
-  height: var(--ag-icon-size, 16px);
-}
-
-.lgr-columns-member .lgr-icon-button svg {
-  display: block;
-  width: var(--ag-icon-size, 16px);
-  height: var(--ag-icon-size, 16px);
-  fill: currentColor;
+  padding-inline: calc(var(--ag-grid-size, 8px) * 0.5);
 }
 
 /* Empty function sections: native centered dashed box (12px/16px margin,

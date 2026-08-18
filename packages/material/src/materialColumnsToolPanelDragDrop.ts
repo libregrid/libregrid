@@ -6,8 +6,10 @@ import {
 } from '@angular/cdk/drag-drop';
 import type { EnvironmentInjector } from '@angular/core';
 import {
+  listDropZones,
   registerColumnsToolPanelDragDropAdapter,
   type ColumnsToolPanelDragDropAdapter,
+  type DropZoneHandle,
 } from '@libregrid/columns-tool-panel';
 
 interface ColumnDragData {
@@ -17,7 +19,7 @@ interface ColumnDragData {
 }
 
 interface DropListData {
-  kind: 'source' | 'group' | 'value' | 'pivot';
+  kind: 'source' | 'group' | 'value' | 'pivot' | 'embedded';
 }
 
 interface PendingMove {
@@ -87,8 +89,21 @@ export function createMaterialColumnsToolPanelDragDropAdapter(
         return [target];
       });
 
-      source.connectedTo(targets);
-      for (const target of targets) target.connectedTo([source, ...targets.filter((other) => other !== target)]);
+      // Toolbar-embedded and standalone header drop zones understand native
+      // HTML5 drags only; CDK rows have native dragging disabled, so bridge
+      // them in as CDK targets and let each zone validate the drop itself.
+      const embeddedZones = findEmbeddedDropZones(root);
+      const embeddedTargets = embeddedZones.map((zone) => {
+        const target = createDropListRef<DropListData>(environmentInjector, zone.element);
+        target.data = { kind: 'embedded' };
+        target.sortingDisabled = true;
+        zone.element.classList.add('cdk-drop-list');
+        return target;
+      });
+
+      const allTargets = [...targets, ...embeddedTargets];
+      source.connectedTo(allTargets);
+      for (const target of allTargets) target.connectedTo([source, ...allTargets.filter((other) => other !== target)]);
 
       const timers = new Set<ReturnType<typeof setTimeout>>();
       const subscriptions = [
@@ -105,6 +120,9 @@ export function createMaterialColumnsToolPanelDragDropAdapter(
           const action = target.data.kind === 'group' ? 'Group by' : target.data.kind === 'value' ? 'Add value' : 'Add pivot';
           clickButton(element, `${action} ${item.data.name}`);
         })),
+        ...embeddedTargets.map((target, index) => target.dropped.subscribe(({ item }) => {
+          if (item.data !== undefined) embeddedZones[index]?.dropColumns([item.data.id]);
+        })),
       ];
 
       schedulePendingMove(root, pendingMoves, schedule);
@@ -116,9 +134,9 @@ export function createMaterialColumnsToolPanelDragDropAdapter(
         for (const subscription of subscriptions) subscription.unsubscribe();
         for (const drag of drags) drag.dispose();
         source.dispose();
-        for (const target of targets) target.dispose();
+        for (const target of allTargets) target.dispose();
         sourceElement.classList.remove('cdk-drop-list');
-        for (const target of targets) {
+        for (const target of allTargets) {
           const element = target.element instanceof HTMLElement
             ? target.element
             : target.element.nativeElement;
@@ -140,6 +158,19 @@ export function createMaterialColumnsToolPanelDragDropAdapter(
       }
     },
   };
+}
+
+/**
+ * Registered row-group/pivot zones outside the panel (toolbar items, the
+ * standalone header panel). Scoped to the panel's grid when the panel is
+ * attached; a detached panel root falls back to all registered zones, whose
+ * own eligibility checks reject foreign columns.
+ */
+function findEmbeddedDropZones(root: HTMLElement): DropZoneHandle[] {
+  const gridRoot = root.closest('.ag-root-wrapper');
+  return listDropZones().filter(
+    (zone) => !root.contains(zone.element) && (gridRoot === null || gridRoot.contains(zone.element)),
+  );
 }
 
 function startColumnMove(
