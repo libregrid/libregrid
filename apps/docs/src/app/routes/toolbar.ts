@@ -72,6 +72,8 @@ function makeRows(n: number): Row[] {
         option. The quick filter drives <code>quickFilterText</code>, Find uses
         <code>&#64;libregrid/find</code>, and the Row Group / Pivot items embed the shared
         drop zones — so the toolbar composes from the same features as the side bar.
+        Drag a column header, or a row from the Columns panel, into a zone to group
+        or pivot.
       </p>
     </div>
   `,
@@ -82,16 +84,17 @@ export class ToolbarDemo {
   private api: GridApi | undefined;
 
   protected readonly columnDefs: ColDef<Row>[] = [
-    { field: 'country', minWidth: 150 },
-    { field: 'region', minWidth: 110 },
-    { field: 'product', minWidth: 130 },
-    { field: 'sales', type: 'numericColumn', minWidth: 110 },
+    { field: 'country', enableRowGroup: true, minWidth: 150 },
+    { field: 'region', enableRowGroup: true, enablePivot: true, minWidth: 110 },
+    { field: 'product', enablePivot: true, minWidth: 130 },
+    { field: 'sales', enableValue: true, type: 'numericColumn', minWidth: 110 },
   ];
 
   protected readonly gridOptions: GridOptions<Row> = {
     defaultColDef: { sortable: true, filter: true, resizable: true, flex: 1 },
     rowGroupPanelShow: 'always',
     pivotMode: false,
+    sideBar: { toolPanels: ['columns'], defaultToolPanel: 'columns' },
     toolbar: {
       alignment: 'left',
       items: [

@@ -4,4 +4,6 @@ export { registerColumnsToolPanelDragDropAdapter } from './columnsToolPanelDragD
 export type { ColumnsToolPanelDragDropAdapter } from './columnsToolPanelDragDropAdapter';
 export { RowGroupingPanelModule } from './rowGroupingPanelModule';
 export { RowGroupingPanel } from './rowGroupingPanel';
+export { listDropZones, getDropZoneForElement, registerDropZone } from './dropZoneRegistry';
+export type { DropZoneHandle } from './dropZoneRegistry';
 export { VERSION } from './version';

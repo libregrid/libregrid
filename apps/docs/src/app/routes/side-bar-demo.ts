@@ -112,13 +112,13 @@ export class SideBarDemo {
   };
 
   protected readonly columnDefs: ColDef<Row>[] = [
-    { field: 'country', minWidth: 160 },
-    { field: 'region', minWidth: 110 },
-    { field: 'product', minWidth: 130 },
-    { field: 'sales', type: 'numericColumn', minWidth: 110 },
-    { field: 'units', type: 'numericColumn', minWidth: 100 },
-    { field: 'category', minWidth: 150 },
-    { field: 'discount', type: 'numericColumn', minWidth: 130 },
+    { field: 'country', enableRowGroup: true, minWidth: 160 },
+    { field: 'region', enableRowGroup: true, enablePivot: true, minWidth: 110 },
+    { field: 'product', enableRowGroup: true, minWidth: 130 },
+    { field: 'sales', enableValue: true, type: 'numericColumn', minWidth: 110 },
+    { field: 'units', enableValue: true, type: 'numericColumn', minWidth: 100 },
+    { field: 'category', enablePivot: true, minWidth: 150 },
+    { field: 'discount', enableValue: true, type: 'numericColumn', minWidth: 130 },
     { field: 'stock', type: 'numericColumn', minWidth: 130 },
   ];
 

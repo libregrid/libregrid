@@ -119,17 +119,93 @@ export const coreCss = `
   color: var(--ag-disabled-foreground-color, color-mix(in srgb, transparent, var(--ag-foreground-color, #181d1f) 50%));
 }
 
+/* Quartz drop-cell pill: 24px tall, fully rounded, ellipsized label + compact
+ * remove control. Used by header/toolbar drop zones and Columns panel members. */
 .lgr-chip {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: calc(var(--ag-grid-size, 8px) * 0.5);
+  gap: calc(var(--ag-grid-size, 8px) * 0.25);
   max-width: 100%;
-  min-height: calc(var(--ag-grid-size, 8px) * 3);
-  padding: 0 var(--ag-grid-size, 8px);
+  height: calc(var(--ag-grid-size, 8px) * 3);
+  padding: 0 calc(var(--ag-grid-size, 8px) * 0.25) 0 calc(var(--ag-grid-size, 8px) * 0.75);
   border: 1px solid var(--ag-chip-border-color, color-mix(in srgb, var(--ag-header-background-color, #f8f8f8), var(--ag-foreground-color, #181d1f) 13%));
   border-radius: calc(var(--ag-grid-size, 8px) * 3);
-  background: var(--ag-chip-background-color, var(--ag-background-color, #fff));
+  background: var(--ag-chip-background-color, color-mix(in srgb, transparent, var(--ag-foreground-color, #181d1f) 7%));
   color: var(--ag-foreground-color, #181d1f);
+  font-family: var(--ag-font-family, inherit);
+  font-size: var(--ag-font-size, 14px);
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.lgr-chip-index {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: calc(var(--ag-grid-size, 8px) * 2);
+  height: calc(var(--ag-grid-size, 8px) * 2);
+  padding: 0 calc(var(--ag-grid-size, 8px) * 0.25);
+  border-radius: 999px;
+  background: color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 18%);
+  color: var(--ag-active-color, #2196f3);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.lgr-chip-label {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 12em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-inline-end: calc(var(--ag-grid-size, 8px) * 0.25);
+}
+
+.lgr-chip-actions {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-width 120ms ease-out, opacity 80ms ease-out;
+}
+
+.lgr-chip:hover .lgr-chip-actions,
+.lgr-chip:focus-within .lgr-chip-actions {
+  max-width: 3.5rem;
+  opacity: 1;
+}
+
+.lgr-chip .lgr-icon-button {
+  width: calc(var(--ag-grid-size, 8px) * 2.25);
+  height: calc(var(--ag-grid-size, 8px) * 2.25);
+  border-radius: 999px;
+  color: var(--ag-secondary-foreground-color, var(--ag-foreground-color, #181d1f));
+}
+
+.lgr-chip .lgr-icon-button svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.lgr-chip-remove {
+  flex: none;
+  margin-inline-start: calc(var(--ag-grid-size, 8px) * 0.125);
+}
+
+.lgr-chip-remove:hover:not(:disabled) {
+  background: color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 16%);
+  color: var(--ag-active-color, #2196f3);
 }
 
 /* Checkbox — painted 16px box matching the native theme (the input itself

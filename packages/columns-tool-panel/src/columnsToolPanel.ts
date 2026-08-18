@@ -446,9 +446,13 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     member.className = 'lgr-chip lgr-columns-member';
     const name = this.getColumnName(column);
     const label = document.createElement('span');
+    label.className = 'lgr-chip-label';
     label.textContent = name;
+    label.title = name;
     const section = kind === 'group' ? 'row groups' : kind === 'value' ? 'values' : 'pivots';
-    member.append(label, this.createIconButton(`Remove ${name} from ${section}`, 'close', () => this.removeFunctionColumn(column, kind)));
+    const remove = this.createIconButton(`Remove ${name} from ${section}`, 'close', () => this.removeFunctionColumn(column, kind));
+    remove.classList.add('lgr-chip-remove');
+    member.append(label, remove);
     return member;
   }
 

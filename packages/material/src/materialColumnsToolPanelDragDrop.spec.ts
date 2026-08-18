@@ -4,6 +4,7 @@ import { EnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   ColumnsToolPanel,
+  registerDropZone,
 } from '@libregrid/columns-tool-panel';
 import type { Column, GridApi } from 'ag-grid-community';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -157,5 +158,49 @@ describe('Material columns tool panel drag-drop adapter', () => {
     expect(disposeDrag).toHaveBeenCalledTimes(2);
 
     uninstall();
+  });
+
+  it('bridges CDK drops into registered toolbar and header drop zones', () => {
+    const connectedTo = vi.spyOn(DropListRef.prototype, 'connectedTo');
+    const zoneElement = document.createElement('section');
+    zoneElement.className = 'lgr-row-group-drop-zone';
+    document.body.appendChild(zoneElement);
+    const dropColumns = vi.fn(() => 1);
+    const unregister = registerDropZone({
+      element: zoneElement,
+      kind: 'group',
+      canDrop: () => true,
+      dropColumns,
+    });
+
+    const country = createColumn('country', true);
+    const api = createApi([country]);
+    const uninstall = installMaterialColumnsToolPanelDragDrop(
+      TestBed.inject(EnvironmentInjector),
+    );
+    const panel = new ColumnsToolPanel();
+    panel.init({
+      api: api as unknown as GridApi,
+      context: null,
+      onStateUpdated: vi.fn(),
+    } as never);
+    document.body.appendChild(panel.getGui());
+
+    const lists = connectedTo.mock.instances as unknown as DropListRef<{ kind: string }>[];
+    const source = lists.find((list) => list.data.kind === 'source');
+    const embedded = lists.find((list) => list.data.kind === 'embedded');
+    const countryDrag = source?.getItemAtIndex(0) as DragRef<TestDragData> | null;
+
+    expect(embedded).toBeDefined();
+    expect(zoneElement.classList).toContain('cdk-drop-list');
+
+    embedded?.drop(countryDrag!, 0, 0, source!, true, { x: 0, y: 0 }, { x: 0, y: 0 }, new MouseEvent('mouseup'));
+
+    expect(dropColumns).toHaveBeenCalledWith(['country']);
+
+    panel.destroy();
+    expect(zoneElement.classList).not.toContain('cdk-drop-list');
+    uninstall();
+    unregister();
   });
 });
