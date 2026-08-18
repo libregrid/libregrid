@@ -100,9 +100,13 @@ Pick the bump type from the table above. Docs-only PRs that must not publish can
 Release is automatic from `main`:
 
 1. Merge a PR that includes a Changeset.
-2. CI on `main` must pass.
+2. CI on `main` must pass (lint/test/build — e2e already ran on the feature PR).
 3. The release workflow opens or updates a **Version Packages** PR.
 4. Merge that PR to publish every `@libregrid/*` package at the new lockstep version.
+
+**CI e2e runs once per change** — on the feature PR only. It is skipped on
+`main` pushes (already covered by the PR) and on the Changesets version PR
+(package.json/CHANGELOG only). Playwright browsers are cached between runs.
 
 You can also run the release workflow manually via `workflow_dispatch` on `main`.
 
