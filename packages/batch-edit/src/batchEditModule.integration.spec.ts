@@ -102,11 +102,13 @@ describe('BatchEditModule (integration)', () => {
 
     grid.cancelBatchEdit();
     expect(grid.isBatchEditing()).toBe(false);
-    // The API contract: the batch is over and the row data was never written.
-    // Community engine v36.1.0 additionally keeps already-staged values (editor closed) in the
-    // edit model after a cancel — the cell keeps displaying them; documented in
-    // docs/parity/batch-edit.md. Only open editors are reverted by the engine on cancel.
+    // The API contract: the batch is over, the row data was never written, and
+    // the cell falls back to the original value. The v36.1.0 engine keeps
+    // already-staged values (editor closed) in the edit model after a cancel,
+    // so BatchEditModule restores them from the model itself — see
+    // docs/parity/batch-edit.md.
     expect(grid.getRowNode('row-1')!.data!.a).toBe(1);
+    await vi.waitFor(() => expect(cell(0, 'a').textContent).toBe('1'));
   });
 
   it('defers value-changed events until commit, then fires them from the batch', async () => {
@@ -182,6 +184,34 @@ describe('BatchEditModule (integration)', () => {
     expect(events).toHaveLength(0);
   });
 
+  it('cancel reverts a staged editor-committed value, and a later batch writes nothing', async () => {
+    const grid = await makeGrid();
+
+    grid.startBatchEdit();
+    await grid.startEditingCell({ rowIndex: 0, colKey: 'a' });
+    await vi.waitFor(() => expect(cell(0, 'a').querySelector('input')).not.toBeNull());
+    const input = cell(0, 'a').querySelector('input') as HTMLInputElement;
+    input.value = '100';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    grid.stopEditing();
+    // The editor is closed; the value is staged and displayed.
+    await vi.waitFor(() => expect(cell(0, 'a').querySelector('input')).toBeNull());
+    await vi.waitFor(() => expect(cell(0, 'a').textContent).toBe('100'));
+    expect(grid.getRowNode('row-1')!.data!.a).toBe(1);
+
+    grid.cancelBatchEdit();
+    // The staged value is reverted: cell display and row data both show the original.
+    await vi.waitFor(() => expect(cell(0, 'a').textContent).toBe('1'));
+    expect(grid.getRowNode('row-1')!.data!.a).toBe(1);
+    expect(grid.isBatchEditing()).toBe(false);
+
+    // Regression: a later batch must not resurrect the cancelled staged value.
+    grid.startBatchEdit();
+    grid.commitBatchEdit();
+    expect(grid.getRowNode('row-1')!.data!.a).toBe(1);
+    await vi.waitFor(() => expect(cell(0, 'a').textContent).toBe('1'));
+  });
+
   it('cancel discards every staged edit and stops with an empty change list', async () => {
     const stopped: BatchEditingStoppedEvent<Row>[] = [];
     const grid = await makeGrid(defaultDefs(), {
@@ -200,6 +230,15 @@ describe('BatchEditModule (integration)', () => {
     expect(grid.getRowNode('row-1')!.data!.a).toBe(1);
     expect(grid.getRowNode('row-2')!.data!.b).toBe('two');
     expect(grid.getRowNode('row-3')!.data!.a).toBe(3);
+    // The staged values are gone from the display too, not just from the data.
+    await vi.waitFor(() => expect(cell(0, 'a').textContent).toBe('1'));
+    expect(cell(1, 'b').textContent).toBe('two');
+    expect(cell(2, 'a').textContent).toBe('3');
+    // Regression: the cancelled values must not resurface in a later batch.
+    grid.startBatchEdit();
+    grid.commitBatchEdit();
+    expect(grid.getRowNode('row-1')!.data!.a).toBe(1);
+    expect(cell(0, 'a').textContent).toBe('1');
   });
 
   it('commit and cancel outside a batch are safe no-ops', async () => {
@@ -279,6 +318,8 @@ describe('BatchEditModule (integration)', () => {
     grid.cancelBatchEdit();
     expect(grid.isBatchEditing()).toBe(false);
     expect(grid.getRowNode('row-1')!.data!.a).toBe(1);
+    await vi.waitFor(() => expect(cell(0, 'a').querySelector('input')).toBeNull());
+    await vi.waitFor(() => expect(cell(0, 'a').textContent).toBe('1'));
   });
 
   it('lets the commit through once a held invalid edit is corrected', async () => {

@@ -1,4 +1,4 @@
-import type { _ModuleWithApi, BeanCollection } from 'ag-grid-community';
+import type { _ModuleWithApi, BeanCollection, Column, IRowNode } from 'ag-grid-community';
 import { EnterpriseCoreModule } from '@libregrid/core';
 import { batchEditCss } from './batchEditCss';
 import { VERSION } from './version';
@@ -29,10 +29,33 @@ function commitBatchEdit(beans: BeanCollection): void {
 }
 
 function cancelBatchEdit(beans: BeanCollection): void {
-  // Cancel semantics: revert every open editor, discard all staged pending
+  if (!editSvc(beans)?.isBatchEditing()) {
+    return;
+  }
+  // The v36.1.0 engine reverts only *open* editors on cancel: values already
+  // staged by a closed editor stay pending in the edit model, keep rendering
+  // in the cell, and are written to the row data by a later batch's commit.
+  // Snapshot them so we can restore the original values after the cancel.
+  const pending = beans.editModelSvc?.getEditMapCopy();
+  // Cancel semantics: revert every open editor, discard the staged pending
   // values, and end the batch. No `commit` flag, so block-mode rejections
   // can never hold the batch open on a cancel.
   editSvc(beans)?.stopBatchEditing({ cancel: true, source: 'api' });
+  // Restore the staged values the engine left behind: drop the stale pending
+  // edit (the cell then renders the row data, which staged edits never touch)
+  // and refresh the affected cells. Silent — cancel fires no value events.
+  if (pending && pending.size > 0) {
+    const rowNodes: IRowNode[] = [];
+    const columns: Column[] = [];
+    pending.forEach((editRow, rowNode) => {
+      editRow.forEach((_edit, column) => {
+        beans.editModelSvc?.removeEdits({ rowNode, column });
+        rowNodes.push(rowNode);
+        columns.push(column);
+      });
+    });
+    beans.rowRenderer?.refreshCells({ rowNodes, columns });
+  }
 }
 
 function isBatchEditing(beans: BeanCollection): boolean {

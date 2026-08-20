@@ -46,25 +46,26 @@ test.describe('Batch edit', () => {
     await expect(log).toContainText('batchEditingStopped (2 changes)');
   });
 
-  test('cancels a batch: open edits are reverted to their original values', async ({ page }) => {
+  test('cancels a batch: staged edits are reverted to their original values', async ({ page }) => {
     const first = page.locator('.ag-row').nth(0).locator('.ag-cell[col-id="country"]');
     const original = (await first.innerText()).trim();
 
     await page.getByTestId('batch-start').click();
 
-    // Type into the editor but leave it open: cancel reverts open editors to
-    // their original values. (Values already staged with Enter stay in the
-    // engine's edit model across cancel - a known community-engine behavior -
-    // so this flow intentionally keeps the editor open.)
+    // Stage the edit with Enter (editor closes) — exactly the flow a user
+    // runs before clicking Cancel. The v36 engine only reverts open editors,
+    // so BatchEditModule restores the staged value itself on cancel.
     await first.dblclick();
     const input = first.locator('input');
     await expect(input).toBeVisible();
     await input.fill('Discarded');
+    await page.keyboard.press('Enter');
+    await expect(input).toHaveCount(0);
+    await expect(first).toHaveText('Discarded');
 
     await page.getByTestId('batch-cancel').click();
 
     await expect(page.getByTestId('batch-status')).toHaveText('Idle');
-    await expect(input).toHaveCount(0);
     await expect(first).toHaveText(original);
     await expect(page.getByTestId('batch-event-log')).toContainText('batchEditingStopped (0 changes)');
   });

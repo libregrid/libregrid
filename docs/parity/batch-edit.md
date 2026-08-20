@@ -12,7 +12,7 @@
 |---|---|---|
 | `startBatchEdit()` | ✅ | Delegates to the Community edit service |
 | `commitBatchEdit()` | ✅ | `stopBatchEditing({ commit: true, cancel: false, source: 'api' })` |
-| `cancelBatchEdit()` | ✅ | `stopBatchEditing({ cancel: true, source: 'api' })` |
+| `cancelBatchEdit()` | ✅ | `stopBatchEditing({ cancel: true, source: 'api' })` + module-level restore of staged values (see Behaviour) |
 | `isBatchEditing()` | ✅ | False when no edit service is present |
 
 ## Events
@@ -27,7 +27,7 @@
 | Requirement | Status | Notes |
 |---|---|---|
 | Staged values leave row data untouched until commit | ✅ | |
-| `cancelBatchEdit()` reverts staged values | 🟡 | The d.ts promises "reverting cells to their original values", but v36.1.0 only reverts **open** editors; values already staged (editor closed) stay in the engine's edit model and are written by a later commit |
+| `cancelBatchEdit()` reverts staged values | ✅ | v36.1.0 only reverts **open** editors — values already staged (editor closed) stay in the engine's edit model and would be written by a later commit. `BatchEditModule` closes that gap: it snapshots the edit model before cancel, removes the stale staged entries, and refreshes the cells, so the display and the row data both return to the original values and a later batch cannot resurrect the cancelled edits |
 | `cellValueChanged` deferred until commit | ✅ | Deferred events carry `source: 'edit'` and no `from`/`eventSource` (v36.1.0 engine behavior) |
 | `invalidEditValueMode: 'block'` holds the commit while invalid | ✅ | A corrected edit releases the commit; the held commit writes nothing, fires no event, and leaves batch + editors open |
 | Edit validation rules | ✅ | The rule lives on `colDef.cellEditorParams.getValidationErrors` (`(params) => string[] \| null`); a top-level colDef rule and the pre-v36 `colDef.validateEditValue` are not honored by v36 |

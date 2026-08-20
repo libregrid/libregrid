@@ -46,13 +46,13 @@ So this package is the **registration layer**: a module that fills the four rese
 | Tier | Coverage |
 |---|---|
 | **Unit** | Module shape; the four API functions delegate with the exact param objects; safe no-ops when the edit service is absent |
-| **Integration** (jsdom, real grid) | Staging leaves row data untouched and marks the cell; commit writes everything in one pass and fires the deferred `cellValueChanged` events (`source: 'edit'`, no `from`); lazy `batchEditingStarted`; empty batch fires neither event; cancel stops with an empty `changes`; multi-row / multi-column commit; block mode holds a commit and a corrected edit releases it; full-row editing marks `ag-row-batch-edit` |
+| **Integration** (jsdom, real grid) | Staging leaves row data untouched and marks the cell; commit writes everything in one pass and fires the deferred `cellValueChanged` events (`source: 'edit'`, no `from`); lazy `batchEditingStarted`; empty batch fires neither event; cancel stops with an empty `changes` and reverts staged values (display + data; a later batch writes nothing); multi-row / multi-column commit; block mode holds a commit and a corrected edit releases it; full-row editing marks `ag-row-batch-edit` |
 | **E2E** (Playwright) | Idle → start → edit two cells → commit updates both; cancel discards; the event log shows the lifecycle; axe clean light + dark |
 
 ## Acceptance criteria
 
 - [x] Start a batch, edit cells, commit — values land in one pass, events fire
-- [x] Cancel discards every staged edit (open editors revert; staged values persist across cancel — engine behavior, documented in parity)
+- [x] Cancel discards every staged edit (open editors revert; staged values are restored by the module — v36 engine only reverts open editors; documented in parity)
 - [x] Block-mode validation holds the commit while an invalid edit is open
 - [x] Full-row edits inside a batch mark the row
 - [x] `npm run verify` green

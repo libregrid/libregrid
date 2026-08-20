@@ -46,9 +46,9 @@ api.isBatchEditing();    // while a batch is in flight
   it is corrected or cancelled.
 - Edit validation rules live on `colDef.cellEditorParams.getValidationErrors`
   (the v36 API).
-- Cancel reverts open editors to their original values; values already staged
-  (editor closed) stay in the engine's edit model across cancel — matching the
-  community engine's v36.1.0 behavior.
+- Cancel reverts every staged edit, open or closed: the v36.1.0 engine only
+  reverts editors still open, so the module restores closed-editor staged
+  values from the edit model itself and a later batch cannot write them.
 
 MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
