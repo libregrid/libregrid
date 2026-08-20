@@ -9,8 +9,8 @@ test.describe('Menus — Context Menu', () => {
 
   test('right-click a cell opens context menu with expected items', async ({ page }) => {
     const cell = page.locator('.ag-cell').first();
-    const cellBox = await cell.boundingBox();
     await cell.click({ button: 'right' });
+    const cellBox = await cell.boundingBox();
 
     const menu = page.locator('.lgr-context-menu');
     await expect(menu).toBeVisible();
@@ -193,7 +193,7 @@ test.describe('Menus — Context Menu', () => {
     await expect(menu).toBeVisible();
 
     // Click on the page title (outside the menu)
-    await page.locator('h1').click();
+    await page.getByRole('heading', { name: 'Menus', exact: true }).first().click();
     await expect(menu).not.toBeVisible();
   });
 

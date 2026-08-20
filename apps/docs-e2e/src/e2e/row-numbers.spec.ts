@@ -45,6 +45,7 @@ test.describe('Row Numbers', () => {
 
     const handle = row.locator('.lgr-row-number-resizer');
     await expect(handle).toHaveCount(1);
+    await handle.scrollIntoViewIfNeeded();
 
     // The page layout settles a few pixels after initial render; wait until
     // the handle's position stops moving before aiming at its 4px-tall band.

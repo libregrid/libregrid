@@ -107,7 +107,7 @@ export class MasterDetailDemo {
     { field: 'arr', headerName: 'ARR', type: 'numericColumn', valueFormatter: ({ value }) => value == null ? '' : `$${Number(value).toLocaleString()}` },
   ];
   protected readonly gridOptions: GridOptions<Account> = {
-    masterDetail: true, keepDetailRows: true, keepDetailRowsCount: 3, detailRowHeight: 230,
+    masterDetail: true, isRowMaster: () => true, keepDetailRows: true, keepDetailRowsCount: 3, detailRowHeight: 230,
     defaultColDef: { flex: 1, minWidth: 120, sortable: true }, getRowId: ({ data }) => data.id,
     detailCellRendererParams: {
       detailGridOptions: { columnDefs: [{ field: 'opened', width: 110 }, { field: 'subject', flex: 1, minWidth: 220 }, { field: 'status', width: 130, sortable: true }, { field: 'owner', width: 120 }], defaultColDef: { sortable: true, resizable: true }, getRowId: ({ data }: GetRowIdParams<Ticket>) => data.id },

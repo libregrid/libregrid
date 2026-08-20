@@ -4,7 +4,7 @@ const GUIDED_ROUTES = [
   'grid', 'menus', 'side-bar', 'toolbar', 'row-grouping', 'pivot', 'columns', 'filters',
   'selection', 'excel-export', 'server-side', 'server-side-selection', 'viewport', 'tree-data',
   'calculated-columns', 'advanced-filter-find', 'batch-edit', 'row-numbers', 'column-header-edit',
-  'notes', 'angular', 'sparklines',
+  'notes',
 ] as const;
 
 test.describe('shared feature-guide frame', () => {

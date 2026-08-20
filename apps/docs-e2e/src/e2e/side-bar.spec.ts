@@ -225,6 +225,7 @@ test.describe('Side Bar', () => {
     const panel = page.locator('.lgr-side-bar-panel');
     const handle = page.locator('.lgr-side-bar-resize-handle');
     await expect(panel).toHaveCSS('width', '260px');
+    await handle.scrollIntoViewIfNeeded();
 
     let handleBox = await handle.boundingBox();
     expect(handleBox).not.toBeNull();

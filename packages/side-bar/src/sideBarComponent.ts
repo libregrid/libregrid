@@ -329,8 +329,7 @@ export class SideBarComponent extends Component implements ISideBar {
   }
 
   private renderButtons(): void {
-    const buttonsEl = this.getGui().querySelector('.lgr-side-bar-buttons');
-    if (!buttonsEl) return;
+    const buttonsEl = this.getButtonsEl();
 
     buttonsEl.innerHTML = '';
     for (const panel of this.sideBarSvc.getToolPanelDefs()) {
@@ -369,8 +368,9 @@ export class SideBarComponent extends Component implements ISideBar {
   }
 
   private refreshRenderer(): void {
+    const buttonsEl = this.getButtonsEl();
     renderSideBar({
-      host: this.getGui().querySelector<HTMLElement>('.lgr-side-bar-buttons') ?? this.getGui(),
+      host: buttonsEl,
       panelDefs: this.sideBarSvc.getToolPanelDefs(),
       openedPanelId: this.openedPanelId,
       position: this.position,
@@ -383,6 +383,23 @@ export class SideBarComponent extends Component implements ISideBar {
         }
       },
     });
+  }
+
+  /**
+   * AG Grid can remove an empty template child while constructing a component.
+   * Keep the tablist as a dedicated child so a framework renderer never falls
+   * back to the complementary sidebar landmark as its host.
+   */
+  private getButtonsEl(): HTMLElement {
+    const root = this.getGui();
+    const existing = root.querySelector<HTMLElement>('.lgr-side-bar-buttons');
+    if (existing) return existing;
+
+    const buttonsEl = document.createElement('div');
+    buttonsEl.className = 'lgr-side-bar-buttons';
+    buttonsEl.setAttribute('role', 'tablist');
+    root.prepend(buttonsEl);
+    return buttonsEl;
   }
 
   private getOrCreatePanel(def: NonNullable<SideBarDef['toolPanels']>[number] & { id: string }): IToolPanel | undefined {
