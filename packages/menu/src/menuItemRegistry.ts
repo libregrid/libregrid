@@ -1,16 +1,21 @@
-import type { MenuItemDef, Column, IRowNode, GridApi } from 'ag-grid-community';
+import type { MenuItemDef, AgProvidedColumnGroup, Column, IRowNode, GridApi } from 'ag-grid-community';
 
 /** Parameters passed to a menu item factory when resolving an item. */
 export interface MenuActionParams {
-  column: Column | null;
+  /** The menu target: a column, or a column group (group-header menu). */
+  column: Column | AgProvidedColumnGroup | null;
   node: IRowNode | null;
   value: unknown;
   api: GridApi;
   context?: unknown;
 }
 
-/** Factory that produces a MenuItemDef (or null to hide the item). */
-export type MenuItemFactory = (params: MenuActionParams) => MenuItemDef | null;
+/**
+ * Factory that produces a MenuItemDef, a list of MenuItemDefs, or null to hide
+ * the item. Returning a list lets one token expand to several flat items based
+ * on state (e.g. the `note` token yields Add Note / Edit Note + Remove Note).
+ */
+export type MenuItemFactory = (params: MenuActionParams) => MenuItemDef | MenuItemDef[] | null;
 
 /** A contribution to the menu-item registry. */
 export interface MenuItemContribution {
@@ -59,22 +64,35 @@ export class MenuItemRegistry {
     this.items.set(contribution.name, contribution);
   }
 
-  /** Resolve a single item by name. Returns null if not found or factory returns null. */
-  getItem(name: string, params: MenuActionParams): MenuItemDef | null {
+  /**
+   * Resolve a single item by name. Returns null if not found or the factory
+   * returns null. The factory may return one item or a list of items.
+   */
+  getItem(name: string, params: MenuActionParams): MenuItemDef | MenuItemDef[] | null {
     const c = this.items.get(name);
     return c ? c.factory(params) : null;
   }
 
-  /** Build a list of MenuItemDefs from names, in registry order. */
+  /**
+   * Build a list of MenuItemDefs from names, in registry order. A factory that
+   * returns a list contributes each item in the list's own order.
+   */
   buildItems(names: string[], params: MenuActionParams): MenuItemDef[] {
-    const resolved: { item: MenuItemDef; order: number }[] = [];
-    for (const name of names) {
+    const resolved: { item: MenuItemDef; order: number; group: number; seq: number }[] = [];
+    names.forEach((name, group) => {
       const item = this.getItem(name, params);
-      if (item) {
-        resolved.push({ item, order: this.items.get(name)?.order ?? 0 });
-      }
-    }
-    return resolved.sort((a, b) => a.order - b.order).map(({ item }) => item);
+      if (!item) return;
+      const order = this.items.get(name)?.order ?? 0;
+      const items = Array.isArray(item) ? item : [item];
+      items.forEach((entry, seq) => {
+        resolved.push({ item: entry, order, group, seq });
+      });
+    });
+    // order is primary; then the name's position in the list (so one name's
+    // items stay together); then the list order within the name.
+    return resolved
+      .sort((a, b) => a.order - b.order || a.group - b.group || a.seq - b.seq)
+      .map(({ item }) => item);
   }
 
   /** Check if an item is registered. */

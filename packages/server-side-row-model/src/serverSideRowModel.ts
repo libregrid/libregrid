@@ -34,6 +34,15 @@ interface HierarchicalStore {
 
 type SsrmNode = RowNode & { __lgrSsrmRoute?: string[]; __lgrSsrmStore?: HierarchicalStore };
 
+/**
+ * The SSRM group route of a node — its chain of ancestor group keys, root to
+ * self — or `undefined` for leaf rows. Selection features use this to promote
+ * single-row operations to whole-group operations.
+ */
+export function getSsrmRoute(node: IRowNode<unknown>): string[] | undefined {
+  return (node as SsrmNode).__lgrSsrmRoute;
+}
+
 type PartialBlockState = 'waiting' | 'loading' | 'loaded' | 'failed';
 
 interface PartialBlock {
@@ -89,7 +98,19 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
   private readonly pendingBlockLoads = new Map<number, PartialBlock>();
   private blockLoadTimer: ReturnType<typeof setTimeout> | undefined;
   private inFlightBlockLoads = 0;
-  private selectionState: IServerSideSelectionState = { selectAll: false, toggledNodes: [] };
+  /**
+   * Selection working copy — a query-avoidance cache, not the source of truth.
+   *
+   * `selectionBaseline` is the default applied to loaded rows,
+   * `selectionToggledIds` holds the rows that deviate from it, and
+   * `selectedGroupRoutes` records group rows' selection. The
+   * `@libregrid/server-side-selection` package keeps this in sync with the
+   * server-side selection spec. Invariant: entries only reference rows
+   * currently in the grid cache — state is purged when rows are evicted or
+   * dropped, and re-resolved from the API when the rows are requested again.
+   */
+  private selectionBaseline = false;
+  private readonly selectionToggledIds = new Set<string>();
   private selectionUpdateInProgress = false;
   private readonly selectedGroupRoutes = new Map<string, boolean>();
   private readonly asyncTransactions: Array<{
@@ -288,6 +309,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     this.clearPendingBlockLoads();
     this.blocks.clear();
     this.hierarchyStores.clear();
+    this.resetSelectionState();
     this.rowCount = 0;
     this.lastRowIndexKnown = false;
     this.failed = false;
@@ -305,6 +327,16 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     callback: (node: IRowNode<unknown>, index: number) => void,
   ): void {
     (this.isHierarchical() ? this.hierarchicalRows() : this.loadedRows()).forEach(callback);
+  }
+
+  /**
+   * SSRM keeps its filtered view in the same row list as its sorted view
+   * (the server applies both), so a filter-only walk is a loaded-rows walk.
+   * This makes core's 'filtered' select-all path (which calls this) work
+   * under SSRM instead of throwing.
+   */
+  public forEachNodeAfterFilter(callback: (node: IRowNode<unknown>, index: number) => void): void {
+    this.forEachNodeAfterFilterAndSort(callback);
   }
 
   public resetRootStore(): void {
@@ -424,11 +456,13 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
   }
 
   public getSelectionState(): IServerSideSelectionState {
-    return { selectAll: this.selectionState.selectAll, toggledNodes: [...this.selectionState.toggledNodes] };
+    return { selectAll: this.selectionBaseline, toggledNodes: [...this.selectionToggledIds] };
   }
 
   public setSelectionState(state: IServerSideSelectionState): void {
-    this.selectionState = { selectAll: state.selectAll, toggledNodes: [...state.toggledNodes] };
+    this.selectionBaseline = state.selectAll;
+    this.selectionToggledIds.clear();
+    for (const id of state.toggledNodes) this.selectionToggledIds.add(id);
     this.loadedRows().forEach((node) => this.applySelection(node));
   }
 
@@ -595,8 +629,37 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
       .sort((left, right) => left.lastAccessed - right.lastAccessed);
     while (this.blocks.size > maximum && candidates.length > 0) {
       const block = candidates.shift();
-      if (block) this.blocks.delete(block.id);
+      if (block) {
+        this.purgeSelectionState(block.nodes);
+        this.blocks.delete(block.id);
+      }
     }
+  }
+
+  /**
+   * Drops the selection working-copy entries of rows that leave the cache.
+   * The selection is owned by the server-side selection spec; these entries
+   * are a query-avoidance cache and must never outlive their rows.
+   */
+  private purgeSelectionState(nodes: Iterable<RowNode>): void {
+    for (const node of nodes) {
+      if (!node.id) continue;
+      if (node.group) {
+        const route = (node as SsrmNode).__lgrSsrmRoute;
+        if (route) this.selectedGroupRoutes.delete(this.routeId(route));
+        for (const child of this.loadedDescendants(node)) {
+          if (child.id) this.selectionToggledIds.delete(child.id);
+        }
+      }
+      this.selectionToggledIds.delete(node.id);
+    }
+  }
+
+  /** Clears the whole selection working copy (rows are being replaced). */
+  private resetSelectionState(): void {
+    this.selectionBaseline = false;
+    this.selectionToggledIds.clear();
+    this.selectedGroupRoutes.clear();
   }
 
   private blockSize(): number {
@@ -650,7 +713,18 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     node.setDataAndId(data, this.rowIdFor(data, index));
     this.positionNode(node, index, rowHeight);
     this.applySelection(node);
+    this.updateNodeSelectable(node);
     return node;
+  }
+
+  /**
+   * Applies the `isRowSelectable` grid option to a freshly materialised node.
+   * The client-side row model runs this pass itself; the SSRM owns its node
+   * lifecycle, so it calls the selection service directly. No-op when no
+   * selection service is registered (grids without row-selection support).
+   */
+  private updateNodeSelectable(node: RowNode): void {
+    this.beans.selectionSvc?.updateRowSelectable(node);
   }
 
   private rowIdFor(data: unknown, index: number): string {
@@ -813,6 +887,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     node.expanded = this.expandAllDefault === true || this.expandedRoutes.has(this.routeId(route));
     this.positionNode(node, index, rowHeight);
     this.applySelection(node);
+    this.updateNodeSelectable(node);
     return node;
   }
 
@@ -825,6 +900,7 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
     node.setDataAndId(data, this.rowIdFor(data, index));
     this.positionNode(node, index, rowHeight);
     this.applySelection(node);
+    this.updateNodeSelectable(node);
     return node;
   }
 
@@ -882,7 +958,10 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
 
   private clearChildStores(): void {
     for (const [id, store] of this.hierarchyStores) {
-      if (store.route.length > 0) this.hierarchyStores.delete(id);
+      if (store.route.length > 0) {
+        this.purgeSelectionState(store.rows);
+        this.hierarchyStores.delete(id);
+      }
     }
   }
 
@@ -901,20 +980,16 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
   }
 
   private updateSelection(id: string, selected: boolean): void {
-    const toggled = new Set(this.selectionState.toggledNodes);
-    if (selected === this.selectionState.selectAll) toggled.delete(id);
-    else toggled.add(id);
-    this.selectionState = { selectAll: this.selectionState.selectAll, toggledNodes: [...toggled] };
+    if (selected === this.selectionBaseline) this.selectionToggledIds.delete(id);
+    else this.selectionToggledIds.add(id);
     const selectedNode = this.getRowNode(id);
     if (selectedNode?.group) {
       const route = (selectedNode as SsrmNode).__lgrSsrmRoute;
       if (route) this.selectedGroupRoutes.set(this.routeId(route), selected);
       for (const child of this.loadedDescendants(selectedNode)) {
         if (!child.id) continue;
-        const descendantToggles = new Set(this.selectionState.toggledNodes);
-        if (selected === this.selectionState.selectAll) descendantToggles.delete(child.id);
-        else descendantToggles.add(child.id);
-        this.selectionState = { selectAll: this.selectionState.selectAll, toggledNodes: [...descendantToggles] };
+        if (selected === this.selectionBaseline) this.selectionToggledIds.delete(child.id);
+        else this.selectionToggledIds.add(child.id);
         this.applySelection(child);
       }
     }
@@ -934,9 +1009,9 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
 
   private applySelection(node: RowNode): void {
     if (!node.id) return;
-    const selected = this.groupSelectionFor(node) ?? (this.selectionState.toggledNodes.includes(node.id)
-      ? !this.selectionState.selectAll
-      : this.selectionState.selectAll);
+    const selected = this.groupSelectionFor(node) ?? (this.selectionToggledIds.has(node.id)
+      ? !this.selectionBaseline
+      : this.selectionBaseline);
     if (node.isSelected() === selected) return;
     this.selectionUpdateInProgress = true;
     // SSRM owns durable selection state. The generic selection service does not

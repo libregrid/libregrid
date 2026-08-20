@@ -54,5 +54,6 @@
 | Fill handle falls back to copy for non-series | ✅     | Unit coverage.                                                                                          |
 | Delete/Backspace clears range                 | ✅     | Fires the delete start/end events.                                                                      |
 | Ranges spanning pinned columns                | 🟡     | Range model accepts all displayed columns; pinned-container visual regression coverage is still needed. |
+| Row-number presses never start a cell drag    | ✅     | The drag feature's `startDrag` hard-skips the row-numbers column (`ROW_NUMBERS_COLUMN_ID`), so a row-number press is always left to the owning feature (row selection / row resizer) instead of starting a single-cell range. DOM-tested. |
 
 > The docs page listed no API methods. The public API was verified against `_CellSelectionGridApi` during Phase 4.

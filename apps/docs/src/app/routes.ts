@@ -21,13 +21,16 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'excel-export', label: 'Excel Export' },
   { path: 'server-side', label: 'Server-side rows' },
   { path: 'server-side-advanced', label: 'SSRM Advanced' },
+  { path: 'server-side-selection', label: 'Server-side Selection' },
   { path: 'viewport', label: 'Viewport rows' },
   { path: 'tree-data', label: 'Tree Data' },
   { path: 'master-detail', label: 'Master / Detail' },
   { path: 'advanced-filter-find', label: 'Advanced Filter & Find' },
   { path: 'batch-edit', label: 'Batch Edit' },
-  { path: 'calculated-columns', label: 'Calculated Columns' },
   { path: 'charts', label: 'Charts & Sparklines' },
+  { path: 'row-numbers', label: 'Row Numbers' },
+  { path: 'column-header-edit', label: 'Column Header Edit' },
+  { path: 'notes', label: 'Cell Notes' },
   { path: 'angular', label: 'Angular' },
   { path: 'api', label: 'API Reference' },
 ];
@@ -106,6 +109,12 @@ export const routes: Routes = [
     title: 'LibreGrid — SSRM Advanced',
   },
   {
+    path: 'server-side-selection',
+    loadComponent: () =>
+      import('./routes/server-side-selection').then((m) => m.ServerSideSelectionDemo),
+    title: 'LibreGrid — Server-Side Selection',
+  },
+  {
     path: 'viewport',
     loadComponent: () => import('./routes/viewport-row-model').then((m) => m.ViewportRowModelDemo),
     title: 'LibreGrid — Viewport Row Model',
@@ -132,14 +141,24 @@ export const routes: Routes = [
     title: 'LibreGrid — Batch Edit',
   },
   {
-    path: 'calculated-columns',
-    loadComponent: () => import('./routes/calculated-columns').then((m) => m.CalculatedColumnsDemo),
-    title: 'LibreGrid — Calculated Columns',
-  },
-  {
     path: 'charts',
     loadComponent: () => import('./routes/charts').then((m) => m.ChartsDemo),
     title: 'LibreGrid — Charts & Sparklines',
+  },
+  {
+    path: 'row-numbers',
+    loadComponent: () => import('./routes/row-numbers').then((m) => m.RowNumbersDemo),
+    title: 'LibreGrid — Row Numbers',
+  },
+  {
+    path: 'column-header-edit',
+    loadComponent: () => import('./routes/column-header-edit').then((m) => m.ColumnHeaderEditDemo),
+    title: 'LibreGrid — Column Header Edit',
+  },
+  {
+    path: 'notes',
+    loadComponent: () => import('./routes/notes').then((m) => m.NotesDemo),
+    title: 'LibreGrid — Cell Notes',
   },
   {
     path: 'benchmark',

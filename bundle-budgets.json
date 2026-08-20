@@ -7,8 +7,8 @@
       "note": "Core singleton — beans, module def, guards, plus the shared control stylesheet, icon set, and theme-token helper added by the 1.1.0 UX pass (measures 16.3 KB)."
     },
     "@libregrid/menu": {
-      "maxSize": "60 KB",
-      "note": "Context menu + column menu + registry + popup lifecycle + the column-filter popup + the 1.1.0 shared renderer (submenus, custom components, icons, keyboard nav). Raised from 40 KB after the 1.1.0 UX pass (measures 59.0 KB)."
+      "maxSize": "75 KB",
+      "note": "Context menu + column menu + registry + popup lifecycle + the column-filter popup + the 1.1.0 shared renderer (submenus, custom components, icons, keyboard nav). Raised from 40 KB after the 1.1.0 UX pass (measures 59.0 KB); raised to 75 KB in Phase 14 for the group-target column menu (AgProvidedColumnGroup targets, per-column item guards) — measures 71.7 KB."
     },
     "@libregrid/side-bar": {
       "maxSize": "24 KB",
@@ -19,16 +19,16 @@
       "note": "Angular Material theme bridge plus optional menu, CDK portal side-bar, CDK columns-panel drag-drop, status-bar shell, and rich-select adapters. Raised from 30 KB at the Phase 13 audit after re-measuring the five adapters."
     },
     "@libregrid/row-grouping": {
-      "maxSize": "113 KB",
-      "note": "Group/flatten/agg/filterAgg/groupFilter stages + AggFuncService + rowGroup/value cols services + auto group column + expand/collapse + group sorting/totals + group filter/show-values-as/menu contributions. Raised from 95 KB at the Phase 13 audit (steady-state unminified output re-measured at 102.7 KB)."
+      "maxSize": "125 KB",
+      "note": "Group/flatten/agg/filterAgg/groupFilter stages + AggFuncService + rowGroup/value cols services + auto group column + expand/collapse + group sorting/totals + group filter/show-values-as/menu contributions. Raised from 95 KB at the Phase 13 audit (steady-state unminified output re-measured at 102.7 KB); raised to 125 KB in Phase 14 for the Show Values As service (modes, def merging, API) and SSRM row grouping — measures 119.9 KB."
     },
     "@libregrid/columns-tool-panel": {
       "maxSize": "55 KB",
       "note": "Column tree, chooser overlay, row-group/value/pivot drop zones, standalone row-group header panel, framework-neutral drag adapter seam, deferred state, and full-grid reorder mapping. Raised from 47 KB at the Phase 13 audit for the pivot drop-zone and drag plumbing."
     },
     "@libregrid/cell-selection": {
-      "maxSize": "31 KB",
-      "note": "Range selection + fill handle. Raised from 20 KB at the Phase 13 audit — rangeService plus range model and fill-series detection measure 27.8 KB unminified."
+      "maxSize": "33 KB",
+      "note": "Range selection + fill handle. Raised from 20 KB at the Phase 13 audit — rangeService plus range model and fill-series detection measure 27.8 KB unminified; raised to 33 KB in Phase 14 for the row-number press contract (startDrag hard-skip, provisional range) — measures 31.3 KB."
     },
     "@libregrid/clipboard": {
       "maxSize": "13 KB",
@@ -56,12 +56,15 @@
     },
     "@libregrid/filters-tool-panel": {
       "maxSize": "12 KB",
-      "note": "Filter cards and deferred apply model. Raised from 10 KB after the 1.1.0 UX pass styling (measures 11.0 KB).",
       "note": "Accessible filters tool panel. Raised from 8 KB at the Phase 13 audit — measures 8.7 KB unminified."
     },
     "@libregrid/server-side-row-model": {
       "maxSize": "45 KB",
       "note": "Flat full/lazy root stores plus hierarchical grouping, analytical request forwarding, and server-driven pivot result columns. Raised from 32 KB at the Phase 13 audit — measures 40.3 KB unminified."
+    },
+    "@libregrid/server-side-selection": {
+      "maxSize": "50 KB",
+      "note": "SSRM selection service (the row-model-specific half of the community selection seam), spec capture/batching, hydration, footer, and selection view. Introduced at Phase 16 — measures 48.1 KB unminified."
     },
     "@libregrid/pivot": {
       "maxSize": "16 KB",
@@ -83,6 +86,14 @@
     "@libregrid/find": {
       "maxSize": "12 KB"
     },
+    "@libregrid/row-numbers": {
+      "maxSize": "14 KB",
+      "note": "RowNumbersService (BaseSingleColService bean) + row-resizer feature + CSS + module def. Added in Phase 14 (measures 12.1 KB unminified)."
+    },
+    "@libregrid/column-header-edit": {
+      "maxSize": "18 KB",
+      "note": "ColumnHeaderEditService (bean) + live/deferred header-name editor DOM + highlight state + CSS + module def. Added in Phase 14 (measures 16.1 KB unminified)."
+    },
     "@libregrid/rich-select": {
       "maxSize": "12 KB",
       "note": "Accessible virtualised rich-select editor. Raised from 8 KB at the Phase 13 audit — measures 10.2 KB unminified."
@@ -94,6 +105,10 @@
     "@libregrid/sparklines": {
       "maxSize": "8 KB"
     },
+    "@libregrid/notes": {
+      "maxSize": "50 KB",
+      "note": "NotesService + NotesDataService beans, per-target notes features (hover/click/Shift+F2 wiring, markers), note popup DOM + resize, context-menu contribution, and CSS. Added in Phase 15 (measures 42.0 KB unminified)."
+    },
     "@libregrid/angular": {
       "maxSize": "16 KB",
       "note": "Angular signal ergonomics, provideLibreGrid, and typed helpers."
@@ -102,13 +117,9 @@
       "maxSize": "8 KB",
       "note": "Batch-editing module: the four reserved GridApi functions delegating to the Community edit service plus the pending-edit CSS."
     },
-    "@libregrid/calculated-columns": {
-      "maxSize": "85 KB",
-      "note": "Calculated columns (Phase 18 / gap-plan A2): expression engine (tokenizer, parser, evaluator, provided functions), the `formula` bean (value pipeline + error hooks) and the `calculatedColsSvc` bean (dynamic-column lifecycle, dialog with pickers/autocomplete, menu items, events). Added with the feature; re-measured at delivery: 80.8 KB unminified."
-    },
     "@libregrid/all": {
-      "maxSize": "4 KB",
-      "note": "Re-exports only — must not contain feature code. 3.8 KB of flat re-export statements measured at the Phase 13 audit."
+      "maxSize": "5 KB",
+      "note": "Re-exports only — must not contain feature code. 3.8 KB of flat re-export statements measured at the Phase 13 audit; raised to 5 KB in Phase 14 for the row-numbers and column-header-edit re-exports; notes re-exports added in Phase 15 (measures 4.3 KB)."
     }
   }
 }

@@ -35,6 +35,9 @@ export const VERSIONED_PACKAGES = [
   'side-bar',
   'material',
   'row-grouping',
+  'row-numbers',
+  'column-header-edit',
+  'notes',
   'columns-tool-panel',
   'cell-selection',
   'clipboard',
@@ -45,6 +48,7 @@ export const VERSIONED_PACKAGES = [
   'multi-filter',
   'filters-tool-panel',
   'server-side-row-model',
+  'server-side-selection',
   'pivot',
   'viewport-row-model',
   'tree-data',
@@ -55,7 +59,6 @@ export const VERSIONED_PACKAGES = [
   'integrated-charts',
   'sparklines',
   'batch-edit',
-  'calculated-columns',
 ];
 
 export function generate(rootDir = root) {

@@ -68,6 +68,10 @@ export function buildGridTheme(root: HTMLElement = document.documentElement, den
     cellHorizontalPadding: spacing * 2,
     wrapperBorderRadius: 14,
     borderRadius: radius,
+    // Quartz defaults checkboxBorderRadius to `borderRadius` (10px) — that
+    // renders row/checkbox controls round, radio-button-like. Keep genuine
+    // checkboxes square regardless of the general corner radius.
+    checkboxBorderRadius: 2,
 
     // Subtle row/column borders for a clean, "table" feel rather than
     // the heavy default strokes.

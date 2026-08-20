@@ -72,11 +72,14 @@ export class AngularDemo {
   protected readonly filterCount = computed(() => Object.keys(this.state.filterModel()).length);
   protected readonly gridOptions = defineGridOptions<Row>({
     columnDefs: createColumnDefs<Row>([
-      { field: 'name', filter: 'agTextColumnFilter', checkboxSelection: true, headerCheckboxSelection: true },
+      // Row + header checkboxes come from the row-selection API below —
+      // the column-level `checkboxSelection` properties are deprecated and
+      // would render a redundant second checkbox per row.
+      { field: 'name', filter: 'agTextColumnFilter' },
       { field: 'score', type: 'numericColumn' },
     ]),
     rowData: ROW_DATA,
-    rowSelection: { mode: 'multiRow' },
+    rowSelection: { mode: 'multiRow', headerCheckbox: true },
     // Deterministic DOM for accessibility scans: row animations leave rows
     // mid-fade with near-zero opacity, which axe reports as contrast failures.
     animateRows: false,

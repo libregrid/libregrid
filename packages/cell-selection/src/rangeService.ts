@@ -1,5 +1,6 @@
 import {
   BeanStub,
+  ROW_NUMBERS_COLUMN_ID,
   type CellRange,
   type CellRangeParams,
   type Column,
@@ -684,6 +685,11 @@ class RangeDragFeature extends BeanStub {
     }
     const cell = this.cell(event.target);
     if (!cell) return;
+    // Row-number cells never start a cell drag: the row-numbers feature owns
+    // the press (it consumes the pointerdown before this container mousedown
+    // fires and selects the whole visible row), so a range created here would
+    // clobber the row selection.
+    if (cell.column === ROW_NUMBERS_COLUMN_ID) return;
     if (event.shiftKey) {
       const column = (this.rangeService as unknown as { columns(): Column[] })
         .columns()

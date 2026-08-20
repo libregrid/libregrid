@@ -50,5 +50,17 @@ We transcribed these lists from the AG Grid documentation pages named in each fi
 | [`tree-data.md`](tree-data.md) | 10 | `@libregrid/tree-data` |
 | [`master-detail.md`](master-detail.md) | 10 | `@libregrid/master-detail` |
 | [`integrated-charts.md`](integrated-charts.md) | 12 | `@libregrid/integrated-charts` |
+| [`row-numbers.md`](row-numbers.md) | 14 | `@libregrid/row-numbers` |
+| [`column-header-edit.md`](column-header-edit.md) | 14 | `@libregrid/column-header-edit` |
+| [`cell-notes.md`](cell-notes.md) | 15 | `@libregrid/notes` |
 | [`batch-edit.md`](batch-edit.md) | 17 | `@libregrid/batch-edit` |
-| [`calculated-columns.md`](calculated-columns.md) | 18 | `@libregrid/calculated-columns` |
+
+## Beyond parity (new features)
+
+These features have **no AG Grid Enterprise counterpart** — there is no Enterprise checklist
+to transcribe, so they are not rows in the table above. They ship as their own packages with
+their own phase documents; guardrail G2 applies only to the reused Community surface.
+
+| Feature | Phase | Package | Note |
+|---|---|---|---|
+| Server-side selection | 16 | `@libregrid/server-side-selection` | Durable spec-based row selection for SSRM over very large data sets. Enterprise's only SSRM selection surface is the in-session `getServerSideSelectionState`/`setServerSideSelectionState` pair (already shipped in Phase 7/14-A9); the cross-session selection *spec*, ops protocol, hydration, and footer are defined by [`phase-16-server-side-selection.md`](../phases/phase-16-server-side-selection.md). |

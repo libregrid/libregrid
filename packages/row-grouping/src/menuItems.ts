@@ -2,16 +2,14 @@ import type { Column, GridApi, IRowNode, MenuItemDef } from 'ag-grid-community';
 import { registerMenuItems, type MenuActionParams } from '@libregrid/menu';
 
 /**
- * Narrow a menu target to a Column (group-header menus carry an
- * AgProvidedColumnGroup, which has no `getColDef`). Structural check (not
- * `instanceof`) so it matches the menu package's own guard and test fakes.
+ * Narrow a menu target to a Column. Group-header menus carry an
+ * AgProvidedColumnGroup in `params.column`; single-column operations
+ * (row group/un-group, value aggregation) do not apply to a group, so
+ * those factories hide themselves. Structural check — matches the menu
+ * package's item-factory convention and plain-object test fakes.
  */
-function menuColumn(column: Column | AgProvidedColumnGroupLike | null): Column | null {
+function asColumn(column: MenuActionParams['column']): Column | null {
   return column != null && typeof (column as Column).getColDef === 'function' ? (column as Column) : null;
-}
-
-interface AgProvidedColumnGroupLike {
-  getColGroupDef(): unknown;
 }
 
 const BUILT_IN_AGG_FUNC_NAMES = ['sum', 'min', 'max', 'avg', 'count', 'first', 'last'];
@@ -72,7 +70,7 @@ registerMenuItems([
     order: 20,
     factory: (params: MenuActionParams): MenuItemDef | null => {
       const { api } = params;
-      const column = menuColumn(params.column);
+      const column = asColumn(params.column);
       if (!column) return null;
       const colId = column.getColId();
       if (isGrouped(api, colId)) return null;
@@ -89,7 +87,7 @@ registerMenuItems([
     order: 21,
     factory: (params: MenuActionParams): MenuItemDef | null => {
       const { api } = params;
-      const column = menuColumn(params.column);
+      const column = asColumn(params.column);
       if (!column) return null;
       const colId = column.getColId();
       if (!isGrouped(api, colId)) return null;
@@ -131,7 +129,7 @@ registerMenuItems([
     order: 24,
     factory: (params: MenuActionParams): MenuItemDef | null => {
       const { api } = params;
-      const column = menuColumn(params.column);
+      const column = asColumn(params.column);
       if (!column) return null;
       const colDef = column.getColDef();
       if (!(colDef.enableValue === true || column.getAggFunc() != null)) return null;

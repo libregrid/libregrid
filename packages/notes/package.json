@@ -1,0 +1,20 @@
+{
+  "name": "@libregrid/notes",
+  "version": "1.1.1",
+  "description": "Cell and full-width-row notes for AG Grid Community — part of LibreGrid",
+  "keywords": ["libregrid", "ag-grid", "notes", "cell-notes", "comments"],
+  "homepage": "https://github.com/libregrid/libregrid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libregrid/libregrid.git",
+    "directory": "packages/notes"
+  },
+  "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
+  "dependencies": { "@libregrid/core": "^1.1.1", "@libregrid/menu": "^1.1.1" },
+  "files": ["dist", "LICENSE", "NOTICE", "README.md"],
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+}

@@ -14,7 +14,7 @@
 | `pivotPanelShow` | ✅ | Header pivot zone honors `always`, `onlyWhenPivoting`, and `never`. |
 | `pivotPanelSuppressSort` | 🟡 | Preserved as a strict-order signal; interactive pivot-label sorting is not yet implemented. |
 | `sideBar` | ✅ | Provided by Phase 1; Columns panel pivot controls are functional. |
-| `toolbar` (`agPivotPanelToolbarItem`) | ❌ | Not implemented — the pivot toolbar (hosting pivot-panel items; `iToolbar`/`toolbarMenuBuilder`) is a documented post-1.0 candidate in phase-13 13A; deferred as planned, not shipped |
+| `toolbar` (`agPivotPanelToolbarItem`) | ✅ | Shipped with the Quick Access Toolbar in 1.1.0 — the item embeds the shared pivot drop zone (see `toolbar.md`) |
 | `suppressAggFuncInHeader` | 🟡 | Generated headers use source display names; custom aggregate-function header formatting remains aggregation follow-up work. |
 
 ## ColDef Properties

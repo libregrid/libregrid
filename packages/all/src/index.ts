@@ -11,31 +11,6 @@ export { BatchEditModule } from '@libregrid/batch-edit';
 export type { BatchEditGridApi } from '@libregrid/batch-edit';
 
 export {
-  CalculatedColumnFormulaService,
-  CalculatedColumnsModule,
-  CalculatedColumnsService,
-  FORMULA_FUNCTION_DESCRIPTIONS,
-  FORMULA_FUNCTION_NAMES,
-  FORMULA_FUNCTIONS,
-  FORMULA_OPERATORS,
-  FormulaError,
-  evaluate,
-  getFormulaFunction,
-  parseExpression,
-  referencedColumnIds,
-  validateExpression,
-} from '@libregrid/calculated-columns';
-export type {
-  CalcDialogProps,
-  ColumnReference,
-  ExprNode,
-  ExpressionEvaluator,
-  FormulaErrorCode,
-  FormulaFunc,
-  ValidateOptions,
-} from '@libregrid/calculated-columns';
-
-export {
   ColumnMenuFactory,
   ColumnMenuModule,
   ContextMenuModule,
@@ -58,6 +33,20 @@ export type {
   MenuRenderRequest,
   MenuRenderResult,
 } from '@libregrid/menu';
+
+export {
+  NOTE_MARKER_CLASS,
+  NotesDataService,
+  NotesFeature,
+  NotesModule,
+  NotesService,
+  attachNotePopupResize,
+  buildNotePopup,
+  keyForParams,
+  notesCss,
+  syncNotePopupContent,
+} from '@libregrid/notes';
+export type { NoteTarget, NotePopupDom } from '@libregrid/notes';
 
 export {
   registerSideBarRenderer,
@@ -118,6 +107,11 @@ export {
 } from '@libregrid/cell-selection';
 export type { CellRangeModel } from '@libregrid/cell-selection';
 
+export { RowNumbersModule, RowNumbersService } from '@libregrid/row-numbers';
+
+export { ColumnHeaderEditModule, ColumnHeaderEditService } from '@libregrid/column-header-edit';
+
+
 export {
   ClipboardModule,
   ClipboardService,
@@ -164,6 +158,19 @@ export {
   SsrmListenerUtils,
   SsrmSortService,
 } from '@libregrid/server-side-row-model';
+export {
+  ServerSideSelectionModule,
+  ServerSideSelectionService,
+  SsrmSelectionService,
+  ssrmSelectionCss,
+} from '@libregrid/server-side-selection';
+export type {
+  SelectionOp,
+  SelectionSpec,
+  SelectionTerm,
+  ServerSideSelectionProvider,
+  SsrmSelectionOptions,
+} from '@libregrid/server-side-selection';
 
 export {
   PivotColDefService,

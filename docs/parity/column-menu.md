@@ -63,7 +63,7 @@
 | `sortAscending`    | 1            | ✅     |                                                                                                                                |
 | `sortDescending`   | 1            | ✅     |                                                                                                                                |
 | `sortUnSort`       | 1            | ✅     |                                                                                                                                |
-| `columnFilter`     | 1            | 🟡     | Stub registered; column-filter UI not implemented                                                                              |
+| `columnFilter`     | 1            | ✅     | Offers a `Filter` item for columns with `colDef.filter` and opens the LibreGrid filter popup (`filterPopup.ts`); tested in `filterPopup.spec.ts` |
 | `columnChooser`    | 1            | ✅     | `Choose Columns` appears when `ColumnsToolPanelModule` is registered. It forwards the selected column's `columnChooserParams`. |
 | `pinSubMenu`       | 1            | 🟡     | Stub registered; pin sub-menu not implemented                                                                                  |
 | `autoSizeThis`     | 1            | ✅     |                                                                                                                                |
@@ -75,7 +75,7 @@
 | `expandAll`        | 2            | 🟡     | Functional opt-in contribution. It is not in the default item arrays.                                                          |
 | `contractAll`      | 2            | 🟡     | Functional opt-in contribution. It is not in the default item arrays.                                                          |
 | `valueAggSubMenu`  | 2            | 🟡     | Functional opt-in contribution. It is not in the default item arrays.                                                          |
-| `editColumnName`   | 13           | 🟡     | Stub registered; column header editing is a documented post-1.0 candidate (see phase-13 13A)                                   |
+| `editColumnName`   | 14           | ✅     | Phase 14 (A7) — real factory registered at runtime by `@libregrid/column-header-edit` (service postConstruct); opens the inline header editor; integration-tested in `packages/column-header-edit` |
 | `calculatedColumn` | 13           | 🟡     | Stub registered; calculated-column editing not implemented                                                                     |
 
 ## Behaviour

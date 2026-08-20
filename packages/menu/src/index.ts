@@ -6,7 +6,7 @@
 export { MenuItemRegistry } from './menuItemRegistry';
 export type { MenuItemContribution, MenuItemFactory, MenuActionParams } from './menuItemRegistry';
 export { MenuItemMapper } from './menuItemMapper';
-export { MenuUtils } from './menuUtils';
+export { MenuUtils, withViewportPopupParent } from './menuUtils';
 export { ContextMenuService } from './contextMenuSvc';
 export { ColumnMenuFactory } from './colMenuFactory';
 export { ContextMenuModule } from './contextMenuModule';

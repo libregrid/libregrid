@@ -1,5 +1,6 @@
 /** @vitest-environment jsdom */
 import { describe, expect, it, vi } from 'vitest';
+import { ROW_NUMBERS_COLUMN_ID } from 'ag-grid-community';
 import { makeBeanHarness } from '@libregrid/core/testing';
 import { RangeService } from './rangeService';
 
@@ -145,6 +146,40 @@ describe('RangeService renderer integration', () => {
     const draggedRange = rangeService.getCellRanges()[0];
     expect(draggedRange?.endRow?.rowIndex).toBe(2);
     expect(draggedRange?.startRow?.rowIndex).toBe(0);
+    feature.destroy();
+    container.remove();
+  });
+
+  it('never starts a cell drag from a row-number cell', () => {
+    // The row-numbers feature owns the press on its column: it consumes the
+    // pointerdown (recording it through the range service and selecting the
+    // whole visible row), so the container mousedown must not create a cell
+    // range here or it would clobber the row selection.
+    const columns = [
+      { getColId: () => ROW_NUMBERS_COLUMN_ID, getColDef: () => ({}) },
+      { getColId: () => 'a', getColDef: () => ({ field: 'a' }) },
+    ];
+    const rangeService = makeBeanHarness(RangeService, {
+      gridOptions: { cellSelection: true },
+      beans: { gridApi: { getAllGridColumns: () => columns } },
+    }).bean;
+    const container = document.createElement('div');
+    const rowNumber = document.createElement('div');
+    rowNumber.className = 'ag-cell';
+    rowNumber.setAttribute('col-id', ROW_NUMBERS_COLUMN_ID);
+    const row = document.createElement('div');
+    row.className = 'ag-row';
+    row.setAttribute('row-index', '0');
+    row.append(rowNumber);
+    container.append(row);
+    document.body.append(container);
+    const feature = rangeService.createDragListenerFeature(container);
+    feature.postConstruct();
+
+    rowNumber.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, buttons: 1 }));
+    rowNumber.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, buttons: 1 }));
+    rowNumber.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    expect(rangeService.getCellRanges()).toHaveLength(0);
     feature.destroy();
     container.remove();
   });

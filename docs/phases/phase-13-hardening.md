@@ -36,10 +36,10 @@ spreadsheet interoperability check remains open and the group benchmark
 regression is recorded below), so every item is documented as a post-1.0
 candidate with its rationale instead of being implemented:
 
-- [x] `RowNumbers` module — ❌ post-1.0: audit did not justify the bundle cost (see gap list)
+- [x] `RowNumbers` module — ✅ shipped in Phase 14 (`@libregrid/row-numbers`) — superseded
 - [x] `Notes` module — ❌ post-1.0: same rationale
-- [x] Column header editing — ❌ post-1.0: same rationale
-- [x] Toolbar — ❌ post-1.0: same rationale
+- [x] Column header editing — ✅ shipped in Phase 14 (`@libregrid/column-header-edit`) — superseded
+- [x] Toolbar — ✅ shipped in the 1.1.0 UX pass (`@libregrid/toolbar`) — superseded
 - [x] `testIdSvc` — ❌ post-1.0: same rationale
 - [x] PDF export — ❌ out of scope: would reimplement a commercial export feature; documented
 - [x] Columns-panel header-area drag target, custom drag image, function-member reorder — ❌ post-1.0 (audit recorded the interaction gaps in `columns-tool-panel.md`)

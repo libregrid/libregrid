@@ -75,12 +75,15 @@ with the commercial package for the features listed here.
 | `AdvancedFilter` | `@libregrid/advanced-filter` | |
 | `Find` | `@libregrid/find` | |
 | `RichSelect` | `@libregrid/rich-select` | |
-| `CalculatedColumns` | `@libregrid/calculated-columns` | Read-only derived data columns; expressions use the operator/function set shared with Formulas |
 | `IntegratedCharts` | `@libregrid/integrated-charts` | Built on MIT `ag-charts-community` — see the chart gaps below |
 | `Sparklines` | `@libregrid/sparklines` | |
 | `ExcelExport` | `@libregrid/excel-export` | `.xlsx` export; cell images, Excel tables and cell notes are not included (see the [gap list](../parity/gap-list.md)) |
+| `Toolbar` | `@libregrid/toolbar` | Quick Access Toolbar; quick-filter, find, row-group, pivot, menu items |
+| `RowNumbers` | `@libregrid/row-numbers` | Row-number column with cell-selection integration and row resizer |
+| `ColumnHeaderEdit` | `@libregrid/column-header-edit` | Editable header names (`headerNameEditable`), live or deferred apply |
 | `PdfExport` | — | **Not planned.** See the [gap list](../parity/gap-list.md) |
-| Notes, RowNumbers, Toolbar, AI toolkit | — | Post-1.0 candidates; see the [gap list](../parity/gap-list.md) |
+| `Notes` | `@libregrid/notes` | Cell and full-width-row notes: `notesDataSource`, hover/click/`Shift+F2`, read-only notes, `suppressNoteActions`, context-menu items (Phase 15) |
+| AI toolkit | — | Post-1.0 candidate; see the [gap list](../parity/gap-list.md) |
 
 LibreGrid-only packages with no Enterprise equivalent:
 
