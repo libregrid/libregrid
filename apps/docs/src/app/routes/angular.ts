@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import type { GridApi } from 'ag-grid-community';
@@ -28,7 +27,7 @@ const ROW_DATA: Row[] = [
 @Component({
   selector: 'lgr-angular-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatChipsModule, MatFormFieldModule, MatInputModule],
+  imports: [AgGridAngular, MatCardModule, MatFormFieldModule, MatInputModule],
   template: `
     <div class="lgr-page">
       <h1>Angular integration</h1>
@@ -45,12 +44,12 @@ const ROW_DATA: Row[] = [
         <mat-label>Filter by name</mat-label>
         <input matInput type="text" placeholder="e.g. Ada" (input)="applyFilter($any($event.target).value)" data-testid="angular-filter-input" />
       </mat-form-field>
-      <mat-chip-set aria-label="Mirrored grid state">
-        <mat-chip>Displayed rows: {{ state.displayedRowCount() }}</mat-chip>
-        <mat-chip>Selected: {{ state.selectedRows().length }}</mat-chip>
-        <mat-chip>Filters active: {{ filterCount() }}</mat-chip>
-        <mat-chip>Revision: {{ state.revision() }}</mat-chip>
-      </mat-chip-set>
+      <ul class="lgr-inline-status" aria-label="Mirrored grid state">
+        <li>Displayed rows: {{ state.displayedRowCount() }}</li>
+        <li>Selected: {{ state.selectedRows().length }}</li>
+        <li>Filters active: {{ filterCount() }}</li>
+        <li>Revision: {{ state.revision() }}</li>
+      </ul>
       <mat-card appearance="outlined">
         <mat-card-content>
           <ag-grid-angular
@@ -72,11 +71,14 @@ export class AngularDemo {
   protected readonly filterCount = computed(() => Object.keys(this.state.filterModel()).length);
   protected readonly gridOptions = defineGridOptions<Row>({
     columnDefs: createColumnDefs<Row>([
-      { field: 'name', filter: 'agTextColumnFilter', checkboxSelection: true, headerCheckboxSelection: true },
+      // Row + header checkboxes come from the row-selection API below —
+      // the column-level `checkboxSelection` properties are deprecated and
+      // would render a redundant second checkbox per row.
+      { field: 'name', filter: 'agTextColumnFilter' },
       { field: 'score', type: 'numericColumn' },
     ]),
     rowData: ROW_DATA,
-    rowSelection: { mode: 'multiRow' },
+    rowSelection: { mode: 'multiRow', headerCheckbox: true },
     // Deterministic DOM for accessibility scans: row animations leave rows
     // mid-fade with near-zero opacity, which axe reports as contrast failures.
     animateRows: false,

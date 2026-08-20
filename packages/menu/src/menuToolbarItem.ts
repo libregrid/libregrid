@@ -118,7 +118,10 @@ function resolveItems(items: (MenuItemDef | string)[], api: GridApi): MenuItemDe
     if (typeof item === 'string') {
       const contribution = store.get(item);
       const resolved = contribution?.factory(actionParams);
-      return resolved ? [resolved] : [];
+      if (!resolved) {
+        return [];
+      }
+      return Array.isArray(resolved) ? resolved : [resolved];
     }
     if (item.subMenu) {
       return [{ ...item, subMenu: resolveItems(item.subMenu.filter((child) => child !== 'separator'), api) }];

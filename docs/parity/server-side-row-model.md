@@ -8,6 +8,18 @@
 
 > **Phase-7 boundary:** flat data only. Requests in this phase include empty grouping/value/pivot arrays, `pivotMode: false`, and `filterModel: null`; only range and server-side sort are active. Grouping, filtering and pivot request semantics remain Phase 9.
 
+> **Phase-14 A9 verification (2026-08-18):** the public v36.1.0 SSRM API reference
+> page was re-fetched and its `ServerSideRowModelApiModule` surface compared
+> against this package. The module's API (`_ServerSideRowModelGridApi`) lists
+> exactly nine methods — `getServerSideSelectionState`,
+> `setServerSideSelectionState`, `applyServerSideTransaction`,
+> `applyServerSideTransactionAsync`, `applyServerSideRowData`,
+> `retryServerSideLoads`, `flushServerSideAsyncTransactions`,
+> `refreshServerSide`, `getServerSideGroupLevelState` — and all nine are
+> exposed by `ServerSideRowModelModule.apiFunctions`. The module also
+> registers under the site's own name (`moduleName: 'ServerSideRowModelApi'`).
+> Nothing on the documented surface is missing; A9 closes with no new code.
+
 ## Grid Options
 
 | Option | Phase | Status | Notes |
@@ -38,6 +50,11 @@
 | `retryServerSideLoads` | 7 | ✅ | Retries failed full loads or failed lazy blocks |
 | `getServerSideGroupLevelState` | 7/9 | ✅ | Returns every currently materialized store route and its row count |
 | `ensureIndexVisible` | 7 | ✅ | Community scrolling API requests the newly visible lazy indices |
+| `setRowCount` | 7 | ✅ | Sets the root store's total row count (scrollbar sizing before the server supplies one) |
+| `isLastRowIndexKnown` | 7 | ✅ | Reports whether the root store's total row count is known |
+| `flushServerSideAsyncTransactions` | 7 | ✅ | Forces the pending async-transaction batch to apply immediately |
+| `getServerSideSelectionState` | 7 | ✅ | Flat ID-backed selection state (see `iServerSideSelection`) |
+| `setServerSideSelectionState` | 7 | ✅ | Applies flat ID-backed selection state |
 
 ## Interfaces
 
@@ -76,3 +93,4 @@
 | Server-side filtering | 9 | ✅ | Filter change replaces the root analytical store and invalidates its children |
 | Expand-all / collapse-all | 9 | ✅ | Common expansion service delegates to SSRM and respects all-rows defaults |
 | Group-level selection semantics | 9 | ✅ | Group selection applies to loaded descendants and remembered route state applies to later children |
+| Selection working copy lifetime = row cache | 16 | ✅ | The bean's flat selection state is a query-avoidance cache: `refreshStore` preserves and reapplies it, `setDatasource` resets it, and evicted blocks purge their ids so `@libregrid/server-side-selection` re-resolves them from the spec on reload |

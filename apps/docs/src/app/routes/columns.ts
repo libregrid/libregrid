@@ -50,7 +50,7 @@ function makeRows(count: number): Row[] {
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
-              style="width: 100%; height: 560px;"
+              style="width: 100%; height: 100%;"
               [theme]="theme.gridTheme()"
               [columnDefs]="columnDefs"
               [rowData]="rowData"
@@ -63,9 +63,9 @@ function makeRows(count: number): Row[] {
       </mat-card>
 
       <div class="lgr-actions">
-        <button mat-stroked-button (click)="openColumns()">Open Columns panel</button>
-        <button mat-stroked-button (click)="openChooser()">Open column chooser</button>
-        <button mat-stroked-button (click)="closeChooser()">Close column chooser</button>
+        <button matButton="tonal" (click)="openColumns()">Open Columns panel</button>
+        <button matButton="tonal" (click)="openChooser()">Open column chooser</button>
+        <button matButton="tonal" (click)="closeChooser()">Close column chooser</button>
       </div>
 
       <h2>How it works</h2>

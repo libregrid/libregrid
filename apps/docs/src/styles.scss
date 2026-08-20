@@ -4,7 +4,7 @@
    LibreGrid Design System — Global Styles
    ════════════════════════════════════════════════════════════════ */
 
-// ── Base theme (violet brand) ──────────────────────────────────
+// ── Base theme (Azure brand) ───────────────────────────────────
 // Material 3 system tokens. The theme bridge reads these
 // (--mat-sys-primary, --mat-sys-surface, …) and maps them onto the grid's
 // Theming API params.
@@ -12,11 +12,24 @@ html {
   color-scheme: light dark;
   @include mat.theme((
     color: (
-      primary: mat.$violet-palette,
-      tertiary: mat.$cyan-palette,
+      primary: mat.$azure-palette,
+      tertiary: mat.$rose-palette,
     ),
     typography: Roboto,
     density: 0,
+  ));
+
+  // Material 3 controls: compact enough for a dense application toolbar while
+  // retaining the larger, clearly differentiated filled/tonal action rhythm.
+  @include mat.button-overrides((
+    filled-container-height: 40px,
+    tonal-container-height: 40px,
+    outlined-container-height: 40px,
+    text-container-height: 40px,
+    filled-container-shape: 10px,
+    tonal-container-shape: 10px,
+    outlined-container-shape: 10px,
+    text-container-shape: 10px,
   ));
 }
 
@@ -25,6 +38,15 @@ html {
 // Material component token falls back to `--mat-sys-*` (and the grid bridge
 // reads the same tokens), switching `data-lgr-accent` restyles the whole
 // app and every grid without a reload.
+html[data-lgr-accent='violet'] {
+  @include mat.theme((
+    color: (
+      primary: mat.$violet-palette,
+      tertiary: mat.$cyan-palette,
+    ),
+  ));
+}
+
 html[data-lgr-accent='azure'] {
   @include mat.theme((
     color: (
@@ -71,7 +93,13 @@ html[data-lgr-accent='magenta'] {
 }
 
 // Explicit dark override so the toggle wins over the OS preference.
-html[data-lgr-theme='dark'] { color-scheme: dark; }
+html[data-lgr-theme='dark'] {
+  color-scheme: dark;
+  // WebKit does not reliably re-resolve Material's light-dark() primary token
+  // after changing color-scheme at runtime. Keep the default Azure accent
+  // legible against the dark surface until the browser does so natively.
+  --mat-sys-primary: #9ecaff;
+}
 html[data-lgr-theme='light'] { color-scheme: light; }
 
 /* ── Reset & base ─────────────────────────────────────────────── */
@@ -212,10 +240,26 @@ kbd {
   border-bottom: 1px solid var(--mat-sys-outline-variant);
 }
 
+/* Legacy demo routes are framed by DocsFeatureHeaderComponent in the app
+ * shell. Keep their original content and live behavior, but avoid showing a
+ * second generic page title directly below the new value-oriented header. */
+.lgr-guided-route .lgr-page > h1:first-child {
+  display: none;
+}
+
 .lgr-page > p:first-of-type {
   color: var(--mat-sys-on-surface-variant);
   font-size: 1.05rem;
   line-height: 1.7;
+}
+
+.lgr-eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--mat-sys-primary);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 /* ── Cards ────────────────────────────────────────────────────── */
@@ -227,13 +271,8 @@ kbd {
 
 .lgr-page mat-card {
   border-radius: 16px;
-  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
   border: 1px solid var(--mat-sys-outline-variant);
   background: var(--mat-sys-surface-container-low);
-}
-
-.lgr-page mat-card:hover {
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
 }
 
 /* ── Grid host ────────────────────────────────────────────────── */
@@ -264,6 +303,13 @@ kbd {
   margin: 1rem 0;
 }
 
+/* Visible state for boolean demo controls. The pages retain native buttons,
+ * but state no longer relies on a text label or color alone. */
+.lgr-actions .lgr-active {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 1px;
+}
+
 /* ── Advanced filter ─────────────────────────────────────────── */
 .lgr-advanced-filter-toolbar { margin: 0 0 1rem; }
 
@@ -289,8 +335,14 @@ kbd {
 .lgr-advanced-filter-builder-host {
   min-width: 0;
   margin-bottom: 1rem;
+  overflow-x: auto;
 }
 .lgr-advanced-filter-builder-host:empty { display: none; }
+
+/* ── Data tables (API reference) ─────────────────────────────── */
+.lgr-table-scroll {
+  overflow-x: auto;
+}
 
 /* ── Cell selection overrides ────────────────────────────────── */
 .ag-cell.ag-cell-range-selected {

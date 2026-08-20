@@ -80,7 +80,7 @@ function makeRows(n: number): Row[] {
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
-              style="width: 100%; height: 500px;"
+              style="width: 100%; height: 100%;"
               [theme]="theme.gridTheme()"
               [columnDefs]="columnDefs"
               [rowData]="rowData()"
@@ -94,10 +94,10 @@ function makeRows(n: number): Row[] {
 
       <h2>API</h2>
       <div class="lgr-actions">
-        <button mat-stroked-button (click)="showContextMenu()">Show context menu</button>
-        <button mat-stroked-button (click)="hidePopupMenu()">Hide popup menu</button>
-        <button mat-stroked-button (click)="setContextMenuSuppressed(true)">Suppress context menu</button>
-        <button mat-stroked-button (click)="setContextMenuSuppressed(false)">Enable context menu</button>
+        <button matButton="tonal" (click)="showContextMenu()">Show context menu</button>
+        <button matButton="tonal" (click)="hidePopupMenu()">Hide popup menu</button>
+        <button matButton="tonal" (click)="setContextMenuSuppressed(true)">Suppress context menu</button>
+        <button matButton="tonal" (click)="setContextMenuSuppressed(false)">Enable context menu</button>
       </div>
       <p><strong>Last menu action:</strong> {{ lastAction() }}</p>
 

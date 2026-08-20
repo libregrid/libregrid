@@ -1,12 +1,16 @@
 import {
   BeanStub,
+  isProvidedColumnGroup,
   type NamedBean,
   type MenuItemDef,
+  type AgProvidedColumnGroup,
   type Column,
+  type ColumnGroup,
   type GridApi,
   type PopupService,
   type IMenuFactory,
   type ContainerType,
+  type ProvidedColumnGroup,
 } from 'ag-grid-community';
 import type { MenuItemMapper } from './menuItemMapper';
 import type { MenuActionParams } from './menuItemRegistry';
@@ -33,23 +37,29 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
   }
 
   /**
-   * Build the column menu items for a given column.
+   * Build the column menu items for a given column or column group
+   * (group-header menu).
    */
   public buildColumnMenuItems(
-    column: Column | null,
+    column: MenuColumnTarget | null,
     source: 'columnMenu' | 'columnsToolPanel' | 'columnChooser' = 'columnMenu',
   ): MenuItemDef[] {
     const api = this.beans.gridApi as GridApi | undefined;
     if (!api) return [];
 
+    // Internal item factories receive the target in `column` (a group for
+    // group-header menus); user callbacks receive the documented shape where
+    // `column` is null and `columnGroup` carries the group.
     const params: MenuActionParams = { column, node: null, value: null, api, context: this.gos.get('context') };
+    const callbackColumn = isColumn(column as Column | ColumnGroup | ProvidedColumnGroup) ? (column as Column) : null;
+    const callbackColumnGroup = isProvidedColumnGroup(column) ? (column.displayInstances?.[0] ?? null) : null;
 
     const userCallback = this.gos.get('getColumnMenuItems');
     if (userCallback && typeof userCallback === 'function') {
       const userItems = userCallback({
         ...params,
-        column,
-        columnGroup: null,
+        column: callbackColumn,
+        columnGroup: callbackColumnGroup,
         defaultItems: DEFAULT_COLUMN_MENU_ITEMS as never,
         source,
       } as never);
@@ -63,8 +73,8 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     if (legacyCallback && typeof legacyCallback === 'function') {
       const legacyItems = legacyCallback({
         ...params,
-        column,
-        columnGroup: null,
+        column: callbackColumn,
+        columnGroup: callbackColumnGroup,
         defaultItems: DEFAULT_COLUMN_MENU_ITEMS as never,
       } as never);
       if (Array.isArray(legacyItems)) {
@@ -116,10 +126,13 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     _containerType: ContainerType,
     onClosedCallback?: () => void,
     _filtersOnly?: boolean,
-  ): void {
-    if (!isColumn(column)) return;
-    if (column.getColDef().suppressHeaderMenuButton) return;
-    this.showMenu(column, onClosedCallback, (popupSvc, menuEl) => {
+  ): boolean {
+    if (!isMenuTarget(column)) return false;
+    const suppressed = isColumn(column)
+      ? column.getColDef().suppressHeaderMenuButton
+      : groupSuppressFlag(column, 'suppressHeaderMenuButton');
+    if (suppressed) return false;
+    return this.showMenu(column, onClosedCallback, (popupSvc, menuEl) => {
       popupSvc.positionPopupUnderMouseEvent({
         type: 'columnMenu',
         mouseEvent,
@@ -138,9 +151,18 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     touchEvent?: TouchEvent | null,
   ): void {
     const event = mouseEvent ?? touchEvent?.touches[0];
-    if (!isColumn(column) || !event) return;
-    if (column.getColDef().suppressHeaderContextMenu) return;
-    this.showMenuAfterMouseEvent(column, event, 'columnMenu');
+    if (!isMenuTarget(column) || !event) return;
+    const suppressed = isColumn(column)
+      ? column.getColDef().suppressHeaderContextMenu
+      : column.getColGroupDef()?.suppressHeaderContextMenu;
+    if (suppressed) return;
+    // Community only honours its global preventDefaultOnContextMenu option.
+    // Once LibreGrid has accepted this header event and opened a column menu,
+    // suppress the native browser menu locally instead. Suppressed headers
+    // intentionally return above without altering browser behaviour.
+    if (this.showMenuAfterMouseEvent(column, event, 'columnMenu') && mouseEvent) {
+      mouseEvent.preventDefault();
+    }
   }
 
   public hideActiveMenu(): void {
@@ -154,7 +176,7 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
   }
 
   private showMenu(
-    column: Column,
+    column: MenuColumnTarget,
     onClosedCallback: ((event?: Event) => void) | undefined,
     position: (popupSvc: PopupService, menuEl: HTMLElement) => void,
     anchorToElement?: HTMLElement,
@@ -206,14 +228,14 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     return true;
   }
 
-  private dispatchVisibleChanged(column: Column, visible: boolean): void {
+  private dispatchVisibleChanged(column: MenuColumnTarget, visible: boolean): void {
     (this.beans.eventSvc as unknown as { dispatchEvent: (event: object) => void } | undefined)?.dispatchEvent({
       type: 'columnMenuVisibleChanged',
       visible,
       switchingTab: false,
       key: 'columnMenu',
-      column,
-      columnGroup: null,
+      column: isColumn(column) ? column : null,
+      columnGroup: isProvidedColumnGroup(column) ? (column.displayInstances?.[0] ?? null) : null,
     });
   }
 
@@ -230,4 +252,22 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
 
 function isColumn(value: unknown): value is Column {
   return !!value && typeof (value as Column).getColDef === 'function';
+}
+
+/** A column or a column group (group-header menu) — anything the column menu can target. */
+type MenuColumnTarget = Column | AgProvidedColumnGroup;
+
+function isMenuTarget(value: unknown): value is MenuColumnTarget {
+  if (value == null) return false;
+  if (isColumn(value as Column | ColumnGroup | ProvidedColumnGroup)) return true;
+  return isProvidedColumnGroup(value as Column | ProvidedColumnGroup | null);
+}
+
+/**
+ * A runtime-only `ColGroupDef` suppress flag — Community honours
+ * `suppressHeaderContextMenu` on group defs (its header context-menu gate),
+ * but the public v36 typings omit these fields, hence the structural cast.
+ */
+function groupSuppressFlag(group: AgProvidedColumnGroup, flag: 'suppressHeaderMenuButton' | 'suppressHeaderContextMenu'): boolean {
+  return (group.getColGroupDef() as Record<string, unknown> | null)?.[flag] === true;
 }

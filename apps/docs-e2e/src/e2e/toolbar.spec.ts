@@ -20,7 +20,10 @@ async function dragByPointer(source: Locator, target: Locator): Promise<void> {
 
 test.describe('Toolbar', () => {
   test.beforeEach(async ({ page }) => {
-    await page.setViewportSize({ width: 1800, height: 900 });
+    // The docs header puts the toolbar drop zones below a 900px viewport.
+    // Keep both the grid header drag source and all targets on screen so this
+    // exercises the real pointer bridge rather than synthetic events.
+    await page.setViewportSize({ width: 1800, height: 1200 });
     await page.goto('/toolbar');
     await expect(page.locator('.ag-root-wrapper')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('.lgr-toolbar .lgr-row-group-drop-zone')).toBeVisible();

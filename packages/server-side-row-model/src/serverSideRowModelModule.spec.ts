@@ -11,7 +11,9 @@ import {
   type IServerSideDatasource,
   type IServerSideGetRowsRequest,
 } from 'ag-grid-community';
+import { AdvancedFilterModule } from '@libregrid/advanced-filter';
 import { ServerSideRowModelModule } from './serverSideRowModelModule';
+import { getSsrmRoute } from './serverSideRowModel';
 
 interface Trade {
   id: string;
@@ -139,6 +141,62 @@ describe('ServerSideRowModelModule', () => {
     api.applyColumnState({ state: [{ colId: 'name', sort: 'desc' }] });
     await vi.waitFor(() => expect(requests).toHaveLength(2));
     expect(requests[1]?.sortModel).toEqual([expect.objectContaining({ colId: 'name', sort: 'desc' })]);
+  });
+
+  it('forwards the advanced filter model instead of the column filter model', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, AdvancedFilterModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+    const model = {
+      filterType: 'join' as const,
+      type: 'AND' as const,
+      conditions: [
+        { filterType: 'text' as const, colId: 'name', type: 'contains' as const, filter: 'Alpha' },
+        { filterType: 'number' as const, colId: 'quantity', type: 'greaterThan' as const, filter: 100 },
+      ],
+    };
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      enableAdvancedFilter: true,
+      columnDefs: [{ field: 'name' }, { field: 'quantity', cellDataType: 'number' }],
+      serverSideDatasource: {
+        getRows(params) {
+          requests.push(params.request);
+          params.success({ rowData: [], rowCount: 0 });
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(requests).toHaveLength(1));
+    api.setAdvancedFilterModel(model);
+    await vi.waitFor(() => expect(requests).toHaveLength(2));
+    expect(requests[1]?.filterModel).toEqual(model);
+  });
+
+  it('continues to forward the classic column filter model when advanced filtering is disabled', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+    const model = { name: { filterType: 'text', type: 'contains', filter: 'Alpha' } };
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [{ field: 'name', filter: true }],
+      serverSideDatasource: {
+        getRows(params) {
+          requests.push(params.request);
+          params.success({ rowData: [], rowCount: 0 });
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(requests).toHaveLength(1));
+    api.setFilterModel(model);
+    await vi.waitFor(() => expect(requests).toHaveLength(2));
+    expect(requests[1]?.filterModel).toEqual(model);
   });
 
   it('accepts rows supplied through applyServerSideRowData', async () => {
@@ -430,5 +488,127 @@ describe('ServerSideRowModelModule', () => {
     // A one-level tree has exactly one request per loaded group: default
     // expansion never recursively fetches unknown descendants.
     expect(requests).toHaveLength(3);
+  });
+});
+
+describe('Phase 16 — selection working copy and selection seams', () => {
+  let api: GridApi<Trade> | undefined;
+
+  afterEach(() => {
+    api?.destroy();
+    api = undefined;
+  });
+
+  function createPartialGrid(options?: Record<string, unknown>): GridApi<Trade> {
+    const element = document.createElement('div');
+    element.style.height = '200px';
+    document.body.appendChild(element);
+    return createGrid(element, {
+      rowModelType: 'serverSide',
+      cacheBlockSize: 2,
+      maxBlocksInCache: 2,
+      rowSelection: { mode: 'multiRow' },
+      columnDefs: [{ field: 'name' }],
+      getRowId: (params) => params.data.id,
+      serverSideDatasource: {
+        getRows(params) {
+          const start = params.request.startRow ?? 0;
+          params.success({
+            rowData: Array.from({ length: 2 }, (_, offset) => ({
+              id: String(start + offset),
+              name: `Row ${start + offset}`,
+            })),
+            rowCount: 100,
+          });
+        },
+      },
+      ...options,
+    });
+  }
+
+  it('exposes the SSRM group route via getSsrmRoute', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [{ field: 'desk', rowGroup: true, hide: true }, { field: 'name' }],
+      serverSideDatasource: {
+        getRows(params) {
+          if (params.request.groupKeys.length === 0) {
+            params.success({ rowData: [{ desk: 'North' }, { desk: 'South' }], rowCount: 2 });
+          } else {
+            params.success({ rowData: [{ id: 'north-1', desk: 'North', name: 'Alpha' }], rowCount: 1 });
+          }
+        },
+      },
+    });
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(2));
+    expect(getSsrmRoute(api.getDisplayedRowAtIndex(0)!)).toEqual(['North']);
+    api.getDisplayedRowAtIndex(0)?.setExpanded(true);
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(3));
+    expect(getSsrmRoute(api.getDisplayedRowAtIndex(1)!)).toBeUndefined();
+  });
+
+  it('returns a defensive copy of the selection working copy', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    api = createPartialGrid();
+    await vi.waitFor(() => expect(api?.getRowNode('0')).toBeDefined());
+    api.setServerSideSelectionState({ selectAll: false, toggledNodes: ['0'] });
+    const state = api.getServerSideSelectionState()!;
+    state.toggledNodes.push('hacked');
+    expect(api.getServerSideSelectionState()).toEqual({ selectAll: false, toggledNodes: ['0'] });
+  });
+
+  it('purges evicted blocks from the selection working copy', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    api = createPartialGrid({ pagination: true, paginationPageSize: 2, paginationPageSizeOptions: [2] });
+    await vi.waitFor(() => expect(api?.getRowNode('0')).toBeDefined());
+    api.setServerSideSelectionState({ selectAll: false, toggledNodes: ['0'] });
+    expect(api.getServerSideSelectionState()).toEqual({ selectAll: false, toggledNodes: ['0'] });
+
+    // `paginationGoToPage` is 0-based in v36: page index 2 → rows 4–5 (block 2).
+    const goToPage = (page: number): void =>
+      (api as unknown as { paginationGoToPage: (page: number) => void }).paginationGoToPage(page);
+
+    // Three blocks against a budget of two, with only the last page visible,
+    // evicts the least-recently-used block 0.
+    goToPage(2);
+    await vi.waitFor(() =>
+      expect(api?.getCacheBlockState()).toEqual(
+        expect.objectContaining({ '2': expect.objectContaining({ pageStatus: 'loaded' }) }),
+      ),
+    );
+    goToPage(4);
+    await vi.waitFor(() =>
+      expect(api?.getCacheBlockState()).toEqual(
+        expect.objectContaining({ '4': expect.objectContaining({ pageStatus: 'loaded' }) }),
+      ),
+    );
+    await vi.waitFor(() => expect(api?.getCacheBlockState()).not.toHaveProperty('0'));
+
+    // The evicted row's working-copy state leaves the client with the row.
+    expect(api.getServerSideSelectionState()).toEqual({ selectAll: false, toggledNodes: [] });
+
+    // Requesting the block again re-materialises the row unselected — its
+    // selection is re-resolved from the API by the selection package.
+    goToPage(0);
+    await vi.waitFor(() => expect(api?.getRowNode('0')?.isSelected()).toBe(false));
+  });
+
+  it('resets the selection working copy when the datasource is replaced', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    api = createPartialGrid();
+    await vi.waitFor(() => expect(api?.getRowNode('0')).toBeDefined());
+    api.setServerSideSelectionState({ selectAll: false, toggledNodes: ['0'] });
+    expect(api.getServerSideSelectionState()).toEqual({ selectAll: false, toggledNodes: ['0'] });
+
+    const replacement: IServerSideDatasource<Trade> = {
+      getRows(params) {
+        params.success({ rowData: [{ id: 'fresh', name: 'Fresh' }], rowCount: 1 });
+      },
+    };
+    api.setGridOption('serverSideDatasource', replacement);
+    expect(api.getServerSideSelectionState()).toEqual({ selectAll: false, toggledNodes: [] });
   });
 });

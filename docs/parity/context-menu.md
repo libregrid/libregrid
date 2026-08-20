@@ -15,7 +15,7 @@
 | `suppressContextMenu`            | ✅     | Suppresses ours, not the browser's; E2E tested                |
 | `allowContextMenuWithControlKey` | ✅     | Ctrl+click path E2E tested                                    |
 | `popupParent`                    | 🟡     | PopupService respects it; explicit E2E still pending          |
-| `cellSelection`                  | 🟡     | Implemented by `@libregrid/cell-selection` (Phase 4); the copy/cut/paste context items gated on it remain registered stubs in this package |
+| `cellSelection`                  | ✅     | Implemented by `@libregrid/cell-selection` (Phase 4); the copy/cut/paste context items it gates are wired (Phase 14 P0-6) |
 | `enableCharts`                   | ✅     | Implemented by `@libregrid/integrated-charts` (Phase 12): gates ChartService and drives the live `chartRange`/`pivotChart` items; integration-tested in `packages/integrated-charts` and demonstrated on the live `/charts` docs route with E2E |
 
 ## Callbacks
@@ -55,23 +55,23 @@
 | `separator`            | 1            | ✅     |                 |
 | `autoSizeAll`          | 1            | ✅     |                 |
 | `resetColumns`         | 1            | ✅     |                 |
-| `pinRowSubMenu`        | 1            | 🟡     | Stub registered; row-pinning sub-menu not implemented |
-| `pinTop`               | 1            | 🟡     | Stub registered; row-pin action not implemented |
-| `pinBottom`            | 1            | 🟡     | Stub registered; row-pin action not implemented |
-| `unpinRow`             | 1            | 🟡     | Stub registered; row-unpin action not implemented |
-| `expandAll`            | 2            | 🟡     | Stub registered; group expand-all action not wired |
-| `contractAll`          | 2            | 🟡     | Stub registered; group contract-all action not wired |
-| `copy`                 | 4            | 🟡     | Stub registered; not wired to the Phase 4 clipboard copy |
-| `copyWithHeaders`      | 4            | 🟡     | Stub registered; not wired to the Phase 4 clipboard copy |
-| `copyWithGroupHeaders` | 4            | 🟡     | Stub registered; not wired to the Phase 4 clipboard copy |
-| `cut`                  | 4            | 🟡     | Stub registered; not wired to the Phase 4 clipboard cut |
-| `paste`                | 4            | 🟡     | Stub registered; not wired to the Phase 4 clipboard paste |
-| `export`               | 5            | 🟡     | Stub registered; export action not wired |
-| `csvExport`            | 5            | 🟡     | Stub registered; CSV export action not wired |
-| `excelExport`          | 5            | 🟡     | Stub registered; Excel export is deferred (see phase-05-excel-export.md) |
+| `pinRowSubMenu`        | 1            | 🟡     | Stub registered; Community's pinned-rows API is data-level (`setPinnedTopRowData`/`setPinnedBottomRowData`) — there is no single-row pin/unpin API to wire a per-row item to |
+| `pinTop`               | 1            | 🟡     | Stub registered; no single-row pin API exists (see `pinRowSubMenu`) |
+| `pinBottom`            | 1            | 🟡     | Stub registered; no single-row pin API exists (see `pinRowSubMenu`) |
+| `unpinRow`             | 1            | 🟡     | Stub registered; no single-row unpin API exists (see `pinRowSubMenu`) |
+| `expandAll`            | 2            | ✅     | Phase 14 (P0-6) — real factory registered by `@libregrid/row-grouping` (replaces the Phase-1 stub via the global store); grid-wide `api.expandAll` or scoped subtree expansion; resolution + invoked API call tested in `menuItems.spec.ts` |
+| `contractAll`          | 2            | ✅     | Phase 14 (P0-6) — real factory registered by `@libregrid/row-grouping` (replaces the Phase-1 stub); grid-wide `api.collapseAll` or scoped subtree collapse; tested in `menuItems.spec.ts` |
+| `copy`                 | 4            | ✅     | Phase 14 (P0-6) — real factory registered by `@libregrid/clipboard` in `onRegister` (replaces the Phase-1 stub); invokes `api.copySelectedRangeToClipboard`; resolution + invoked call tested in `clipboardModule.integration.spec.ts` |
+| `copyWithHeaders`      | 4            | ✅     | Phase 14 (P0-6) — `@libregrid/clipboard`; `copySelectedRangeToClipboard({ includeHeaders: true })`; tested |
+| `copyWithGroupHeaders` | 4            | ✅     | Phase 14 (P0-6) — `@libregrid/clipboard`; `copySelectedRangeToClipboard({ includeHeaders: true, includeGroupHeaders: true })`; tested |
+| `cut`                  | 4            | ✅     | Phase 14 (P0-6) — `@libregrid/clipboard`; `api.cutToClipboard`; tested |
+| `paste`                | 4            | ✅     | Phase 14 (P0-6) — `@libregrid/clipboard`; `api.pasteFromClipboard`; tested |
+| `export`               | 5            | ✅     | Phase 14 (P0-6) — `@libregrid/excel-export`; submenu of `csvExport`/`excelExport`; tested |
+| `csvExport`            | 5            | ✅     | Phase 14 (P0-6) — `@libregrid/excel-export`; `api.exportDataAsCsv`; tested |
+| `excelExport`          | 5            | ✅     | Phase 14 (P0-6) — `@libregrid/excel-export`; `api.exportDataAsExcel`; tested |
 | `chartRange`           | 12           | ✅     | Creates linked Community range charts from the selected range |
 | `pivotChart`           | 12           | ✅     | Creates a chart from pivot-visible data |
-| `note`                 | 13           | 🟡     | Stub registered; Notes is a documented post-1.0 candidate (see phase-13 13A) |
+| `note`                 | 13           | ✅     | Phase 15 (A4) — real factory registered by `@libregrid/notes` (replaces the Phase-1 stub); *Add Note* / *Edit Note* + *Remove Note* / *View Note* (+ disabled remove for read-only) per note access; added to `DEFAULT_CONTEXT_MENU_ITEMS` so it appears by default; tested in `notesModule.integration.spec.ts` |
 
 ## Behaviour
 

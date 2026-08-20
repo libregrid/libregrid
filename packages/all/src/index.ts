@@ -7,6 +7,9 @@
  */
 export * from '@libregrid/core';
 
+export { BatchEditModule } from '@libregrid/batch-edit';
+export type { BatchEditGridApi } from '@libregrid/batch-edit';
+
 export {
   ColumnMenuFactory,
   ColumnMenuModule,
@@ -30,6 +33,20 @@ export type {
   MenuRenderRequest,
   MenuRenderResult,
 } from '@libregrid/menu';
+
+export {
+  NOTE_MARKER_CLASS,
+  NotesDataService,
+  NotesFeature,
+  NotesModule,
+  NotesService,
+  attachNotePopupResize,
+  buildNotePopup,
+  keyForParams,
+  notesCss,
+  syncNotePopupContent,
+} from '@libregrid/notes';
+export type { NoteTarget, NotePopupDom } from '@libregrid/notes';
 
 export {
   registerSideBarRenderer,
@@ -90,6 +107,11 @@ export {
 } from '@libregrid/cell-selection';
 export type { CellRangeModel } from '@libregrid/cell-selection';
 
+export { RowNumbersModule, RowNumbersService } from '@libregrid/row-numbers';
+
+export { ColumnHeaderEditModule, ColumnHeaderEditService } from '@libregrid/column-header-edit';
+
+
 export {
   ClipboardModule,
   ClipboardService,
@@ -136,6 +158,19 @@ export {
   SsrmListenerUtils,
   SsrmSortService,
 } from '@libregrid/server-side-row-model';
+export {
+  ServerSideSelectionModule,
+  ServerSideSelectionService,
+  SsrmSelectionService,
+  ssrmSelectionCss,
+} from '@libregrid/server-side-selection';
+export type {
+  SelectionOp,
+  SelectionSpec,
+  SelectionTerm,
+  ServerSideSelectionProvider,
+  SsrmSelectionOptions,
+} from '@libregrid/server-side-selection';
 
 export {
   PivotColDefService,

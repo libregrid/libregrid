@@ -40,8 +40,8 @@ const rows: Row[] = [
           data-testid="selection-grid" /></mat-card-content
     ></mat-card>
     <p>
-      <button mat-stroked-button (click)="copy()">Copy selected range</button>
-      <button mat-stroked-button (click)="clear()">Clear range</button>
+      <button matButton="tonal" (click)="copy()">Copy selected range</button>
+      <button matButton="tonal" (click)="clear()">Clear range</button>
     </p>
     <p aria-live="polite">{{ copied() }}</p>
     <h2>Status</h2>

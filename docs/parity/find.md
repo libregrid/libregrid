@@ -12,7 +12,7 @@
 |---|---|---|---|
 | `findSearchValue` | `string` | ✅ | Reactive match rebuild |
 | `findOptions` | `FindOptions` | ✅ | |
-| `toolbar` | — | ❌ | Not implemented — Quick Access Toolbar is a documented post-1.0 candidate (see phase-13 13A); not shipped |
+| `toolbar` | — | ✅ | Shipped with the Quick Access Toolbar in 1.1.0 — `agFindToolbarItem` places the find input in the toolbar (see `toolbar.md`) |
 
 ## FindOptions
 

@@ -34,6 +34,7 @@ export default defineConfig({
       ),
       '@libregrid/core': fileURLToPath(new URL('./packages/core/src/index.ts', import.meta.url)),
       '@libregrid/menu': fileURLToPath(new URL('./packages/menu/src/index.ts', import.meta.url)),
+      '@libregrid/notes': fileURLToPath(new URL('./packages/notes/src/index.ts', import.meta.url)),
       '@libregrid/side-bar': fileURLToPath(
         new URL('./packages/side-bar/src/index.ts', import.meta.url),
       ),
@@ -46,6 +47,9 @@ export default defineConfig({
       '@libregrid/pivot': fileURLToPath(new URL('./packages/pivot/src/index.ts', import.meta.url)),
       '@libregrid/server-side-row-model': fileURLToPath(
         new URL('./packages/server-side-row-model/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/server-side-selection': fileURLToPath(
+        new URL('./packages/server-side-selection/src/index.ts', import.meta.url),
       ),
       '@libregrid/viewport-row-model': fileURLToPath(
         new URL('./packages/viewport-row-model/src/index.ts', import.meta.url),
@@ -71,6 +75,12 @@ export default defineConfig({
       '@libregrid/cell-selection': fileURLToPath(
         new URL('./packages/cell-selection/src/index.ts', import.meta.url),
       ),
+      '@libregrid/row-numbers': fileURLToPath(
+        new URL('./packages/row-numbers/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/column-header-edit': fileURLToPath(
+        new URL('./packages/column-header-edit/src/index.ts', import.meta.url),
+      ),
       '@libregrid/clipboard': fileURLToPath(
         new URL('./packages/clipboard/src/index.ts', import.meta.url),
       ),
@@ -85,6 +95,9 @@ export default defineConfig({
       ),
       '@libregrid/advanced-filter': fileURLToPath(
         new URL('./packages/advanced-filter/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/batch-edit': fileURLToPath(
+        new URL('./packages/batch-edit/src/index.ts', import.meta.url),
       ),
       '@libregrid/find': fileURLToPath(new URL('./packages/find/src/index.ts', import.meta.url)),
       '@libregrid/rich-select': fileURLToPath(

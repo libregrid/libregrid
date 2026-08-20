@@ -9,6 +9,7 @@ import { SideBarModule } from '@libregrid/side-bar';
 import { RowGroupingModule } from '@libregrid/row-grouping';
 import { PivotModule } from '@libregrid/pivot';
 import { ServerSideRowModelModule } from '@libregrid/server-side-row-model';
+import { ServerSideSelectionModule } from '@libregrid/server-side-selection';
 import { ViewportRowModelModule } from '@libregrid/viewport-row-model';
 import { TreeDataModule } from '@libregrid/tree-data';
 import { MasterDetailModule } from '@libregrid/master-detail';
@@ -25,7 +26,12 @@ import { FindModule } from '@libregrid/find';
 import { ToolbarModule } from '@libregrid/toolbar';
 import { RichSelectModule } from '@libregrid/rich-select';
 import { IntegratedChartsModule } from '@libregrid/integrated-charts';
+import { BatchEditModule } from '@libregrid/batch-edit';
+import { CalculatedColumnsModule } from '@libregrid/calculated-columns';
 import { SparklinesModule } from '@libregrid/sparklines';
+import { RowNumbersModule } from '@libregrid/row-numbers';
+import { ColumnHeaderEditModule } from '@libregrid/column-header-edit';
+import { NotesModule } from '@libregrid/notes';
 import { provideLibreGridMaterialTheme } from '@libregrid/material';
 
 import { App } from './app/app';
@@ -47,7 +53,7 @@ bootstrapApplication(App, {
   providers: [
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
-    provideLibreGridMaterialTheme(),
+    provideLibreGridMaterialTheme({ accent: 'azure' }),
     provideLibreGrid(
       AllCommunityModule,
       EnterpriseCoreModule,
@@ -87,6 +93,18 @@ bootstrapApplication(App, {
       // Phase 12
       IntegratedChartsModule,
       SparklinesModule,
+      // Phase 14
+      RowNumbersModule,
+      ColumnHeaderEditModule,
+      // Phase 15
+      NotesModule,
+      // Phase 16
+      ServerSideSelectionModule,
+      // Phase 17
+      BatchEditModule,
+      // Calculated values are registered here with every other app capability;
+      // route components never self-register modules.
+      CalculatedColumnsModule,
     ),
   ],
 }).catch((err) => console.error(err));

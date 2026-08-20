@@ -46,10 +46,10 @@ const scores = [
           data-testid="excel-grid" /></mat-card-content
     ></mat-card>
     <p>
-      <button mat-stroked-button (click)="exportSingle()" data-testid="export-single">
+      <button matButton="tonal" (click)="exportSingle()" data-testid="export-single">
         Export as .xlsx
       </button>
-      <button mat-stroked-button (click)="exportMultiple()" data-testid="export-multiple">
+      <button matButton="tonal" (click)="exportMultiple()" data-testid="export-multiple">
         Export multiple sheets
       </button>
     </p>

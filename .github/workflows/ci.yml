@@ -137,12 +137,11 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+      - name: Install Playwright browsers and OS dependencies
+        # The cache may be partial (for example, an older Chromium-only run).
+        # `install` verifies every requested executable and only downloads what
+        # is missing, so it is safe to run on both cache hits and misses.
         run: npx playwright install --with-deps chromium firefox webkit
-      - name: Install Playwright OS deps (cached browsers)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium firefox webkit
       - name: Playwright E2E and axe (Chromium, Firefox, WebKit)
         run: NX_DAEMON=false npx nx e2e docs-e2e
 

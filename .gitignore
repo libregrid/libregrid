@@ -20,3 +20,4 @@ packages/excel-export/src/testing/__fixtures__/verification/
 # Local debugging probes
 .probe-*.mjs
 .ag-*-ref.png
+.claude/settings.local.json

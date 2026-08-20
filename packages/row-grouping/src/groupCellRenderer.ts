@@ -77,8 +77,8 @@ export class GroupCellRenderer implements ICellRendererComp {
 
   private toggleExpanded(event: Event): void {
     const { node } = this.params;
-    if (!node.group) return;
-    if (!node.childrenAfterGroup?.length && !this.isServerSideGroup()) return;
+    if (!node.group && !node.master) return;
+    if (!node.master && !node.childrenAfterGroup?.length && !this.isServerSideGroup()) return;
     node.setExpanded(!node.expanded, event as MouseEvent | KeyboardEvent);
   }
 
@@ -89,7 +89,9 @@ export class GroupCellRenderer implements ICellRendererComp {
 
   private render(): void {
     const { node, value, suppressPadding, suppressCount, totalValueGetter } = this.params;
-    const isExpandable = !!node.group && (!!node.childrenAfterGroup?.length || this.isServerSideGroup());
+    const isExpandable =
+      !!node.master ||
+      (!!node.group && (!!node.childrenAfterGroup?.length || this.isServerSideGroup()));
 
     this.eGui.classList.toggle('lgr-group-cell-expandable', isExpandable);
     this.eGui.classList.toggle('lgr-group-cell-total', !!node.footer);

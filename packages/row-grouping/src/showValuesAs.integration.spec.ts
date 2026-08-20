@@ -3,9 +3,10 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { createGrid, ModuleRegistry, AllCommunityModule, type GridApi, type GridOptions } from 'ag-grid-community';
+import { ColumnMenuModule } from '@libregrid/menu';
 import { RowGroupingModule } from './rowGroupingModule';
 
-ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule]);
+ModuleRegistry.registerModules([AllCommunityModule, ColumnMenuModule, RowGroupingModule]);
 
 interface Row {
   country: string;
@@ -129,6 +130,124 @@ describe('showValuesAs (PR 2.5)', () => {
       const node = api.getDisplayedRowAtIndex(0)!;
       expect(api.getCellValue({ rowNode: node, colKey: 'sales', useFormatter: true, transformValues: true })).toBe('16.67%');
     });
+
+    api.destroy();
+    el.remove();
+  });
+});
+
+describe('showValuesAs column menu (Phase 14 A10)', () => {
+  function menuItems(): HTMLElement[] {
+    return Array.from(document.querySelectorAll<HTMLElement>('.lgr-menu-item'));
+  }
+
+  it('selects a mode through the Show Values As submenu', async () => {
+    const { api, el } = bootGrid({
+      columnDefs: [
+        { field: 'country' },
+        { field: 'sales', enableShowValuesAs: true },
+      ],
+      rowData: ROW_DATA,
+    });
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(3));
+
+    api.showColumnMenu('sales');
+    await vi.waitFor(() =>
+      expect(menuItems().some((elm) => elm.textContent?.trim() === 'Show Values As')).toBe(true),
+    );
+    // percentOfParentColumnTotal is hidden without pivot
+    expect(menuItems().some((elm) => elm.textContent?.trim() === '% of Parent Column Total')).toBe(false);
+
+    menuItems().find((elm) => elm.textContent?.trim() === 'Show Values As')!.click();
+    await vi.waitFor(() =>
+      expect(menuItems().some((elm) => elm.textContent?.trim() === '% of Grand Total')).toBe(true),
+    );
+    menuItems().find((elm) => elm.textContent?.trim() === '% of Grand Total')!.click();
+
+    await vi.waitFor(() => {
+      const node = api.getDisplayedRowAtIndex(0)!; // NY: 100/600
+      expect(api.getCellValue({ rowNode: node, colKey: 'sales', useFormatter: true, transformValues: true })).toBe(
+        '16.67%',
+      );
+    });
+    // The selection round-trips through the column state.
+    expect(api.getColumnState().find((s) => s.colId === 'sales')?.showValuesAs).toBe('percentOfGrandTotal');
+
+    api.destroy();
+    el.remove();
+  });
+
+  it('None clears the selection', async () => {
+    const { api, el } = bootGrid({
+      columnDefs: [
+        { field: 'country' },
+        { field: 'sales', enableShowValuesAs: true, showValuesAs: 'percentOfGrandTotal' },
+      ],
+      rowData: ROW_DATA,
+    });
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(3));
+
+    api.showColumnMenu('sales');
+    await vi.waitFor(() =>
+      expect(menuItems().some((elm) => elm.textContent?.trim() === 'Show Values As')).toBe(true),
+    );
+    menuItems().find((elm) => elm.textContent?.trim() === 'Show Values As')!.click();
+    await vi.waitFor(() => expect(menuItems().some((elm) => elm.textContent?.trim() === 'None')).toBe(true));
+    menuItems().find((elm) => elm.textContent?.trim() === 'None')!.click();
+
+    await vi.waitFor(() => {
+      const node = api.getDisplayedRowAtIndex(0)!;
+      expect(api.getCellValue({ rowNode: node, colKey: 'sales' })).toBe(100);
+    });
+    expect(api.getColumnState().find((s) => s.colId === 'sales')?.showValuesAs).toBeNull();
+
+    api.destroy();
+    el.remove();
+  });
+
+  it('hides the item for columns without enableShowValuesAs', async () => {
+    const { api, el } = bootGrid({
+      columnDefs: [{ field: 'country' }, { field: 'sales' }],
+      rowData: ROW_DATA,
+    });
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(3));
+
+    api.showColumnMenu('sales');
+    await vi.waitFor(() => expect(menuItems().length).toBeGreaterThan(0));
+    expect(menuItems().some((elm) => elm.textContent?.trim() === 'Show Values As')).toBe(false);
+
+    api.destroy();
+    el.remove();
+  });
+
+  it('defaultColDef.enableShowValuesAs shows the item for numeric-type columns', async () => {
+    const { api, el } = bootGrid({
+      defaultColDef: { enableShowValuesAs: true },
+      columnDefs: [{ field: 'country', cellDataType: 'string' }, { field: 'sales', cellDataType: 'number' }],
+      rowData: ROW_DATA,
+    });
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(3));
+
+    api.showColumnMenu('sales');
+    await vi.waitFor(() =>
+      expect(menuItems().some((elm) => elm.textContent?.trim() === 'Show Values As')).toBe(true),
+    );
+
+    api.destroy();
+    el.remove();
+  });
+
+  it('defaultColDef.enableShowValuesAs hides the item for non-numeric columns', async () => {
+    const { api, el } = bootGrid({
+      defaultColDef: { enableShowValuesAs: true },
+      columnDefs: [{ field: 'country', cellDataType: 'string' }, { field: 'sales', cellDataType: 'number' }],
+      rowData: ROW_DATA,
+    });
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(3));
+
+    api.showColumnMenu('country');
+    await vi.waitFor(() => expect(menuItems().length).toBeGreaterThan(0));
+    expect(menuItems().some((elm) => elm.textContent?.trim() === 'Show Values As')).toBe(false);
 
     api.destroy();
     el.remove();

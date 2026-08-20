@@ -8,7 +8,8 @@ import type { Routes } from '@angular/router';
  */
 export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: '', label: 'Overview' },
-  { path: 'validation', label: 'Manual validation' },
+  { path: 'getting-started', label: 'Getting started' },
+  { path: 'packages', label: 'Package catalog' },
   { path: 'grid', label: 'Grid (Community)' },
   { path: 'menus', label: 'Menus' },
   { path: 'side-bar', label: 'Side bar' },
@@ -21,12 +22,20 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'excel-export', label: 'Excel Export' },
   { path: 'server-side', label: 'Server-side rows' },
   { path: 'server-side-advanced', label: 'SSRM Advanced' },
+  { path: 'server-side-selection', label: 'Server-side Selection' },
   { path: 'viewport', label: 'Viewport rows' },
   { path: 'tree-data', label: 'Tree Data' },
   { path: 'master-detail', label: 'Master / Detail' },
+  { path: 'calculated-columns', label: 'Calculated Columns' },
   { path: 'advanced-filter-find', label: 'Advanced Filter & Find' },
-  { path: 'charts', label: 'Charts & Sparklines' },
+  { path: 'batch-edit', label: 'Batch Edit' },
+  { path: 'charts', label: 'Integrated Charts' },
+  { path: 'sparklines', label: 'Sparklines' },
+  { path: 'row-numbers', label: 'Row Numbers' },
+  { path: 'column-header-edit', label: 'Column Header Edit' },
+  { path: 'notes', label: 'Cell Notes' },
   { path: 'angular', label: 'Angular' },
+  { path: 'material', label: 'Material theme bridge' },
   { path: 'api', label: 'API Reference' },
 ];
 
@@ -37,14 +46,19 @@ export const routes: Routes = [
     title: 'LibreGrid — Overview',
   },
   {
-    path: 'validation',
-    loadComponent: () => import('./routes/manual-validation').then((m) => m.ManualValidation),
-    title: 'LibreGrid — Manual Validation',
-  },
-  {
     path: 'grid',
     loadComponent: () => import('./routes/grid-demo').then((m) => m.GridDemo),
     title: 'LibreGrid — Grid',
+  },
+  {
+    path: 'getting-started',
+    loadComponent: () => import('./routes/getting-started').then((m) => m.GettingStarted),
+    title: 'LibreGrid — Getting Started',
+  },
+  {
+    path: 'packages',
+    loadComponent: () => import('./routes/package-catalog').then((m) => m.PackageCatalog),
+    title: 'LibreGrid — Package Catalog',
   },
   {
     path: 'menus',
@@ -104,6 +118,12 @@ export const routes: Routes = [
     title: 'LibreGrid — SSRM Advanced',
   },
   {
+    path: 'server-side-selection',
+    loadComponent: () =>
+      import('./routes/server-side-selection').then((m) => m.ServerSideSelectionDemo),
+    title: 'LibreGrid — Server-Side Selection',
+  },
+  {
     path: 'viewport',
     loadComponent: () => import('./routes/viewport-row-model').then((m) => m.ViewportRowModelDemo),
     title: 'LibreGrid — Viewport Row Model',
@@ -119,15 +139,46 @@ export const routes: Routes = [
     title: 'LibreGrid — Master Detail',
   },
   {
+    path: 'calculated-columns',
+    loadComponent: () =>
+      import('./routes/calculated-columns').then((m) => m.CalculatedColumnsDemo),
+    title: 'LibreGrid — Calculated Columns',
+  },
+  {
     path: 'advanced-filter-find',
     loadComponent: () =>
       import('./routes/advanced-filter-find').then((m) => m.AdvancedFilterFindDemo),
     title: 'LibreGrid — Advanced Filter & Find',
   },
   {
+    path: 'batch-edit',
+    loadComponent: () => import('./routes/batch-edit').then((m) => m.BatchEditDemo),
+    title: 'LibreGrid — Batch Edit',
+  },
+  {
     path: 'charts',
     loadComponent: () => import('./routes/charts').then((m) => m.ChartsDemo),
     title: 'LibreGrid — Charts & Sparklines',
+  },
+  {
+    path: 'sparklines',
+    loadComponent: () => import('./routes/sparklines').then((m) => m.SparklinesDemo),
+    title: 'LibreGrid — Sparklines',
+  },
+  {
+    path: 'row-numbers',
+    loadComponent: () => import('./routes/row-numbers').then((m) => m.RowNumbersDemo),
+    title: 'LibreGrid — Row Numbers',
+  },
+  {
+    path: 'column-header-edit',
+    loadComponent: () => import('./routes/column-header-edit').then((m) => m.ColumnHeaderEditDemo),
+    title: 'LibreGrid — Column Header Edit',
+  },
+  {
+    path: 'notes',
+    loadComponent: () => import('./routes/notes').then((m) => m.NotesDemo),
+    title: 'LibreGrid — Cell Notes',
   },
   {
     path: 'benchmark',
@@ -140,9 +191,18 @@ export const routes: Routes = [
     title: 'LibreGrid — Angular',
   },
   {
+    path: 'material',
+    loadComponent: () => import('./routes/material').then((m) => m.MaterialDemo),
+    title: 'LibreGrid — Material Theme Bridge',
+  },
+  {
     path: 'api',
     loadComponent: () => import('./routes/api').then((m) => m.ApiReference),
     title: 'LibreGrid — API Reference',
   },
-  { path: '**', redirectTo: '' },
+  {
+    path: '**',
+    loadComponent: () => import('./routes/not-found').then((m) => m.NotFound),
+    title: 'LibreGrid — Page Not Found',
+  },
 ];

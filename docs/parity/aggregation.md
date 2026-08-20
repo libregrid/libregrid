@@ -35,8 +35,8 @@
 | `defaultAggFunc` | ✅ | Preferred over the `'sum'` fallback |
 | `showValuesAs` | ✅ | PR 2.5 shipped — the five built-in modes are integration-tested (`packages/row-grouping/src/showValuesAs.integration.spec.ts`) and demonstrated on the live `/row-grouping` docs route (see `row-grouping.md`) |
 | `initialShowValuesAs` | ✅ | PR 2.5 shipped — create-only, per doc; implemented and integration-tested via `resolveColumn`'s `applyInitial` flag (✅ in `row-grouping.md`) |
-| `showValuesAsDef` | 🟡 | PR 2.5 shipped — `precision`/`suppressHeaderIndicator` are read, but `modes` (custom mode registry / built-in overrides) is not implemented; see `docs/parity/row-grouping.md` |
-| `enableShowValuesAs` | 🟡 | PR 2.5 shipped — read by `isMenuEligible`, but no column-menu entry point renders it yet (not wired into `@libregrid/menu`); see `docs/parity/row-grouping.md` "Column-menu integration" |
+| `showValuesAsDef` | ✅ | PR 2.5 shipped — `precision`/`suppressHeaderIndicator` are read; Phase 14 (A10) — `modes` (custom mode registry / built-in overrides) implemented; see `docs/parity/row-grouping.md` |
+| `enableShowValuesAs` | ✅ | PR 2.5 shipped — read by `isMenuEligible`; Phase 14 (A10) — the column-menu entry point is wired (runtime `postConstruct` registration into `@libregrid/menu`); see `docs/parity/row-grouping.md` "Column-menu integration" |
 
 ## API Methods
 

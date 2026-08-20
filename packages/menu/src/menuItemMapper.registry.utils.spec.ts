@@ -41,6 +41,27 @@ describe('MenuItemMapper', () => {
     ]);
   });
 
+  it('flattens multi-item factories in place, for mapItems and mapMixed', () => {
+    const { bean: mapper } = makeBeanHarness(MenuItemMapper);
+    mapper.registry.register({
+      name: 'multi',
+      factory: () => [
+        { name: 'First half' },
+        { name: 'Second half', subMenu: ['child'] },
+      ],
+    });
+    mapper.registry.register({ name: 'child', factory: () => ({ name: 'Child' }) });
+
+    expect(mapper.mapItems(['multi'], params)).toEqual([
+      { name: 'First half' },
+      { name: 'Second half', subMenu: [{ name: 'Child' }] },
+    ]);
+    expect(mapper.mapMixed(['multi'], params)).toEqual([
+      { name: 'First half' },
+      { name: 'Second half', subMenu: [{ name: 'Child' }] },
+    ]);
+  });
+
   it('resolves string subMenu entries on registered items, for mapItems and mapMixed', () => {
     const { bean: mapper } = makeBeanHarness(MenuItemMapper);
     mapper.registry.register({ name: 'child', factory: () => ({ name: 'Child' }) });
@@ -93,6 +114,24 @@ describe('MenuItemRegistry', () => {
     expect(
       registry.buildItems(['later-key', 'earlier-key'], params).map((item) => item.name),
     ).toEqual(['Second label', 'First label']);
+  });
+
+  it('keeps list order within one name when sorting by contribution order', () => {
+    const registry = new MenuItemRegistry();
+    registry.register({
+      name: 'a-list',
+      order: 5,
+      factory: () => [{ name: 'A1' }, { name: 'A2' }],
+    });
+    registry.register({ name: 'b-single', order: 5, factory: () => ({ name: 'B' }) });
+
+    // Same order: list order (A1, A2) must be preserved relative to B's position
+    // as given in the names array (a-list before b-single).
+    expect(registry.buildItems(['a-list', 'b-single'], params).map((i) => i.name)).toEqual([
+      'A1',
+      'A2',
+      'B',
+    ]);
   });
 
   it('overwrites matching registrations and exposes registered names', () => {

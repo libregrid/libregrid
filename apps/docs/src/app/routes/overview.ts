@@ -57,7 +57,7 @@ const FEATURES: FeatureCard[] = [
   },
 ];
 
-const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/all';
+const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libregrid/row-grouping';
 
 @Component({
   selector: 'lgr-overview',
@@ -369,9 +369,9 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/all';
             charts, Excel export and more. No licence key. No fork. MIT licensed.
           </p>
           <div class="hero-actions">
-            <a mat-flat-button color="primary" routerLink="/row-grouping">See a live grid</a>
-            <a mat-stroked-button routerLink="/validation">Try every feature</a>
-            <a mat-stroked-button href="https://github.com/libregrid/libregrid" target="_blank">
+            <a matButton="filled" routerLink="/getting-started">Start an integration</a>
+            <a matButton="tonal" routerLink="/packages">Explore customer outcomes</a>
+            <a matButton="tonal" href="https://github.com/libregrid/libregrid" target="_blank">
               <mat-icon>open_in_new</mat-icon>
               GitHub
             </a>
@@ -382,7 +382,7 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/all';
       <!-- Badge bar -->
       <div class="badge-bar">
         <span class="badge-item"><mat-icon>check_circle</mat-icon> {{ PHASES.length }}/{{ PHASES.length }} phases shipped</span>
-        <span class="badge-item"><mat-icon>verified</mat-icon> v1.0 on npm</span>
+        <span class="badge-item"><mat-icon>verified</mat-icon> v1.1.1 on npm</span>
         <span class="badge-item"><mat-icon>tag</mat-icon> ag-grid-community 36.1</span>
         <span class="badge-item"><mat-icon>lock_open</mat-icon> MIT licensed</span>
       </div>
@@ -460,9 +460,9 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/all';
           jump straight to whichever feature matters most to you.
         </p>
         <div class="hero-actions">
-          <a mat-flat-button color="primary" routerLink="/row-grouping">Row grouping</a>
-          <a mat-flat-button color="primary" routerLink="/charts">Charts</a>
-          <a mat-stroked-button routerLink="/grid">Grid</a>
+          <a matButton="filled" routerLink="/row-grouping">Row grouping</a>
+          <a matButton="tonal" routerLink="/charts">Charts</a>
+          <a matButton="tonal" routerLink="/grid">Grid</a>
         </div>
       </div>
 

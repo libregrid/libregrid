@@ -164,9 +164,11 @@ const MODES: readonly { id: ThemeMode; label: string; icon: string }[] = [
             >
               <span class="lgr-swatch-dot" [style.background]="theme.color"></span>
               {{ theme.label }}
-              @if (themeService.accent() === theme.id) {
-                <mat-icon class="lgr-swatch-check">check_circle</mat-icon>
-              }
+              <mat-icon
+                class="lgr-swatch-check"
+                [style.visibility]="themeService.accent() === theme.id ? 'visible' : 'hidden'"
+                aria-hidden="true"
+              >check_circle</mat-icon>
             </button>
           }
         </div>

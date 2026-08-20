@@ -1,5 +1,16 @@
-import type { GridApi, IRowNode, MenuItemDef } from 'ag-grid-community';
+import type { Column, GridApi, IRowNode, MenuItemDef } from 'ag-grid-community';
 import { registerMenuItems, type MenuActionParams } from '@libregrid/menu';
+
+/**
+ * Narrow a menu target to a Column. Group-header menus carry an
+ * AgProvidedColumnGroup in `params.column`; single-column operations
+ * (row group/un-group, value aggregation) do not apply to a group, so
+ * those factories hide themselves. Structural check — matches the menu
+ * package's item-factory convention and plain-object test fakes.
+ */
+function asColumn(column: MenuActionParams['column']): Column | null {
+  return column != null && typeof (column as Column).getColDef === 'function' ? (column as Column) : null;
+}
 
 const BUILT_IN_AGG_FUNC_NAMES = ['sum', 'min', 'max', 'avg', 'count', 'first', 'last'];
 const AGG_FUNC_LABELS: Record<string, string> = {
@@ -58,7 +69,8 @@ registerMenuItems([
     name: 'rowGroup',
     order: 20,
     factory: (params: MenuActionParams): MenuItemDef | null => {
-      const { column, api } = params;
+      const { api } = params;
+      const column = asColumn(params.column);
       if (!column) return null;
       const colId = column.getColId();
       if (isGrouped(api, colId)) return null;
@@ -74,7 +86,8 @@ registerMenuItems([
     name: 'rowUnGroup',
     order: 21,
     factory: (params: MenuActionParams): MenuItemDef | null => {
-      const { column, api } = params;
+      const { api } = params;
+      const column = asColumn(params.column);
       if (!column) return null;
       const colId = column.getColId();
       if (!isGrouped(api, colId)) return null;
@@ -115,7 +128,8 @@ registerMenuItems([
     name: 'valueAggSubMenu',
     order: 24,
     factory: (params: MenuActionParams): MenuItemDef | null => {
-      const { column, api } = params;
+      const { api } = params;
+      const column = asColumn(params.column);
       if (!column) return null;
       const colDef = column.getColDef();
       if (!(colDef.enableValue === true || column.getAggFunc() != null)) return null;

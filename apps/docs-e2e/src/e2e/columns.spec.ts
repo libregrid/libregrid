@@ -1,23 +1,6 @@
 import { test, expect, type Locator } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-async function dragByPointer(source: Locator, target: Locator): Promise<void> {
-  const sourceBox = await source.boundingBox();
-  const targetBox = await target.boundingBox();
-  if (!sourceBox || !targetBox) throw new Error('Drag source or target is not visible');
-  const page = source.page();
-  const from = { x: sourceBox.x + sourceBox.width / 2, y: sourceBox.y + sourceBox.height / 2 };
-  const to = { x: targetBox.x + targetBox.width / 2, y: targetBox.y + targetBox.height * 0.75 };
-  await page.mouse.move(from.x, from.y);
-  await page.mouse.down();
-  // Give the CDK drag ref a beat to arm before the threshold-crossing move.
-  await page.waitForTimeout(100);
-  await page.mouse.move(from.x + 8, from.y + 8, { steps: 3 });
-  await page.mouse.move(to.x, to.y, { steps: 12 });
-  await page.waitForTimeout(100);
-  await page.mouse.up();
-}
-
 async function dropColumn(source: Locator, target: Locator): Promise<void> {
   const page = source.page();
   const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
@@ -66,7 +49,7 @@ test.describe('Columns Tool Panel', () => {
       has: page.getByRole('checkbox', { name: 'Show Product' }),
     });
 
-    await dragByPointer(country, product);
+    await dropColumn(country, product);
 
     // The CDK adapter reorders one step per click with a scheduled pause
     // between steps, so poll until the sequence settles.

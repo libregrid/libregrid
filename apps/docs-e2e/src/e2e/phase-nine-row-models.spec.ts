@@ -8,9 +8,10 @@ test.describe('SSRM advanced demo', () => {
     await expect(grid.locator('[row-index="0"]')).toContainText('Equities');
     await grid.locator('[row-index="0"] .ag-group-contracted, [row-index="0"] .ag-group-value').first().click();
     await expect(grid.locator('[row-index="1"]')).toContainText(/Arbitrage|Macro|Momentum/);
-    await page.getByRole('button', { name: 'Filter Equities' }).click();
+    await page.getByRole('button', { name: 'Apply risk review filter' }).click();
     await expect(grid.locator('[row-index="0"]')).toContainText('Equities');
-    await page.getByRole('button', { name: 'Toggle server pivot' }).click();
+    await expect(page.getByText('"filterType": "join"')).toBeVisible();
+    await page.getByRole('button', { name: 'Show monthly pivot' }).click();
     await expect(grid.locator('.ag-header-cell[col-id="Jan_sum"]')).toBeVisible();
   });
 

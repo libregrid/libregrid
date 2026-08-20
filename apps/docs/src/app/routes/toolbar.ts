@@ -49,7 +49,7 @@ function makeRows(n: number): Row[] {
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
-              style="width: 100%; height: 480px;"
+              style="width: 100%; height: 100%;"
               [theme]="theme.gridTheme()"
               [columnDefs]="columnDefs"
               [rowData]="rowData()"
@@ -63,7 +63,7 @@ function makeRows(n: number): Row[] {
 
       <h2>API</h2>
       <div class="lgr-actions">
-        <button mat-stroked-button (click)="resetQuickFilter()">Clear quick filter</button>
+        <button matButton="tonal" (click)="resetQuickFilter()">Clear quick filter</button>
       </div>
 
       <h2>How it works</h2>

@@ -30,7 +30,7 @@ export class MenuItemMapper extends BeanStub implements NamedBean {
       }
       const item = this.registry.getItem(name, params);
       if (item) {
-        result.push(this.mapDefinition(item, params));
+        this.pushResolved(item, params, result);
       }
     }
     return result;
@@ -52,13 +52,28 @@ export class MenuItemMapper extends BeanStub implements NamedBean {
         }
         const resolved = this.registry.getItem(item, params);
         if (resolved) {
-          result.push(this.mapDefinition(resolved, params));
+          this.pushResolved(resolved, params, result);
         }
       } else {
         result.push(this.mapDefinition(item, params));
       }
     }
     return result;
+  }
+
+  /**
+   * Push a resolved item (or list of items) onto the result, mapping each
+   * definition so nested subMenus are resolved recursively.
+   */
+  private pushResolved(
+    item: MenuItemDef | MenuItemDef[],
+    params: MenuActionParams,
+    result: (MenuItemDef | 'separator')[],
+  ): void {
+    const items = Array.isArray(item) ? item : [item];
+    for (const def of items) {
+      result.push(this.mapDefinition(def, params));
+    }
   }
 
   private mapDefinition(item: MenuItemDef, params: MenuActionParams): MenuItemDef {
