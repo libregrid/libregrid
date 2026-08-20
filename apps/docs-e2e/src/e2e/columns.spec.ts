@@ -66,7 +66,7 @@ test.describe('Columns Tool Panel', () => {
       has: page.getByRole('checkbox', { name: 'Show Product' }),
     });
 
-    await dragByPointer(country, product);
+    await dropColumn(country, product);
 
     // The CDK adapter reorders one step per click with a scheduled pause
     // between steps, so poll until the sequence settles.

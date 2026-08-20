@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
 import type { ColDef, GridOptions } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
 
@@ -23,10 +22,10 @@ const ROWS: AccountHealth[] = [
 @Component({
   selector: 'lgr-sparklines-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatChipsModule],
+  imports: [AgGridAngular, MatCardModule],
   template: `
     <div class="lgr-page"><p class="lgr-eyebrow">At-a-glance patterns</p><h1>Sparklines</h1><p>Give account teams the shape of a trend without forcing them into a separate report. The mini charts below virtualize with grid rows, so they remain useful in large operational views.</p>
-      <mat-chip-set aria-label="Sparkline guidance"><mat-chip>Browser-only rendering</mat-chip><mat-chip>Use raw series from your API</mat-chip><mat-chip>Accessible values remain in cells</mat-chip></mat-chip-set>
+      <ul class="lgr-inline-status" aria-label="Sparkline guidance"><li>Browser-only rendering</li><li>Use raw series from your API</li><li>Accessible values remain in cells</li></ul>
       <mat-card appearance="outlined"><mat-card-content><div class="lgr-grid-host"><ag-grid-angular style="height:100%;width:100%" [theme]="theme.gridTheme()" [gridOptions]="gridOptions" /></div></mat-card-content></mat-card>
       <h2>Backend boundary</h2><p>Send compact, ordered numeric arrays alongside each row—such as monthly usage or retention. The grid owns presentation; your service remains the source of truth for the series and its aggregation window.</p>
     </div>

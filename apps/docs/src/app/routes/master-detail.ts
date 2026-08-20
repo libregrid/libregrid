@@ -121,5 +121,15 @@ export class MasterDetailDemo {
 
   protected collapseAll(): void { this.api?.forEachNode((node) => node.expanded && node.setExpanded(false)); }
   protected clearActivity(): void { this.detailActivity.set('Activity cleared. Expand an account to request its ticket detail.'); }
-  protected ready(api: import('ag-grid-community').GridApi<Account>): void { this.api = api; }
+  protected ready(api: import('ag-grid-community').GridApi<Account>): void {
+    this.api = api;
+    // Community's client-side model does not call the MasterDetail service
+    // until a model refresh. Mark the initial nodes before that refresh so
+    // the shared flatten stage can render each account as an expandable
+    // master row from the first paint.
+    queueMicrotask(() => {
+      api.forEachNode((node) => { node.master = true; });
+      api.refreshClientSideRowModel('map');
+    });
+  }
 }

@@ -16,7 +16,7 @@ test.describe('Master Detail', () => {
     await page.goto('/master-detail');
     const grid = page.getByTestId('master-detail-grid');
     await expect(grid.locator('[row-index="0"]')).toContainText('Atlas Trading');
-    await grid.locator('[row-index="0"] .ag-group-contracted').click();
+    await grid.locator('[row-index="0"] .lgr-group-cell-toggle').click();
     await expect(grid.locator('.ag-details-grid').first()).toBeVisible();
     await grid.locator('.ag-details-grid').first().getByRole('columnheader', { name: 'Status' }).click();
     await expect(grid.locator('.ag-details-grid [row-index="0"]').first()).toContainText(/SAML|Monthly/);
