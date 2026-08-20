@@ -1,5 +1,17 @@
-import type { AdvancedFilterModel } from 'ag-grid-community';
-import type { ColumnKind, ExpressionColumn } from './expression';
+import type { AdvancedFilterModel, ColumnAdvancedFilterModel } from 'ag-grid-community';
+import {
+  parseAdvancedFilterExpression,
+  serialiseAdvancedFilterModel,
+  type ColumnKind,
+  type ExpressionColumn,
+} from './expression';
+
+type JoinType = 'AND' | 'OR';
+type JoinModel = AdvancedFilterModel & {
+  filterType: 'join';
+  type: JoinType;
+  conditions: AdvancedFilterModel[];
+};
 
 /** Display controls shared by every Advanced Filter Builder host. */
 export interface AdvancedFilterBuilderOptions {
@@ -23,69 +35,302 @@ export interface AdvancedFilterBuilderParams {
   model: AdvancedFilterModel | null;
   buttons?: readonly string[];
   options?: AdvancedFilterBuilderOptions;
+  /** Element whose resolved AG Grid theme variables should style the modal. */
+  themeSource?: HTMLElement;
   onApply: (model: AdvancedFilterModel | null) => void;
   onReset: () => void;
   onClose: () => void;
 }
 
+/** Framework-neutral guided rule composer for the public Advanced Filter model. */
 export class AdvancedFilterBuilder {
-  private readonly gui = document.createElement('section');
+  private readonly gui = document.createElement('div');
+  private readonly dialog = document.createElement('section');
+  private readonly rules = document.createElement('div');
+  private readonly expression = document.createElement('input');
+  private readonly error = document.createElement('div');
+  private readonly applyButton = document.createElement('button');
+  private readonly restoreFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   private staged: AdvancedFilterModel | null;
+  private rootJoin: JoinType;
+  private expressionDraft: string;
+  private destroyed = false;
+  private draggedPath: number[] | null = null;
 
   public constructor(private readonly params: AdvancedFilterBuilderParams) {
     this.staged = cloneModel(params.model);
-    this.gui.className = 'lgr-advanced-filter-builder';
-    this.gui.setAttribute('role', 'dialog');
-    this.gui.setAttribute('aria-label', 'Advanced filter builder');
-    if (params.options?.minWidth) this.gui.style.setProperty('--lgr-advanced-filter-builder-min-width', `${params.options.minWidth}px`);
-    this.render();
+    this.rootJoin = this.staged?.filterType === 'join' ? this.staged.type : 'AND';
+    this.expressionDraft = serialiseAdvancedFilterModel(this.staged);
+    this.build();
+    this.renderRules();
+    copyAgThemeVariables(params.themeSource ?? document.documentElement, this.gui);
+    queueMicrotask(() => {
+      if (this.gui.isConnected) this.dialog.querySelector<HTMLElement>(
+        '.lgr-advanced-filter-condition-column, .lgr-advanced-filter-builder-add',
+      )?.focus();
+    });
   }
 
   public getGui(): HTMLElement {
     return this.gui;
   }
 
-  /** Refreshes the current staged UI without discarding the user's edits. */
+  /** Refreshes the staged UI without discarding edits. */
   public refresh(): void {
-    this.render();
+    this.renderRules();
+    this.syncExpression();
   }
 
-  private render(): void {
+  /** Removes modal UI and returns focus to the control that opened it. */
+  public destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
+    this.gui.remove();
+    if (this.restoreFocus?.isConnected) this.restoreFocus.focus();
+  }
+
+  private build(): void {
+    this.gui.className = 'lgr-advanced-filter-builder-overlay';
+    this.gui.addEventListener('mousedown', (event) => {
+      if (event.target === this.gui) this.close();
+    });
+
+    this.dialog.className = 'lgr-advanced-filter-builder';
+    this.dialog.setAttribute('role', 'dialog');
+    this.dialog.setAttribute('aria-modal', 'true');
+    if (this.params.options?.minWidth) {
+      this.dialog.style.setProperty('--lgr-advanced-filter-builder-min-width', `${this.params.options.minWidth}px`);
+    }
+    const headingId = uniqueId('title');
+    const descriptionId = uniqueId('description');
+    this.dialog.setAttribute('aria-labelledby', headingId);
+    this.dialog.setAttribute('aria-describedby', descriptionId);
+    this.dialog.addEventListener('keydown', (event) => this.onDialogKeydown(event));
+
+    const header = document.createElement('div');
+    header.className = 'lgr-advanced-filter-builder-header';
     const heading = document.createElement('div');
     heading.className = 'lgr-advanced-filter-builder-heading';
-    const title = document.createElement('strong');
-    title.textContent = 'Advanced Filter Builder';
-    const description = document.createElement('span');
-    description.textContent = 'Combine one or more conditions, then apply the staged rule.';
+    const title = document.createElement('h2');
+    title.id = headingId;
+    title.textContent = 'Advanced Filter';
+    const description = document.createElement('p');
+    description.id = descriptionId;
+    description.textContent = 'Build readable conditions. Changes are staged until you apply.';
     heading.append(title, description);
-    const pills = document.createElement('div');
-    pills.className = 'lgr-advanced-filter-pills';
-    const conditions = this.conditions();
-    if (conditions.length === 0) pills.append(this.emptyState());
-    else conditions.forEach((condition, index) => pills.append(this.pill(condition, index)));
+    const close = iconButton('Close advanced filter builder', '×', () => this.close());
+    close.classList.add('lgr-advanced-filter-builder-close');
+    header.append(heading, close);
 
-    const actions = document.createElement('div');
-    actions.className = 'lgr-advanced-filter-actions';
-    actions.append(this.addConditionButton(), ...this.actionButtons());
-    this.gui.replaceChildren(heading, pills, actions);
+    const body = document.createElement('div');
+    body.className = 'lgr-advanced-filter-builder-body';
+    this.rules.className = 'lgr-advanced-filter-rules';
+    const expressionBlock = document.createElement('div');
+    expressionBlock.className = 'lgr-advanced-filter-expression-block';
+    const expressionLabel = document.createElement('label');
+    expressionLabel.className = 'lgr-advanced-filter-section-label';
+    expressionLabel.htmlFor = uniqueId('expression');
+    expressionLabel.textContent = 'Filter expression';
+    this.expression.id = expressionLabel.htmlFor;
+    this.expression.className = 'lgr-advanced-filter-builder-expression';
+    this.expression.spellcheck = false;
+    this.expression.value = this.expressionDraft;
+    this.expression.placeholder = '[country] CONTAINS "United" AND [sales] > 100';
+    this.expression.setAttribute('aria-describedby', descriptionId);
+    this.expression.addEventListener('input', () => this.onExpressionInput());
+    this.error.className = 'lgr-advanced-filter-builder-error';
+    this.error.setAttribute('role', 'alert');
+    this.error.hidden = true;
+    const expressionHelp = document.createElement('p');
+    expressionHelp.className = 'lgr-advanced-filter-expression-help';
+    expressionHelp.textContent = 'The visual rules and expression stay synchronized. You can edit either view.';
+    expressionBlock.append(expressionLabel, this.expression, expressionHelp, this.error);
+    body.append(this.rules, expressionBlock);
+
+    const footer = document.createElement('div');
+    footer.className = 'lgr-advanced-filter-actions';
+    const configured = this.params.buttons ?? ['apply', 'cancel'];
+    for (const action of configured) {
+      if (action === 'clear') {
+        footer.append(button('Clear', () => {
+          this.staged = null;
+          this.modelChanged();
+        }, 'lgr-advanced-filter-builder-quiet'));
+      } else if (action === 'reset') {
+        footer.append(button('Reset', () => this.params.onReset(), 'lgr-advanced-filter-builder-quiet'));
+      } else if (action === 'cancel') {
+        footer.append(button('Cancel', () => this.close(), 'lgr-advanced-filter-builder-quiet'));
+      } else if (action === 'apply') {
+        this.applyButton.type = 'button';
+        this.applyButton.className = 'lgr-advanced-filter-builder-primary';
+        this.applyButton.textContent = 'Apply';
+        this.applyButton.addEventListener('click', () => this.apply());
+        footer.append(this.applyButton);
+      }
+    }
+
+    this.dialog.append(header, body, footer);
+    this.gui.append(this.dialog);
   }
 
-  private addConditionButton(): HTMLButtonElement {
-    const add = button('Add condition', () => {
-      const column = this.params.columns[0];
-      if (!column) return;
-      const condition: AdvancedFilterModel = {
-        filterType: column.kind ?? 'text',
-        colId: column.id,
-        type: column.kind === 'boolean' ? 'true' : 'contains',
-        ...(column.kind === 'boolean' ? {} : { filter: '' }),
-      } as AdvancedFilterModel;
-      this.staged = joinLike(this.staged, condition);
-      this.render();
+  private renderRules(): void {
+    const root = this.rootModel();
+    this.rules.replaceChildren(this.group(root, [], true));
+  }
+
+  private group(model: JoinModel, path: number[], root: boolean): HTMLElement {
+    const section = document.createElement('section');
+    section.className = `lgr-advanced-filter-rule-group${root ? ' lgr-advanced-filter-rule-group-root' : ''}`;
+    section.setAttribute('aria-label', root ? 'Filter conditions' : 'Nested filter group');
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'lgr-advanced-filter-group-toolbar';
+    const logic = document.createElement('div');
+    const label = document.createElement('span');
+    label.className = 'lgr-advanced-filter-section-label';
+    label.textContent = root ? 'Match rows when' : 'Nested group matches';
+    const choices = document.createElement('div');
+    choices.className = 'lgr-advanced-filter-logic-choice';
+    choices.setAttribute('role', 'radiogroup');
+    choices.setAttribute('aria-label', root ? 'Root condition logic' : 'Nested condition logic');
+    choices.append(
+      this.logicButton('All conditions', 'AND', model.type, path),
+      this.logicButton('Any condition', 'OR', model.type, path),
+    );
+    logic.append(label, choices);
+    toolbar.append(logic);
+    if (root) {
+      toolbar.append(button('Clear all', () => {
+        this.staged = null;
+        this.modelChanged();
+      }, 'lgr-advanced-filter-builder-quiet'));
+    } else {
+      toolbar.append(iconButton('Remove group', '×', () => this.remove(path)));
+    }
+
+    const content = document.createElement('div');
+    content.className = 'lgr-advanced-filter-group-content';
+    const rail = document.createElement('div');
+    rail.className = 'lgr-advanced-filter-rule-rail';
+    const railLabel = document.createElement('span');
+    railLabel.textContent = model.type;
+    rail.append(railLabel);
+    const rows = document.createElement('div');
+    rows.className = 'lgr-advanced-filter-rule-rows';
+    if (model.conditions.length === 0) rows.append(this.emptyState());
+    model.conditions.forEach((condition, index) => {
+      const childPath = [...path, index];
+      rows.append(condition.filterType === 'join'
+        ? this.group(condition as JoinModel, childPath, false)
+        : this.condition(condition as ColumnAdvancedFilterModel, childPath, index));
     });
-    if (this.params.options?.addSelectWidth) add.style.minWidth = `${this.params.options.addSelectWidth}px`;
-    add.className = 'lgr-advanced-filter-builder-add';
-    return add;
+    content.append(rail, rows);
+
+    const actions = document.createElement('div');
+    actions.className = 'lgr-advanced-filter-group-actions';
+    const addCondition = button('Add condition', () => this.addCondition(path), 'lgr-advanced-filter-builder-add');
+    if (this.params.options?.addSelectWidth) addCondition.style.minWidth = `${this.params.options.addSelectWidth}px`;
+    actions.append(addCondition, button('Add group', () => this.addGroup(path), 'lgr-advanced-filter-builder-quiet'));
+    section.append(toolbar, content, actions);
+    return section;
+  }
+
+  private logicButton(label: string, value: JoinType, selected: JoinType, path: number[]): HTMLButtonElement {
+    const control = button(label, () => this.setJoin(path, value));
+    control.className = 'lgr-advanced-filter-logic-button';
+    control.classList.toggle('lgr-advanced-filter-logic-button-active', value === selected);
+    control.setAttribute('role', 'radio');
+    control.setAttribute('aria-checked', String(value === selected));
+    return control;
+  }
+
+  private condition(condition: ColumnAdvancedFilterModel, path: number[], index: number): HTMLElement {
+    const row = document.createElement('div');
+    row.className = 'lgr-advanced-filter-condition-row';
+    row.dataset.path = path.join('.');
+    const number = index + 1;
+    const move = iconButton(`Move condition ${number}. Use Arrow Up or Arrow Down.`, '⠿', () => undefined);
+    move.classList.add('lgr-advanced-filter-move-handle');
+    if (this.params.options?.showMoveButtons) {
+      move.draggable = true;
+      move.addEventListener('dragstart', (event) => {
+        this.draggedPath = path;
+        row.classList.add('lgr-advanced-filter-condition-dragging');
+        if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+      });
+      move.addEventListener('dragend', () => {
+        this.draggedPath = null;
+        row.classList.remove('lgr-advanced-filter-condition-dragging');
+      });
+      move.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+        event.preventDefault();
+        this.move(path, event.key === 'ArrowUp' ? -1 : 1);
+      });
+      row.addEventListener('dragover', (event) => {
+        if (this.draggedPath && sameParent(this.draggedPath, path)) event.preventDefault();
+      });
+      row.addEventListener('drop', (event) => {
+        event.preventDefault();
+        if (this.draggedPath) this.moveTo(this.draggedPath, path.at(-1) ?? 0);
+      });
+    } else {
+      move.hidden = true;
+    }
+
+    const column = document.createElement('select');
+    column.className = 'lgr-advanced-filter-condition-control lgr-advanced-filter-condition-column';
+    column.setAttribute('aria-label', `Condition ${number} column`);
+    this.params.columns.forEach((candidate) => {
+      const option = document.createElement('option');
+      option.value = candidate.id;
+      option.textContent = humanise(candidate.id);
+      option.selected = candidate.id === condition.colId;
+      column.append(option);
+    });
+
+    const operator = document.createElement('select');
+    operator.className = 'lgr-advanced-filter-condition-control lgr-advanced-filter-condition-operator';
+    operator.setAttribute('aria-label', `Condition ${number} operator`);
+    operatorOptions(condition.filterType as ColumnKind).forEach((candidate) => {
+      const option = document.createElement('option');
+      option.value = candidate;
+      option.textContent = operatorLabel(candidate);
+      option.selected = candidate === condition.type;
+      operator.append(option);
+    });
+
+    const valueHost = document.createElement('div');
+    valueHost.className = 'lgr-advanced-filter-condition-value-host';
+    valueHost.append(this.valueControl(condition, path, number));
+    this.applySelectWidths(column, operator);
+    column.addEventListener('change', () => this.changeColumn(path, column.value));
+    operator.addEventListener('change', () => this.changeOperator(path, operator.value));
+    row.append(move, column, operator, valueHost, iconButton(`Remove condition ${number}`, '×', () => this.remove(path)));
+    return row;
+  }
+
+  private valueControl(condition: ColumnAdvancedFilterModel, path: number[], number: number): HTMLElement {
+    if (condition.filterType === 'boolean' || condition.type === 'blank' || condition.type === 'notBlank') {
+      const empty = document.createElement('span');
+      empty.className = 'lgr-advanced-filter-condition-no-value';
+      empty.textContent = 'No value needed';
+      return empty;
+    }
+    const input = document.createElement('input');
+    input.className = 'lgr-advanced-filter-condition-control lgr-advanced-filter-condition-value';
+    input.setAttribute('aria-label', `Condition ${number} value`);
+    input.value = 'filter' in condition && condition.filter != null ? String(condition.filter) : '';
+    if (condition.filterType === 'number' || condition.filterType === 'bigint') {
+      input.type = 'number';
+      input.step = 'any';
+    } else if (condition.filterType === 'date' || condition.filterType === 'dateString') {
+      input.type = 'date';
+    } else if (condition.filterType === 'dateTime' || condition.filterType === 'dateTimeString') {
+      input.type = 'datetime-local';
+    }
+    input.addEventListener('change', () => this.changeValue(path, input.value));
+    return input;
   }
 
   private emptyState(): HTMLElement {
@@ -99,108 +344,231 @@ export class AdvancedFilterBuilder {
     return empty;
   }
 
-  private actionButtons(): HTMLButtonElement[] {
-    const actions: Record<string, HTMLButtonElement> = {
-      apply: button('Apply', () => this.params.onApply(cloneModel(this.staged)), 'lgr-advanced-filter-builder-primary'),
-      clear: button('Clear', () => {
-        this.staged = null;
-        this.render();
-      }),
-      reset: button('Reset', () => this.params.onReset()),
-      cancel: button('Cancel', () => this.params.onClose()),
-    };
-    return (this.params.buttons ?? ['apply', 'cancel']).flatMap((action) => actions[action] ? [actions[action]] : []);
-  }
-
-  private pill(condition: AdvancedFilterModel, index: number): HTMLElement {
-    const item = document.createElement('div');
-    item.className = 'lgr-advanced-filter-pill';
-    item.tabIndex = 0;
-    if (condition.filterType === 'join') return item;
-
-    const column = document.createElement('select');
-    column.setAttribute('aria-label', `Condition ${index + 1} column`);
-    this.params.columns.forEach((candidate) => {
-      const option = document.createElement('option');
-      option.value = candidate.id;
-      option.textContent = candidate.id;
-      option.selected = candidate.id === condition.colId;
-      column.append(option);
-    });
-    const operator = document.createElement('select');
-    operator.setAttribute('aria-label', `Condition ${index + 1} operator`);
-    operatorOptions(condition.filterType).forEach((candidate) => {
-      const option = document.createElement('option');
-      option.value = candidate;
-      option.textContent = operatorLabel(candidate);
-      option.selected = candidate === condition.type;
-      operator.append(option);
-    });
-    const value = document.createElement('input');
-    value.setAttribute('aria-label', `Condition ${index + 1} value`);
-    value.value = 'filter' in condition && condition.filter != null ? String(condition.filter) : '';
-    value.disabled = condition.type === 'blank' || condition.type === 'notBlank' || condition.filterType === 'boolean';
+  private applySelectWidths(...selects: HTMLSelectElement[]): void {
     const settings = this.params.options;
-    for (const select of [column, operator]) {
+    for (const select of selects) {
       if (settings?.pillSelectMinWidth) select.style.minWidth = `${settings.pillSelectMinWidth}px`;
       if (settings?.pillSelectMaxWidth) select.style.maxWidth = `${settings.pillSelectMaxWidth}px`;
     }
-    const update = (): void => {
-      const selected = this.params.columns.find((candidate) => candidate.id === column.value) ?? this.params.columns[0];
-      if (!selected) return;
-      const available = operatorOptions(selected.kind ?? 'text');
-      const type = available.includes(operator.value) ? operator.value : available[0]!;
-      const next = {
-        ...condition,
-        filterType: selected.kind ?? 'text',
-        colId: selected.id,
-        type,
-        ...(value.disabled ? {} : { filter: selected.kind === 'number' ? Number(value.value) : value.value }),
-      } as AdvancedFilterModel;
-      this.replace(index, next);
-    };
-    column.addEventListener('change', update);
-    operator.addEventListener('change', () => {
-      value.disabled = operator.value === 'blank' || operator.value === 'notBlank';
-      update();
-    });
-    value.addEventListener('change', update);
-    const remove = button('Remove', () => {
-      const copy = this.conditions().filter((_, current) => current !== index);
-      this.staged = copy.length === 0 ? null : copy.length === 1 ? copy[0]! : { filterType: 'join', type: 'AND', conditions: copy };
-      this.render();
-    });
-    item.append(column, operator, value);
-    if (settings?.showMoveButtons) {
-      item.append(button('Move up', () => this.move(index, -1)), button('Move down', () => this.move(index, 1)));
+  }
+
+  private rootModel(): JoinModel {
+    return this.staged?.filterType === 'join'
+      ? cloneModel(this.staged) as JoinModel
+      : joinModel(this.rootJoin, this.staged ? [cloneModel(this.staged)!] : []);
+  }
+
+  private setRoot(root: JoinModel): void {
+    this.rootJoin = root.type;
+    this.staged = root.conditions.length === 0
+      ? null
+      : root.conditions.length === 1
+        ? root.conditions[0]!
+        : root;
+  }
+
+  private setJoin(path: number[], value: JoinType): void {
+    const root = this.rootModel();
+    this.groupAt(root, path).type = value;
+    this.setRoot(root);
+    this.modelChanged();
+  }
+
+  private addCondition(path: number[]): void {
+    const condition = this.defaultCondition();
+    if (!condition) return;
+    const root = this.rootModel();
+    this.groupAt(root, path).conditions.push(condition);
+    this.setRoot(root);
+    this.modelChanged();
+  }
+
+  private addGroup(path: number[]): void {
+    const condition = this.defaultCondition();
+    if (!condition) return;
+    const root = this.rootModel();
+    this.groupAt(root, path).conditions.push(joinModel('AND', [condition]));
+    this.setRoot(root);
+    this.modelChanged();
+  }
+
+  private remove(path: number[]): void {
+    const root = this.rootModel();
+    const parent = this.groupAt(root, path.slice(0, -1));
+    parent.conditions.splice(path.at(-1) ?? 0, 1);
+    this.removeEmptyGroups(root);
+    this.setRoot(root);
+    this.modelChanged();
+  }
+
+  private move(path: number[], delta: number): void {
+    this.moveTo(path, (path.at(-1) ?? 0) + delta);
+  }
+
+  private moveTo(path: number[], targetIndex: number): void {
+    const root = this.rootModel();
+    const parent = this.groupAt(root, path.slice(0, -1));
+    const index = path.at(-1) ?? 0;
+    if (targetIndex < 0 || targetIndex >= parent.conditions.length || targetIndex === index) return;
+    const [condition] = parent.conditions.splice(index, 1);
+    if (!condition) return;
+    parent.conditions.splice(targetIndex, 0, condition);
+    this.setRoot(root);
+    this.modelChanged();
+  }
+
+  private changeColumn(path: number[], columnId: string): void {
+    const root = this.rootModel();
+    const current = this.itemAt(root, path);
+    if (current.filterType === 'join') return;
+    const selected = this.params.columns.find((candidate) => candidate.id === columnId) ?? this.params.columns[0];
+    if (!selected) return;
+    const kind = selected.kind ?? 'text';
+    const operators = operatorOptions(kind);
+    const type = operators.includes(current.type) ? current.type : operators[0]!;
+    this.replaceAt(root, path, columnModel(selected.id, kind, type, 'filter' in current ? current.filter : ''));
+    this.setRoot(root);
+    this.modelChanged();
+  }
+
+  private changeOperator(path: number[], type: string): void {
+    const root = this.rootModel();
+    const current = this.itemAt(root, path);
+    if (current.filterType === 'join') return;
+    this.replaceAt(root, path, columnModel(current.colId, current.filterType as ColumnKind, type, 'filter' in current ? current.filter : ''));
+    this.setRoot(root);
+    this.modelChanged();
+  }
+
+  private changeValue(path: number[], value: string): void {
+    const root = this.rootModel();
+    const current = this.itemAt(root, path);
+    if (current.filterType === 'join') return;
+    const filter = current.filterType === 'number' || current.filterType === 'bigint' ? Number(value) : value;
+    this.replaceAt(root, path, { ...current, filter } as AdvancedFilterModel);
+    this.setRoot(root);
+    this.modelChanged();
+  }
+
+  private defaultCondition(): AdvancedFilterModel | null {
+    const column = this.params.columns[0];
+    if (!column) return null;
+    const kind = column.kind ?? 'text';
+    return columnModel(column.id, kind, kind === 'boolean' ? 'true' : kind === 'text' ? 'contains' : 'equals', '');
+  }
+
+  private groupAt(root: JoinModel, path: number[]): JoinModel {
+    let group = root;
+    for (const index of path) {
+      const item = group.conditions[index];
+      if (!item || item.filterType !== 'join') throw new Error('Invalid advanced filter group path');
+      group = item as JoinModel;
     }
-    item.append(remove);
+    return group;
+  }
+
+  private itemAt(root: JoinModel, path: number[]): AdvancedFilterModel {
+    const parent = this.groupAt(root, path.slice(0, -1));
+    const item = parent.conditions[path.at(-1) ?? 0];
+    if (!item) throw new Error('Invalid advanced filter condition path');
     return item;
   }
 
-  private conditions(): AdvancedFilterModel[] {
-    return this.staged ? flatten(this.staged) : [];
+  private replaceAt(root: JoinModel, path: number[], value: AdvancedFilterModel): void {
+    const parent = this.groupAt(root, path.slice(0, -1));
+    parent.conditions[path.at(-1) ?? 0] = value;
   }
 
-  private replace(index: number, condition: AdvancedFilterModel): void {
-    const conditions = this.conditions();
-    conditions[index] = condition;
-    this.staged = conditions.length === 1 ? conditions[0]! : { filterType: 'join', type: 'AND', conditions };
-    this.render();
+  private removeEmptyGroups(group: JoinModel): void {
+    group.conditions = group.conditions.filter((condition) => {
+      if (condition.filterType !== 'join') return true;
+      this.removeEmptyGroups(condition as JoinModel);
+      return condition.conditions.length > 0;
+    });
   }
 
-  private move(index: number, delta: number): void {
-    const conditions = this.conditions();
-    const next = index + delta;
-    if (next < 0 || next >= conditions.length) return;
-    [conditions[index], conditions[next]] = [conditions[next]!, conditions[index]!];
-    this.staged = conditions.length === 1 ? conditions[0]! : { filterType: 'join', type: 'AND', conditions };
-    this.render();
+  private modelChanged(): void {
+    this.expressionDraft = serialiseAdvancedFilterModel(this.staged);
+    this.renderRules();
+    this.syncExpression();
+  }
+
+  private syncExpression(): void {
+    this.expression.value = this.expressionDraft;
+    this.showError(null);
+  }
+
+  private onExpressionInput(): void {
+    this.expressionDraft = this.expression.value;
+    if (this.expressionDraft.trim() === '') {
+      this.staged = null;
+      this.renderRules();
+      this.showError(null);
+      return;
+    }
+    const result = parseAdvancedFilterExpression(this.expressionDraft, this.params.columns);
+    if (result.error) {
+      this.showError(`${result.error.message} (at ${result.error.position + 1})`);
+      return;
+    }
+    this.staged = result.model;
+    if (result.model.filterType === 'join') this.rootJoin = result.model.type;
+    this.renderRules();
+    this.showError(null);
+  }
+
+  private showError(message: string | null): void {
+    this.error.textContent = message ?? '';
+    this.error.hidden = !message;
+    this.expression.setAttribute('aria-invalid', String(!!message));
+    this.applyButton.disabled = !!message;
+  }
+
+  private apply(): void {
+    if (!this.error.hidden) return;
+    this.params.onApply(cloneModel(this.staged));
+  }
+
+  private close(): void {
+    if (this.destroyed) return;
+    this.params.onClose();
+  }
+
+  private onDialogKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.close();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = Array.from(this.dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )).filter((element) => !element.hidden && !element.closest('[hidden]'));
+    if (focusable.length === 0) return;
+    const first = focusable[0]!;
+    const last = focusable.at(-1)!;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 }
 
 function cloneModel(model: AdvancedFilterModel | null): AdvancedFilterModel | null {
   return model ? structuredClone(model) : null;
+}
+
+function joinModel(type: JoinType, conditions: AdvancedFilterModel[]): JoinModel {
+  return { filterType: 'join', type, conditions } as JoinModel;
+}
+
+function columnModel(colId: string, kind: ColumnKind, type: string, value: unknown): AdvancedFilterModel {
+  if (kind === 'boolean') return { filterType: 'boolean', colId, type } as AdvancedFilterModel;
+  if (type === 'blank' || type === 'notBlank') return { filterType: kind, colId, type } as AdvancedFilterModel;
+  return { filterType: kind, colId, type, filter: kind === 'number' || kind === 'bigint' ? Number(value) : value } as AdvancedFilterModel;
 }
 
 function button(label: string, handler: () => void, className?: string): HTMLButtonElement {
@@ -212,14 +580,11 @@ function button(label: string, handler: () => void, className?: string): HTMLBut
   return element;
 }
 
-function flatten(model: AdvancedFilterModel): AdvancedFilterModel[] {
-  return model.filterType === 'join' && model.type === 'AND' ? model.conditions : [model];
-}
-
-function joinLike(before: AdvancedFilterModel | null, condition: AdvancedFilterModel): AdvancedFilterModel {
-  return !before ? condition : before.filterType === 'join' && before.type === 'AND'
-    ? { ...before, conditions: [...before.conditions, condition] }
-    : { filterType: 'join', type: 'AND', conditions: [before, condition] };
+function iconButton(label: string, symbol: string, handler: () => void): HTMLButtonElement {
+  const element = button(symbol, handler, 'lgr-advanced-filter-icon-button');
+  element.setAttribute('aria-label', label);
+  element.title = label;
+  return element;
 }
 
 function operatorOptions(kind: ColumnKind): string[] {
@@ -231,5 +596,31 @@ function operatorOptions(kind: ColumnKind): string[] {
 }
 
 function operatorLabel(value: string): string {
-  return ({ equals: '=', notEqual: '≠', lessThan: '<', lessThanOrEqual: '≤', greaterThan: '>', greaterThanOrEqual: '≥', contains: 'contains', notContains: 'does not contain', startsWith: 'starts with', endsWith: 'ends with', blank: 'is blank', notBlank: 'is not blank', true: 'is true', false: 'is false' } as Record<string, string>)[value] ?? value;
+  return ({
+    equals: 'equals', notEqual: 'does not equal', lessThan: 'less than', lessThanOrEqual: 'at most',
+    greaterThan: 'greater than', greaterThanOrEqual: 'at least', contains: 'contains',
+    notContains: 'does not contain', startsWith: 'starts with', endsWith: 'ends with',
+    blank: 'is blank', notBlank: 'is not blank', true: 'is true', false: 'is false',
+  } as Record<string, string>)[value] ?? value;
+}
+
+function humanise(value: string): string {
+  const spaced = value.replace(/[_-]+/g, ' ').replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+  return spaced.length ? spaced[0]!.toUpperCase() + spaced.slice(1) : value;
+}
+
+function sameParent(first: number[], second: number[]): boolean {
+  return first.length === second.length && first.slice(0, -1).every((value, index) => value === second[index]);
+}
+
+function uniqueId(suffix: string): string {
+  return `lgr-advanced-filter-builder-${suffix}-${Math.random().toString(36).slice(2)}`;
+}
+
+function copyAgThemeVariables(source: HTMLElement, target: HTMLElement): void {
+  const computed = getComputedStyle(source);
+  for (let index = 0; index < computed.length; index++) {
+    const name = computed.item(index);
+    if (name.startsWith('--ag-')) target.style.setProperty(name, computed.getPropertyValue(name));
+  }
 }

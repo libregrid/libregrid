@@ -22,17 +22,46 @@ describe('AdvancedFilterService options and module API', () => {
   it('honours configured header/builder buttons and exercises public API delegates', () => {
     const parent = document.createElement('div'); const { service, events } = configured({ enableAdvancedFilter: true, includeHiddenColumnsInAdvancedFilter: true, advancedFilterParent: parent, advancedFilterParams: { buttons: ['apply', 'clear', 'reset', 'cancel'], suppressBuilderButton: true }, advancedFilterBuilderParams: { buttons: ['clear', 'reset', 'cancel', 'apply'], showMoveButtons: true, suppressFullScreenButton: true, minWidth: 400 } });
     document.body.append(parent); expect(service.columns()).toHaveLength(2);
-    service.getCtrl().toggleFilterBuilder({ source: 'api', force: true }); expect(parent.querySelectorAll('button')).not.toHaveLength(0); expect(events).toHaveBeenCalledWith(expect.objectContaining({ visible: true }));
+    service.getCtrl().toggleFilterBuilder({ source: 'api', force: true }); expect(document.body.querySelectorAll('.lgr-advanced-filter-builder button')).not.toHaveLength(0); expect(events).toHaveBeenCalledWith(expect.objectContaining({ visible: true }));
     const api = AdvancedFilterModule.apiFunctions as unknown as Record<string, (beans: object, ...args: never[]) => unknown>;
     expect(api.getAdvancedFilterModel({ advancedFilter: service })).toBeNull(); api.setAdvancedFilterModel({ filterManager: { setAdvFilterModel: vi.fn() } }, null); api.hideAdvancedFilterBuilder({ filterManager: { toggleAdvFilterBuilder: vi.fn() } });
+    service.getCtrl().toggleFilterBuilder({ source: 'api', force: false });
   });
   it('applies, clears, resets, reorders and cancels builder conditions', () => {
     const parent = document.createElement('div'); const { service } = configured({ advancedFilterParent: parent, advancedFilterBuilderParams: { buttons: ['apply', 'clear', 'reset', 'cancel'], showMoveButtons: true } }); document.body.append(parent);
     service.getCtrl().toggleFilterBuilder({ source: 'ui', force: true });
-    const click = (label: string) => [...parent.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === label)!.click();
-    click('Add condition'); click('Add condition'); click('Move down'); click('Move up'); click('Remove'); click('Clear'); click('Add condition'); click('Apply');
+    const builder = [...document.body.querySelectorAll<HTMLElement>('.lgr-advanced-filter-builder')].at(-1)!;
+    const click = (label: string) => [...builder.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === label)!.click();
+    click('Add condition'); click('Add condition');
+    builder.querySelector<HTMLButtonElement>('button[aria-label^="Move condition 1"]')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    builder.querySelector<HTMLButtonElement>('button[aria-label^="Move condition 2"]')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    builder.querySelector<HTMLButtonElement>('button[aria-label^="Remove condition"]')!.click();
+    click('Clear'); click('Add condition'); click('Apply');
     expect(service.getModel()).toEqual({ filterType: 'text', colId: 'name', type: 'contains', filter: '' });
     service.getCtrl().toggleFilterBuilder({ source: 'ui', force: true }); click('Reset'); expect(service.getModel()).toBeNull();
+  });
+  it('keeps grouped visual rules and the raw expression synchronized', () => {
+    const parent = document.createElement('div'); const { service } = configured({ advancedFilterParent: parent, advancedFilterBuilderParams: { buttons: ['cancel', 'apply'], showMoveButtons: true } }); document.body.append(parent);
+    service.getCtrl().toggleFilterBuilder({ source: 'ui', force: true });
+    const builder = document.body.querySelector<HTMLElement>('.lgr-advanced-filter-builder')!;
+    const click = (label: string) => [...builder.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === label)!.click();
+    click('Add condition'); click('Add group');
+    const nestedAny = [...builder.querySelectorAll<HTMLButtonElement>('.lgr-advanced-filter-logic-button')]
+      .filter((button) => button.textContent === 'Any condition').at(-1)!;
+    nestedAny.click();
+    const expression = builder.querySelector<HTMLInputElement>('.lgr-advanced-filter-builder-expression')!;
+    expect(expression.value).toContain('[name] CONTAINS');
+    expression.value = '[name] = "after" OR [name] IS BLANK';
+    expression.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(builder.querySelectorAll('.lgr-advanced-filter-condition-row')).toHaveLength(2);
+    expect(builder.querySelector('.lgr-advanced-filter-builder-error')?.hasAttribute('hidden')).toBe(true);
+    expression.value = '[name] CONTAINS';
+    expression.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(builder.querySelector('.lgr-advanced-filter-builder-error')?.textContent).toContain('Expected a filter value');
+    expect(builder.querySelector<HTMLButtonElement>('.lgr-advanced-filter-builder-primary')?.disabled).toBe(true);
+    service.getCtrl().toggleFilterBuilder({ source: 'api', force: false });
   });
   it('mounts the accessible header, runs every header action, and safely tears down', () => {
     const { service, changed } = configured({ enableAdvancedFilter: true, advancedFilterParams: { buttons: ['apply', 'clear', 'reset', 'cancel'] }, advancedFilterBuilderParams: { addSelectWidth: 144, pillSelectMinWidth: 90, pillSelectMaxWidth: 160 } });

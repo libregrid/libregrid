@@ -51,7 +51,7 @@ export class AdvancedFilterService extends BeanStub implements IAdvancedFilterSe
   public getBuilderParent(): HTMLElement | undefined { const parent = this.gos.get('advancedFilterParent'); return parent instanceof HTMLElement ? parent : undefined; }
   public emitBuilderVisibility(visible: boolean, source: 'api' | 'ui'): void { (this.beans as GridBeans).eventSvc?.dispatchEvent({ type: 'advancedFilterBuilderVisibleChanged', visible, source }); }
   public headerButtons(): readonly string[] { return (this.gos.get('advancedFilterParams') as { buttons?: string[] } | undefined)?.buttons ?? ['apply']; }
-  public builderButtons(): readonly string[] { return (this.gos.get('advancedFilterBuilderParams') as { buttons?: string[] } | undefined)?.buttons ?? ['apply', 'cancel']; }
+  public builderButtons(): readonly string[] { return (this.gos.get('advancedFilterBuilderParams') as { buttons?: string[] } | undefined)?.buttons ?? ['cancel', 'apply']; }
   public builderOptions(): AdvancedFilterBuilderOptions { return (this.gos.get('advancedFilterBuilderParams') as AdvancedFilterBuilderOptions | undefined) ?? {}; }
   private valueFor(node: RowNode, colId: string): unknown {
     const columns = (this.beans as GridBeans).colModel?.getCols() ?? [];
@@ -120,7 +120,7 @@ class AdvancedFilterController implements IAdvancedFilterCtrl {
     const visible = !!this.builder?.getGui().isConnected;
     if (params.force === false || (params.force === undefined && visible)) this.hide(params.source); else this.show(params.source);
   }
-  public destroy(): void { if (this.host && this.spacer) this.host.unmountComp(this.spacer); this.header?.remove(); this.builder?.getGui().remove(); }
+  public destroy(): void { if (this.host && this.spacer) this.host.unmountComp(this.spacer); this.header?.remove(); this.builder?.destroy(); }
   public sync(): void { if (!this.header) return; const input = this.header.querySelector<HTMLInputElement>('input'); if (input && document.activeElement !== input) input.value = this.service.text(); if (this.builder?.getGui().isConnected) this.builder.refresh(); }
   private createHeader(): HTMLElement {
     const root = document.createElement('section'); root.className = 'lgr-advanced-filter'; root.setAttribute('aria-label', 'Advanced filter');
@@ -145,11 +145,13 @@ class AdvancedFilterController implements IAdvancedFilterCtrl {
   }
   private show(source: 'api' | 'ui'): void {
     if (this.builder?.getGui().isConnected) return;
+    const builderParent = this.service.getBuilderParent();
     this.builder = new AdvancedFilterBuilder({
       columns: this.service.columns(),
       model: this.service.getModel(),
       buttons: this.service.builderButtons(),
       options: this.service.builderOptions(),
+      themeSource: this.header?.closest<HTMLElement>('.ag-root-wrapper') ?? builderParent ?? document.documentElement,
       onApply: (model) => {
         this.service.setModel(model);
         this.service.filterChanged();
@@ -162,10 +164,10 @@ class AdvancedFilterController implements IAdvancedFilterCtrl {
       },
       onClose: () => this.hide('ui'),
     });
-    (this.service.getBuilderParent() ?? document.body).append(this.builder.getGui());
+    document.body.append(this.builder.getGui());
     this.emitVisible(true, source);
   }
-  private hide(source: 'api' | 'ui'): void { if (!this.builder) return; this.builder.getGui().remove(); this.builder = undefined; this.emitVisible(false, source); }
+  private hide(source: 'api' | 'ui'): void { if (!this.builder) return; this.builder.destroy(); this.builder = undefined; this.emitVisible(false, source); }
   private emitVisible(visible: boolean, source: 'api' | 'ui'): void { this.service.emitBuilderVisibility(visible, source); }
 }
 

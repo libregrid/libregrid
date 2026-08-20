@@ -19,15 +19,16 @@ describe('AdvancedFilterModule', () => {
     api.setAdvancedFilterModel(null);
     await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(2));
   });
-  it('keeps builder and text editor on the same model and honours an external parent', () => {
+  it('keeps the document-level builder and text editor on the same model', () => {
     const service = new AdvancedFilterService();
     const parent = document.createElement('div'); document.body.append(parent);
     (service as unknown as { gos: { get(key: string): unknown }; beans: object }).gos = { get: (key: string) => key === 'advancedFilterParent' ? parent : key === 'enableAdvancedFilter' ? true : undefined };
     (service as unknown as { beans: object }).beans = { colModel: { getCols: () => [{ getId: () => 'country', getColDef: () => ({}) }] }, eventSvc: { dispatchEvent: () => undefined } };
     service.getCtrl().toggleFilterBuilder({ source: 'api', force: true });
-    expect(parent.querySelector('.lgr-advanced-filter-builder')).toBeTruthy();
-    [...parent.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Add condition')!.click();
-    [...parent.querySelectorAll<HTMLButtonElement>('.lgr-advanced-filter-actions button')].find((button) => button.textContent === 'Apply')!.click();
+    const builder = document.body.querySelector<HTMLElement>('.lgr-advanced-filter-builder')!;
+    expect(builder).toBeTruthy();
+    [...builder.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Add condition')!.click();
+    [...builder.querySelectorAll<HTMLButtonElement>('.lgr-advanced-filter-actions button')].find((button) => button.textContent === 'Apply')!.click();
     expect(service.getModel()).toEqual({ filterType: 'text', colId: 'country', type: 'contains', filter: '' });
   });
 });

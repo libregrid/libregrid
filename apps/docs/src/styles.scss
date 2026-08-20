@@ -38,6 +38,15 @@ html {
 // Material component token falls back to `--mat-sys-*` (and the grid bridge
 // reads the same tokens), switching `data-lgr-accent` restyles the whole
 // app and every grid without a reload.
+html[data-lgr-accent='violet'] {
+  @include mat.theme((
+    color: (
+      primary: mat.$violet-palette,
+      tertiary: mat.$cyan-palette,
+    ),
+  ));
+}
+
 html[data-lgr-accent='azure'] {
   @include mat.theme((
     color: (

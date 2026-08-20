@@ -92,4 +92,24 @@ test.describe('Theme toggle', () => {
     await page.waitForTimeout(200);
     await expect(page.locator('html')).toHaveAttribute('data-lgr-theme', 'light');
   });
+
+  test('Azure and Violet apply distinct primary colors', async ({ page }) => {
+    const primaryColor = () => page.evaluate(() => {
+      const probe = document.createElement('span');
+      probe.style.cssText = 'position:absolute;visibility:hidden;color:var(--mat-sys-primary)';
+      document.documentElement.appendChild(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    });
+
+    await expect(page.locator('html')).toHaveAttribute('data-lgr-accent', 'azure');
+    const azure = await primaryColor();
+
+    await page.getByRole('button', { name: 'Open theme picker' }).click();
+    await page.locator('.lgr-swatch').filter({ hasText: 'Violet' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-lgr-accent', 'violet');
+
+    expect(await primaryColor()).not.toBe(azure);
+  });
 });
