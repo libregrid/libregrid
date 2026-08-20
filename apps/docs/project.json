@@ -25,6 +25,11 @@
     },
     "serve": {
       "executor": "@angular/build:dev-server",
+      "options": {
+        "prebundle": {
+          "exclude": ["@libregrid/calculated-columns"]
+        }
+      },
       "configurations": {
         "production": {
           "buildTarget": "docs:build:production"

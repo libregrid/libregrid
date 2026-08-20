@@ -390,7 +390,26 @@ describe('CalculatedColumnsService (unit)', () => {
     );
     expect(h.dispatched).toHaveLength(1);
     expect(h.dispatched[0]).toMatchObject({ type: 'calculatedColumnCreated', expression: '' });
-    expect(h.eRootDiv.querySelector('.lgr-calc-dialog')).not.toBeNull();
+    expect(document.querySelector('.lgr-calc-dialog')).not.toBeNull();
+    h.harness.destroy();
+  });
+
+  it('opens an add dialog as a centered modal', () => {
+    const source = makeColumn('revenue');
+    const created = makeColumn('lgr-calc-1', '');
+    created.isCalculatedCol = true;
+    const h = makeService({ calculatedColumns: true }, { colDefList: [source] });
+    h.userSvc.setCreatedColumn.mockImplementation((colId: string, properties: ColDef) => {
+      h.userSvc.entries.set(colId, { properties, created: true, parentGroupId: null });
+      h.colModel.colDefList.push(created);
+    });
+
+    h.bean.openCalculatedColumnDialog(source, 'add', true);
+
+    const dialog = document.querySelector<HTMLElement>('.lgr-calc-dialog')!;
+    expect(dialog.getAttribute('role')).toBe('dialog');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(document.querySelector('.lgr-calc-dialog-overlay')).not.toBeNull();
     h.harness.destroy();
   });
 
@@ -401,7 +420,7 @@ describe('CalculatedColumnsService (unit)', () => {
     h.bean.openCalculatedColumnDialog(a, 'add', false);
     expect(h.userSvc.removeColumn).toHaveBeenCalledWith('lgr-calc-1', false);
     expect(h.dispatched).toHaveLength(0);
-    expect(h.eRootDiv.querySelector('.lgr-calc-dialog')).toBeNull();
+    expect(document.querySelector('.lgr-calc-dialog')).toBeNull();
     h.harness.destroy();
   });
 
@@ -422,7 +441,7 @@ describe('CalculatedColumnsService (unit)', () => {
     });
     h.bean.openCalculatedColumnDialog(created, 'edit', false);
 
-    const input = h.eRootDiv.querySelector<HTMLInputElement>('.lgr-calc-dialog-expression')!;
+    const input = document.querySelector<HTMLInputElement>('.lgr-calc-dialog-expression')!;
     input.value = '[a] * 2';
     input.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -446,7 +465,7 @@ describe('CalculatedColumnsService (unit)', () => {
     const h = makeService({ calculatedColumns: true }, { colDefList: [declared] });
     h.userSvc.isDeclared.mockReturnValue(true);
     h.bean.openCalculatedColumnDialog(declared, 'edit', false);
-    const input = h.eRootDiv.querySelector<HTMLInputElement>('.lgr-calc-dialog-expression')!;
+    const input = document.querySelector<HTMLInputElement>('.lgr-calc-dialog-expression')!;
     input.value = '[a] + 1';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(h.userSvc.setOverride).toHaveBeenCalledWith('sum', {
@@ -471,8 +490,8 @@ describe('CalculatedColumnsService (unit)', () => {
     h.bean.openCalculatedColumnDialog(a, 'add', false);
     const created = live.get('lgr-calc-1')!;
     expect(h.bean.isHighlightedColumn(created)).toBe(true);
-    h.eRootDiv.querySelector<HTMLElement>('.lgr-calc-dialog-close')!.click();
-    expect(h.eRootDiv.querySelector('.lgr-calc-dialog')).toBeNull();
+    document.querySelector<HTMLElement>('.lgr-calc-dialog-close')!.click();
+    expect(document.querySelector('.lgr-calc-dialog')).toBeNull();
     expect(h.bean.isHighlightedColumn(created)).toBe(false);
     h.harness.destroy();
   });
@@ -493,7 +512,7 @@ describe('CalculatedColumnsService (unit)', () => {
     h.harness.destroy();
   });
 
-  it('uses dataTypes and picker options from the grid option', () => {
+  it('uses dataTypes and configured palette visibility while keeping Values available', () => {
     const a = makeColumn('a');
     const h = makeService(
       { calculatedColumns: { dataTypes: ['number'], expressionPickers: ['columns'] } },
@@ -508,9 +527,10 @@ describe('CalculatedColumnsService (unit)', () => {
     });
     h.colModel.getNonPivotColById.mockImplementation((colId: string) => live.get(colId));
     h.bean.openCalculatedColumnDialog(a, 'add', false);
-    const type = h.eRootDiv.querySelector<HTMLSelectElement>('.lgr-calc-dialog-type')!;
+    const type = document.querySelector<HTMLSelectElement>('.lgr-calc-dialog-type')!;
     expect(type.options.length).toBe(1);
-    expect(h.eRootDiv.querySelectorAll('.lgr-calc-dialog-picker').length).toBe(1);
+    expect(Array.from(document.querySelectorAll('.lgr-calc-dialog-palette-tab')).map((tab) => tab.textContent))
+      .toEqual(['Columns', 'Values']);
     h.harness.destroy();
   });
 

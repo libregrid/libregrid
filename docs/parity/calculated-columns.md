@@ -36,7 +36,7 @@
 | Remove Calculated Column (calculated column menu) | ✅ | Declared columns are tombstoned; created columns are dropped |
 | Remove Calculated Column (cell context menu) | ✅ | Offered on calculated-column cells only |
 | Title / type / expression fields | ✅ | Type list comes from `dataTypes` |
-| Column, function and operator pickers | ✅ | Insert at the cursor |
+| Column, function, operator and value pickers | ✅ | Insert at the cursor; Values create inline expression-pill inputs for text, number, Boolean dropdowns and ISO dates |
 | Inline autocomplete | ✅ | Column references while typing `[`; function names while typing an identifier; keyboard navigable |
 | `live` apply mode | ✅ | Every keystroke applies; invalid expressions render their error code until fixed |
 | `deferred` apply mode | ✅ | Apply validates; invalid blocks; Cancel/close discards |

@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { afterEach, describe, expect, it } from 'vitest';
-import type { FormulaError } from './expression';
+import { evaluate, parseExpression, type FormulaError, validateExpression } from './expression';
 import { CalculatedColumnDialog, type CalcDialogHost, type CalcDialogProps, type ColumnReference } from './calculatedColumnsDialog';
 
 const REFERENCES: ColumnReference[] = [
@@ -80,15 +80,16 @@ function expressionInput(): HTMLInputElement {
   return el;
 }
 
-function pickerButtons(): HTMLElement[] {
-  return Array.from(document.querySelectorAll<HTMLElement>('.lgr-calc-dialog-picker'));
+function paletteTabs(): HTMLElement[] {
+  return Array.from(document.querySelectorAll<HTMLElement>('.lgr-calc-dialog-palette-tab'));
 }
 
-function pickerItems(): HTMLElement[] {
-  // Only items in the currently-visible picker list.
-  return Array.from(document.querySelectorAll<HTMLElement>('.lgr-calc-dialog-picker-item')).filter(
-    (el) => el.closest<HTMLElement>('.lgr-calc-dialog-picker-list')?.hidden === false,
-  );
+function paletteItems(): HTMLElement[] {
+  return Array.from(document.querySelectorAll<HTMLElement>('.lgr-calc-dialog-palette-item'));
+}
+
+function expressionChips(): HTMLElement[] {
+  return Array.from(document.querySelectorAll<HTMLElement>('.lgr-calc-dialog-expression-chip'));
 }
 
 afterEach(() => {
@@ -104,6 +105,11 @@ describe('CalculatedColumnDialog (unit)', () => {
     expect(typeInput().value).toBe('number');
     expect(expressionInput().value).toBe('[revenue] - [cost]');
     expect(typeInput().options.length).toBe(4);
+    const dialog = document.querySelector<HTMLElement>('.lgr-calc-dialog')!;
+    expect(dialog.getAttribute('role')).toBe('dialog');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(dialog.getAttribute('aria-labelledby')).toBeTruthy();
+    expect(document.querySelector('.lgr-calc-dialog-expression-canvas')).not.toBeNull();
   });
 
   it('applies title/type changes immediately in live mode', () => {
@@ -150,37 +156,177 @@ describe('CalculatedColumnDialog (unit)', () => {
     expect(fake.applied).toHaveLength(0);
   });
 
-  it('closes on an outside mousedown', () => {
+  it('closes when its backdrop is clicked', () => {
     const { host, fake } = makeHost();
     openDialog(host);
-    document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    document.querySelector<HTMLElement>('.lgr-calc-dialog-overlay')!.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     expect(fake.closeCalls).toBe(1);
   });
 
-  it('offers column, function and operator pickers and inserts at the cursor', () => {
+  it('switches palette tabs and inserts their exact existing formula syntax', () => {
     const { host, fake } = makeHost();
     openDialog(host);
-    const [columns, functions, operators] = pickerButtons();
+    const [columns, functions, operators] = paletteTabs();
     expect(columns!.textContent).toContain('Columns');
     expect(functions!.textContent).toContain('Functions');
     expect(operators!.textContent).toContain('Operators');
 
     columns!.click();
-    const columnItems = pickerItems();
+    const columnItems = paletteItems();
     expect(columnItems.length).toBe(2);
     columnItems[1]!.click(); // insert [cost]
     expect(expressionInput().value).toBe('[revenue] - [cost][cost]');
     expect(fake.applied.at(-1)?.expression).toBe('[revenue] - [cost][cost]');
 
     functions!.click();
-    const functionItems = pickerItems();
+    const functionItems = paletteItems();
     expect(functionItems.some((el) => el.textContent?.includes('SUM()'))).toBe(true);
     functionItems.find((el) => el.textContent?.includes('SUM()'))!.click();
-    expect(expressionInput().value).toContain('SUM(');
+    expect(expressionInput().value).toContain('SUM()');
+    expect(expressionInput().selectionStart).toBe(expressionInput().value.indexOf('SUM(') + 4);
 
     operators!.click();
-    const operatorItems = pickerItems();
+    const operatorItems = paletteItems();
     expect(operatorItems.some((el) => el.querySelector('code')?.textContent === '+')).toBe(true);
+    expect(document.querySelector('.lgr-calc-dialog-operator-group')?.textContent).toContain('Arithmetic');
+  });
+
+  it('opens inline value inputs on expression pills and commits them on blur', () => {
+    const { host } = makeHost();
+    openDialog(host, OPTIONS, { headerName: 'Profit', cellDataType: 'number', expression: '' });
+    paletteTabs().find((tab) => tab.textContent === 'Values')!.click();
+    const value = (label: string) => paletteItems().find((item) => item.querySelector('code')?.textContent === label)!;
+
+    value('Text').click();
+    const text = document.querySelector<HTMLInputElement>('.lgr-calc-dialog-expression-canvas [aria-label="Edit text value"]')!;
+    text.value = 'North';
+    text.dispatchEvent(new Event('blur'));
+    expect(expressionInput().value).toBe('"North"');
+
+    expressionInput().value = '';
+    expressionInput().dispatchEvent(new Event('input', { bubbles: true }));
+    value('Number').click();
+    const number = document.querySelector<HTMLInputElement>('.lgr-calc-dialog-expression-canvas [aria-label="Edit number value"]')!;
+    number.value = '42.5';
+    number.dispatchEvent(new Event('blur'));
+    expect(expressionInput().value).toBe('42.5');
+
+    expressionInput().value = '';
+    expressionInput().dispatchEvent(new Event('input', { bubbles: true }));
+    value('Date').click();
+    const date = document.querySelector<HTMLInputElement>('.lgr-calc-dialog-expression-canvas [aria-label="Edit date value"]')!;
+    expect(date.type).toBe('date');
+    date.value = '2026-08-20';
+    date.dispatchEvent(new Event('blur'));
+    expect(expressionInput().value).toBe('"2026-08-20"');
+    expect(validateExpression(expressionInput().value)).toBeNull();
+
+    expressionInput().value = '';
+    expressionInput().dispatchEvent(new Event('input', { bubbles: true }));
+    value('Boolean').click();
+    const bool = document.querySelector<HTMLSelectElement>('.lgr-calc-dialog-expression-canvas [aria-label="Edit boolean value"]')!;
+    bool.value = 'FALSE';
+    bool.dispatchEvent(new Event('blur'));
+    expect(expressionInput().value).toBe('FALSE');
+    expect(validateExpression(expressionInput().value)).toBeNull();
+
+    document.querySelector<HTMLElement>('.lgr-calc-dialog-expression-chip-literal')!.click();
+    expect(document.querySelector('.lgr-calc-dialog-expression-canvas [aria-label="Edit boolean value"]')).not.toBeNull();
+  });
+
+  it('uses a selected canvas gap as the palette insertion target', () => {
+    const { host, fake } = makeHost();
+    openDialog(host, OPTIONS, { headerName: 'Profit', cellDataType: 'number', expression: '[revenue][cost]' });
+    const gap = document.querySelector<HTMLElement>('.lgr-calc-dialog-expression-gap[data-position="9"]')!;
+    expect(gap.textContent).toBe('');
+    expect(gap.getAttribute('aria-label')).toContain('Insert between expression tokens');
+    gap.click();
+    paletteTabs()[2]!.click();
+    paletteItems().find((item) => item.querySelector('code')?.textContent === '+')!.click();
+    expect(expressionInput().value).toBe('[revenue] + [cost]');
+    expect(fake.applied.at(-1)?.expression).toBe('[revenue] + [cost]');
+    expect(validateExpression(expressionInput().value)).toBeNull();
+    expect(evaluate(parseExpression(expressionInput().value), {
+      resolveColumn: (colId) => colId === 'revenue' ? 12 : 7,
+      isResolving: () => false,
+    })).toBe(19);
+  });
+
+  it('accepts a palette item dropped on a canvas gap', () => {
+    const { host } = makeHost();
+    openDialog(host, OPTIONS, { headerName: 'Profit', cellDataType: 'number', expression: '' });
+    const column = paletteItems().find((item) => item.querySelector('code')?.textContent === '[revenue]')!;
+    column.dispatchEvent(new Event('dragstart', { bubbles: true }));
+    expect(document.querySelector('.lgr-calc-dialog-expression-canvas')?.getAttribute('data-dragging')).toBe('true');
+    document.querySelector<HTMLElement>('.lgr-calc-dialog-expression-gap[data-position="0"]')!
+      .dispatchEvent(new Event('drop', { bubbles: true, cancelable: true }));
+    expect(expressionInput().value).toBe('[revenue]');
+    column.dispatchEvent(new Event('dragend', { bubbles: true }));
+    expect(document.querySelector('.lgr-calc-dialog-expression-canvas')?.hasAttribute('data-dragging')).toBe(false);
+  });
+
+  it('inserts a palette formula token rather than drag-transfer JSON into the raw expression field', () => {
+    const { host } = makeHost();
+    openDialog(host, OPTIONS, { headerName: 'Profit', cellDataType: 'number', expression: '' });
+    const column = paletteItems().find((item) => item.querySelector('code')?.textContent === '[revenue]')!;
+    column.dispatchEvent(new Event('dragstart', { bubbles: true }));
+    expressionInput().setSelectionRange(0, 0);
+    expressionInput().dispatchEvent(new Event('drop', { bubbles: true, cancelable: true }));
+    expect(expressionInput().value).toBe('[revenue]');
+    expect(expressionInput().value).not.toContain('{"label"');
+    column.dispatchEvent(new Event('dragend', { bubbles: true }));
+  });
+
+  it('moves a dragged expression pill to a different insertion target', () => {
+    const { host, fake } = makeHost();
+    openDialog(host, OPTIONS, { headerName: 'Profit', cellDataType: 'number', expression: '[revenue][cost]' });
+    const cost = expressionChips().find((chip) => chip.textContent === '[cost]')!;
+    expect(cost.draggable).toBe(true);
+    cost.dispatchEvent(new Event('dragstart', { bubbles: true }));
+    document.querySelector<HTMLElement>('.lgr-calc-dialog-expression-gap[data-position="0"]')!
+      .dispatchEvent(new Event('drop', { bubbles: true, cancelable: true }));
+    expect(expressionInput().value).toBe('[cost][revenue]');
+    expect(fake.applied.at(-1)?.expression).toBe('[cost][revenue]');
+    cost.dispatchEvent(new Event('dragend', { bubbles: true }));
+  });
+
+  it('removes a dragged expression pill through the trash target or palette', () => {
+    const { host } = makeHost();
+    openDialog(host, OPTIONS, { headerName: 'Profit', cellDataType: 'number', expression: '[revenue][cost]' });
+    const trash = document.querySelector<HTMLElement>('.lgr-calc-dialog-expression-trash-target')!;
+    expect(trash.getAttribute('aria-label')).toContain('drop an expression pill here to remove it');
+
+    let cost = expressionChips().find((chip) => chip.textContent === '[cost]')!;
+    cost.dispatchEvent(new Event('dragstart', { bubbles: true }));
+    trash.dispatchEvent(new Event('drop', { bubbles: true, cancelable: true }));
+    expect(expressionInput().value).toBe('[revenue]');
+    cost.dispatchEvent(new Event('dragend', { bubbles: true }));
+
+    expressionInput().value = '[revenue][cost]';
+    expressionInput().dispatchEvent(new Event('input', { bubbles: true }));
+    cost = expressionChips().find((chip) => chip.textContent === '[cost]')!;
+    cost.dispatchEvent(new Event('dragstart', { bubbles: true }));
+    document.querySelector<HTMLElement>('.lgr-calc-dialog-palette')!
+      .dispatchEvent(new Event('drop', { bubbles: true, cancelable: true }));
+    expect(expressionInput().value).toBe('[revenue]');
+    cost.dispatchEvent(new Event('dragend', { bubbles: true }));
+  });
+
+  it('synchronizes typed formulas into chips and preserves malformed raw input', () => {
+    const { host } = makeHost();
+    openDialog(host);
+    const input = expressionInput();
+    input.value = '[revenue] * SUM(2)';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const chips = Array.from(document.querySelectorAll<HTMLElement>('.lgr-calc-dialog-expression-chip'));
+    expect(chips.map((chip) => chip.textContent)).toEqual(['[revenue]', '*', 'SUM', '(', '2', ')']);
+    expect(chips[0]!.classList.contains('lgr-calc-dialog-expression-chip-column')).toBe(true);
+    expect(chips[2]!.classList.contains('lgr-calc-dialog-expression-chip-function')).toBe(true);
+
+    input.value = '[revenue';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(input.value).toBe('[revenue');
+    expect(document.querySelector('.lgr-calc-dialog-expression-canvas')?.getAttribute('data-invalid')).toBe('true');
   });
 
   it('autocompletes column references while typing a bracket', () => {
@@ -276,5 +422,18 @@ describe('CalculatedColumnDialog (unit)', () => {
     dialog.open(root, false, trigger);
     dialog.destroy();
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it('traps Tab focus inside the modal', () => {
+    const { host } = makeHost();
+    const { dialog } = openDialog(host);
+    const root = document.querySelector<HTMLElement>('.lgr-calc-dialog')!;
+    const focusable = Array.from(root.querySelectorAll<HTMLElement>('button, input, select')).filter((element) => !element.closest('[hidden]'));
+    const first = focusable[0]!;
+    const last = focusable.at(-1)!;
+    last.focus();
+    last.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
+    expect(document.activeElement).toBe(first);
+    dialog.destroy();
   });
 });

@@ -2,17 +2,11 @@ import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/cor
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
 import {
-  ModuleRegistry,
   type CalculatedColumnExpressionChangedEvent,
   type CalculatedColumnValidationStateChangedEvent,
   type GridOptions,
 } from 'ag-grid-community';
-import { AllCommunityModule } from 'ag-grid-community';
-import { ColumnMenuModule, ContextMenuModule } from '@libregrid/menu';
-import { CalculatedColumnsModule } from '@libregrid/calculated-columns';
 import { LibreGridThemeService } from '@libregrid/material';
-
-ModuleRegistry.registerModules([AllCommunityModule, ColumnMenuModule, ContextMenuModule, CalculatedColumnsModule]);
 
 interface Row {
   product: string;
@@ -64,7 +58,7 @@ function makeRows(): Row[] {
         row data. <strong>Profit</strong> and <strong>Unit Price</strong> below
         are declared in code; open the header menu on any column and choose
         <strong>Add Calculated Column</strong> to create one live — the dialog
-        offers column, function and operator pickers plus autocomplete.
+        offers column, function, operator and value pickers plus autocomplete.
         Calculated columns are always read-only: Community's edit and paste
         paths refuse them.
       </p>

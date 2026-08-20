@@ -83,7 +83,7 @@ export type ExprNode =
 // Tokenizer
 // ---------------------------------------------------------------------------
 
-interface Token {
+export interface FormulaToken {
   type: 'num' | 'str' | 'ref' | 'ident' | 'op';
   value: string;
 }
@@ -92,8 +92,8 @@ function fail(message: string): never {
   throw new FormulaError('#PARSE!', message);
 }
 
-export function tokenize(source: string): Token[] {
-  const tokens: Token[] = [];
+export function tokenize(source: string): FormulaToken[] {
+  const tokens: FormulaToken[] = [];
   let i = 0;
   while (i < source.length) {
     const ch = source.charAt(i);
@@ -160,7 +160,7 @@ class Parser {
   private pos = 0;
 
   public constructor(
-    private readonly tokens: Token[],
+    private readonly tokens: FormulaToken[],
   ) {}
 
   public parse(): ExprNode {
@@ -170,7 +170,7 @@ class Parser {
     return node;
   }
 
-  private peek(): Token | undefined {
+  private peek(): FormulaToken | undefined {
     return this.tokens[this.pos];
   }
 

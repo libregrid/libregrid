@@ -50,6 +50,9 @@ column.
   `POWER`, `RAND`, `NOW`, `TODAY`, `CONCAT`, `IF`, `COUNT`, `COUNTA`,
   `COUNTBLANK`, `AND`, `OR`, `NOT`. `SUMIF`/`COUNTIF` accept array arguments
   (cell ranges arrive with the Formulas feature).
+- Values pills insert a matching inline editor in the expression canvas for
+  text, numbers, booleans, and ISO dates. The date control serializes to a
+  quoted `"YYYY-MM-DD"` literal when it loses focus.
 - Errors render as spreadsheet codes in the cell (`#REF!`, `#NAME?`, `#CIRCREF!`,
   `#PARSE!`, `#VALUE!`, `#DIV/0!`, `#ERROR!`) with the Community formula-error
   styling and tooltip.
