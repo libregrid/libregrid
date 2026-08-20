@@ -1,4 +1,4 @@
-import type { GridApi, IRowNode, MenuItemDef } from 'ag-grid-community';
+import { isColumn, type GridApi, type IRowNode, type MenuItemDef } from 'ag-grid-community';
 import { registerMenuItems, type MenuActionParams } from '@libregrid/menu';
 
 const BUILT_IN_AGG_FUNC_NAMES = ['sum', 'min', 'max', 'avg', 'count', 'first', 'last'];
@@ -59,7 +59,7 @@ registerMenuItems([
     order: 20,
     factory: (params: MenuActionParams): MenuItemDef | null => {
       const { column, api } = params;
-      if (!column) return null;
+      if (!column || !isColumn(column)) return null;
       const colId = column.getColId();
       if (isGrouped(api, colId)) return null;
       if (column.getColDef().enableRowGroup !== true) return null;
@@ -75,7 +75,7 @@ registerMenuItems([
     order: 21,
     factory: (params: MenuActionParams): MenuItemDef | null => {
       const { column, api } = params;
-      if (!column) return null;
+      if (!column || !isColumn(column)) return null;
       const colId = column.getColId();
       if (!isGrouped(api, colId)) return null;
       return {
@@ -116,7 +116,7 @@ registerMenuItems([
     order: 24,
     factory: (params: MenuActionParams): MenuItemDef | null => {
       const { column, api } = params;
-      if (!column) return null;
+      if (!column || !isColumn(column)) return null;
       const colDef = column.getColDef();
       if (!(colDef.enableValue === true || column.getAggFunc() != null)) return null;
       const colId = column.getColId();

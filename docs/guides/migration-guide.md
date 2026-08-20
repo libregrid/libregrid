@@ -75,6 +75,7 @@ with the commercial package for the features listed here.
 | `AdvancedFilter` | `@libregrid/advanced-filter` | |
 | `Find` | `@libregrid/find` | |
 | `RichSelect` | `@libregrid/rich-select` | |
+| `CalculatedColumns` | `@libregrid/calculated-columns` | Read-only derived data columns; expressions use the operator/function set shared with Formulas |
 | `IntegratedCharts` | `@libregrid/integrated-charts` | Built on MIT `ag-charts-community` — see the chart gaps below |
 | `Sparklines` | `@libregrid/sparklines` | |
 | `ExcelExport` | `@libregrid/excel-export` | `.xlsx` export; cell images, Excel tables and cell notes are not included (see the [gap list](../parity/gap-list.md)) |

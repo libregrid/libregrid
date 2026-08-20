@@ -4,15 +4,14 @@ Every ✅/🟡/❌ verdict lives in the per-domain checklists under [`docs/parit
 This page is the honest, prominent summary — read it before adopting LibreGrid, and
 always re-check the domain file for the exact option-level notes.
 
-Audited 2026-08-14; counts refreshed 2026-08-18 against the domain files. Legend: ✅ done+tested · 🟡 partial (note names the missing part) · ❌ not shipped (rationale in the domain file).
+Audited 2026-08-14; counts refreshed 2026-08-20 against the domain files. Legend: ✅ done+tested · 🟡 partial (note names the missing part) · ❌ not shipped (rationale in the domain file).
 
 ## The headline gaps
 
 1. **Excel export ships, minus three optional sub-features.** Phase 5 delivered the
    OOXML writer and the full export API; sub-PR 5.9 was descoped, so cell images
    (`addImageToCell`), Excel tables (`exportAsExcelTable`) and cell notes are ❌ with
-   rationale (see [`excel-export.md`](excel-export.md)). Nested-submenu expansion in the
-   Phase 1 context menu is tracked as OPEN-ACTIONS C3.
+   rationale (see [`excel-export.md`](excel-export.md)).
 2. **PDF export is not planned.** No equivalent of AG Grid Enterprise's PDF export;
    documented as out of scope (see the 13A long-tail list below).
 3. **Charts are built on MIT ag-charts-community.** Chart types that exist only in the
@@ -67,6 +66,7 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 | Sparklines | 4 | 0 | 0 | [`integrated-charts.md`](integrated-charts.md) — Sparklines section |
 | Excel export | 60 | 8 | 5 | [`excel-export.md`](excel-export.md) — shipped; images, tables and notes descoped (5.9) |
 | Batch edit | 14 | 0 | 0 | [`batch-edit.md`](batch-edit.md) |
+| Calculated columns | 26 | 6 | 0 | [`calculated-columns.md`](calculated-columns.md) |
 
 The menu domains carry the most 🟡 rows: their checklists track per-item state, and each 🟡
 names the exact missing item. Read the domain file before treating a 🟡 count as a

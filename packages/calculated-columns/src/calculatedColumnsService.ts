@@ -16,7 +16,7 @@ import {
 import type { MenuActionParams, MenuItemContribution } from '@libregrid/menu';
 import type { CalculatedColumnFormulaService } from './calculatedColumnFormulaService';
 import { CalculatedColumnDialog, type CalcDialogHost, type CalcDialogProps, type ColumnReference } from './calculatedColumnsDialog';
-import { FormulaError, type FormulaErrorCode } from './expression';
+import type { FormulaError, FormulaErrorCode } from './expression';
 
 type ColumnTreeBuild = Parameters<ICalculatedColumnsService['contributeTo']>[0];
 type HeaderPosition = NonNullable<Parameters<ICalculatedColumnsService['openCalculatedColumnDialog']>[3]>['headerPosition'];

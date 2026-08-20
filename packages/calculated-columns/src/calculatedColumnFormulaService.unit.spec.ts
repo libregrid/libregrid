@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { AgColumn, type ColDef } from 'ag-grid-community';
 import { makeBeanHarness } from '@libregrid/core/testing';
 import { CalculatedColumnFormulaService } from './calculatedColumnFormulaService';

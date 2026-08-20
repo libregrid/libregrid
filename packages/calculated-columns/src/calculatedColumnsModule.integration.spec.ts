@@ -24,7 +24,7 @@ let events: Events;
 
 function on(event: string): unknown[] {
   const e = events as unknown as Record<string, unknown[]>;
-  e[event] ?? (e[event] = []);
+  if (e[event] === undefined) e[event] = [];
   return e[event]!;
 }
 
