@@ -1,5 +1,18 @@
-import type { GridApi, IRowNode, MenuItemDef } from 'ag-grid-community';
+import type { Column, GridApi, IRowNode, MenuItemDef } from 'ag-grid-community';
 import { registerMenuItems, type MenuActionParams } from '@libregrid/menu';
+
+/**
+ * Narrow a menu target to a Column (group-header menus carry an
+ * AgProvidedColumnGroup, which has no `getColDef`). Structural check (not
+ * `instanceof`) so it matches the menu package's own guard and test fakes.
+ */
+function menuColumn(column: Column | AgProvidedColumnGroupLike | null): Column | null {
+  return column != null && typeof (column as Column).getColDef === 'function' ? (column as Column) : null;
+}
+
+interface AgProvidedColumnGroupLike {
+  getColGroupDef(): unknown;
+}
 
 const BUILT_IN_AGG_FUNC_NAMES = ['sum', 'min', 'max', 'avg', 'count', 'first', 'last'];
 const AGG_FUNC_LABELS: Record<string, string> = {
@@ -58,7 +71,8 @@ registerMenuItems([
     name: 'rowGroup',
     order: 20,
     factory: (params: MenuActionParams): MenuItemDef | null => {
-      const { column, api } = params;
+      const { api } = params;
+      const column = menuColumn(params.column);
       if (!column) return null;
       const colId = column.getColId();
       if (isGrouped(api, colId)) return null;
@@ -74,7 +88,8 @@ registerMenuItems([
     name: 'rowUnGroup',
     order: 21,
     factory: (params: MenuActionParams): MenuItemDef | null => {
-      const { column, api } = params;
+      const { api } = params;
+      const column = menuColumn(params.column);
       if (!column) return null;
       const colId = column.getColId();
       if (!isGrouped(api, colId)) return null;
@@ -115,7 +130,8 @@ registerMenuItems([
     name: 'valueAggSubMenu',
     order: 24,
     factory: (params: MenuActionParams): MenuItemDef | null => {
-      const { column, api } = params;
+      const { api } = params;
+      const column = menuColumn(params.column);
       if (!column) return null;
       const colDef = column.getColDef();
       if (!(colDef.enableValue === true || column.getAggFunc() != null)) return null;

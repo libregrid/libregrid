@@ -25,6 +25,7 @@
     "@libregrid/advanced-filter": "^1.1.1",
     "@libregrid/angular": "^1.1.1",
     "@libregrid/batch-edit": "^1.1.1",
+    "@libregrid/calculated-columns": "^1.1.1",
     "@libregrid/cell-selection": "^1.1.1",
     "@libregrid/clipboard": "^1.1.1",
     "@libregrid/columns-tool-panel": "^1.1.1",

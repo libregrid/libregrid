@@ -1,0 +1,23 @@
+{
+  "name": "@libregrid/calculated-columns",
+  "version": "1.1.1",
+  "description": "Calculated columns (read-only derived data) for AG Grid Community — part of LibreGrid",
+  "keywords": ["libregrid", "ag-grid", "calculated-columns", "derived-data"],
+  "homepage": "https://github.com/libregrid/libregrid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libregrid/libregrid.git",
+    "directory": "packages/calculated-columns"
+  },
+  "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
+  "dependencies": {
+    "@libregrid/core": "^1.1.1",
+    "@libregrid/menu": "^1.1.1"
+  },
+  "files": ["dist", "LICENSE", "NOTICE", "README.md"],
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+}

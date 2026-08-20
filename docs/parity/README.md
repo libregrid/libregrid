@@ -51,3 +51,4 @@ We transcribed these lists from the AG Grid documentation pages named in each fi
 | [`master-detail.md`](master-detail.md) | 10 | `@libregrid/master-detail` |
 | [`integrated-charts.md`](integrated-charts.md) | 12 | `@libregrid/integrated-charts` |
 | [`batch-edit.md`](batch-edit.md) | 17 | `@libregrid/batch-edit` |
+| [`calculated-columns.md`](calculated-columns.md) | 18 | `@libregrid/calculated-columns` |

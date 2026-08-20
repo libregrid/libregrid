@@ -26,6 +26,7 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'master-detail', label: 'Master / Detail' },
   { path: 'advanced-filter-find', label: 'Advanced Filter & Find' },
   { path: 'batch-edit', label: 'Batch Edit' },
+  { path: 'calculated-columns', label: 'Calculated Columns' },
   { path: 'charts', label: 'Charts & Sparklines' },
   { path: 'angular', label: 'Angular' },
   { path: 'api', label: 'API Reference' },
@@ -129,6 +130,11 @@ export const routes: Routes = [
     path: 'batch-edit',
     loadComponent: () => import('./routes/batch-edit').then((m) => m.BatchEditDemo),
     title: 'LibreGrid — Batch Edit',
+  },
+  {
+    path: 'calculated-columns',
+    loadComponent: () => import('./routes/calculated-columns').then((m) => m.CalculatedColumnsDemo),
+    title: 'LibreGrid — Calculated Columns',
   },
   {
     path: 'charts',

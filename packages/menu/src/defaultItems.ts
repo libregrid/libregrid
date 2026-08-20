@@ -15,6 +15,12 @@ export const DEFAULT_CONTEXT_MENU_ITEMS: string[] = [
   'paste',
   'separator',
   'export',
+  // The calculatedColumnRemove item resolves to the real "Remove Calculated
+  // Column" entry only when @libregrid/calculated-columns is registered (its
+  // service re-registers the same name in postConstruct); without the module
+  // the stub returns null and the preceding separator is trimmed.
+  'separator',
+  'calculatedColumnRemove',
 ];
 
 /**
@@ -33,6 +39,7 @@ export const DEFAULT_COLUMN_MENU_ITEMS: string[] = [
   'separator',
   'columnChooser',
   'columnFilter',
+  'calculatedColumn',
 ];
 
 // ---------------------------------------------------------------------------
@@ -133,8 +140,13 @@ const builtInItems: MenuItemContribution[] = [
   },
   {
     name: 'calculatedColumn',
-    factory: () => null, // Stub — Phase 13
+    factory: () => null, // Stub — replaced by @libregrid/calculated-columns at runtime
     order: 42,
+  },
+  {
+    name: 'calculatedColumnRemove',
+    factory: () => null, // Stub — replaced by @libregrid/calculated-columns at runtime
+    order: 44,
   },
 
   // Phase 1 items — these have real implementations

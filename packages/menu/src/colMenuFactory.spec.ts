@@ -137,4 +137,23 @@ describe('ColumnMenuFactory', () => {
     bean.showMenuAfterContextMenuEvent(createColumn(false, undefined, { suppressHeaderContextMenu: true }) as never, new MouseEvent('contextmenu'));
     expect(addPopup).not.toHaveBeenCalled();
   });
+
+  it('suppresses the native browser menu when the header context menu opens', () => {
+    const addPopup = vi.fn(() => ({ hideFunc: vi.fn() }));
+    const { bean } = makeBeanHarness(ColumnMenuFactory, {
+      beans: { gridApi: {}, menuItemMapper: { mapItems: vi.fn(() => [{ name: 'Item' }]) } as unknown as MenuItemMapper, popupSvc: { addPopup } },
+    });
+
+    const event = new MouseEvent('contextmenu', { cancelable: true, bubbles: true });
+    const spy = vi.spyOn(event, 'preventDefault');
+    bean.showMenuAfterContextMenuEvent(createColumn() as never, event);
+    expect(spy).toHaveBeenCalledOnce();
+    expect(addPopup).toHaveBeenCalledOnce();
+
+    // A suppressed header keeps the browser default menu available.
+    const suppressed = new MouseEvent('contextmenu', { cancelable: true, bubbles: true });
+    const suppressedSpy = vi.spyOn(suppressed, 'preventDefault');
+    bean.showMenuAfterContextMenuEvent(createColumn(false, undefined, { suppressHeaderContextMenu: true }) as never, suppressed);
+    expect(suppressedSpy).not.toHaveBeenCalled();
+  });
 });

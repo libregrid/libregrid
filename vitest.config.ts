@@ -89,6 +89,9 @@ export default defineConfig({
       '@libregrid/batch-edit': fileURLToPath(
         new URL('./packages/batch-edit/src/index.ts', import.meta.url),
       ),
+      '@libregrid/calculated-columns': fileURLToPath(
+        new URL('./packages/calculated-columns/src/index.ts', import.meta.url),
+      ),
       '@libregrid/find': fileURLToPath(new URL('./packages/find/src/index.ts', import.meta.url)),
       '@libregrid/rich-select': fileURLToPath(
         new URL('./packages/rich-select/src/index.ts', import.meta.url),
