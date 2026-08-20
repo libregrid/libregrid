@@ -79,7 +79,7 @@ const ROWS = makeRows();
       </mat-card>
 
       <div class="lgr-actions">
-        <button mat-stroked-button (click)="openFilters()">Open Filters panel</button>
+        <button matButton="tonal" (click)="openFilters()">Open Filters panel</button>
       </div>
 
       <h2>Try it</h2>

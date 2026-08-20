@@ -90,13 +90,13 @@ function makeRows(n: number): Row[] {
             <span class="lgr-batch-status" data-testid="batch-status"
               >{{ batchEditing() ? 'Batch editing' : 'Idle' }}</span
             >
-            <button mat-stroked-button data-testid="batch-start" (click)="startBatch()" [disabled]="batchEditing()">
+            <button matButton="tonal" data-testid="batch-start" (click)="startBatch()" [disabled]="batchEditing()">
               Start batch edit
             </button>
-            <button mat-stroked-button data-testid="batch-commit" (click)="commitBatch()" [disabled]="!batchEditing()">
+            <button matButton="tonal" data-testid="batch-commit" (click)="commitBatch()" [disabled]="!batchEditing()">
               Commit batch
             </button>
-            <button mat-stroked-button data-testid="batch-cancel" (click)="cancelBatch()" [disabled]="!batchEditing()">
+            <button matButton="tonal" data-testid="batch-cancel" (click)="cancelBatch()" [disabled]="!batchEditing()">
               Cancel batch
             </button>
           </div>

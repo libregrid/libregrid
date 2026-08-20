@@ -21,11 +21,15 @@ import { MatInputModule } from '@angular/material/input';
 import { LibreGridThemeService } from '@libregrid/material';
 import { NAV } from './routes';
 import { ThemePicker } from './theme-picker';
+import { DOCS_SECTIONS, featureForPath, type DocsSectionId } from './docs/feature-catalog';
+import { DocsDemoGuideComponent, DocsFeatureHeaderComponent, DocsRouteCompanionComponent, ROUTE_GUIDES } from './docs';
 
 interface NavItem {
   path: string;
   label: string;
   icon: string;
+  section: DocsSectionId;
+  searchText: string;
 }
 
 const NAV_ICONS: Record<string, string> = {
@@ -56,10 +60,22 @@ const NAV_ICONS: Record<string, string> = {
   'api': 'api',
 };
 
-const ITEMS: NavItem[] = NAV.map((item) => ({
-  ...item,
-  icon: NAV_ICONS[item.path] ?? 'circle',
-}));
+const ITEMS: NavItem[] = NAV.map((item) => {
+  const feature = featureForPath(item.path);
+  return {
+    ...item,
+    icon: feature?.icon ?? NAV_ICONS[item.path] ?? 'circle',
+    section: feature?.section ?? 'reference',
+    searchText: [item.label, ...(feature?.packages ?? []), ...(feature?.keywords ?? [])]
+      .join(' ')
+      .toLowerCase(),
+  };
+});
+
+interface NavSection {
+  label: string;
+  items: readonly NavItem[];
+}
 
 @Component({
   selector: 'lgr-root',
@@ -76,6 +92,9 @@ const ITEMS: NavItem[] = NAV.map((item) => ({
     MatFormFieldModule,
     MatInputModule,
     ThemePicker,
+    DocsDemoGuideComponent,
+    DocsFeatureHeaderComponent,
+    DocsRouteCompanionComponent,
   ],
   styles: `
     :host {
@@ -245,6 +264,13 @@ const ITEMS: NavItem[] = NAV.map((item) => ({
       min-width: 0;
     }
 
+    .lgr-route-frame {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: clamp(1rem, 3vw, 2.5rem) clamp(1.5rem, 3vw, 2.5rem) 0;
+    }
+
     /* ── Prev / next pager ──────────────────────── */
     .lgr-pager {
       display: flex;
@@ -365,32 +391,52 @@ const ITEMS: NavItem[] = NAV.map((item) => ({
             }
           </mat-form-field>
 
-          <div class="lgr-nav-section-title">Features</div>
-          <div class="lgr-nav-list">
-            @for (item of filteredNav(); track item.path) {
-              <a
-                class="lgr-nav-item"
-                [routerLink]="item.path"
-                routerLinkActive
-                #rla="routerLinkActive"
-                [class.active]="rla.isActive"
-                [routerLinkActiveOptions]="{ exact: item.path === '' }"
-                (click)="closeNavigationOnHandset()"
-              >
-                <mat-icon>{{ item.icon }}</mat-icon>
-                {{ item.label }}
-              </a>
-            }
-            @if (filteredNav().length === 0) {
-              <div class="lgr-nav-empty">No features match "{{ filterQuery() }}".</div>
-            }
-          </div>
+          @for (section of filteredSections(); track section.label) {
+            <div class="lgr-nav-section-title">{{ section.label }}</div>
+            <div class="lgr-nav-list">
+              @for (item of section.items; track item.path) {
+                <a
+                  class="lgr-nav-item"
+                  [routerLink]="item.path"
+                  routerLinkActive
+                  #rla="routerLinkActive"
+                  [class.active]="rla.isActive"
+                  [routerLinkActiveOptions]="{ exact: item.path === '' }"
+                  (click)="closeNavigationOnHandset()"
+                >
+                  <mat-icon>{{ item.icon }}</mat-icon>
+                  {{ item.label }}
+                </a>
+              }
+            </div>
+          }
+          @if (filteredNav().length === 0) {
+            <div class="lgr-nav-empty">No features match "{{ filterQuery() }}".</div>
+          }
         </nav>
       </mat-sidenav>
 
       <mat-sidenav-content>
-        <main>
+        <main id="main-content" [class.lgr-guided-route]="currentGuide() !== undefined">
+          @if (currentFeature(); as feature) {
+            @if (currentGuide(); as guide) {
+              <div class="lgr-route-frame">
+                <lgr-docs-feature-header
+                  [title]="feature.label"
+                  [summary]="feature.outcome"
+                  [packages]="feature.packages"
+                  [values]="featureValues()"
+                />
+                <lgr-docs-demo-guide [intro]="guide.intro" [steps]="guide.steps" />
+              </div>
+            }
+          }
           <router-outlet />
+          @if (currentFeature(); as feature) {
+            @if (currentGuide(); as guide) {
+              <lgr-docs-route-companion [feature]="feature" [guide]="guide" />
+            }
+          }
         </main>
 
         <!-- Prev / next feature navigation -->
@@ -434,7 +480,15 @@ export class App {
   protected readonly filteredNav = computed(() => {
     const query = this.filterQuery().trim().toLowerCase();
     if (!query) return ITEMS;
-    return ITEMS.filter((item) => item.label.toLowerCase().includes(query));
+    return ITEMS.filter((item) => item.searchText.includes(query));
+  });
+
+  protected readonly filteredSections = computed<readonly NavSection[]>(() => {
+    const visible = this.filteredNav();
+    return DOCS_SECTIONS.map((section) => ({
+      label: section.label,
+      items: visible.filter((item) => item.section === section.id),
+    })).filter((section) => section.items.length > 0);
   });
 
   protected readonly isHandset = toSignal(
@@ -455,6 +509,36 @@ export class App {
   protected readonly currentIndex = computed(() => {
     const path = stripQuery(this.currentPath()).replace(/^\//, '');
     return ITEMS.findIndex((item) => item.path === path);
+  });
+
+  protected readonly currentFeature = computed(() => {
+    const path = stripQuery(this.currentPath()).replace(/^\//, '');
+    return featureForPath(path);
+  });
+
+  protected readonly currentGuide = computed(() => {
+    const feature = this.currentFeature();
+    return feature ? ROUTE_GUIDES[feature.path] : undefined;
+  });
+
+  protected readonly featureValues = computed(() => {
+    const feature = this.currentFeature();
+    if (!feature) return [];
+    const dataBoundary = feature.boundary !== 'Browser';
+    return [
+      {
+        icon: 'workspace_premium',
+        title: 'Customer outcome',
+        description: feature.outcome,
+      },
+      {
+        icon: dataBoundary ? 'sync_alt' : 'extension',
+        title: dataBoundary ? 'Application data boundary' : 'Composable browser capability',
+        description: dataBoundary
+          ? 'The guide identifies the request, response, and ownership that belong in your systems.'
+          : 'Install and register only this capability without adding unrelated product surface.',
+      },
+    ];
   });
 
   protected readonly prevItem = computed(() => {

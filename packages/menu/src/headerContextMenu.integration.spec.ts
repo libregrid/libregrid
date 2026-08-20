@@ -25,6 +25,12 @@ function headerCell(colId: string): HTMLElement {
   return el;
 }
 
+function groupHeaderCell(groupId: string): HTMLElement {
+  const el = host?.querySelector<HTMLElement>(`.ag-header-group-cell[col-id="${groupId}"], .ag-header-group-cell`);
+  if (!el) throw new Error(`group header cell ${groupId} not found`);
+  return el;
+}
+
 function rightClick(el: HTMLElement): MouseEvent {
   const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
   el.dispatchEvent(event);
@@ -54,5 +60,13 @@ describe('header context menu (integration)', () => {
     const event = rightClick(headerCell('gold'));
     expect(event.defaultPrevented).toBe(false);
     expect(document.querySelector('.lgr-menu')).toBeNull();
+  });
+
+  it('suppresses the native browser menu for a group-header menu too', async () => {
+    await makeGrid([{ headerName: 'Medals', groupId: 'medals', children: [{ field: 'gold' }] }]);
+
+    const event = rightClick(groupHeaderCell('medals'));
+    expect(event.defaultPrevented).toBe(true);
+    await vi.waitFor(() => expect(document.querySelector('.lgr-menu')).not.toBeNull());
   });
 });

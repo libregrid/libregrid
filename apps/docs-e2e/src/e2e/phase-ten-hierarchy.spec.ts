@@ -15,10 +15,11 @@ test.describe('Master Detail', () => {
   test('mounts a separately sortable detail grid and exposes it to keyboard users', async ({ page }) => {
     await page.goto('/master-detail');
     const grid = page.getByTestId('master-detail-grid');
-    await expect(grid.getByRole('row', { name: 'Atlas Trading' })).toBeVisible();
+    await expect(grid.locator('[row-index="0"]')).toContainText('Atlas Trading');
+    await grid.locator('[row-index="0"] .ag-group-contracted').click();
     await expect(grid.locator('.ag-details-grid').first()).toBeVisible();
-    await grid.locator('.ag-details-grid').first().getByRole('columnheader', { name: 'Direction' }).click();
-    await expect(grid.locator('.ag-details-grid [row-index="0"]').first()).toContainText(/Inbound|Outbound/);
+    await grid.locator('.ag-details-grid').first().getByRole('columnheader', { name: 'Status' }).click();
+    await expect(grid.locator('.ag-details-grid [row-index="0"]').first()).toContainText(/SAML|Monthly/);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   });
 });

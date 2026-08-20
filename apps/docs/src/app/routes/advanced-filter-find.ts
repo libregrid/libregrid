@@ -19,10 +19,10 @@ const rows: Row[] = [
     <p>Expressions and the visual builder use one serialisable Advanced Filter model. Find highlights each rendered match and wraps through the results.</p>
     <mat-card appearance="outlined"><mat-card-content>
       <div class="lgr-actions lgr-advanced-filter-toolbar">
-        <button mat-flat-button (click)="showBuilder()">Open advanced builder</button>
-        <button mat-stroked-button (click)="clearFilter()">Clear filter</button>
+        <button matButton="filled" (click)="showBuilder()">Open advanced builder</button>
+        <button matButton="tonal" (click)="clearFilter()">Clear filter</button>
         <label class="lgr-find-control">Find <input data-testid="phase-eleven-find" [value]="findText" (input)="setFind($any($event.target).value)" placeholder="Find text"></label>
-        <button mat-stroked-button (click)="next()">Next match</button>
+        <button matButton="tonal" (click)="next()">Next match</button>
         <span class="lgr-match-count" aria-live="polite">{{ matches }} matches</span>
       </div>
       <div #advancedParent class="lgr-advanced-filter-builder-host" data-testid="phase-eleven-filter-parent"></div>

@@ -71,14 +71,14 @@ function makeRows(n: number): Row[] {
 
       <h2>API</h2>
       <div class="lgr-actions">
-        <button mat-stroked-button (click)="toggleSideBar()">Toggle side bar</button>
-        <button mat-stroked-button (click)="openPanel('columns')">Open columns panel</button>
-        <button mat-stroked-button (click)="openPanel('filters')">Open filters panel</button>
-        <button mat-stroked-button (click)="closePanel()">Close panel</button>
-        <button mat-stroked-button (click)="setPosition('left')">Left</button>
-        <button mat-stroked-button (click)="setPosition('right')">Right</button>
-        <button mat-stroked-button (click)="setButtonsHidden(true)">Hide panel buttons</button>
-        <button mat-stroked-button (click)="setButtonsHidden(false)">Show panel buttons</button>
+        <button matButton="tonal" (click)="toggleSideBar()">Toggle side bar</button>
+        <button matButton="tonal" (click)="openPanel('columns')">Open columns panel</button>
+        <button matButton="tonal" (click)="openPanel('filters')">Open filters panel</button>
+        <button matButton="tonal" (click)="closePanel()">Close panel</button>
+        <button matButton="tonal" (click)="setPosition('left')">Left</button>
+        <button matButton="tonal" (click)="setPosition('right')">Right</button>
+        <button matButton="tonal" (click)="setButtonsHidden(true)">Hide panel buttons</button>
+        <button matButton="tonal" (click)="setButtonsHidden(false)">Show panel buttons</button>
       </div>
 
       <p>

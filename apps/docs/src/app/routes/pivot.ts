@@ -25,7 +25,7 @@ const rowData: Sale[] = [
       <mat-card appearance="outlined"><mat-card-content>
         <ag-grid-angular style="width:100%;height:500px" [theme]="theme.gridTheme()" [columnDefs]="columnDefs" [rowData]="rowData" [gridOptions]="gridOptions" (gridReady)="ready($event.api)" data-testid="pivot-grid" />
       </mat-card-content></mat-card>
-      <p><button mat-stroked-button (click)="toggle()">Toggle pivot mode</button> <button mat-stroked-button (click)="openColumns()">Open Columns panel</button></p>
+      <p><button matButton="tonal" (click)="toggle()">Toggle pivot mode</button> <button matButton="tonal" (click)="openColumns()">Open Columns panel</button></p>
       <h2>How it works</h2>
       <p>
         Register <code>&#64;libregrid/pivot</code>, set <code>pivot: true</code> on a column,

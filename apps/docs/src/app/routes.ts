@@ -8,6 +8,8 @@ import type { Routes } from '@angular/router';
  */
 export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: '', label: 'Overview' },
+  { path: 'getting-started', label: 'Getting started' },
+  { path: 'packages', label: 'Package catalog' },
   { path: 'grid', label: 'Grid (Community)' },
   { path: 'menus', label: 'Menus' },
   { path: 'side-bar', label: 'Side bar' },
@@ -24,13 +26,16 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'viewport', label: 'Viewport rows' },
   { path: 'tree-data', label: 'Tree Data' },
   { path: 'master-detail', label: 'Master / Detail' },
+  { path: 'calculated-columns', label: 'Calculated Columns' },
   { path: 'advanced-filter-find', label: 'Advanced Filter & Find' },
   { path: 'batch-edit', label: 'Batch Edit' },
-  { path: 'charts', label: 'Charts & Sparklines' },
+  { path: 'charts', label: 'Integrated Charts' },
+  { path: 'sparklines', label: 'Sparklines' },
   { path: 'row-numbers', label: 'Row Numbers' },
   { path: 'column-header-edit', label: 'Column Header Edit' },
   { path: 'notes', label: 'Cell Notes' },
   { path: 'angular', label: 'Angular' },
+  { path: 'material', label: 'Material theme bridge' },
   { path: 'api', label: 'API Reference' },
 ];
 
@@ -44,6 +49,16 @@ export const routes: Routes = [
     path: 'grid',
     loadComponent: () => import('./routes/grid-demo').then((m) => m.GridDemo),
     title: 'LibreGrid — Grid',
+  },
+  {
+    path: 'getting-started',
+    loadComponent: () => import('./routes/getting-started').then((m) => m.GettingStarted),
+    title: 'LibreGrid — Getting Started',
+  },
+  {
+    path: 'packages',
+    loadComponent: () => import('./routes/package-catalog').then((m) => m.PackageCatalog),
+    title: 'LibreGrid — Package Catalog',
   },
   {
     path: 'menus',
@@ -124,6 +139,12 @@ export const routes: Routes = [
     title: 'LibreGrid — Master Detail',
   },
   {
+    path: 'calculated-columns',
+    loadComponent: () =>
+      import('./routes/calculated-columns').then((m) => m.CalculatedColumnsDemo),
+    title: 'LibreGrid — Calculated Columns',
+  },
+  {
     path: 'advanced-filter-find',
     loadComponent: () =>
       import('./routes/advanced-filter-find').then((m) => m.AdvancedFilterFindDemo),
@@ -138,6 +159,11 @@ export const routes: Routes = [
     path: 'charts',
     loadComponent: () => import('./routes/charts').then((m) => m.ChartsDemo),
     title: 'LibreGrid — Charts & Sparklines',
+  },
+  {
+    path: 'sparklines',
+    loadComponent: () => import('./routes/sparklines').then((m) => m.SparklinesDemo),
+    title: 'LibreGrid — Sparklines',
   },
   {
     path: 'row-numbers',
@@ -165,9 +191,18 @@ export const routes: Routes = [
     title: 'LibreGrid — Angular',
   },
   {
+    path: 'material',
+    loadComponent: () => import('./routes/material').then((m) => m.MaterialDemo),
+    title: 'LibreGrid — Material Theme Bridge',
+  },
+  {
     path: 'api',
     loadComponent: () => import('./routes/api').then((m) => m.ApiReference),
     title: 'LibreGrid — API Reference',
   },
-  { path: '**', redirectTo: '' },
+  {
+    path: '**',
+    loadComponent: () => import('./routes/not-found').then((m) => m.NotFound),
+    title: 'LibreGrid — Page Not Found',
+  },
 ];

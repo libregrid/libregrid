@@ -54,4 +54,16 @@ describe('side-bar renderer registration', () => {
     unregisterFirst();
     expect(getSideBarRenderer()).toBe(second);
   });
+
+  it('can preserve an explicitly installed renderer when registering a fallback', () => {
+    const custom = { refresh: vi.fn() };
+    const fallback = { refresh: vi.fn() };
+    unregister = registerSideBarRenderer(custom);
+
+    const unregisterFallback = registerSideBarRenderer(fallback, { replaceExisting: false });
+
+    expect(getSideBarRenderer()).toBe(custom);
+    unregisterFallback();
+    expect(getSideBarRenderer()).toBe(custom);
+  });
 });

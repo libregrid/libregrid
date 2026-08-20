@@ -20,14 +20,23 @@ function getStore(): {
   latestRequest: SideBarRenderRequest | undefined;
 } {
   const scope = globalThis as typeof globalThis & {
-    [RENDERER_KEY]?: { renderer: SideBarRenderer | undefined; latestRequest: SideBarRenderRequest | undefined };
+    [RENDERER_KEY]?: {
+      renderer: SideBarRenderer | undefined;
+      latestRequest: SideBarRenderRequest | undefined;
+    };
   };
   return (scope[RENDERER_KEY] ??= { renderer: undefined, latestRequest: undefined });
 }
 
 /** Install an optional UI renderer without coupling this package to a framework. */
-export function registerSideBarRenderer(nextRenderer: SideBarRenderer): () => void {
+export function registerSideBarRenderer(
+  nextRenderer: SideBarRenderer,
+  options: { replaceExisting?: boolean } = {},
+): () => void {
   const store = getStore();
+  if (store.renderer && options.replaceExisting === false) {
+    return () => {};
+  }
   const previous = store.renderer;
   store.renderer = nextRenderer;
   if (store.latestRequest) nextRenderer.refresh(store.latestRequest);

@@ -23,6 +23,10 @@ export const DEFAULT_CONTEXT_MENU_ITEMS: string[] = [
   // service, so the default menu is unchanged.
   'separator',
   'note',
+  'separator',
+  // Resolved by @libregrid/calculated-columns when a calculated column is
+  // the context-menu target. It remains hidden when that package is absent.
+  'calculatedColumnRemove',
 ];
 
 /**
@@ -51,6 +55,12 @@ export const DEFAULT_COLUMN_MENU_ITEMS: string[] = [
   'columnChooser',
   'columnFilter',
   'showValuesAs',
+  'separator',
+  // Resolved by @libregrid/calculated-columns when the feature is enabled.
+  // This is deliberately part of the default recipe so end users can create
+  // a derived column from any ordinary header without app code wiring a
+  // custom menu callback.
+  'calculatedColumn',
   'separator',
   'editColumnName',
 ];

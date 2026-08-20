@@ -11,6 +11,7 @@ import {
   type IServerSideDatasource,
   type IServerSideGetRowsRequest,
 } from 'ag-grid-community';
+import { AdvancedFilterModule } from '@libregrid/advanced-filter';
 import { ServerSideRowModelModule } from './serverSideRowModelModule';
 import { getSsrmRoute } from './serverSideRowModel';
 
@@ -140,6 +141,62 @@ describe('ServerSideRowModelModule', () => {
     api.applyColumnState({ state: [{ colId: 'name', sort: 'desc' }] });
     await vi.waitFor(() => expect(requests).toHaveLength(2));
     expect(requests[1]?.sortModel).toEqual([expect.objectContaining({ colId: 'name', sort: 'desc' })]);
+  });
+
+  it('forwards the advanced filter model instead of the column filter model', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, AdvancedFilterModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+    const model = {
+      filterType: 'join' as const,
+      type: 'AND' as const,
+      conditions: [
+        { filterType: 'text' as const, colId: 'name', type: 'contains' as const, filter: 'Alpha' },
+        { filterType: 'number' as const, colId: 'quantity', type: 'greaterThan' as const, filter: 100 },
+      ],
+    };
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      enableAdvancedFilter: true,
+      columnDefs: [{ field: 'name' }, { field: 'quantity', cellDataType: 'number' }],
+      serverSideDatasource: {
+        getRows(params) {
+          requests.push(params.request);
+          params.success({ rowData: [], rowCount: 0 });
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(requests).toHaveLength(1));
+    api.setAdvancedFilterModel(model);
+    await vi.waitFor(() => expect(requests).toHaveLength(2));
+    expect(requests[1]?.filterModel).toEqual(model);
+  });
+
+  it('continues to forward the classic column filter model when advanced filtering is disabled', async () => {
+    ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
+    const requests: IServerSideGetRowsRequest[] = [];
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+    const model = { name: { filterType: 'text', type: 'contains', filter: 'Alpha' } };
+
+    api = createGrid(element, {
+      rowModelType: 'serverSide',
+      columnDefs: [{ field: 'name', filter: true }],
+      serverSideDatasource: {
+        getRows(params) {
+          requests.push(params.request);
+          params.success({ rowData: [], rowCount: 0 });
+        },
+      },
+    });
+
+    await vi.waitFor(() => expect(requests).toHaveLength(1));
+    api.setFilterModel(model);
+    await vi.waitFor(() => expect(requests).toHaveLength(2));
+    expect(requests[1]?.filterModel).toEqual(model);
   });
 
   it('accepts rows supplied through applyServerSideRowData', async () => {

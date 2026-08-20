@@ -126,13 +126,13 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     _containerType: ContainerType,
     onClosedCallback?: () => void,
     _filtersOnly?: boolean,
-  ): void {
-    if (!isMenuTarget(column)) return;
+  ): boolean {
+    if (!isMenuTarget(column)) return false;
     const suppressed = isColumn(column)
       ? column.getColDef().suppressHeaderMenuButton
       : groupSuppressFlag(column, 'suppressHeaderMenuButton');
-    if (suppressed) return;
-    this.showMenu(column, onClosedCallback, (popupSvc, menuEl) => {
+    if (suppressed) return false;
+    return this.showMenu(column, onClosedCallback, (popupSvc, menuEl) => {
       popupSvc.positionPopupUnderMouseEvent({
         type: 'columnMenu',
         mouseEvent,
@@ -156,7 +156,13 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
       ? column.getColDef().suppressHeaderContextMenu
       : column.getColGroupDef()?.suppressHeaderContextMenu;
     if (suppressed) return;
-    this.showMenuAfterMouseEvent(column, event, 'columnMenu');
+    // Community only honours its global preventDefaultOnContextMenu option.
+    // Once LibreGrid has accepted this header event and opened a column menu,
+    // suppress the native browser menu locally instead. Suppressed headers
+    // intentionally return above without altering browser behaviour.
+    if (this.showMenuAfterMouseEvent(column, event, 'columnMenu') && mouseEvent) {
+      mouseEvent.preventDefault();
+    }
   }
 
   public hideActiveMenu(): void {

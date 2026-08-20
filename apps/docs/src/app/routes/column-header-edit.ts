@@ -59,10 +59,10 @@ function makeRows(n: number): Row[] {
 
       <h2>Options</h2>
       <div class="lgr-actions">
-        <button mat-stroked-button [class.lgr-active]="deferred()" (click)="toggleApplyMode()">
+        <button matButton="tonal" [class.lgr-active]="deferred()" (click)="toggleApplyMode()">
           {{ deferred() ? "applyMode: 'deferred'" : "applyMode: 'live'" }}
         </button>
-        <button mat-stroked-button (click)="resetColumnState()">resetColumnState()</button>
+        <button matButton="tonal" (click)="resetColumnState()">resetColumnState()</button>
       </div>
 
       <h2>How it works</h2>

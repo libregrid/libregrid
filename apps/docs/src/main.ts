@@ -27,6 +27,7 @@ import { ToolbarModule } from '@libregrid/toolbar';
 import { RichSelectModule } from '@libregrid/rich-select';
 import { IntegratedChartsModule } from '@libregrid/integrated-charts';
 import { BatchEditModule } from '@libregrid/batch-edit';
+import { CalculatedColumnsModule } from '@libregrid/calculated-columns';
 import { SparklinesModule } from '@libregrid/sparklines';
 import { RowNumbersModule } from '@libregrid/row-numbers';
 import { ColumnHeaderEditModule } from '@libregrid/column-header-edit';
@@ -52,7 +53,7 @@ bootstrapApplication(App, {
   providers: [
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
-    provideLibreGridMaterialTheme(),
+    provideLibreGridMaterialTheme({ accent: 'azure' }),
     provideLibreGrid(
       AllCommunityModule,
       EnterpriseCoreModule,
@@ -101,6 +102,9 @@ bootstrapApplication(App, {
       ServerSideSelectionModule,
       // Phase 17
       BatchEditModule,
+      // Calculated values are registered here with every other app capability;
+      // route components never self-register modules.
+      CalculatedColumnsModule,
     ),
   ],
 }).catch((err) => console.error(err));

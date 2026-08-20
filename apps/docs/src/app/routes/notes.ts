@@ -130,11 +130,11 @@ function keyOf(params: NotesDataSourceNoteParams | NotesDataSourceFullWidthRowNo
 
       <h2>Options</h2>
       <div class="lgr-actions">
-        <button mat-stroked-button [class.lgr-active]="trigger() !== 'hover'" (click)="toggleTrigger()">
+        <button matButton="tonal" [class.lgr-active]="trigger() !== 'hover'" (click)="toggleTrigger()">
           {{ trigger() === 'hover' ? 'noteTrigger: hover' : 'noteTrigger: click' }}
         </button>
-        <button mat-stroked-button (click)="addNoteToFirstRow()">Add note to first row</button>
-        <button mat-stroked-button (click)="clearAllNotes()">Clear all notes</button>
+        <button matButton="tonal" (click)="addNoteToFirstRow()">Add note to first row</button>
+        <button matButton="tonal" (click)="clearAllNotes()">Clear all notes</button>
       </div>
 
       <h2>How it works</h2>

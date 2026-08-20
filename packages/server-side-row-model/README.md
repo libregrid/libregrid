@@ -78,6 +78,15 @@ backend supports. Registering `ServerSideRowModelModule` alongside
 sends the current grouping/pivot state in each request instead of computing
 it locally.
 
+### Advanced Filter requests
+
+When `enableAdvancedFilter: true` is configured (and
+`AdvancedFilterModule` is registered), `params.request.filterModel` contains
+the current `AdvancedFilterModel` expression tree, or `null` when no advanced
+filter is applied. It replaces the classic column-filter map in that field, so
+the datasource can translate one expression into its database query before it
+loads the requested block.
+
 ## API
 
 | Export | Purpose |

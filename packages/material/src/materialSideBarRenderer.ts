@@ -26,6 +26,8 @@ import {
         type="button"
         class="lgr-side-bar-button"
         role="tab"
+        [id]="buttonId(panel)"
+        [attr.aria-controls]="panelId(panel)"
         [attr.aria-label]="label(panel)"
         [attr.aria-expanded]="openedPanelId === panel.id"
         [title]="label(panel)"
@@ -60,6 +62,14 @@ class MaterialSideBarButtonsComponent implements OnChanges {
   icon(panel: SideBarRenderRequest['panelDefs'][number]): string | null {
     return panel.iconKey ? iconSvg(panel.iconKey as never) : null;
   }
+
+  buttonId(panel: SideBarRenderRequest['panelDefs'][number]): string {
+    return `lgr-side-bar-${panel.id}-button`;
+  }
+
+  panelId(panel: SideBarRenderRequest['panelDefs'][number]): string {
+    return `lgr-side-bar-${panel.id}-panel`;
+  }
 }
 
 export function installMaterialSideBarRenderer(
@@ -68,6 +78,7 @@ export function installMaterialSideBarRenderer(
 ): () => void {
   return registerSideBarRenderer(
     createMaterialSideBarRenderer(applicationRef, environmentInjector),
+    { replaceExisting: false },
   );
 }
 
@@ -81,7 +92,9 @@ export function createMaterialSideBarRenderer(
 
   return {
     refresh(request) {
-      if (host !== request.host) {
+      request.host.setAttribute('role', 'tablist');
+      const componentElement = component?.location.nativeElement as HTMLElement | undefined;
+      if (host !== request.host || !componentElement || !request.host.contains(componentElement)) {
         outlet?.dispose();
         host = request.host;
         outlet = new DomPortalOutlet(host, applicationRef, environmentInjector);

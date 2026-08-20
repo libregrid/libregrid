@@ -6,7 +6,9 @@ import {
   _getRowIdCallback,
   _getSortModel,
   type AgColumn,
+  type AdvancedFilterModel,
   type ColumnVO,
+  type FilterModel,
   type IRowNode,
   type IServerSideDatasource,
   type IServerSideRowModel,
@@ -746,11 +748,20 @@ export class ServerSideRowModel extends BeanStub implements NamedBean, IServerSi
       rowGroupColsSvc?: { columns: AgColumn[] };
       valueColsSvc?: { columns: AgColumn[] };
       pivotColsSvc?: { columns: AgColumn[] };
-      filterManager?: { getFilterModel(): Record<string, unknown> | null };
+      filterManager?: {
+        isAdvFilterEnabled(): boolean;
+        getAdvFilterModel(): AdvancedFilterModel | null;
+        getFilterModel(): FilterModel;
+      };
       colModel?: { pivotMode?: boolean };
     };
-    const activeFilterModel = services.filterManager?.getFilterModel() ?? null;
-    const filterModel = activeFilterModel && Object.keys(activeFilterModel).length > 0 ? activeFilterModel : null;
+    const filterManager = services.filterManager;
+    const filterModel = filterManager?.isAdvFilterEnabled()
+      ? filterManager.getAdvFilterModel()
+      : (() => {
+        const activeFilterModel = filterManager?.getFilterModel() ?? null;
+        return activeFilterModel && Object.keys(activeFilterModel).length > 0 ? activeFilterModel : null;
+      })();
     return {
       startRow,
       endRow,

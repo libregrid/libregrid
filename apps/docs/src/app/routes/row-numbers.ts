@@ -60,13 +60,13 @@ function makeRows(n: number): Row[] {
 
       <h2>Options</h2>
       <div class="lgr-actions">
-        <button mat-stroked-button [class.lgr-active]="rowNumbers()" (click)="toggleRowNumbers()">
+        <button matButton="tonal" [class.lgr-active]="rowNumbers()" (click)="toggleRowNumbers()">
           {{ rowNumbers() ? 'rowNumbers: on' : 'rowNumbers: off' }}
         </button>
-        <button mat-stroked-button [class.lgr-active]="enableRowResizer()" (click)="toggleRowResizer()">
+        <button matButton="tonal" [class.lgr-active]="enableRowResizer()" (click)="toggleRowResizer()">
           {{ enableRowResizer() ? 'Row resizer: on' : 'Row resizer: off' }}
         </button>
-        <button mat-stroked-button [class.lgr-active]="cellSelection()" (click)="toggleCellSelection()">
+        <button matButton="tonal" [class.lgr-active]="cellSelection()" (click)="toggleCellSelection()">
           {{ cellSelection() ? 'Cell selection: on' : 'Cell selection: off' }}
         </button>
       </div>
