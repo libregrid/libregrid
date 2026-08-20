@@ -8,6 +8,7 @@
       "@libregrid/all",
       "@libregrid/angular",
       "@libregrid/batch-edit",
+      "@libregrid/calculated-columns",
       "@libregrid/cell-selection",
       "@libregrid/clipboard",
       "@libregrid/columns-tool-panel",

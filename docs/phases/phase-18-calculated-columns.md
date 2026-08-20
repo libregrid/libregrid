@@ -67,7 +67,7 @@ beans Community's seams expect, plus the dialog.
 - [x] Menu: `calculatedColumn` (Add / Edit+Remove submenu) and `calculatedColumnRemove` (context) registry contributions overriding the new `@libregrid/menu` stubs
 - [x] Unit specs — expression (30), formula service (13), dialog (14), service (24)
 - [x] jsdom integration specs (13) — values, chained refs, errors, read-only, add/edit/remove via menus, validation flips, Grid State round-trip, deferred apply, disabled option, group aggregation
-- [x] Demo route + Playwright e2e (declared values, add via menu dialog, error codes, event log, axe light + dark)
+- [x] Demo route + Playwright e2e (declared values, add via menu dialog, error codes, event log, axe light + dark) — Chromium + Firefox green locally; WebKit needs missing OS libraries in this sandbox (CI runs the full matrix)
 - [x] Parity checklist `docs/parity/calculated-columns.md`; gap-list row
 - [x] Coverage above repo thresholds (statements 89.8 / branches 77.7 / functions 95.3 / lines 93.9)
 
