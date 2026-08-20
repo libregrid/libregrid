@@ -58,6 +58,7 @@ export class CalculatedColumnDialog {
   private props: CalcDialogProps;
   private closed = false;
   private suggestIndex = -1;
+  private suggestItems: Array<{ text: string; insert: string; label: string }> = [];
   private docListener: ((e: Event) => void) | null = null;
   private restoreFocusElement: HTMLElement | null = null;
 
@@ -166,9 +167,6 @@ export class CalculatedColumnDialog {
     this.eExpression.addEventListener('input', () => this.onExpressionInput());
     this.eExpression.addEventListener('keydown', (e) => this.onExpressionKeydown(e));
     this.eExpression.addEventListener('click', () => this.updateSuggest(true));
-    this.eExpression.addEventListener('keyup', (e) => {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') this.moveSuggest(e.key === 'ArrowDown' ? 1 : -1);
-    });
 
     this.eSuggest = document.createElement('div');
     this.eSuggest.className = 'lgr-calc-dialog-suggest';
@@ -238,6 +236,7 @@ export class CalculatedColumnDialog {
     const list = document.createElement('div');
     list.className = 'lgr-calc-dialog-picker-list';
     list.hidden = true;
+    this.ePickerLists.set(kind, list);
     entries();
     button.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -246,7 +245,6 @@ export class CalculatedColumnDialog {
       }
       list.hidden = !list.hidden;
     });
-    this.ePickerLists.set(kind, list);
     const wrap = document.createElement('span');
     wrap.className = 'lgr-calc-dialog-picker-wrap';
     wrap.append(button, list);
@@ -395,12 +393,19 @@ export class CalculatedColumnDialog {
       this.closeDialog();
       return;
     }
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && this.eSuggest && !this.eSuggest.hidden) {
+      e.preventDefault();
+      this.moveSuggest(e.key === 'ArrowDown' ? 1 : -1);
+      return;
+    }
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (this.suggestIndex >= 0 && this.eSuggest) {
-        const item = this.eSuggest.children[this.suggestIndex] as HTMLButtonElement | undefined;
-        item?.click();
-        return;
+      if (this.suggestIndex >= 0 && this.eSuggest && !this.eSuggest.hidden) {
+        const item = this.suggestItems[this.suggestIndex];
+        if (item) {
+          this.acceptSuggest(item);
+          return;
+        }
       }
       if (this.options.applyMode === 'deferred') {
         this.applyDeferred();
@@ -462,7 +467,7 @@ export class CalculatedColumnDialog {
         .slice(0, SUGGEST_LIMIT)
         .map((r) => ({ text: `[${r.colId}]`, insert: `[${r.colId}]`, label: r.label }));
       this.pendingReplace = { start: bracket, end: caret };
-    } else if (identStart >= 0 && identStart > 0) {
+    } else if (identStart >= 0) {
       const prefix = before.slice(identStart).toLowerCase();
       if (prefix.length > 0 && /[A-Za-z]/.test(prefix.charAt(0))) {
         items = FORMULA_FUNCTION_NAMES.filter((n) => n.toLowerCase().startsWith(prefix))
@@ -477,9 +482,12 @@ export class CalculatedColumnDialog {
     if (items.length === 0 || (force === false && !this.pendingReplace)) {
       suggest.hidden = true;
       suggest.replaceChildren();
+      this.suggestItems = [];
       this.suggestIndex = -1;
       return;
     }
+    suggest.replaceChildren();
+    this.suggestItems = items;
     for (const item of items) {
       const button = document.createElement('button');
       button.type = 'button';
