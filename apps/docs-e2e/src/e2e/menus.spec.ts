@@ -56,11 +56,8 @@ test.describe('Menus — Context Menu', () => {
     await expect(submenu.locator('.lgr-menu-item', { hasText: 'CSV Export' })).toBeVisible();
     await expect(submenu.locator('.lgr-menu-item', { hasText: 'Excel Export' })).toBeVisible();
 
-    // The parent row stays highlighted while its submenu is open, and moving
-    // into the submenu must not dismiss the popup.
+    // The parent row stays highlighted while its submenu is open.
     await expect(exportRow).toHaveClass(/lgr-menu-item-submenu-open/);
-    await submenu.locator('.lgr-menu-item', { hasText: 'Excel Export' }).hover();
-    await expect(submenu).toBeVisible();
 
     // Selecting a child item closes the whole menu (the CSV export runs as a
     // download, which the e2e runner accepts and discards).

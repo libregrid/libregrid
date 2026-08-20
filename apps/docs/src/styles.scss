@@ -93,7 +93,13 @@ html[data-lgr-accent='magenta'] {
 }
 
 // Explicit dark override so the toggle wins over the OS preference.
-html[data-lgr-theme='dark'] { color-scheme: dark; }
+html[data-lgr-theme='dark'] {
+  color-scheme: dark;
+  // WebKit does not reliably re-resolve Material's light-dark() primary token
+  // after changing color-scheme at runtime. Keep the default Azure accent
+  // legible against the dark surface until the browser does so natively.
+  --mat-sys-primary: #9ecaff;
+}
 html[data-lgr-theme='light'] { color-scheme: light; }
 
 /* ── Reset & base ─────────────────────────────────────────────── */
