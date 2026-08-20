@@ -25,6 +25,7 @@ import { FindModule } from '@libregrid/find';
 import { ToolbarModule } from '@libregrid/toolbar';
 import { RichSelectModule } from '@libregrid/rich-select';
 import { IntegratedChartsModule } from '@libregrid/integrated-charts';
+import { BatchEditModule } from '@libregrid/batch-edit';
 import { SparklinesModule } from '@libregrid/sparklines';
 import { provideLibreGridMaterialTheme } from '@libregrid/material';
 
@@ -87,6 +88,8 @@ bootstrapApplication(App, {
       // Phase 12
       IntegratedChartsModule,
       SparklinesModule,
+      // Phase 17
+      BatchEditModule,
     ),
   ],
 }).catch((err) => console.error(err));

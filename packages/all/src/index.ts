@@ -7,6 +7,9 @@
  */
 export * from '@libregrid/core';
 
+export { BatchEditModule } from '@libregrid/batch-edit';
+export type { BatchEditGridApi } from '@libregrid/batch-edit';
+
 export {
   ColumnMenuFactory,
   ColumnMenuModule,

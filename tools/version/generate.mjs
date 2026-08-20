@@ -54,6 +54,7 @@ export const VERSIONED_PACKAGES = [
   'rich-select',
   'integrated-charts',
   'sparklines',
+  'batch-edit',
 ];
 
 export function generate(rootDir = root) {

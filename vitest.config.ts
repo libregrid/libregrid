@@ -86,6 +86,9 @@ export default defineConfig({
       '@libregrid/advanced-filter': fileURLToPath(
         new URL('./packages/advanced-filter/src/index.ts', import.meta.url),
       ),
+      '@libregrid/batch-edit': fileURLToPath(
+        new URL('./packages/batch-edit/src/index.ts', import.meta.url),
+      ),
       '@libregrid/find': fileURLToPath(new URL('./packages/find/src/index.ts', import.meta.url)),
       '@libregrid/rich-select': fileURLToPath(
         new URL('./packages/rich-select/src/index.ts', import.meta.url),

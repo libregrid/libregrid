@@ -6,6 +6,7 @@
     "paths": {
       "@libregrid/advanced-filter": ["../advanced-filter/dist/index.d.ts"],
       "@libregrid/angular": ["../angular/dist/index.d.ts"],
+      "@libregrid/batch-edit": ["../batch-edit/dist/index.d.ts"],
       "@libregrid/cell-selection": ["../cell-selection/dist/index.d.ts"],
       "@libregrid/clipboard": ["../clipboard/dist/index.d.ts"],
       "@libregrid/columns-tool-panel": ["../columns-tool-panel/dist/index.d.ts"],

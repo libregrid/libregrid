@@ -25,6 +25,7 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'tree-data', label: 'Tree Data' },
   { path: 'master-detail', label: 'Master / Detail' },
   { path: 'advanced-filter-find', label: 'Advanced Filter & Find' },
+  { path: 'batch-edit', label: 'Batch Edit' },
   { path: 'charts', label: 'Charts & Sparklines' },
   { path: 'angular', label: 'Angular' },
   { path: 'api', label: 'API Reference' },
@@ -123,6 +124,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./routes/advanced-filter-find').then((m) => m.AdvancedFilterFindDemo),
     title: 'LibreGrid — Advanced Filter & Find',
+  },
+  {
+    path: 'batch-edit',
+    loadComponent: () => import('./routes/batch-edit').then((m) => m.BatchEditDemo),
+    title: 'LibreGrid — Batch Edit',
   },
   {
     path: 'charts',

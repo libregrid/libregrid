@@ -98,6 +98,10 @@
       "maxSize": "16 KB",
       "note": "Angular signal ergonomics, provideLibreGrid, and typed helpers."
     },
+    "@libregrid/batch-edit": {
+      "maxSize": "8 KB",
+      "note": "Batch-editing module: the four reserved GridApi functions delegating to the Community edit service plus the pending-edit CSS."
+    },
     "@libregrid/all": {
       "maxSize": "4 KB",
       "note": "Re-exports only — must not contain feature code. 3.8 KB of flat re-export statements measured at the Phase 13 audit."

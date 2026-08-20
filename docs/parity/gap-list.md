@@ -66,6 +66,7 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 | Integrated charts | 54 | 1 | 3 | [`integrated-charts.md`](integrated-charts.md) |
 | Sparklines | 4 | 0 | 0 | [`integrated-charts.md`](integrated-charts.md) — Sparklines section |
 | Excel export | 60 | 8 | 5 | [`excel-export.md`](excel-export.md) — shipped; images, tables and notes descoped (5.9) |
+| Batch edit | 14 | 0 | 0 | [`batch-edit.md`](batch-edit.md) |
 
 The menu domains carry the most 🟡 rows: their checklists track per-item state, and each 🟡
 names the exact missing item. Read the domain file before treating a 🟡 count as a
