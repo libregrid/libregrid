@@ -21,6 +21,7 @@ const packages = [
   'row-grouping',
   'columns-tool-panel',
   'cell-selection',
+  'calculated-columns',
   'clipboard',
   'status-bar',
   'excel-export',

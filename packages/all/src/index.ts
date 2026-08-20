@@ -11,6 +11,31 @@ export { BatchEditModule } from '@libregrid/batch-edit';
 export type { BatchEditGridApi } from '@libregrid/batch-edit';
 
 export {
+  CalculatedColumnFormulaService,
+  CalculatedColumnsModule,
+  CalculatedColumnsService,
+  FORMULA_FUNCTION_DESCRIPTIONS,
+  FORMULA_FUNCTION_NAMES,
+  FORMULA_FUNCTIONS,
+  FORMULA_OPERATORS,
+  FormulaError,
+  evaluate,
+  getFormulaFunction,
+  parseExpression,
+  referencedColumnIds,
+  validateExpression,
+} from '@libregrid/calculated-columns';
+export type {
+  CalcDialogProps,
+  ColumnReference,
+  ExprNode,
+  ExpressionEvaluator,
+  FormulaErrorCode,
+  FormulaFunc,
+  ValidateOptions,
+} from '@libregrid/calculated-columns';
+
+export {
   ColumnMenuFactory,
   ColumnMenuModule,
   ContextMenuModule,

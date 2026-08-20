@@ -102,6 +102,10 @@
       "maxSize": "8 KB",
       "note": "Batch-editing module: the four reserved GridApi functions delegating to the Community edit service plus the pending-edit CSS."
     },
+    "@libregrid/calculated-columns": {
+      "maxSize": "48 KB",
+      "note": "Calculated columns (Phase 17 / gap-plan A2): expression engine (tokenizer, parser, evaluator, provided functions), the `formula` bean (value pipeline + error hooks) and the `calculatedColsSvc` bean (dynamic-column lifecycle, dialog with pickers/autocomplete, menu items, events). Added with the feature; re-measure on first delivery."
+    },
     "@libregrid/all": {
       "maxSize": "4 KB",
       "note": "Re-exports only — must not contain feature code. 3.8 KB of flat re-export statements measured at the Phase 13 audit."
