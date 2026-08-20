@@ -50,7 +50,7 @@ const PACKAGES: PackageEntry[] = [
         maps each AG Grid Enterprise module to the package that replaces it.
       </p>
       <mat-card appearance="outlined">
-        <mat-card-content>
+        <mat-card-content class="lgr-table-scroll">
           <table mat-table [dataSource]="packages" aria-label="LibreGrid packages">
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef>Package</th>

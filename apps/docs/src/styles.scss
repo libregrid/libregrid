@@ -289,8 +289,14 @@ kbd {
 .lgr-advanced-filter-builder-host {
   min-width: 0;
   margin-bottom: 1rem;
+  overflow-x: auto;
 }
 .lgr-advanced-filter-builder-host:empty { display: none; }
+
+/* ── Data tables (API reference) ─────────────────────────────── */
+.lgr-table-scroll {
+  overflow-x: auto;
+}
 
 /* ── Cell selection overrides ────────────────────────────────── */
 .ag-cell.ag-cell-range-selected {

@@ -8,7 +8,6 @@ import type { Routes } from '@angular/router';
  */
 export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: '', label: 'Overview' },
-  { path: 'validation', label: 'Manual validation' },
   { path: 'grid', label: 'Grid (Community)' },
   { path: 'menus', label: 'Menus' },
   { path: 'side-bar', label: 'Side bar' },
@@ -40,11 +39,6 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./routes/overview').then((m) => m.Overview),
     title: 'LibreGrid — Overview',
-  },
-  {
-    path: 'validation',
-    loadComponent: () => import('./routes/manual-validation').then((m) => m.ManualValidation),
-    title: 'LibreGrid — Manual Validation',
   },
   {
     path: 'grid',

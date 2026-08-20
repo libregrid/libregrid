@@ -46,7 +46,7 @@ function makeRows(n: number): Row[] {
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
-              style="width: 100%; height: 420px;"
+              style="width: 100%; height: 100%;"
               [theme]="theme.gridTheme()"
               [columnDefs]="columnDefs"
               [rowData]="rowData()"

@@ -370,7 +370,7 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/all';
           </p>
           <div class="hero-actions">
             <a mat-flat-button color="primary" routerLink="/row-grouping">See a live grid</a>
-            <a mat-stroked-button routerLink="/validation">Try every feature</a>
+            <a mat-stroked-button routerLink="/charts">Charts & sparklines</a>
             <a mat-stroked-button href="https://github.com/libregrid/libregrid" target="_blank">
               <mat-icon>open_in_new</mat-icon>
               GitHub
