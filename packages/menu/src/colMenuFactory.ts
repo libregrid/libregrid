@@ -140,6 +140,16 @@ export class ColumnMenuFactory extends BeanStub implements NamedBean, IMenuFacto
     const event = mouseEvent ?? touchEvent?.touches[0];
     if (!isColumn(column) || !event) return;
     if (column.getColDef().suppressHeaderContextMenu) return;
+    // The Community header handler only calls preventDefault() when the
+    // `preventDefaultOnContextMenu` grid option is set; without it the native
+    // browser menu opens on top of ours. Suppress it here, scoped to the
+    // header context menu actually opening (a suppressed header keeps the
+    // browser default).
+    if (mouseEvent) {
+      mouseEvent.preventDefault();
+    } else {
+      touchEvent?.preventDefault();
+    }
     this.showMenuAfterMouseEvent(column, event, 'columnMenu');
   }
 
