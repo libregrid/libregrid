@@ -7,6 +7,7 @@ import {
 import type { EnvironmentInjector } from '@angular/core';
 import {
   listDropZones,
+  onDropZoneRegistryChange,
   registerColumnsToolPanelDragDropAdapter,
   type ColumnsToolPanelDragDropAdapter,
   type DropZoneHandle,
@@ -92,18 +93,44 @@ export function createMaterialColumnsToolPanelDragDropAdapter(
       // Toolbar-embedded and standalone header drop zones understand native
       // HTML5 drags only; CDK rows have native dragging disabled, so bridge
       // them in as CDK targets and let each zone validate the drop itself.
-      const embeddedZones = findEmbeddedDropZones(root);
-      const embeddedTargets = embeddedZones.map((zone) => {
-        const target = createDropListRef<DropListData>(environmentInjector, zone.element);
-        target.data = { kind: 'embedded' };
-        target.sortingDisabled = true;
-        zone.element.classList.add('cdk-drop-list');
-        return target;
-      });
-
-      const allTargets = [...targets, ...embeddedTargets];
-      source.connectedTo(allTargets);
-      for (const target of allTargets) target.connectedTo([source, ...allTargets.filter((other) => other !== target)]);
+      // Embedded zones can mount after the panel (the toolbar and header are
+      // separate views), so keep the CDK connections in sync with the shared
+      // registry rather than taking a one-time snapshot during attach.
+      const embeddedTargets = new Map<DropZoneHandle, DropListRef<DropListData>>();
+      const embeddedSubscriptions = new Map<DropZoneHandle, { unsubscribe: () => void }>();
+      const allTargets = () => [...targets, ...embeddedTargets.values()];
+      const reconnectTargets = () => {
+        const connectedTargets = allTargets();
+        source.connectedTo(connectedTargets);
+        for (const target of connectedTargets) {
+          target.connectedTo([source, ...connectedTargets.filter((other) => other !== target)]);
+        }
+      };
+      const refreshEmbeddedTargets = () => {
+        const zones = new Set(findEmbeddedDropZones(root));
+        for (const [zone, target] of embeddedTargets) {
+          if (zones.has(zone)) continue;
+          embeddedSubscriptions.get(zone)?.unsubscribe();
+          embeddedSubscriptions.delete(zone);
+          embeddedTargets.delete(zone);
+          target.dispose();
+          zone.element.classList.remove('cdk-drop-list');
+        }
+        for (const zone of zones) {
+          if (embeddedTargets.has(zone)) continue;
+          const target = createDropListRef<DropListData>(environmentInjector, zone.element);
+          target.data = { kind: 'embedded' };
+          target.sortingDisabled = true;
+          zone.element.classList.add('cdk-drop-list');
+          embeddedTargets.set(zone, target);
+          embeddedSubscriptions.set(zone, target.dropped.subscribe(({ item }) => {
+            if (item.data !== undefined) zone.dropColumns([item.data.id]);
+          }));
+        }
+        reconnectTargets();
+      };
+      const unsubscribeRegistry = onDropZoneRegistryChange(refreshEmbeddedTargets);
+      refreshEmbeddedTargets();
 
       const timers = new Set<ReturnType<typeof setTimeout>>();
       const subscriptions = [
@@ -120,9 +147,6 @@ export function createMaterialColumnsToolPanelDragDropAdapter(
           const action = target.data.kind === 'group' ? 'Group by' : target.data.kind === 'value' ? 'Add value' : 'Add pivot';
           clickButton(element, `${action} ${item.data.name}`);
         })),
-        ...embeddedTargets.map((target, index) => target.dropped.subscribe(({ item }) => {
-          if (item.data !== undefined) embeddedZones[index]?.dropColumns([item.data.id]);
-        })),
       ];
 
       schedulePendingMove(root, pendingMoves, schedule);
@@ -131,12 +155,17 @@ export function createMaterialColumnsToolPanelDragDropAdapter(
         for (const timer of timers) clearTimeout(timer);
         const pending = pendingMoves.get(root);
         if (pending) pending.scheduled = false;
+        unsubscribeRegistry();
         for (const subscription of subscriptions) subscription.unsubscribe();
+        for (const [zone, subscription] of embeddedSubscriptions) {
+          subscription.unsubscribe();
+          zone.element.classList.remove('cdk-drop-list');
+        }
         for (const drag of drags) drag.dispose();
         source.dispose();
-        for (const target of allTargets) target.dispose();
+        for (const target of allTargets()) target.dispose();
         sourceElement.classList.remove('cdk-drop-list');
-        for (const target of allTargets) {
+        for (const target of allTargets()) {
           const element = target.element instanceof HTMLElement
             ? target.element
             : target.element.nativeElement;

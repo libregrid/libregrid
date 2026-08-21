@@ -27,6 +27,10 @@ test.describe('Toolbar', () => {
     await page.goto('/toolbar');
     await expect(page.locator('.ag-root-wrapper')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('.lgr-toolbar .lgr-row-group-drop-zone')).toBeVisible();
+    const consentNotice = page.locator('#klaro-cookie-notice');
+    if (await consentNotice.isVisible()) {
+      await consentNotice.getByRole('button', { name: 'Reject analytics' }).click();
+    }
   });
 
   test('renders quick filter, find, and embedded drop zones', async ({ page }) => {
