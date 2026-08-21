@@ -16,7 +16,7 @@ Additionally, `@libregrid/core` must be a singleton in the application. Two copi
 1. **Peer range:** Every package declares `"ag-grid-community": ">=36.1.0 <37"`. Never widen this speculatively.
 2. **Version single-source:** `VERSION` is derived from the installed `ag-grid-community/package.json` at build time via `tools/version/generate.mjs`. No hand-maintained constant.
 3. **CI enforcement:** `tools/version/check.mjs` fails the build on drift. Runs on every commit.
-4. **Conformance matrix:** `tools/conformance/matrix.mjs` runs the full suite against each supported version. Nightly CI detects seam churn.
+4. **Conformance matrix:** `tools/conformance/matrix.mjs` runs the full suite against each supported version. Run on demand to detect seam churn before widening the peer range.
 5. **Core singleton:** Runtime duplicate guard + CI check that no two workspace packages resolve different core ranges.
 6. **Compatibility releases:** Every Community minor gets a LibreGrid compatibility release within one week. This is a project commitment, not a CI guarantee.
 
