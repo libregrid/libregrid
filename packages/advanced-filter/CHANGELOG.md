@@ -1,5 +1,11 @@
 # @libregrid/advanced-filter
 
+## 1.2.1
+
+### Patch Changes
+
+- @libregrid/core@1.2.1
+
 ## 1.2.0
 
 ### Minor Changes

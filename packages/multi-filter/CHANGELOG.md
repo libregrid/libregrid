@@ -1,5 +1,12 @@
 # @libregrid/multi-filter
 
+## 1.2.1
+
+### Patch Changes
+
+- @libregrid/core@1.2.1
+  - @libregrid/set-filter@1.2.1
+
 ## 1.2.0
 
 ### Patch Changes
