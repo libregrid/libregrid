@@ -201,6 +201,16 @@ export const routes: Routes = [
     title: 'LibreGrid — API Reference',
   },
   {
+    path: 'privacy',
+    loadComponent: () => import('./routes/privacy').then((m) => m.PrivacyPage),
+    title: 'LibreGrid — Privacy notice',
+  },
+  {
+    path: 'cookies',
+    loadComponent: () => import('./routes/cookies').then((m) => m.CookiesPage),
+    title: 'LibreGrid — Cookie notice',
+  },
+  {
     path: '**',
     loadComponent: () => import('./routes/not-found').then((m) => m.NotFound),
     title: 'LibreGrid — Page Not Found',

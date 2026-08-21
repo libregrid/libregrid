@@ -10,7 +10,17 @@
         "index": "apps/docs/src/index.html",
         "browser": "apps/docs/src/main.ts",
         "tsConfig": "apps/docs/tsconfig.app.json",
-        "styles": ["apps/docs/src/styles.scss"],
+        "styles": [
+          "apps/docs/src/assets/vendor/klaro/klaro.min.css",
+          "apps/docs/src/styles.scss"
+        ],
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/docs/src/assets",
+            "output": "assets"
+          }
+        ],
         "polyfills": ["zone.js"]
       },
       "configurations": {

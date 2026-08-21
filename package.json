@@ -31,6 +31,10 @@
     "gen:version": "node tools/version/generate.mjs",
     "release": "npm run gen:version && npm run verify && npx changeset publish",
     "docs": "npm -w apps/docs run dev",
+    "webapp:build": "npm -w apps/docs run build",
+    "hosting:serve": "npm -w apps/docs run hosting:serve",
+    "hosting:preview": "npm -w apps/docs run hosting:preview",
+    "hosting:deploy": "npm -w apps/docs run hosting:deploy",
     "manual:validate": "npm -w apps/docs run dev"
   },
   "devDependencies": {
