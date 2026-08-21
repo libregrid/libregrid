@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 # Superseded PR runs are pointless — cancel them. Pushes to main are never
-# cancelled: release.yml chains off this workflow's `workflow_run` completion,
-# so cancelling a main run would silently break the release trigger.
+# cancelled (release.yml is manual-only, so nothing chains off this run; the
+# protection is just that a main run should always reach a verdict).
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

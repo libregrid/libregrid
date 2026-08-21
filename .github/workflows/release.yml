@@ -1,12 +1,9 @@
 name: Release
 
 on:
-  # A release is only prepared or published from a main commit that has passed CI.
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
-  # Use this once after adding the workflow to prepare the first version PR.
+  # Manual only. Releases are intentional and batched across merged PRs —
+  # changesets accumulate until a maintainer runs this workflow. See
+  # docs/design/release-versioning-plan.md (Option A).
   workflow_dispatch:
 
 permissions:
@@ -20,15 +17,12 @@ concurrency:
 
 jobs:
   release:
-    if: >-
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -39,9 +33,13 @@ jobs:
       - run: npm ci
 
       - name: Create version PR or publish packages
+        id: changesets
         uses: changesets/action@v1
         with:
-          version: npx changeset version
+          # After the lockstep bump, mirror it into the private manifests
+          # (root + docs) and regenerate the docs version badge so the
+          # Version Packages PR carries every version field in one commit.
+          version: npx changeset version && npm run sync:version && node tools/version/workspace.mjs generate
           publish: npm run release
           commit: 'chore: version packages'
           title: 'chore: version packages'
@@ -53,3 +51,19 @@ jobs:
           # Changesets invokes npm itself; this npm config flag creates
           # provenance attestations, including for a package's first release.
           NPM_CONFIG_PROVENANCE: 'true'
+
+      # Changesets publishes to npm but creates no tag or GitHub Release.
+      # Every release must leave that trail so npm, the repo, and the docs
+      # badge can never drift apart silently again.
+      - name: Tag and publish GitHub Release
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./packages/core/package.json').version")
+          node tools/version/release-notes.mjs > release-notes.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+          gh release create "v$VERSION" --title "LibreGrid v$VERSION" --notes-file release-notes.md

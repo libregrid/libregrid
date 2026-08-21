@@ -97,18 +97,24 @@ Pick the bump type from the table above. Docs-only PRs that must not publish can
 
 ### Releases
 
-Release is automatic from `main`:
+Releases are **manual and batched** (see
+[`docs/design/release-versioning-plan.md`](./docs/design/release-versioning-plan.md)).
+Merging a PR with a changeset bumps and publishes nothing — changesets
+accumulate in `.changeset/` until a maintainer releases:
 
-1. Merge a PR that includes a Changeset.
-2. CI on `main` must pass (lint/test/build — e2e already ran on the feature PR).
-3. The release workflow opens or updates a **Version Packages** PR.
-4. Merge that PR to publish every `@libregrid/*` package at the new lockstep version.
+1. Run the **Release** workflow manually on `main`
+   (**GitHub → Actions → Release → Run workflow**).
+2. It opens (or updates) a single **Version Packages** PR that bumps every
+   `@libregrid/*` package in lockstep, syncs the root and docs manifests, and
+   regenerates the docs version badge.
+3. Review and merge that PR.
+4. Run the **Release** workflow again. It publishes every package to npm,
+   creates the `vX.Y.Z` tag, and creates a GitHub Release with aggregated
+   changelog notes.
 
 **CI e2e runs once per change** — on the feature PR only. It is skipped on
 `main` pushes (already covered by the PR) and on the Changesets version PR
 (package.json/CHANGELOG only). Playwright browsers are cached between runs.
-
-You can also run the release workflow manually via `workflow_dispatch` on `main`.
 
 Full detail: [`docs/guides/publishing.md`](./docs/guides/publishing.md).
 

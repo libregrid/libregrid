@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { LIBREGRID_VERSION } from '../../version';
 
 interface Phase {
   num: string;
@@ -382,7 +383,7 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
       <!-- Badge bar -->
       <div class="badge-bar">
         <span class="badge-item"><mat-icon>check_circle</mat-icon> 27 enterprise features</span>
-        <span class="badge-item"><mat-icon>verified</mat-icon> v1.2.1 on npm</span>
+        <span class="badge-item"><mat-icon>verified</mat-icon> v{{ libregridVersion }} on npm</span>
         <span class="badge-item"><mat-icon>tag</mat-icon> ag-grid-community 36.1</span>
         <span class="badge-item"><mat-icon>lock_open</mat-icon> MIT licensed</span>
       </div>
@@ -481,6 +482,7 @@ export class Overview {
   protected readonly PHASES = PHASES;
   protected readonly FEATURES = FEATURES;
   protected readonly installCommand = INSTALL_COMMAND;
+  protected readonly libregridVersion = LIBREGRID_VERSION;
   protected readonly copied = signal(false);
 
   protected copyInstall(): void {

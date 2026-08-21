@@ -10,6 +10,7 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { agGridVersion, VERSIONED_PACKAGES } from './generate.mjs';
+import { libregridVersion, SYNCED_MANIFESTS, DOCS_VERSION_FILE } from './workspace.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const problems = [];
@@ -62,6 +63,30 @@ if (distinctVersions.size > 1) {
     `Multiple @libregrid package versions across the workspace — releases are lockstep: ` +
       [...lockstepVersions].map(([k, v]) => `${k}@${v}`).join(', '),
   );
+}
+
+// 3. Private manifests mirror the lockstep version (plan: one project version).
+const projectVersion = libregridVersion(root);
+for (const rel of SYNCED_MANIFESTS) {
+  const manifest = JSON.parse(readFileSync(join(root, rel), 'utf8'));
+  if (manifest.version !== projectVersion) {
+    problems.push(
+      `${rel} has version '${manifest.version}' but the lockstep version is '${projectVersion}' — run \`node tools/version/workspace.mjs sync\``,
+    );
+  }
+}
+
+// 4. Docs version badge is generated, never stale.
+const docsFile = join(root, DOCS_VERSION_FILE);
+if (!existsSync(docsFile)) {
+  problems.push(`${DOCS_VERSION_FILE} is missing — run \`node tools/version/workspace.mjs generate\``);
+} else {
+  const found = /LIBREGRID_VERSION = '([^']+)'/.exec(readFileSync(docsFile, 'utf8'))?.[1];
+  if (found !== projectVersion) {
+    problems.push(
+      `${DOCS_VERSION_FILE} has '${found}' but the lockstep version is '${projectVersion}' — run \`node tools/version/workspace.mjs generate\``,
+    );
+  }
 }
 
 const changesetConfig = JSON.parse(readFileSync(join(root, '.changeset', 'config.json'), 'utf8'));
