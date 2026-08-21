@@ -53,11 +53,10 @@ jobs:
           create-github-releases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Required for the initial publish. Once every package has an npm
-          # trusted-publisher configuration, this secret can be removed.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          # Changesets invokes npm itself; this npm config flag creates
-          # provenance attestations, including for a package's first release.
+          # Tokenless: every @libregrid/* package trusts this workflow via an
+          # npm trusted-publisher config (id-token: write above). npm CLI
+          # detects the OIDC environment and exchanges it for a short-lived
+          # publish credential — no NPM_TOKEN secret exists.
           NPM_CONFIG_PROVENANCE: 'true'
 
       # Self-sufficient: creates the tag + GitHub Release whenever the lockstep

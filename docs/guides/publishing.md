@@ -52,18 +52,28 @@ npm audit signatures
 Also follow the root README quick start from a clean temporary project before
 announcing the release.
 
-## Move to tokenless publishing
+## Tokenless publishing (done)
 
-You can configure npm trusted publishers only after a package exists on the
-registry. After the first release, configure each `@libregrid/*` package in
-npm as a GitHub Actions trusted publisher:
+Every `@libregrid/*` package trusts the Release workflow as an npm trusted
+publisher (GitHub Actions: repo `libregrid/libregrid`, workflow `release.yml`,
+allowed action `npm publish`). Publishing uses GitHub OIDC — the workflow has
+`id-token: write`, and the npm CLI exchanges it for a short-lived credential
+automatically. No `NPM_TOKEN` secret is used.
 
-- GitHub organization: `libregrid`
-- Repository: `libregrid`
-- Workflow filename: `release.yml`
-- Allowed action: `npm publish`
+The configs were created in bulk with the npm CLI (≥11.15.0):
 
-Remove the `NPM_TOKEN` repository secret. On each npm package's **Publishing
-access** page, select **Require two-factor authentication and disallow
-tokens**. The workflow already has the required GitHub OIDC permission
-(`id-token: write`). npm will use its short-lived credential automatically.
+```bash
+for d in packages/*/; do
+  name=$(node -p "require('./$d/package.json').name")
+  npm trust github "$name" --file release.yml --repo libregrid/libregrid --allow-publish --yes
+  sleep 2
+done
+```
+
+Verify with `npm trust list @libregrid/core`. Recreate a config with
+`npm trust revoke --id <id> <package>` followed by the `npm trust github`
+command above.
+
+Remaining hardening, per package on npmjs.com under **Settings → Publishing
+access**: select **Require two-factor authentication and disallow tokens**.
+Trusted publishers use OIDC, so this does not break the Release workflow.
