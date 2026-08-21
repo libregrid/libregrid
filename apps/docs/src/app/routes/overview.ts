@@ -364,7 +364,7 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
             <span class="highlight">Free and open source.</span>
           </h1>
           <p class="hero-sub">
-            LibreGrid adds the AG Grid Enterprise feature set to the Community
+            LibreGrid adds an enterprise feature set to the AG Grid Community
             edition you already run — menus, grouping, pivot, server-side rows,
             charts, Excel export and more. No licence key. No fork. MIT licensed.
           </p>
@@ -381,8 +381,8 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
 
       <!-- Badge bar -->
       <div class="badge-bar">
-        <span class="badge-item"><mat-icon>check_circle</mat-icon> {{ PHASES.length }}/{{ PHASES.length }} phases shipped</span>
-        <span class="badge-item"><mat-icon>verified</mat-icon> v1.1.1 on npm</span>
+        <span class="badge-item"><mat-icon>check_circle</mat-icon> 27 enterprise features</span>
+        <span class="badge-item"><mat-icon>verified</mat-icon> v1.2.1 on npm</span>
         <span class="badge-item"><mat-icon>tag</mat-icon> ag-grid-community 36.1</span>
         <span class="badge-item"><mat-icon>lock_open</mat-icon> MIT licensed</span>
       </div>
