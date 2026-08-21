@@ -1,5 +1,15 @@
 # @libregrid/clipboard
 
+## 1.2.3
+
+### Patch Changes
+
+- cc24da1: minor bug fixes
+- Updated dependencies [cc24da1]
+  - @libregrid/cell-selection@1.2.3
+  - @libregrid/core@1.2.3
+  - @libregrid/menu@1.2.3
+
 ## 1.2.2
 
 ### Patch Changes

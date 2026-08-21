@@ -1,5 +1,11 @@
 # @libregrid/core
 
+## 1.2.3
+
+### Patch Changes
+
+- cc24da1: minor bug fixes
+
 ## 1.2.2
 
 ## 1.2.1

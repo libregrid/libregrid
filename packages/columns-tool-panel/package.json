@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/columns-tool-panel",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Columns tool panel for AG Grid Community — part of LibreGrid",
   "keywords": ["libregrid", "ag-grid", "data-grid", "columns", "tool-panel"],
   "homepage": "https://github.com/libregrid/libregrid#readme",
@@ -15,8 +15,8 @@
   "sideEffects": false,
   "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
   "dependencies": {
-    "@libregrid/core": "^1.2.2",
-    "@libregrid/side-bar": "^1.2.2"
+    "@libregrid/core": "^1.2.3",
+    "@libregrid/side-bar": "^1.2.3"
   },
   "files": ["dist", "LICENSE", "NOTICE", "README.md"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
