@@ -1,5 +1,74 @@
 # @libregrid/all
 
+## 1.2.0
+
+### Minor Changes
+
+- f4d6a72: Add `@libregrid/batch-edit`: batch editing for Community grids. The module registers the four `GridApi` functions the Community build reserves (`startBatchEdit`, `commitBatchEdit`, `cancelBatchEdit`, `isBatchEditing`) on top of the Community edit service, so staged cell edits can be committed in one pass or cancelled — plus the staged-edit highlight styles.
+- 3a7c86d: A4: cell and full-width-row notes (Enterprise `Notes` module parity).
+
+  - **New `@libregrid/notes`** — the AG Grid Community notes feature. Provide a `notesDataSource` (or a `FullWidthNotesDataSource` with `supportsFullWidthRows: true`) and register `NotesModule`. Notes open on hover (`noteTrigger: 'hover'`, `noteShowDelay`, `noteHideDelay`), on click (`noteTrigger: 'click'`), or with `Shift+F2`. Noted cells and full-width rows are marked with the `lgr-cell-has-note` class. The popup edits text only (metadata is rendered as provided), commits on close when changed, and honours `note.readOnly`. `colDef.suppressNoteActions` (boolean or callback) hides note interactions per column — suppressed cells with an existing note only offer _View Note_. `notesDataSource` can be set or cleared at runtime with `setGridOption`; the grid reacts without a redraw. Grid API: `getNote`, `setNote`, `refreshNotes` (the reserved Enterprise method names).
+  - **Context menu `note` item is now in the default menu** — `DEFAULT_CONTEXT_MENU_ITEMS` ends with a `note` entry. Without `@libregrid/notes` registered the factory resolves to nothing and the menu is unchanged (separator trimming); with it, cells gain _Add Note_ / _Edit Note_ + _Remove Note_ / _View Note_ (read-only) items.
+  - **`@libregrid/all`** re-exports the notes module.
+
+- 192f180: Calculated columns (gap-plan A2, Phase 18): read-only derived data columns with spreadsheet-style expressions. New `@libregrid/calculated-columns` package — the `calculatedColsSvc` + `formula` bean implementations over Community's v36.1.0 seams: bracket-reference expression engine with provided functions and formula error codes, dialog-created columns with anchor placement and Grid State persistence, menu contributions, edit highlighting and the four `calculatedColumn*` events. The accessible add/edit modal includes a visual token canvas, draggable and keyboard-insertable Columns/Functions/Operators/Values palettes, movable and removable expression pills, inline literal editing, a synchronized raw formula field, and live/deferred apply modes. `@libregrid/menu` gains the `calculatedColumn` (column menu) and `calculatedColumnRemove` (context menu) default stubs.
+- 3a7c86d: P0 enterprise-parity batch: Row Numbers, live column/group header editing, Show Values As, SSRM row grouping, and the group-header column menu.
+
+  - **New `@libregrid/row-numbers`** — the AG Grid Community row-number column with 1-based numbering, RTL lock, and the row-height resizer handle. Clicking a row number selects the whole visible row (the press is consumed by the row-numbers feature and recorded through the cell-selection range service).
+  - **New `@libregrid/column-header-edit`** — inline `headerName` editing for `headerNameEditable` columns and column groups, in `live` (Enter commits) and `deferred` (Apply commits) modes, exposed as the `Edit Column Name` column-menu item.
+  - **Column menu now accepts a column-group target** — right-clicking a group header opens the column menu with the `AgProvidedColumnGroup` as the menu target. Per-column items (sort, auto-size this column, column chooser, column filter) are hidden for group targets; grid-level items (auto-size all, reset columns) and group-capable items (edit column name) remain. `MenuActionParams.column` is widened to `Column | AgProvidedColumnGroup | null`.
+  - **Show Values As** — `colDef.showValuesAsDef`, built-in number/currency/percent/scientific/bytes modes, grid-wide `defaultColDef` merging, the `Show Values As` column-menu item, and `setColumnShowValuesAs`/`getColumnsShowValuesAs` API.
+  - **Server-Side Row Model row grouping** — row group/pivot support for SSRM (group by, aggregation, expand/contract, value-agg menu) so `@libregrid/row-grouping` works across row models.
+  - **Cell selection** — the row-numbers feature owns the press on its column; a cell drag never starts from a row-number cell, so a row-number click selects the row instead of a single cell.
+  - **`@libregrid/all`** re-exports the two new modules.
+
+- 3a7c86d: Phase 16 — server-side selection for SSRM grids over very large data sets.
+
+  - **New `@libregrid/server-side-selection`** — durable, spec-based row selection for AG Grid Community server-side row model grids. Registers a `selectionSvc` bean for SSRM (Community's `RowSelectionModule` gates its service to the client-side/infinite/viewport row models, so SSRM grids previously had no selection service and every selection gesture was a silent no-op). Adds the compact selection spec (`all` filter terms, `group` route terms, server-only exceptions/additions) captured from UI and API selection, debounced into small `applyOps` batches, and hydrated back onto the datasource cache via `resolveSelected`. Includes the footer (per-page + total counts, spec-level Select All / Deselect All, and the R6 "Show All Selected" selection view) and tab-isolated `{gridId}:{tabId}` identity.
+  - **`@libregrid/server-side-row-model`** — the row model now keeps a per-node selection working copy: `getSsrmRoute` exposes a node's group route, `forEachNodeAfterFilter` walks the loaded-and-filtered set, node-creation sites call `updateRowSelectable`, `refreshStore` preserves and reapplies the working copy, `setDatasource` resets it, and evicted blocks purge their selection state so it is re-resolved from the spec on reload.
+  - **`@libregrid/all`** re-exports the new module, services, and types.
+
+  Selection semantics: terms accumulate (R1), survive filter changes (R2), exceptions override terms (R3), Select All (filtered) clears in-scope exceptions then appends the term (R4), groups are atomic both directions (R5), the selection view is `selected(spec) ∧ filterModel` with filters untouched (R6), and the header checkbox is viewport-only (R7). See `docs/phases/phase-16-server-side-selection.md`.
+
+### Patch Changes
+
+- Updated dependencies [f4d6a72]
+- Updated dependencies [3a7c86d]
+- Updated dependencies [02eb07e]
+- Updated dependencies [192f180]
+- Updated dependencies [c4c47ae]
+- Updated dependencies [3a7c86d]
+- Updated dependencies [3a7c86d]
+  - @libregrid/batch-edit@1.2.0
+  - @libregrid/notes@1.2.0
+  - @libregrid/menu@1.2.0
+  - @libregrid/advanced-filter@1.2.0
+  - @libregrid/row-numbers@1.2.0
+  - @libregrid/column-header-edit@1.2.0
+  - @libregrid/cell-selection@1.2.0
+  - @libregrid/row-grouping@1.2.0
+  - @libregrid/server-side-selection@1.2.0
+  - @libregrid/server-side-row-model@1.2.0
+  - @libregrid/angular@1.2.0
+  - @libregrid/clipboard@1.2.0
+  - @libregrid/columns-tool-panel@1.2.0
+  - @libregrid/core@1.2.0
+  - @libregrid/excel-export@1.2.0
+  - @libregrid/filters-tool-panel@1.2.0
+  - @libregrid/find@1.2.0
+  - @libregrid/integrated-charts@1.2.0
+  - @libregrid/master-detail@1.2.0
+  - @libregrid/material@1.2.0
+  - @libregrid/multi-filter@1.2.0
+  - @libregrid/pivot@1.2.0
+  - @libregrid/rich-select@1.2.0
+  - @libregrid/set-filter@1.2.0
+  - @libregrid/side-bar@1.2.0
+  - @libregrid/sparklines@1.2.0
+  - @libregrid/status-bar@1.2.0
+  - @libregrid/tree-data@1.2.0
+  - @libregrid/viewport-row-model@1.2.0
+
 ## 1.1.1
 
 ### Patch Changes

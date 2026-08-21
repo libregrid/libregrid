@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/core",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Shared infrastructure for LibreGrid — enterprise-grade features for AG Grid Community",
   "keywords": ["libregrid", "ag-grid", "data-grid"],
   "homepage": "https://github.com/libregrid/libregrid#readme",

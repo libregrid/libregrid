@@ -1,5 +1,15 @@
 # @libregrid/advanced-filter
 
+## 1.2.0
+
+### Minor Changes
+
+- 02eb07e: Redesign the Advanced Filter Builder as an accessible, responsive modal with readable condition rows, nested All/Any groups, type-aware value inputs, drag and keyboard reordering, and a synchronized raw-expression editor that preserves invalid text for correction.
+
+### Patch Changes
+
+- @libregrid/core@1.2.0
+
 ## 1.1.1
 
 ### Patch Changes
