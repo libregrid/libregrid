@@ -65,6 +65,17 @@ export const sideBarCss = `
   position: relative;
 }
 
+/* The Material renderer reuses .lgr-side-bar-button on an MDC button. MDC's
+ * min-width (64px) and horizontal padding are wider than the 32px strip, so
+ * the button overflows it and the icon and label are pushed out of view.
+ * Parent-qualify + double the class to win over the MDC selectors. */
+.lgr-side-bar-buttons .lgr-side-bar-button.lgr-side-bar-button {
+  min-width: 0;
+  width: 100%;
+  height: auto;
+  padding: calc(var(--ag-grid-size, 8px) * 2) 0;
+}
+
 .lgr-side-bar-button:hover {
   background: var(--ag-icon-button-hover-background-color, color-mix(in srgb, transparent, var(--ag-foreground-color, #181d1f) 10%));
 }
