@@ -38,6 +38,116 @@ describe('separators', () => {
   });
 });
 
+describe('submenus survive the menu moving under a stationary pointer', () => {
+  /**
+   * Menus are position:absolute, so a page scroll, a smooth-scroll animation or
+   * a late popup re-position slides them out from under a stationary cursor.
+   * The browser then fires mouseleave/mouseenter with no user intent behind
+   * them. Before this guard the submenu closed the instant you hovered it, with
+   * no way to reopen — and only sometimes, whenever something moved the menu.
+   */
+  function pinMenuAt(el: HTMLElement, top: number): void {
+    el.getBoundingClientRect = () =>
+      ({
+        top,
+        left: 100,
+        right: 100,
+        bottom: top,
+        width: 0,
+        height: 0,
+        x: 100,
+        y: top,
+        toJSON: () => ({}),
+      }) as DOMRect;
+  }
+
+  const pointerMove = (): void => {
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 10, clientY: 10 }));
+  };
+
+  it('keeps the submenu open when the row leaves because the menu moved', () => {
+    const { menu } = renderMenu([{ name: 'Parent', subMenu: [{ name: 'Child' }] }]);
+    const root = menu.element;
+    pinMenuAt(root, 100);
+    pointerMove();
+
+    const parent = root.querySelector<HTMLElement>('.lgr-menu-item');
+    parent?.dispatchEvent(new MouseEvent('mouseenter'));
+    vi.advanceTimersByTime(150);
+    expect(root.querySelector('.lgr-sub-menu')).not.toBeNull();
+
+    // The document scrolls: the menu shifts and the browser fires mouseleave
+    // even though the pointer never moved.
+    pinMenuAt(root, 20);
+    parent?.dispatchEvent(new MouseEvent('mouseleave'));
+    vi.advanceTimersByTime(150);
+
+    expect(root.querySelector('.lgr-sub-menu')).not.toBeNull();
+    menu.destroy();
+  });
+
+  it('still opens the submenu when the menu moves during the open delay', () => {
+    // The open is scheduled on mouseenter and cancelled on mouseleave, so a
+    // menu that moves inside that window would never show a submenu at all.
+    const { menu } = renderMenu([{ name: 'Parent', subMenu: [{ name: 'Child' }] }]);
+    const root = menu.element;
+    pinMenuAt(root, 100);
+    pointerMove();
+
+    const parent = root.querySelector<HTMLElement>('.lgr-menu-item');
+    parent?.dispatchEvent(new MouseEvent('mouseenter'));
+    pinMenuAt(root, 20);
+    parent?.dispatchEvent(new MouseEvent('mouseleave'));
+    vi.advanceTimersByTime(150);
+
+    expect(root.querySelector('.lgr-sub-menu')).not.toBeNull();
+    menu.destroy();
+  });
+
+  it('does not let a plain row that slid under the pointer close the submenu', () => {
+    const { menu } = renderMenu([
+      { name: 'Parent', subMenu: [{ name: 'Child' }] },
+      { name: 'Plain' },
+    ]);
+    const root = menu.element;
+    pinMenuAt(root, 100);
+    pointerMove();
+
+    const rows = Array.from(root.querySelectorAll<HTMLElement>('.lgr-menu-item'));
+    rows[0]?.dispatchEvent(new MouseEvent('mouseenter'));
+    vi.advanceTimersByTime(150);
+    expect(root.querySelector('.lgr-sub-menu')).not.toBeNull();
+
+    // The menu moves and the plain row lands under the cursor on its own.
+    pinMenuAt(root, 20);
+    rows[1]?.dispatchEvent(new MouseEvent('mouseenter'));
+    vi.advanceTimersByTime(150);
+
+    expect(root.querySelector('.lgr-sub-menu')).not.toBeNull();
+    menu.destroy();
+  });
+
+  it('still closes on a genuine pointer-driven leave', () => {
+    const { menu } = renderMenu([{ name: 'Parent', subMenu: [{ name: 'Child' }] }]);
+    const root = menu.element;
+    pinMenuAt(root, 100);
+    pointerMove();
+
+    const parent = root.querySelector<HTMLElement>('.lgr-menu-item');
+    parent?.dispatchEvent(new MouseEvent('mouseenter'));
+    vi.advanceTimersByTime(150);
+    expect(root.querySelector('.lgr-sub-menu')).not.toBeNull();
+
+    // The menu has NOT moved; the pointer really did leave.
+    pointerMove();
+    parent?.dispatchEvent(new MouseEvent('mouseleave'));
+    vi.advanceTimersByTime(150);
+
+    expect(root.querySelector('.lgr-sub-menu')).toBeNull();
+    menu.destroy();
+  });
+});
+
 describe('submenus', () => {
   it('open on hover inside the menu element and close after the grace delay', () => {
     const { menu } = renderMenu([{ name: 'Parent', subMenu: [{ name: 'Child' }] }]);

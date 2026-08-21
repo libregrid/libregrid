@@ -101,6 +101,28 @@ export function createMenuDom(
   let openSubmenu: { element: HTMLElement; parentRow: HTMLElement; dom: MenuDom } | null = null;
   let openTimer: number | undefined;
   let closeTimer: number | undefined;
+  // Menus are position:absolute (see menuCss), so anything that moves the
+  // document — a page scroll, a smooth-scroll animation, a late popup
+  // re-position — slides the menu out from under a stationary pointer. The
+  // browser then fires mouseleave/mouseenter with no user intent behind them,
+  // and the submenu guards would destroy it with no way to reopen: the submenu
+  // appears to close the instant you hover it, but only sometimes. Tell the two
+  // apart by snapshotting the menu's position on every real pointer move; if
+  // the menu has shifted since, the enter/leave came from the menu moving.
+  let rootRectAtPointerMove: { top: number; left: number } | null = null;
+  const snapshotRootPosition = (): void => {
+    const rect = root.getBoundingClientRect();
+    rootRectAtPointerMove = { top: rect.top, left: rect.left };
+  };
+  const menuMovedSincePointerMove = (): boolean => {
+    if (!rootRectAtPointerMove) return false;
+    const rect = root.getBoundingClientRect();
+    return (
+      Math.abs(rect.top - rootRectAtPointerMove.top) > 1 ||
+      Math.abs(rect.left - rootRectAtPointerMove.left) > 1
+    );
+  };
+  document.addEventListener('mousemove', snapshotRootPosition, true);
   let typeahead = '';
   let typeaheadTimer: number | undefined;
   let destroyed = false;
@@ -158,15 +180,19 @@ export function createMenuDom(
   };
 
   const scheduleSubmenuCloseGuards = (submenuEl: HTMLElement, row: HTMLElement, submenu: MenuDom): void => {
-    row.addEventListener('mouseleave', () => {
+    const scheduleClose = (): void => {
+      // A leave caused by the menu moving is not a request to close. The
+      // snapshot is deliberately NOT refreshed here: only real pointer movement
+      // may refresh it, or the row's own mouseleave listener (registered first)
+      // would clear the flag and this one would close anyway.
+      if (menuMovedSincePointerMove()) return;
       closeTimer = window.setTimeout(() => closeSubmenu(), SUBMENU_CLOSE_DELAY_MS);
-    });
+    };
+    row.addEventListener('mouseleave', scheduleClose);
     submenuEl.addEventListener('mouseenter', () => {
       if (closeTimer !== undefined) window.clearTimeout(closeTimer);
     });
-    submenuEl.addEventListener('mouseleave', () => {
-      closeTimer = window.setTimeout(() => closeSubmenu(), SUBMENU_CLOSE_DELAY_MS);
-    });
+    submenuEl.addEventListener('mouseleave', scheduleClose);
     // Keep the submenu DOM in sync with the parent menu's lifecycle.
     const submenuDestroy = submenu.destroy.bind(submenu);
     submenu.destroy = () => {
@@ -312,12 +338,18 @@ export function createMenuDom(
         if (openSubmenu?.parentRow !== row) {
           openTimer = window.setTimeout(() => openSubmenuFor(row, item), SUBMENU_OPEN_DELAY_MS);
         }
-      } else if (openSubmenu) {
+      } else if (openSubmenu && !menuMovedSincePointerMove()) {
         // Hovering a plain item closes an open submenu after the grace delay.
+        // Skipped when the menu just moved: the pointer did not travel here,
+        // the row slid under it.
         closeTimer = window.setTimeout(() => closeSubmenu(), SUBMENU_CLOSE_DELAY_MS);
       }
     });
     row.addEventListener('mouseleave', () => {
+      // The menu sliding out from under a stationary pointer must not cancel a
+      // scheduled submenu open, or hovering a parent row while the menu moves
+      // silently never opens its submenu at all.
+      if (menuMovedSincePointerMove()) return;
       if (openTimer !== undefined) window.clearTimeout(openTimer);
       // Keep the row highlighted while its submenu is open.
       if (openSubmenu?.parentRow === row) return;
@@ -586,6 +618,7 @@ export function createMenuDom(
       if (openTimer !== undefined) window.clearTimeout(openTimer);
       if (closeTimer !== undefined) window.clearTimeout(closeTimer);
       if (typeaheadTimer !== undefined) window.clearTimeout(typeaheadTimer);
+      document.removeEventListener('mousemove', snapshotRootPosition, true);
       closeSubmenu();
       for (const instance of customInstances) {
         instance.destroy?.();
