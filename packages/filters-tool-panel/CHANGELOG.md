@@ -1,5 +1,13 @@
 # @libregrid/filters-tool-panel
 
+## 1.2.0
+
+### Patch Changes
+
+- @libregrid/core@1.2.0
+  - @libregrid/set-filter@1.2.0
+  - @libregrid/side-bar@1.2.0
+
 ## 1.1.1
 
 ### Patch Changes

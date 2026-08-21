@@ -1,5 +1,16 @@
 # @libregrid/excel-export
 
+## 1.2.0
+
+### Patch Changes
+
+- Updated dependencies [3a7c86d]
+- Updated dependencies [192f180]
+- Updated dependencies [c4c47ae]
+- Updated dependencies [3a7c86d]
+  - @libregrid/menu@1.2.0
+  - @libregrid/core@1.2.0
+
 ## 1.1.1
 
 ### Patch Changes
