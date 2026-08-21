@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/source",
-  "version": "0.1.0",
+  "version": "1.2.2",
   "private": true,
   "license": "MIT",
   "description": "Enterprise-grade features for AG Grid Community",
@@ -28,7 +28,8 @@
     "check:budgets": "node tools/bundle-budgets/check.mjs && node tools/bundle-budgets/consumer-fixtures.mjs",
     "check:contamination": "node tools/check-contamination/bin.mjs",
     "check:versions": "node tools/version/check.mjs",
-    "gen:version": "node tools/version/generate.mjs",
+    "gen:version": "node tools/version/generate.mjs && node tools/version/workspace.mjs generate",
+    "sync:version": "node tools/version/workspace.mjs sync",
     "release": "npm run gen:version && npm run verify && npx changeset publish",
     "docs": "npm -w apps/docs run dev",
     "webapp:build": "npm -w apps/docs run build",

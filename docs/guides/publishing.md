@@ -19,18 +19,20 @@ in the project [README](../../README.md).
 
 ## Release flow
 
-Changesets drives the [Release workflow](../../.github/workflows/release.yml).
-It has two outcomes:
+Releases are manual and batched — see
+[release-versioning-plan.md](../design/release-versioning-plan.md). Merging a
+PR never publishes; changesets accumulate until you release.
 
-1. When release changesets exist, it opens a **Version Packages** pull request.
-   Review it, including the generated changelogs and package versions. Then
-   merge it.
-2. When no changesets remain, a successful CI run on `main` runs the release
-   checks. It publishes every unpublished package with the `latest` dist-tag.
+To release:
 
-To run the release workflow manually, open **GitHub → Actions → Release →
-Run workflow** and select `main`. Merging the version pull request starts CI.
-After CI succeeds, the workflow publishes the packages.
+1. Open **GitHub → Actions → Release → Run workflow** and select `main`.
+2. Changesets opens (or updates) a **Version Packages** pull request with the
+   lockstep bump, updated changelogs, synced root/docs manifests, and the
+   regenerated docs version badge. Review it, then merge.
+3. Run the Release workflow again on `main`. It runs the release checks,
+   publishes every unpublished package with the `latest` dist-tag, creates the
+   `vX.Y.Z` tag, and creates a GitHub Release with notes aggregated from the
+   per-package CHANGELOG sections.
 
 The workflow runs `npm run verify` before publishing. It uses
 `NPM_CONFIG_PROVENANCE=true`. Changesets supplies `--access public` from the
