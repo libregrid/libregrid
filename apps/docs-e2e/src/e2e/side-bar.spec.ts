@@ -125,6 +125,30 @@ test.describe('Side Bar', () => {
     await expect(page.locator('.lgr-side-bar-panel')).toHaveAttribute('role', 'tabpanel');
   });
 
+  test('sidebar buttons show labels and icons inside the strip', async ({ page }) => {
+    const strip = page.locator('.lgr-side-bar-buttons');
+    const stripBox = await strip.boundingBox();
+    expect(stripBox).not.toBeNull();
+
+    for (const name of ['Columns', 'Filters']) {
+      const button = page.getByRole('tab', { name, exact: true });
+      const label = button.locator('.lgr-side-bar-button-label');
+      await expect(label).toBeVisible();
+      await expect(label).toHaveText(name);
+
+      // MDC button metrics must not push the label outside the 32px strip.
+      const labelBox = await label.boundingBox();
+      expect(labelBox).not.toBeNull();
+      expect(labelBox!.x).toBeGreaterThanOrEqual(stripBox!.x - 1);
+      expect(labelBox!.x + labelBox!.width).toBeLessThanOrEqual(
+        stripBox!.x + stripBox!.width + 1,
+      );
+
+      // Angular's innerHTML sanitizer must not strip the panel icon.
+      await expect(button.locator('.lgr-side-bar-button-icon svg')).toBeVisible();
+    }
+  });
+
   test('active panel button exposes aria-expanded', async ({ page }) => {
     const panelButton = page.getByRole('tab', { name: 'Columns' });
     await expect(panelButton).toHaveAttribute('aria-expanded', 'true');

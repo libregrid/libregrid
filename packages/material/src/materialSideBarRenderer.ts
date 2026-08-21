@@ -2,12 +2,14 @@ import '@angular/compiler';
 import {
   Component,
   Input,
+  inject,
   type ApplicationRef,
   type ComponentRef,
   type EnvironmentInjector,
   type OnChanges,
 } from '@angular/core';
 import { DomPortalOutlet, ComponentPortal } from '@angular/cdk/portal';
+import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import { MatButtonModule } from '@angular/material/button';
 import { iconSvg } from '@libregrid/core';
 import {
@@ -45,6 +47,9 @@ class MaterialSideBarButtonsComponent implements OnChanges {
   @Input({ required: true }) request!: SideBarRenderRequest;
   panelDefs: SideBarRenderRequest['panelDefs'] = [];
   openedPanelId: string | null = null;
+  // Angular strips <svg> from innerHTML bindings; our icon paths are a
+  // fixed in-repo set, so bypassing the sanitizer is safe.
+  private readonly sanitizer = inject(DomSanitizer);
 
   ngOnChanges(): void {
     this.panelDefs = this.request.panelDefs;
@@ -59,8 +64,9 @@ class MaterialSideBarButtonsComponent implements OnChanges {
     return panel.labelDefault || panel.labelKey || panel.id;
   }
 
-  icon(panel: SideBarRenderRequest['panelDefs'][number]): string | null {
-    return panel.iconKey ? iconSvg(panel.iconKey as never) : null;
+  icon(panel: SideBarRenderRequest['panelDefs'][number]): SafeHtml | null {
+    const svg = panel.iconKey ? iconSvg(panel.iconKey as never) : null;
+    return svg ? this.sanitizer.bypassSecurityTrustHtml(svg) : null;
   }
 
   buttonId(panel: SideBarRenderRequest['panelDefs'][number]): string {

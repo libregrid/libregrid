@@ -73,6 +73,19 @@ describe('Material side-bar renderer', () => {
     expect(host.querySelector('button')?.getAttribute('aria-expanded')).toBe('false');
   });
 
+  it('renders the panel icon svg — Angular must not sanitize it away', () => {
+    const host = document.createElement('div');
+    const renderer = createMaterialSideBarRenderer(
+      TestBed.inject(ApplicationRef),
+      TestBed.inject(EnvironmentInjector),
+    );
+
+    renderer.refresh(request(host));
+
+    expect(host.querySelector('.lgr-side-bar-button-icon svg')).not.toBeNull();
+    expect(host.querySelector('.lgr-side-bar-button-label')?.textContent).toBe('Columns');
+  });
+
   it('matches the native tab and tabpanel relationship attributes', () => {
     const host = document.createElement('div');
     const renderer = createMaterialSideBarRenderer(
