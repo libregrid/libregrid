@@ -68,7 +68,9 @@
   version.
 - `tools/version/workspace.mjs` — reads the lockstep version from
   `packages/core/package.json`; `sync` writes it into the root and docs
-  manifests; `generate` writes `apps/docs/src/version.ts`.
+  manifests (and maintains a minimal CHANGELOG.md entry in each, which
+  changesets/action requires for every package whose version changed);
+  `generate` writes `apps/docs/src/version.ts`.
 - `tools/version/check.mjs` — extended to fail on docs-version or manifest
   drift.
 - `tools/version/release-notes.mjs` — aggregates the `## X.Y.Z` sections from

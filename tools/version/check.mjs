@@ -66,12 +66,20 @@ if (distinctVersions.size > 1) {
 }
 
 // 3. Private manifests mirror the lockstep version (plan: one project version).
+//    Each also needs a CHANGELOG.md — changesets/action reads one for every
+//    package whose version changed when it builds the Version Packages PR body.
 const projectVersion = libregridVersion(root);
 for (const rel of SYNCED_MANIFESTS) {
   const manifest = JSON.parse(readFileSync(join(root, rel), 'utf8'));
   if (manifest.version !== projectVersion) {
     problems.push(
       `${rel} has version '${manifest.version}' but the lockstep version is '${projectVersion}' — run \`node tools/version/workspace.mjs sync\``,
+    );
+  }
+  const changelog = join(dirname(join(root, rel)), 'CHANGELOG.md');
+  if (!existsSync(changelog)) {
+    problems.push(
+      `${rel} has no CHANGELOG.md — the release workflow will fail reading it. Run \`node tools/version/workspace.mjs sync\``,
     );
   }
 }
