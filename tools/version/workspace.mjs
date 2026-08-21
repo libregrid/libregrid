@@ -8,7 +8,7 @@
  *   node tools/version/workspace.mjs sync      # bump root + docs manifests
  *   node tools/version/workspace.mjs generate  # write apps/docs/src/version.ts
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,6 +24,29 @@ export function libregridVersion(rootDir = root) {
   return pkg.version;
 }
 
+/**
+ * changesets/action treats every package whose version field changed during
+ * the version command as released and reads its CHANGELOG.md for the version
+ * PR body. The synced private manifests therefore each need a changelog entry.
+ */
+function ensureChangelogEntry(rootDir, manifestRel, version) {
+  const manifestDir = dirname(join(rootDir, manifestRel));
+  const changelogPath = join(manifestDir, 'CHANGELOG.md');
+  const name = JSON.parse(readFileSync(join(rootDir, manifestRel), 'utf8')).name;
+  const entry = `## ${version}\n\nVersion synced with the lockstep release.`;
+  if (!existsSync(changelogPath)) {
+    writeFileSync(changelogPath, `# ${name}\n\n${entry}\n`);
+    return true;
+  }
+  const contents = readFileSync(changelogPath, 'utf8');
+  if (contents.includes(`## ${version}`)) return false;
+  const lines = contents.split('\n');
+  const titleIndex = lines.findIndex((line) => line.startsWith('# '));
+  lines.splice(titleIndex + 1, 0, '', entry);
+  writeFileSync(changelogPath, lines.join('\n'));
+  return true;
+}
+
 /** Writes the lockstep version into the private workspace manifests. */
 export function syncManifests(rootDir = root) {
   const version = libregridVersion(rootDir);
@@ -36,6 +59,9 @@ export function syncManifests(rootDir = root) {
     if (updated !== contents) {
       writeFileSync(path, updated);
       written.push(rel);
+    }
+    if (ensureChangelogEntry(rootDir, rel, version)) {
+      written.push(join(dirname(rel), 'CHANGELOG.md'));
     }
   }
   return { version, written };
