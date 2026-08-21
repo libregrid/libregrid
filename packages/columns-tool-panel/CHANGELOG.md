@@ -1,5 +1,12 @@
 # @libregrid/columns-tool-panel
 
+## 1.2.2
+
+### Patch Changes
+
+- @libregrid/core@1.2.2
+  - @libregrid/side-bar@1.2.2
+
 ## 1.2.1
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @libregrid/integrated-charts
 
+## 1.2.2
+
+### Patch Changes
+
+- Updated dependencies [982d1cd]
+  - @libregrid/menu@1.2.2
+  - @libregrid/cell-selection@1.2.2
+  - @libregrid/core@1.2.2
+
 ## 1.2.1
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @libregrid/tree-data
 
+## 1.2.2
+
+### Patch Changes
+
+- @libregrid/core@1.2.2
+  - @libregrid/row-grouping@1.2.2
+
 ## 1.2.1
 
 ### Patch Changes

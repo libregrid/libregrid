@@ -1,5 +1,12 @@
 # @libregrid/status-bar
 
+## 1.2.2
+
+### Patch Changes
+
+- @libregrid/cell-selection@1.2.2
+  - @libregrid/core@1.2.2
+
 ## 1.2.1
 
 ### Patch Changes
