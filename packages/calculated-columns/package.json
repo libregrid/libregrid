@@ -15,7 +15,7 @@
   "sideEffects": false,
   "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
   "dependencies": {
-    "@libregrid/core": "^1.2.0",
+    "@libregrid/core": "^1.2.1",
     "@libregrid/menu": "^1.2.0"
   },
   "files": ["dist", "LICENSE", "NOTICE", "README.md"],
