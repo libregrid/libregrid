@@ -1,5 +1,15 @@
 # @libregrid/side-bar
 
+## 1.2.3
+
+### Patch Changes
+
+- cc24da1: minor bug fixes
+- df929a8: Fix sidebar buttons rendering without labels or icons when the Material renderer is installed. MDC's button `min-width` (64px) and horizontal padding overrode the 32px strip, pushing the icon and label out of view; and Angular's `innerHTML` sanitizer stripped the panel icon SVG. Buttons now fit the strip and the icon renders.
+- 9c8ce41: Fix sidebar buttons rendering the label above the icon when the Material renderer is installed. Angular Material wraps the button's projected content in `.mdc-button__label` (display: block), so the icon and label stopped being flex children of the column button and shared a baseline. The wrapper is now a flex column, restoring the icon-over-label stack.
+- Updated dependencies [cc24da1]
+  - @libregrid/core@1.2.3
+
 ## 1.2.2
 
 ### Patch Changes

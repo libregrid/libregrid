@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/toolbar",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Quick Access Toolbar for AG Grid Community — part of LibreGrid",
   "keywords": [
     "libregrid",
@@ -24,7 +24,7 @@
     "ag-grid-community": ">=36.1.0 <37"
   },
   "dependencies": {
-    "@libregrid/core": "^1.2.2"
+    "@libregrid/core": "^1.2.3"
   },
   "files": [
     "dist",

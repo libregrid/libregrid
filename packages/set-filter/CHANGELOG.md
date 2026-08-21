@@ -1,5 +1,13 @@
 # @libregrid/set-filter
 
+## 1.2.3
+
+### Patch Changes
+
+- cc24da1: minor bug fixes
+- Updated dependencies [cc24da1]
+  - @libregrid/core@1.2.3
+
 ## 1.2.2
 
 ### Patch Changes

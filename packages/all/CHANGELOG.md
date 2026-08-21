@@ -1,5 +1,43 @@
 # @libregrid/all
 
+## 1.2.3
+
+### Patch Changes
+
+- cc24da1: minor bug fixes
+- Updated dependencies [cc24da1]
+- Updated dependencies [df929a8]
+- Updated dependencies [9c8ce41]
+  - @libregrid/advanced-filter@1.2.3
+  - @libregrid/angular@1.2.3
+  - @libregrid/batch-edit@1.2.3
+  - @libregrid/cell-selection@1.2.3
+  - @libregrid/clipboard@1.2.3
+  - @libregrid/column-header-edit@1.2.3
+  - @libregrid/columns-tool-panel@1.2.3
+  - @libregrid/core@1.2.3
+  - @libregrid/excel-export@1.2.3
+  - @libregrid/filters-tool-panel@1.2.3
+  - @libregrid/find@1.2.3
+  - @libregrid/integrated-charts@1.2.3
+  - @libregrid/master-detail@1.2.3
+  - @libregrid/material@1.2.3
+  - @libregrid/menu@1.2.3
+  - @libregrid/multi-filter@1.2.3
+  - @libregrid/notes@1.2.3
+  - @libregrid/pivot@1.2.3
+  - @libregrid/rich-select@1.2.3
+  - @libregrid/row-grouping@1.2.3
+  - @libregrid/row-numbers@1.2.3
+  - @libregrid/server-side-row-model@1.2.3
+  - @libregrid/server-side-selection@1.2.3
+  - @libregrid/set-filter@1.2.3
+  - @libregrid/side-bar@1.2.3
+  - @libregrid/sparklines@1.2.3
+  - @libregrid/status-bar@1.2.3
+  - @libregrid/tree-data@1.2.3
+  - @libregrid/viewport-row-model@1.2.3
+
 ## 1.2.2
 
 ### Patch Changes
