@@ -32,19 +32,25 @@ jobs:
 
       - run: npm ci
 
+      # v2.1.1+: detects published packages via the CLI's CHANGESETS_OUTPUT
+      # file — action v1 parsed stdout for "New tag:" lines, which the
+      # changesets v3 CLI no longer prints, silently disabling the published
+      # output and its own release creation.
       - name: Create version PR or publish packages
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v2.1.1
         with:
           # Must be a single command — the action does not run this through a
           # shell, so && chains arrive as literal args. version:packages bumps
           # the lockstep versions, then mirrors them into the private manifests
           # (root + docs) and regenerates the docs version badge, so the
           # Version Packages PR carries every version field in one commit.
-          version: npm run version:packages
-          publish: npm run release
-          commit: 'chore: version packages'
-          title: 'chore: version packages'
+          version-script: npm run version:packages
+          publish-script: npm run release
+          commit-message: 'chore: version packages'
+          pr-title: 'chore: version packages'
+          # One curated release per lockstep version, not 32 per-package ones.
+          create-github-releases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Required for the initial publish. Once every package has an npm
@@ -54,18 +60,25 @@ jobs:
           # provenance attestations, including for a package's first release.
           NPM_CONFIG_PROVENANCE: 'true'
 
-      # Changesets publishes to npm but creates no tag or GitHub Release.
-      # Every release must leave that trail so npm, the repo, and the docs
-      # badge can never drift apart silently again.
+      # Self-sufficient: creates the tag + GitHub Release whenever the lockstep
+      # version is on npm but has no tag yet — on a normal publish, on a
+      # re-run after a partial failure, and not at all during the version-PR
+      # stage (the bumped version is not on npm yet).
       - name: Tag and publish GitHub Release
-        if: steps.changesets.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=$(node -p "require('./packages/core/package.json').version")
+          if git ls-remote --tags origin "refs/tags/v$VERSION" | grep -q .; then
+            echo "Tag v$VERSION already exists — nothing to do."
+            exit 0
+          fi
+          if ! npm view "@libregrid/core@$VERSION" version > /dev/null 2>&1; then
+            echo "v$VERSION is not on npm yet (version PR stage) — skipping."
+            exit 0
+          fi
           node tools/version/release-notes.mjs > release-notes.md
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "v$VERSION"
-          git push origin "v$VERSION"
-          gh release create "v$VERSION" --title "LibreGrid v$VERSION" --notes-file release-notes.md
+          gh release create "v$VERSION" \
+            --target "$(git rev-parse HEAD)" \
+            --title "LibreGrid v$VERSION" \
+            --notes-file release-notes.md
