@@ -55,8 +55,9 @@ All spacing derives from one base unit, so our CSS must keep using `calc()` on
    selected, and disabled treatments.
 4. **Stable test selectors.** E2E specs assert `.lgr-menu-item`,
    `.lgr-context-menu`, `.lgr-side-bar`, `.lgr-tool-panel` and friends.
-   Enrich the DOM; keep those classes and roles (`role=menu`/`menuitem`,
-   `role=complementary`) intact.
+   `.lgr-context-menu` and `.lgr-column-menu` identify root menus only;
+   submenus use `.lgr-sub-menu`. Enrich the DOM; keep those classes and roles
+   (`role=menu`/`menuitem`, `role=complementary`) intact.
 5. **Icons, labels, hierarchy.** Enterprise surfaces lead with icons and
    label/value structure (status bar name-value pairs, iconed menu items,
    iconed side-bar buttons). Our pass adds that hierarchy, not just paint.

@@ -149,6 +149,27 @@ describe('submenus survive the menu moving under a stationary pointer', () => {
 });
 
 describe('submenus', () => {
+  it.each([
+    ['context', 'lgr-context-menu'],
+    ['column', 'lgr-column-menu'],
+  ] as const)('reserves .lgr-%s-menu for the root menu while a submenu is open', (kind, rootClass) => {
+    const menu = createMenuDom(
+      kind,
+      [{ name: 'Parent', subMenu: [{ name: 'Child' }] }],
+      params,
+      { closeAll: vi.fn() },
+    );
+    document.body.appendChild(menu.element);
+
+    menu.element.querySelector<HTMLElement>('.lgr-menu-item')?.click();
+
+    expect(menu.element.querySelector('.lgr-sub-menu')).not.toBeNull();
+    expect(document.querySelectorAll(`.${rootClass}`)).toHaveLength(1);
+    expect(menu.element.classList.contains(rootClass)).toBe(true);
+    expect(menu.element.querySelector('.lgr-sub-menu')?.classList.contains(rootClass)).toBe(false);
+    menu.destroy();
+  });
+
   it('open on hover inside the menu element and close after the grace delay', () => {
     const { menu } = renderMenu([{ name: 'Parent', subMenu: [{ name: 'Child' }] }]);
     const parent = menu.element.querySelector<HTMLElement>('.lgr-menu-item');
