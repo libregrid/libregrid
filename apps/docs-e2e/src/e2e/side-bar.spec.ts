@@ -145,7 +145,14 @@ test.describe('Side Bar', () => {
       );
 
       // Angular's innerHTML sanitizer must not strip the panel icon.
-      await expect(button.locator('.lgr-side-bar-button-icon svg')).toBeVisible();
+      const icon = button.locator('.lgr-side-bar-button-icon svg');
+      await expect(icon).toBeVisible();
+
+      // Material's .mdc-button__label wrapper must not break the
+      // icon-over-label stack.
+      const iconBox = await icon.boundingBox();
+      expect(iconBox).not.toBeNull();
+      expect(iconBox!.y).toBeLessThan(labelBox!.y);
     }
   });
 
