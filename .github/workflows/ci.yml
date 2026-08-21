@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# Superseded PR runs are pointless — cancel them. Pushes to main are never
+# cancelled: release.yml chains off this workflow's `workflow_run` completion,
+# so cancelling a main run would silently break the release trigger.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 # Contamination job runs first and blocks every other job.
 # See docs/reference/guardrails.md G1 and docs/adr/0004-contamination-controls.md.
 jobs:
@@ -20,9 +27,10 @@ jobs:
   # tree, so re-running the full browser matrix on every main push (and again
   # on the version PR) wastes ~20 minutes three times per change.
   detect-changes:
+    # ADR 0004: contamination runs first and blocks every other job.
+    needs: contamination
     runs-on: ubuntu-latest
     outputs:
-      docs_only: ${{ steps.check.outputs.docs_only }}
       skip_e2e: ${{ steps.check.outputs.skip_e2e }}
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +46,6 @@ jobs:
           # Push to main: PR already ran e2e. Release only needs lint-test-build green.
           if [ "$EVENT_NAME" = "push" ]; then
             echo "push to main — skip e2e/phase-gates (covered by the merged PR)."
-            echo "docs_only=false" >> "$GITHUB_OUTPUT"
             echo "skip_e2e=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -46,14 +53,12 @@ jobs:
           # Changesets version PR: package.json + CHANGELOG only. No UI change.
           if [ "$HEAD_REF" = "changeset-release/main" ]; then
             echo "changeset-release/main — skip e2e/phase-gates."
-            echo "docs_only=false" >> "$GITHUB_OUTPUT"
             echo "skip_e2e=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
             echo "No usable base commit (new branch or first push) — full CI."
-            echo "docs_only=false" >> "$GITHUB_OUTPUT"
             echo "skip_e2e=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -65,7 +70,6 @@ jobs:
           # Docs / license / changeset files only.
           NON_DOC=$(echo "$CHANGED" | grep -vE '\.md$|(^|/)LICENSE$|(^|/)NOTICE$|^\.changeset/' | grep -v '^$' || true)
           if [ -z "$NON_DOC" ]; then
-            echo "docs_only=true" >> "$GITHUB_OUTPUT"
             echo "skip_e2e=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -74,12 +78,10 @@ jobs:
           NON_VERSION=$(echo "$CHANGED" | grep -vE '\.md$|(^|/)LICENSE$|(^|/)NOTICE$|^\.changeset/|(^|/)package\.json$' | grep -v '^$' || true)
           if [ -z "$NON_VERSION" ]; then
             echo "version-only change set — skip e2e/phase-gates."
-            echo "docs_only=false" >> "$GITHUB_OUTPUT"
             echo "skip_e2e=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          echo "docs_only=false" >> "$GITHUB_OUTPUT"
           echo "skip_e2e=false" >> "$GITHUB_OUTPUT"
 
   contamination:
@@ -120,10 +122,22 @@ jobs:
       - name: Bundle budget check
         run: npm run check:budgets
 
-  e2e:
-    needs: [lint-test-build, detect-changes]
+  # Sharded across 6 runners (3 browsers x 2 shards). Playwright `workers`
+  # stays at 1 inside each job on purpose: every shard is an isolated runner
+  # with its own docs dev server, so fanning out across jobs cannot introduce
+  # the shared-state races that raising `workers` within a job could.
+  # Job id uses an underscore so `needs.e2e_shard.result` parses unambiguously.
+  e2e_shard:
+    name: e2e (${{ matrix.browser }} ${{ matrix.shard }}/2)
+    needs: [contamination, detect-changes]
     if: needs.detect-changes.outputs.skip_e2e != 'true'
     runs-on: ubuntu-latest
+    strategy:
+      # One failing browser must not hide the state of the other five.
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -133,20 +147,54 @@ jobs:
       - run: npm ci
       - name: Cache Playwright browsers
         uses: actions/cache@v4
-        id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      - name: Install Playwright browsers and OS dependencies
-        # The cache may be partial (for example, an older Chromium-only run).
-        # `install` verifies every requested executable and only downloads what
-        # is missing, so it is safe to run on both cache hits and misses.
-        run: npx playwright install --with-deps chromium firefox webkit
-      - name: Playwright E2E and axe (Chromium, Firefox, WebKit)
-        run: NX_DAEMON=false npx nx e2e docs-e2e
+          # Keyed per browser so this cannot race phase-gates into saving a
+          # Chromium-only cache that the full matrix then has to repair.
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browser and OS dependencies
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Playwright E2E and axe
+        run: |
+          npx playwright test --config=apps/docs-e2e/playwright.config.ts \
+            --project="$BROWSER" --shard="$SHARD/2"
+        env:
+          BROWSER: ${{ matrix.browser }}
+          SHARD: ${{ matrix.shard }}
+      - name: Upload Playwright traces
+        # `trace: 'on-first-retry'` produces traces that were previously
+        # discarded, forcing local reproduction of every CI-only failure.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-${{ matrix.browser }}-shard${{ matrix.shard }}
+          # outputDir is config-relative; `reporter: 'github'` emits no
+          # HTML report, so the trace zips under test-results are the artifact.
+          path: apps/docs-e2e/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # Aggregates the matrix into the single `e2e` status check that branch
+  # protection requires. Without this, the required `e2e` context would never
+  # report once the job became a matrix, and every PR would block forever.
+  e2e:
+    name: e2e
+    needs: [e2e_shard]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check shard results
+        env:
+          RESULT: ${{ needs.e2e_shard.result }}
+        run: |
+          # 'skipped' is the expected result when detect-changes set skip_e2e.
+          case "$RESULT" in
+            success|skipped) echo "e2e gate: $RESULT" ;;
+            *) echo "e2e shards did not pass: $RESULT"; exit 1 ;;
+          esac
 
   phase-gates:
-    needs: [lint-test-build, detect-changes]
+    needs: [contamination, detect-changes]
     if: needs.detect-changes.outputs.skip_e2e != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -161,7 +209,7 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('package-lock.json') }}
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
@@ -170,11 +218,3 @@ jobs:
         run: npx playwright install-deps chromium
       - name: Community conformance matrix
         run: NX_DAEMON=false npx nx run conformance:matrix
-      - name: Benchmark comparison
-        # Non-blocking for now: comparing against a same-run baseline on shared
-        # GitHub Actions runners produces regression numbers dominated by
-        # runner noise, not real perf changes. Revisit once there's a stable
-        # baseline strategy (e.g. a dedicated runner or multi-run averaging)
-        # worth gating merges on.
-        continue-on-error: true
-        run: NX_DAEMON=false npx nx run bench:compare
