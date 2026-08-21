@@ -1,5 +1,14 @@
 # @libregrid/menu
 
+## 1.2.2
+
+### Patch Changes
+
+- 982d1cd: Make `.lgr-context-menu` and `.lgr-column-menu` root-menu-only selectors.
+  Submenus retain `.lgr-menu` and `.lgr-sub-menu`; consumers that style every
+  menu level should use `.lgr-menu` instead of the root-menu selectors.
+- @libregrid/core@1.2.2
+
 ## 1.2.1
 
 ### Patch Changes
