@@ -76,6 +76,17 @@ export const sideBarCss = `
   padding: calc(var(--ag-grid-size, 8px) * 2) 0;
 }
 
+/* Angular Material wraps a mat-button's projected content in
+ * .mdc-button__label (display: block). The icon and label stop being flex
+ * children of the column button and share a baseline, which renders the
+ * label above the icon. Restore the icon-over-label column stack. */
+.lgr-side-bar-button .mdc-button__label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
 .lgr-side-bar-button:hover {
   background: var(--ag-icon-button-hover-background-color, color-mix(in srgb, transparent, var(--ag-foreground-color, #181d1f) 10%));
 }
