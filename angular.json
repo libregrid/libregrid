@@ -98,6 +98,11 @@
     }
   },
   "cli": {
-    "analytics": false
+    "analytics": false,
+    "_comment": "environment:all keeps the disk cache on in CI too. Angular disables it when CI=true by default, and prebundling depends on it — so serve.options.prebundle in apps/docs/project.json was inert on exactly the runs that matter, and every e2e job served hundreds of unbundled ESM modules per page load.",
+    "cache": {
+      "enabled": true,
+      "environment": "all"
+    }
   }
 }
