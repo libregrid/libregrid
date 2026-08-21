@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+const ROOT_CONTEXT_MENU_ITEMS = '.lgr-context-menu > .lgr-menu-scroll .lgr-menu-item';
+
 test.describe('Menus — Context Menu', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/menus');
@@ -23,7 +25,7 @@ test.describe('Menus — Context Menu', () => {
     expect(menuBox!.y).toBeGreaterThanOrEqual(cellBox!.y - 1);
 
     // Default items should be present
-    await expect(menu.locator('.lgr-menu-item').first()).toBeVisible();
+    await expect(page.locator(ROOT_CONTEXT_MENU_ITEMS).first()).toBeVisible();
   });
 
   test('separators span the full menu width', async ({ page }) => {
@@ -49,10 +51,11 @@ test.describe('Menus — Context Menu', () => {
     const menu = page.locator('.lgr-context-menu');
     await expect(menu).toBeVisible();
 
-    const exportRow = menu.locator('.lgr-menu-item', { hasText: /^Export/ });
+    const exportRow = page.locator(ROOT_CONTEXT_MENU_ITEMS, { hasText: /^Export/ });
     await exportRow.hover();
     const submenu = page.locator('.lgr-sub-menu');
     await expect(submenu).toBeVisible();
+    await expect(menu).toHaveCount(1);
     await expect(submenu.locator('.lgr-menu-item', { hasText: 'CSV Export' })).toBeVisible();
     await expect(submenu.locator('.lgr-menu-item', { hasText: 'Excel Export' })).toBeVisible();
 
@@ -71,7 +74,7 @@ test.describe('Menus — Context Menu', () => {
 
     const menu = page.locator('.lgr-context-menu');
     await expect(menu).toBeVisible();
-    await expect(menu.locator('.lgr-menu-item:not(.lgr-menu-item-disabled)').first()).toBeFocused();
+    await expect(page.locator(`${ROOT_CONTEXT_MENU_ITEMS}:not(.lgr-menu-item-disabled)`).first()).toBeFocused();
 
     // Walk down to the Export item (order varies with registered modules).
     for (let i = 0; i < 10; i++) {
@@ -79,7 +82,7 @@ test.describe('Menus — Context Menu', () => {
       if (focused.startsWith('Export')) break;
       await page.keyboard.press('ArrowDown');
     }
-    await expect(page.locator('.lgr-context-menu .lgr-menu-item', { hasText: /^Export/ })).toBeFocused();
+    await expect(page.locator(ROOT_CONTEXT_MENU_ITEMS, { hasText: /^Export/ })).toBeFocused();
 
     await page.keyboard.press('ArrowRight');
     const submenu = page.locator('.lgr-sub-menu');
@@ -91,7 +94,7 @@ test.describe('Menus — Context Menu', () => {
 
     await page.keyboard.press('ArrowLeft');
     await expect(submenu).toHaveCount(0);
-    await expect(menu.locator('.lgr-menu-item', { hasText: /^Export/ })).toBeFocused();
+    await expect(page.locator(ROOT_CONTEXT_MENU_ITEMS, { hasText: /^Export/ })).toBeFocused();
   });
 
   test('a menu opened at the grid edge renders outside the grid footprint', async ({ page }) => {

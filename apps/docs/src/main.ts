@@ -1,5 +1,5 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { inject, provideAppInitializer, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { AllCommunityModule } from 'ag-grid-community';
 import { provideLibreGrid } from '@libregrid/angular';
@@ -35,6 +35,7 @@ import { NotesModule } from '@libregrid/notes';
 import { provideLibreGridMaterialTheme } from '@libregrid/material';
 
 import { App } from './app/app';
+import { ConsentService } from './app/consent.service';
 import { routes } from './app/routes';
 
 /**
@@ -53,6 +54,7 @@ bootstrapApplication(App, {
   providers: [
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
+    provideAppInitializer(() => inject(ConsentService).initialize()),
     provideLibreGridMaterialTheme({ accent: 'azure' }),
     provideLibreGrid(
       AllCommunityModule,

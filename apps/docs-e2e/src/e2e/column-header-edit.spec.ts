@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const EDITOR = '.lgr-header-name-editor-input';
+const ROOT_COLUMN_MENU_ITEMS = '.lgr-column-menu > .lgr-menu-scroll .lgr-menu-item';
 
 async function openColumnMenu(page: import('@playwright/test').Page, colId: string): Promise<void> {
   await page.locator(`.ag-header-cell[col-id="${colId}"] .ag-header-cell-menu-button`).click();
@@ -16,19 +17,19 @@ test.describe('Column Header Edit', () => {
   test('offers Edit Column Name only for headerNameEditable columns', async ({ page }) => {
     await openColumnMenu(page, 'name');
     const menu = page.locator('.lgr-column-menu');
-    await expect(menu.locator('.lgr-menu-item', { hasText: 'Edit Column Name' })).toBeVisible();
+    await expect(page.locator(ROOT_COLUMN_MENU_ITEMS, { hasText: 'Edit Column Name' })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(menu).not.toBeVisible();
 
     await openColumnMenu(page, 'notes');
-    await expect(page.locator('.lgr-column-menu .lgr-menu-item', { hasText: 'Edit Column Name' })).toHaveCount(0);
+    await expect(page.locator(ROOT_COLUMN_MENU_ITEMS, { hasText: 'Edit Column Name' })).toHaveCount(0);
     await page.keyboard.press('Escape');
   });
 
   test('renames a column live: Enter commits, the name persists in column state', async ({ page }) => {
     const grid = page.getByTestId('column-header-edit-grid');
     await openColumnMenu(page, 'name');
-    await page.locator('.lgr-column-menu .lgr-menu-item', { hasText: 'Edit Column Name' }).click();
+    await page.locator(ROOT_COLUMN_MENU_ITEMS, { hasText: 'Edit Column Name' }).click();
 
     const input = page.locator(EDITOR);
     await expect(input).toBeVisible();
@@ -39,7 +40,7 @@ test.describe('Column Header Edit', () => {
     await expect(grid.locator('.ag-header-cell[col-id="name"]')).toContainText('Full Name');
     // Still the override after re-rendering: reopening the editor shows the new name.
     await openColumnMenu(page, 'name');
-    await page.locator('.lgr-column-menu .lgr-menu-item', { hasText: 'Edit Column Name' }).click();
+    await page.locator(ROOT_COLUMN_MENU_ITEMS, { hasText: 'Edit Column Name' }).click();
     await expect(page.locator(EDITOR)).toHaveValue('Full Name');
     await page.keyboard.press('Escape');
 
@@ -51,7 +52,7 @@ test.describe('Column Header Edit', () => {
   test('Escape in live mode discards the edit', async ({ page }) => {
     const grid = page.getByTestId('column-header-edit-grid');
     await openColumnMenu(page, 'name');
-    await page.locator('.lgr-column-menu .lgr-menu-item', { hasText: 'Edit Column Name' }).click();
+    await page.locator(ROOT_COLUMN_MENU_ITEMS, { hasText: 'Edit Column Name' }).click();
 
     const input = page.locator(EDITOR);
     await input.fill('Discarded');
@@ -66,14 +67,14 @@ test.describe('Column Header Edit', () => {
     await expect(page.getByRole('button', { name: "applyMode: 'deferred'" })).toBeVisible();
 
     await openColumnMenu(page, 'name');
-    await page.locator('.lgr-column-menu .lgr-menu-item', { hasText: 'Edit Column Name' }).click();
+    await page.locator(ROOT_COLUMN_MENU_ITEMS, { hasText: 'Edit Column Name' }).click();
     const input = page.locator(EDITOR);
     await input.fill('Committed');
     await page.locator('.lgr-header-name-editor-apply').click();
     await expect(grid.locator('.ag-header-cell[col-id="name"]')).toContainText('Committed');
 
     await openColumnMenu(page, 'name');
-    await page.locator('.lgr-column-menu .lgr-menu-item', { hasText: 'Edit Column Name' }).click();
+    await page.locator(ROOT_COLUMN_MENU_ITEMS, { hasText: 'Edit Column Name' }).click();
     await input.fill('Thrown away');
     await input.press('Escape');
     await expect(grid.locator('.ag-header-cell[col-id="name"]')).toContainText('Committed');
@@ -92,10 +93,10 @@ test.describe('Column Header Edit', () => {
     await expect(menu).toBeVisible();
     // Per-column items (sort, auto-size this column, ...) are hidden for a
     // group target; the group-capable Edit Column Name item is offered.
-    await expect(menu.locator('.lgr-menu-item', { hasText: 'Edit Column Name' })).toBeVisible();
-    await expect(menu.locator('.lgr-menu-item', { hasText: 'Sort Ascending' })).toHaveCount(0);
+    await expect(page.locator(ROOT_COLUMN_MENU_ITEMS, { hasText: 'Edit Column Name' })).toBeVisible();
+    await expect(page.locator(ROOT_COLUMN_MENU_ITEMS, { hasText: 'Sort Ascending' })).toHaveCount(0);
 
-    await menu.locator('.lgr-menu-item', { hasText: 'Edit Column Name' }).click();
+    await page.locator(ROOT_COLUMN_MENU_ITEMS, { hasText: 'Edit Column Name' }).click();
 
     const input = page.locator(EDITOR);
     await expect(input).toBeVisible();

@@ -19,6 +19,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { ConsentService } from './consent.service';
 import { NAV } from './routes';
 import { ThemePicker } from './theme-picker';
 import { DOCS_SECTIONS, featureForPath, type DocsSectionId } from './docs/feature-catalog';
@@ -317,6 +318,32 @@ interface NavSection {
 
     .lgr-pager-link mat-icon { flex-shrink: 0; }
 
+    .lgr-site-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      align-items: center;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1rem clamp(1rem, 3vw, 2.5rem) 1.5rem;
+      color: var(--mat-sys-on-surface-variant);
+      font-size: 0.8rem;
+    }
+
+    .lgr-site-footer a,
+    .lgr-site-footer button {
+      color: inherit;
+      font: inherit;
+    }
+
+    .lgr-site-footer button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
     /* ── Responsive ──────────────────────────────── */
     @media (max-width: 700px) {
       mat-sidenav {
@@ -465,12 +492,21 @@ interface NavSection {
             }
           </nav>
         }
+
+        <footer class="lgr-site-footer">
+          <span>© {{ currentYear }} LibreGrid</span>
+          <a routerLink="/privacy">Privacy</a>
+          <a routerLink="/cookies">Cookies</a>
+          <button type="button" (click)="consent.showSettings()">Privacy choices</button>
+        </footer>
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
 })
 export class App {
   protected readonly theme = inject(LibreGridThemeService);
+  protected readonly consent = inject(ConsentService);
+  protected readonly currentYear = new Date().getFullYear();
   protected readonly nav = ITEMS;
   private readonly router = inject(Router);
   private readonly breakpoints = inject(BreakpointObserver);

@@ -10,6 +10,7 @@ coverage/
 # Never commit — guardrail G1 (see docs/reference/guardrails.md)
 **/ag-grid-enterprise/
 .angular/
+.firebase/
 apps/*/dist/
 out-tsc/
 apps/bench/bench/results/

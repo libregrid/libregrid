@@ -203,4 +203,42 @@ describe('Material columns tool panel drag-drop adapter', () => {
     uninstall();
     unregister();
   });
+
+  it('connects embedded zones that register after the panel attaches', () => {
+    const connectedTo = vi.spyOn(DropListRef.prototype, 'connectedTo');
+    const root = document.createElement('section');
+    root.innerHTML = `
+      <div class="lgr-columns-list">
+        <div class="lgr-columns-row" data-column-id="country" data-column-name="Country" data-column-index="0" data-column-movable="true"></div>
+      </div>
+    `;
+    document.body.appendChild(root);
+
+    const cleanup = createMaterialColumnsToolPanelDragDropAdapter(
+      TestBed.inject(EnvironmentInjector),
+    ).attach(root);
+    const zoneElement = document.createElement('section');
+    zoneElement.className = 'lgr-row-group-drop-zone';
+    document.body.appendChild(zoneElement);
+    const dropColumns = vi.fn(() => 1);
+    const unregister = registerDropZone({
+      element: zoneElement,
+      kind: 'group',
+      canDrop: () => true,
+      dropColumns,
+    });
+
+    const lists = connectedTo.mock.instances as unknown as DropListRef<{ kind: string }>[];
+    const source = lists.find((list) => list.data.kind === 'source');
+    const embedded = lists.find((list) => list.data.kind === 'embedded');
+    const countryDrag = source?.getItemAtIndex(0) as DragRef<TestDragData> | null;
+
+    expect(embedded).toBeDefined();
+    expect(zoneElement.classList).toContain('cdk-drop-list');
+    embedded?.drop(countryDrag!, 0, 0, source!, true, { x: 0, y: 0 }, { x: 0, y: 0 }, new MouseEvent('mouseup'));
+    expect(dropColumns).toHaveBeenCalledWith(['country']);
+
+    cleanup();
+    unregister();
+  });
 });

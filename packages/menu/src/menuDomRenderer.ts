@@ -164,6 +164,10 @@ export function createMenuDom(
     );
     const submenuEl = submenu.element;
     submenuEl.classList.add('lgr-sub-menu');
+    // Kind classes are stable selectors for the registered root popup only.
+    // Submenus remain descendants of that popup, but must not make root-menu
+    // locators ambiguous while they are open.
+    submenuEl.classList.remove('lgr-context-menu', 'lgr-column-menu');
     // The submenu lives inside the root menu element so the grid's popup
     // service treats clicks in it as inside the popup (its outside-click
     // detection only recognises the registered popup child and its
@@ -671,4 +675,3 @@ function renderIcon(icon: MenuItemDef['icon']): string {
 
 /** Re-exported from core so the menu package keeps a single public entry. */
 export { inheritThemeTokensImpl as inheritThemeTokens };
-

@@ -399,6 +399,103 @@ kbd {
   font-weight: 600;
 }
 
+/* ── Klaro consent manager — Azure Material bridge ─────────────── */
+.klaro {
+  --font-family: 'Roboto', system-ui, sans-serif;
+  --title-font-family: 'Inter', 'Roboto', system-ui, sans-serif;
+  --font-size: 0.9375rem;
+  --light1: var(--mat-sys-on-primary-container);
+  --light2: var(--mat-sys-outline-variant);
+  --light3: color-mix(in srgb, var(--mat-sys-on-primary-container) 72%, transparent);
+  --dark1: var(--mat-sys-primary-container);
+  --dark2: var(--mat-sys-primary);
+  --green1: var(--mat-sys-primary);
+  --green2: var(--mat-sys-primary);
+  --green3: var(--mat-sys-primary);
+  --blue1: var(--mat-sys-secondary);
+  --blue2: var(--mat-sys-primary);
+  --button-text-color: var(--mat-sys-on-primary);
+  --border-radius: 14px;
+  --border-width: 1px;
+  --box-shadow-color: color-mix(in srgb, var(--mat-sys-primary) 45%, transparent);
+}
+
+.klaro .cookie-notice:not(.cookie-modal-notice),
+.klaro .cookie-modal .cm-modal.cm-klaro,
+.klaro .cookie-modal-notice {
+  border: 1px solid var(--mat-sys-outline-variant);
+  box-shadow: 0 20px 56px color-mix(in srgb, #000 30%, transparent);
+}
+
+.klaro .cookie-notice:not(.cookie-modal-notice) {
+  max-width: min(29rem, calc(100vw - 2rem));
+}
+
+.klaro .cookie-modal .cm-modal.cm-klaro {
+  max-width: min(42rem, calc(100vw - 2rem));
+}
+
+.klaro .cookie-modal .cm-btn,
+.klaro .cookie-notice .cm-btn {
+  min-height: 2.5rem;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+}
+
+.klaro .cookie-modal .cm-btn.cm-btn-success,
+.klaro .cookie-notice .cm-btn.cm-btn-success,
+.klaro .cookie-modal .cm-btn.cm-btn-success-var,
+.klaro .cookie-notice .cm-btn.cm-btn-success-var {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+.klaro .cookie-modal .cm-btn.cm-btn-danger,
+.klaro .cookie-notice .cm-btn.cm-btn-danger {
+  background: transparent;
+  border: 1px solid var(--mat-sys-primary);
+  color: var(--mat-sys-primary);
+}
+
+.klaro .cookie-modal .cm-btn.cm-btn-info,
+.klaro .cookie-notice .cm-btn.cm-btn-info {
+  background: transparent;
+  border: 1px solid var(--mat-sys-primary);
+  color: var(--mat-sys-primary);
+}
+
+.klaro .cookie-modal .cm-btn:focus-visible,
+.klaro .cookie-notice .cm-btn:focus-visible,
+.klaro .cookie-modal .cm-list-input:focus + .cm-list-label .slider {
+  outline: 3px solid color-mix(in srgb, var(--mat-sys-primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.lgr-policy-page {
+  max-width: 54rem;
+}
+
+.lgr-policy-page h2 {
+  margin-top: 2.25rem;
+}
+
+.lgr-policy-page code {
+  font-size: 0.9em;
+}
+
+.lgr-policy-effective {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.lgr-policy-callout {
+  margin: 2rem 0;
+  padding: 1rem;
+  border-left: 4px solid var(--mat-sys-primary);
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .lgr-page { padding: 1rem; }
