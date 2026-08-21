@@ -111,13 +111,23 @@ export class ConsentService {
       // intentionally forces Klaro's UI open, so call it only for a visitor
       // who has not confirmed a choice yet.
       const manager = window.klaro?.getManager(this.config);
-      if (!manager?.confirmed) window.klaro?.show(this.config, false);
+      if (!manager?.confirmed) this.show(false);
     });
   }
 
   showSettings(): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    void this.load().then(() => window.klaro?.show(this.config, true));
+    void this.load().then(() => this.show(true));
+  }
+
+  private show(asModal: boolean): void {
+    window.klaro?.show(this.config, asModal);
+    const notice = this.document.getElementById('klaro-cookie-notice');
+    if (!notice) return;
+    // Klaro's non-modal notice references a title it does not render. Give the
+    // dialog a direct accessible name instead of leaving a broken reference.
+    notice.removeAttribute('aria-labelledby');
+    notice.setAttribute('aria-label', 'Cookie preferences');
   }
 
   private load(): Promise<void> {
