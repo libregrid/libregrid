@@ -147,7 +147,7 @@ Using them is **legal** (they are MIT) but **unstable**. Three consequences, all
 
 1. **Narrow peer range.** Every package declares `"ag-grid-community": ">=36.1.0 <37"`. Never widen this speculatively.
 2. **Version lock-step.** `moduleRegistry` enforces that our module's `version` matches Community's **major.minor**. Every Community minor release requires an LibreGrid compatibility release. See `standards.md` §Version single-source.
-3. **Conformance matrix is the tripwire.** Phase 0 Task 0.7 builds it; it runs nightly. A Community release that breaks a seam must fail our CI before it reaches a user.
+3. **Conformance matrix is the tripwire.** Phase 0 Task 0.7 builds it; run it on demand against the supported range. A Community release that breaks a seam must fail before we widen the peer range.
 
 If a seam disappears in a future Community version, that is a known, accepted risk with a documented fallback (soft fork). Do not attempt to work around it by patching `node_modules` or monkey-patching the core at runtime.
 
