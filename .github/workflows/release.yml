@@ -36,10 +36,12 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          # After the lockstep bump, mirror it into the private manifests
-          # (root + docs) and regenerate the docs version badge so the
+          # Must be a single command — the action does not run this through a
+          # shell, so && chains arrive as literal args. version:packages bumps
+          # the lockstep versions, then mirrors them into the private manifests
+          # (root + docs) and regenerates the docs version badge, so the
           # Version Packages PR carries every version field in one commit.
-          version: npx changeset version && npm run sync:version && node tools/version/workspace.mjs generate
+          version: npm run version:packages
           publish: npm run release
           commit: 'chore: version packages'
           title: 'chore: version packages'

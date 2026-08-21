@@ -30,6 +30,7 @@
     "check:versions": "node tools/version/check.mjs",
     "gen:version": "node tools/version/generate.mjs && node tools/version/workspace.mjs generate",
     "sync:version": "node tools/version/workspace.mjs sync",
+    "version:packages": "changeset version && npm run sync:version && node tools/version/workspace.mjs generate",
     "release": "npm run gen:version && npm run verify && npx changeset publish",
     "docs": "npm -w apps/docs run dev",
     "webapp:build": "npm -w apps/docs run build",
