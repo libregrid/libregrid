@@ -2,8 +2,11 @@
 
 > Enterprise-grade grid features for [AG Grid Community](https://www.npmjs.com/package/ag-grid-community), delivered as open-source modules.
 
+### [libregrid.dev](https://libregrid.dev) — live demos and full documentation
+
 [![npm version](https://img.shields.io/npm/v/%40libregrid%2Fcore.svg)](https://www.npmjs.com/package/@libregrid/core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![Docs](https://img.shields.io/badge/docs-libregrid.dev-blue)](https://libregrid.dev)
 
 LibreGrid gives `ag-grid-community` the advanced capabilities that teams
 usually buy: row grouping, pivoting, server-side row models, cell selection
@@ -157,6 +160,7 @@ navigation. The checklist is also available in
 
 ## Documentation and support
 
+- [libregrid.dev](https://libregrid.dev) — live demos and full documentation for every feature
 - [Feature parity and gap list](./docs/parity/gap-list.md) — what is complete, partial, and out of scope
 - [Migration guide](./docs/guides/migration-guide.md) — package-by-package migration
 - [Manual validation guide](./docs/guides/manual-validation.md) — test the browser demos yourself
