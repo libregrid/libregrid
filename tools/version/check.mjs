@@ -6,7 +6,7 @@
  * Also checks the @libregrid/core singleton requirement: no two workspace
  * packages may depend on different @libregrid/core versions.
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { agGridVersion, VERSIONED_PACKAGES } from './generate.mjs';
@@ -32,18 +32,19 @@ for (const pkg of VERSIONED_PACKAGES) {
 
 // 2. @libregrid/core singleton — one resolved version across the workspace.
 const coreRanges = new Map();
+const lockstepVersions = new Map();
 const pkgJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 for (const pattern of pkgJson.workspaces ?? []) {
   const base = pattern.replace('/*', '');
   const dir = join(root, base);
   if (!existsSync(dir)) continue;
-  const { readdirSync } = await import('node:fs');
   for (const name of readdirSync(dir)) {
     const p = join(dir, name, 'package.json');
     if (!existsSync(p)) continue;
     const m = JSON.parse(readFileSync(p, 'utf8'));
     const range = m.dependencies?.['@libregrid/core'];
     if (range) coreRanges.set(m.name, range);
+    if (base === 'packages' && m.name?.startsWith('@libregrid/')) lockstepVersions.set(m.name, m.version);
   }
 }
 const distinct = new Set(coreRanges.values());
@@ -52,6 +53,23 @@ if (distinct.size > 1) {
     `Multiple @libregrid/core ranges across the workspace — a duplicate core breaks the ` +
       `module registry (package-architecture.md §7): ` +
       [...coreRanges].map(([k, v]) => `${k}→${v}`).join(', '),
+  );
+}
+
+const distinctVersions = new Set(lockstepVersions.values());
+if (distinctVersions.size > 1) {
+  problems.push(
+    `Multiple @libregrid package versions across the workspace — releases are lockstep: ` +
+      [...lockstepVersions].map(([k, v]) => `${k}@${v}`).join(', '),
+  );
+}
+
+const changesetConfig = JSON.parse(readFileSync(join(root, '.changeset', 'config.json'), 'utf8'));
+const fixedPackages = new Set(changesetConfig.fixed.flat());
+const missingFromFixed = [...lockstepVersions].map(([name]) => name).filter((name) => !fixedPackages.has(name));
+if (missingFromFixed.length > 0) {
+  problems.push(
+    `Lockstep packages missing from .changeset/config.json fixed group: ${missingFromFixed.join(', ')}`,
   );
 }
 
