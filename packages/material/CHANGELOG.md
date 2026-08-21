@@ -1,5 +1,16 @@
 # @libregrid/material
 
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [b6836f0]
+  - @libregrid/menu@1.2.1
+  - @libregrid/columns-tool-panel@1.2.1
+  - @libregrid/core@1.2.1
+  - @libregrid/rich-select@1.2.1
+  - @libregrid/side-bar@1.2.1
+
 ## 1.2.0
 
 ### Patch Changes
