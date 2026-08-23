@@ -4,7 +4,7 @@ Every ✅/🟡/❌ verdict lives in the per-domain checklists under [`docs/parit
 This page is the honest, prominent summary — read it before adopting LibreGrid, and
 always re-check the domain file for the exact option-level notes.
 
-Audited 2026-08-14; counts refreshed 2026-08-19 against the domain files (Phase 14 P0 batch). Legend: ✅ done+tested · 🟡 partial (note names the missing part) · ❌ not shipped (rationale in the domain file).
+Audited 2026-08-14; counts refreshed 2026-08-23 against the domain files (1.2.3 baseline). Legend: ✅ done+tested · 🟡 partial (note names the missing part) · ❌ not shipped (rationale in the domain file).
 
 ## The headline gaps
 
@@ -24,8 +24,12 @@ Audited 2026-08-14; counts refreshed 2026-08-19 against the domain files (Phase 
 5. **Drag-and-drop long-tail items** in the columns tool panel are post-1.0: dragging
    into the column-header area, custom drag images, and in-panel function-member
    reordering (see [`columns-tool-panel.md`](columns-tool-panel.md)).
+6. **The remaining Class A wave is Formulas, the AI toolkit, group-value editing and
+   group-row dragging.** Calculated columns, batch editing, cell notes, row numbers,
+   column header editing and show-values-as all shipped in Phases 14–18
+   (see [`ENTERPRISE-GAP-PLAN.md`](../../ENTERPRISE-GAP-PLAN.md)).
 
-## Post-1.0 candidates (phase-13 13A)
+## Post-1.0 candidates (phase-13 13A) and remaining Class A items
 
 Documented as optional long-tail work, only shipped if justified after a clean audit:
 
@@ -34,15 +38,19 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 - Sticky group/total rows
 - Columns-panel header-area drag target, custom drag-image component, function-member reordering
 - rowGroupPanelSuppressSort alongside a real row-group sorting surface
+- Formulas (`@libregrid/formulas` — the largest remaining Class A item; Phase 18's expression engine is the shared core)
+- AI toolkit (`@libregrid/ai-toolkit`)
+- Group-value editing (`refreshAfterGroupEdit` in `row-grouping`)
+- Group row dragging (parity row first, then the drag surface)
 
 ## Per-domain summary
 
 | Domain | ✅ | 🟡 | ❌ | File |
 | --- | --- | --- | --- | --- |
-| Row grouping | 53 | 4 | 20 | [`row-grouping.md`](row-grouping.md) |
-| Aggregation | 30 | 7 | 2 | [`aggregation.md`](aggregation.md) |
+| Row grouping | 54 | 4 | 20 | [`row-grouping.md`](row-grouping.md) |
+| Aggregation | 31 | 7 | 2 | [`aggregation.md`](aggregation.md) |
 | Pivoting | 23 | 2 | 0 | [`pivoting.md`](pivoting.md) |
-| Server-side row model | 54 | 0 | 0 | [`server-side-row-model.md`](server-side-row-model.md) |
+| Server-side row model | 55 | 0 | 0 | [`server-side-row-model.md`](server-side-row-model.md) |
 | Viewport row model | 15 | 0 | 0 | [`viewport-row-model.md`](viewport-row-model.md) |
 | Tree data | 15 | 2 | 1 | [`tree-data.md`](tree-data.md) |
 | Master / detail | 16 | 0 | 0 | [`master-detail.md`](master-detail.md) |
@@ -64,8 +72,9 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 | Columns tool panel | 46 | 2 | 4 | [`columns-tool-panel.md`](columns-tool-panel.md) |
 | Integrated charts | 54 | 1 | 3 | [`integrated-charts.md`](integrated-charts.md) |
 | Sparklines | 4 | 0 | 0 | [`integrated-charts.md`](integrated-charts.md) — Sparklines section |
-| Excel export | 60 | 8 | 5 | [`excel-export.md`](excel-export.md) — shipped; images, tables and notes descoped (5.9) |
-| Batch edit | 14 | 0 | 0 | [`batch-edit.md`](batch-edit.md) |
+| Excel export | 61 | 8 | 5 | [`excel-export.md`](excel-export.md) — shipped; images, tables and notes descoped (5.9) |
+| Batch edit | 13 | 3 | 1 | [`batch-edit.md`](batch-edit.md) — SSRM batch editing ❌ (Enterprise is CSR only) |
+| Calculated columns | 26 | 6 | 0 | [`calculated-columns.md`](calculated-columns.md) |
 
 The menu domains carry the most 🟡 rows: their checklists track per-item state, and each 🟡
 names the exact missing item. Read the domain file before treating a 🟡 count as a

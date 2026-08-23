@@ -37,7 +37,7 @@ regression is recorded below), so every item is documented as a post-1.0
 candidate with its rationale instead of being implemented:
 
 - [x] `RowNumbers` module — ✅ shipped in Phase 14 (`@libregrid/row-numbers`) — superseded
-- [x] `Notes` module — ❌ post-1.0: same rationale
+- [x] `Notes` module — ✅ shipped in Phase 15 (`@libregrid/notes`) — superseded
 - [x] Column header editing — ✅ shipped in Phase 14 (`@libregrid/column-header-edit`) — superseded
 - [x] Toolbar — ✅ shipped in the 1.1.0 UX pass (`@libregrid/toolbar`) — superseded
 - [x] `testIdSvc` — ❌ post-1.0: same rationale

@@ -150,6 +150,21 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 - [x] **Phase 13 — Long tail & 1.0 hardening** · [`phases/phase-13-hardening.md`](docs/phases/phase-13-hardening.md)
       Parity audit, a11y sweep, bundle budgets, migration guide, 1.0.0.
 
+- [x] **Phase 14 — P0 batch** · [`phases/phase-14-p0-batch.md`](docs/phases/phase-14-p0-batch.md)
+      Row numbers, column header editing, show-values-as completion, SSRM API verification, doc-hygiene pass.
+
+- [x] **Phase 15 — Cell notes** · [`phases/phase-15-cell-notes.md`](docs/phases/phase-15-cell-notes.md)
+      `@libregrid/notes`; wires the `note` context-menu stub.
+
+- [x] **Phase 16 — Server-side selection** · [`phases/phase-16-server-side-selection.md`](docs/phases/phase-16-server-side-selection.md)
+      Beyond parity: durable spec-based SSRM selection (`@libregrid/server-side-selection`).
+
+- [x] **Phase 17 — Batch edit** · [`phases/phase-17-batch-edit.md`](docs/phases/phase-17-batch-edit.md)
+      `@libregrid/batch-edit`; registration layer over Community's edit service.
+
+- [x] **Phase 18 — Calculated columns** · [`phases/phase-18-calculated-columns.md`](docs/phases/phase-18-calculated-columns.md)
+      `@libregrid/calculated-columns`; expression engine reused by A1 Formulas.
+
 ---
 
 ## 6. Package inventory
@@ -182,6 +197,12 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 | `@libregrid/sparklines`            | 12    | `Sparklines`                           |
 | `@libregrid/angular`               | 13    | — (Angular ergonomics)                 |
 | `@libregrid/all`                   | 13    | — (bundle re-export)                   |
+| `@libregrid/row-numbers`           | 14    | `RowNumbers`                           |
+| `@libregrid/column-header-edit`    | 14    | `ColumnHeaderEdit`                     |
+| `@libregrid/notes`                 | 15    | `Notes`                                |
+| `@libregrid/server-side-selection` | 16    | `RowSelection` (SSRM; beyond parity)   |
+| `@libregrid/batch-edit`            | 17    | `BatchEdit`                            |
+| `@libregrid/calculated-columns`    | 18    | `CalculatedColumns`                    |
 
 ---
 
