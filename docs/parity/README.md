@@ -54,6 +54,7 @@ We transcribed these lists from the AG Grid documentation pages named in each fi
 | [`column-header-edit.md`](column-header-edit.md) | 14 | `@libregrid/column-header-edit` |
 | [`cell-notes.md`](cell-notes.md) | 15 | `@libregrid/notes` |
 | [`batch-edit.md`](batch-edit.md) | 17 | `@libregrid/batch-edit` |
+| [`calculated-columns.md`](calculated-columns.md) | 18 | `@libregrid/calculated-columns` |
 
 ## Beyond parity (new features)
 

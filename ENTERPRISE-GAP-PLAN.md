@@ -1,7 +1,9 @@
 # ENTERPRISE-GAP-PLAN — ag-grid.com Enterprise features missing from LibreGrid
 
-**Status:** PROPOSAL — research complete, no implementation decisions made
-**Date:** 2026-08-18
+**Status:** LIVING DOCUMENT — refreshed for the **1.2.3** baseline (2026-08-23). Each
+Class A item records its current state; shipped items are marked ✅ and moved to
+§4a. Remaining items are the honest "what is left to implement" list.
+**Date:** 2026-08-18 (initial research) · refreshed 2026-08-23 (1.2.3)
 **Companion to:** [`LIBREGRID-PLAN.md`](LIBREGRID-PLAN.md) (master plan) — this is a
 strategic inventory of *what is missing*, not a numbered phase. Per repo convention:
 each item below becomes a phase file only after it is chosen.
@@ -23,7 +25,7 @@ Two sources are cross-referenced throughout:
 2. **This repo** — the per-feature parity tables in `docs/parity/` (status legend
    ⬜/✅/🟡/❌), `docs/parity/gap-list.md`, `docs/guides/migration-guide.md`, and
    `docs/phases/phase-13-hardening.md` (13A post-1.0 list), audited as of
-   2026-08-15 (published `1.1.1`).
+   2026-08-23 (published **1.2.3**).
 
 **Scope rule applied:** a feature counts as "missing" only if the *site* (v36.1.0)
 classifies it Enterprise **and** LibreGrid has no working counterpart. Features the
@@ -42,17 +44,19 @@ into ~25 feature areas):
 
 | Bucket | Count | Meaning |
 | --- | --- | --- |
-| **Shipped with gaps** (Class B) | ~14 feature areas | `@libregrid/*` package exists; documented ❌/🟡 parity rows remain |
-| **No counterpart** (Class A) | 11 feature areas | Enterprise on the site, no LibreGrid package and no parity coverage |
+| **Shipped with gaps** (Class B) | ~16 feature areas | `@libregrid/*` package exists; documented ❌/🟡 parity rows remain |
+| **No counterpart** (Class A) | 3 feature areas | Enterprise on the site, no LibreGrid package and no parity coverage |
 | **Not gaps — Community on the site** (Class D) | 14 feature areas | Stock `ag-grid-community` provides them; some older docs assumed Enterprise |
 | **Out of scope / declined** (Class C) | 3 | PDF export, commercial chart types, licence key (N/A) |
 
 Headline: the large structural features (row grouping, aggregation, pivoting,
 SSRM, tree data, master/detail, tool panels, menus, clipboard, Excel export,
 charts, sparklines, filters, find, cell selection) are already shipped. The
-remaining missing surface is mostly **cell-level productivity features**
-(formulas, calculated columns, batch editing, notes, row numbers, header editing,
-group editing, AI toolkit) plus a long tail of option-level gaps in shipped
+**Class A wave is nearly complete**: calculated columns, batch editing, cell
+notes, row numbers, column header editing, show-values-as and the SSRM API
+verification all shipped in Phases 14–18. The remaining missing surface is
+**Formulas** (the largest), the **AI toolkit**, **group-value editing**, and
+**group-row dragging**, plus a long tail of option-level gaps in shipped
 packages.
 
 ---
@@ -60,44 +64,55 @@ packages.
 ## 3. Class A — Enterprise features with no LibreGrid counterpart
 
 Each entry: site evidence (inventory §refs) → current state → proposed action.
-All proposals are pending user decision.
 
-### A1. Formulas — `FormulaModule`
+### A1. Formulas — `FormulaModule` ⬜ **remaining**
 - **Site:** 4 pages (`formulas`, `formula-editor-component`, `formula-reference`,
   `formula-custom-functions`) — spreadsheet-style cell expressions that update when
   referenced data changes; tokenising formula editor; operator/function reference;
   custom functions. Pricing row: Formulas = E. Inventory §8.
 - **State:** no package. Note: plain cell *expressions* are Community; Formulas is
-  the Enterprise add-on layer on top.
+  the Enterprise add-on layer on top. **The expression engine shipped for
+  calculated columns (Phase 18) is written to be reused here** — `formula` is the
+  seam A1 extends with per-cell storage, and the function registry already exposes
+  `getFunction`/`getFunctionNames` (see `docs/phases/phase-18-calculated-columns.md` §Notes).
 - **Proposed:** new `@libregrid/formulas` package (formula engine + editor
-  component + custom-function registry). Largest Class A item.
+  component + custom-function registry). Largest remaining Class A item.
 
-### A2. Calculated Columns — `CalculatedColumnsModule`
+### A2. Calculated Columns — `CalculatedColumnsModule` ✅ **shipped**
 - **Site:** `calculated-columns` page; pricing row: Calculated Columns = E.
-- **State:** no package.
-- **Proposed:** new `@libregrid/calculated-columns`. Natural first stop in the
-  "derived data" family (pairs with A1/A3).
+- **State:** ✅ **Shipped in Phase 18** — `@libregrid/calculated-columns`
+  (`CalculatedColumns`); parity `docs/parity/calculated-columns.md` (26 ✅ / 6 🟡).
+  Expression engine, dialog, menus, Grid State round-trip, events all implemented.
+- **Remaining 🟡 (not gaps, noted in parity):** `dataTypes` validation, explicit
+  `colId` gating, pivot-result integration, non-CSR row models, group-path display
+  references, `SUMIF`/`COUNTIF` cell ranges (arrive with A1).
 
-### A3. Batch Editing — `BatchEditModule`
+### A3. Batch Editing — `BatchEditModule` ✅ **shipped**
 - **Site:** `batch-editing` page; pricing row: Batch Editing = E. Cell editing
-  itself is **Community** (§5), so batch editing is the only editing gap.
-- **State:** no package.
-- **Proposed:** new `@libregrid/batch-edit` (queue/apply/discard semantics per
-  the docs page). Builds on stock Community editing — no editing engine work needed.
+  itself is **Community** (§5), so batch editing was the only editing gap.
+- **State:** ✅ **Shipped in Phase 17** — `@libregrid/batch-edit` (`BatchEdit`);
+  parity `docs/parity/batch-edit.md` (13 ✅ / 3 🟡 / 1 ❌). Registration layer over
+  the Community edit service: `startBatchEdit`/`commitBatchEdit`/`cancelBatchEdit`/
+  `isBatchEditing`, staged-cell highlights, cancel-revert of staged values.
+- **Remaining ❌/🟡 (noted in parity):** SSRM batch editing ❌ (Enterprise is CSR
+  only), single-undo-action grouping 🟡, custom-renderer refresh spec 🟡.
 
-### A4. Cell Notes — `NotesModule`
+### A4. Cell Notes — `NotesModule` ✅ **shipped**
 - **Site:** `notes` page; pricing row: Cell Notes = E.
-- **State:** no package; already tracked as a post-1.0 candidate
-  (`gap-list.md`, migration guide); the context-menu `note` item is a registered
-  stub in `@libregrid/menu` (stubs listed in `docs/parity/context-menu.md`).
-- **Proposed:** new `@libregrid/notes`; wires the existing menu stub.
+- **State:** ✅ **Shipped in Phase 15** — `@libregrid/notes`; parity
+  `docs/parity/cell-notes.md` (23 ✅ / 0 🟡). Hover/click/`Shift+F2` popups,
+  read-only notes, `suppressNoteActions`, full-width row notes, runtime
+  `notesDataSource` swap; the `note` context-menu token joins
+  `DEFAULT_CONTEXT_MENU_ITEMS`.
 
-### A5. Row Numbers — `RowNumbersModule`
+### A5. Row Numbers — `RowNumbersModule` ✅ **shipped**
 - **Site:** `row-numbers` page; pricing row: Row Numbers = E.
-- **State:** no package; tracked post-1.0 candidate.
-- **Proposed:** new `@libregrid/row-numbers`. Small, self-contained.
+- **State:** ✅ **Shipped in Phase 14** — `@libregrid/row-numbers`; parity
+  `docs/parity/row-numbers.md` (14 ✅ / 0 🟡). Row-number click selects the whole
+  visible row; cell-selection never starts a drag from the column; row resizer
+  included.
 
-### A6. AI Toolkit — `AiToolkitModule`
+### A6. AI Toolkit — `AiToolkitModule` ⬜ **remaining**
 - **Site:** `ai-toolkit` page — LLM integration for grid state via natural
   language with structured outputs; pricing row: AI Toolkit = E. (The AI Features
   section's other two features — **MCP Server** and **AI Skills** — are
@@ -106,40 +121,36 @@ All proposals are pending user decision.
 - **Proposed:** new `@libregrid/ai-toolkit`. Strategic item; scope depends on the
   documented API surface.
 
-### A7. Column Header Editing — `ColumnHeaderEditModule`
+### A7. Column Header Editing — `ColumnHeaderEditModule` ✅ **shipped**
 - **Site:** "Editable Header Name (e)" section on the `column-headers` page.
-- **State:** no package; tracked post-1.0; `editColumnName` column-menu item is a
-  registered stub (`docs/parity/column-menu.md`).
-- **Proposed:** new `@libregrid/column-header-edit`. Small; unblocks the menu stub.
+- **State:** ✅ **Shipped in Phase 14** — `@libregrid/column-header-edit`; parity
+  `docs/parity/column-header-edit.md` (18 ✅ / 0 🟡). Group entry point is the
+  group-header right-click context menu; per-column menu items hide for group
+  targets.
 
-### A8. Editing Group Values — `RowGroupingEditModule`
+### A8. Editing Group Values — `RowGroupingEditModule` ⬜ **remaining**
 - **Site:** `grouping-editing` page ("Row Grouping - Editing Groups").
-- **State:** `refreshAfterGroupEdit` ❌ in `docs/parity/row-grouping.md`. Its
-  recorded rationale — "LibreGrid has no cell-editing feature yet" — is now
-  **stale**: cell editing is Community stock (§5), so the blocker no longer
-  stands.
+- **State:** `refreshAfterGroupEdit` still ❌ in `docs/parity/row-grouping.md`
+  (rationale now **stale** — cell editing is Community stock, so the blocker no
+  longer stands; the option simply has not been implemented).
 - **Proposed:** fold into `@libregrid/row-grouping` (option + re-aggregation
   timing), no new package.
 
-### A9. SSRM API module — `ServerSideRowModelApiModule`
+### A9. SSRM API module — `ServerSideRowModelApiModule` ✅ **closed**
 - **Site:** flagged Enterprise in API metadata (inventory §7); the `ssrm-api`
   page documents the SSRM contract interfaces, which `@libregrid/server-side-row-model`
-  implements (49 ✅ / 0 🟡 / 0 ❌).
-- **State:** no separate package, but the documented interface surface appears
-  covered by the SSRM package.
-- **Proposed:** **verify and close** — confirm the v36.1.0 API module exposes
-  nothing beyond the already-implemented contract; if not, a thin seam or a
-  documented "provided by stock" note. Cheapest Class A item.
+  implements (55 ✅ / 0 🟡 / 0 ❌).
+- **State:** ✅ **Closed in Phase 14** — the v36.1.0 module's nine-method
+  `_ServerSideRowModelGridApi` surface is fully exposed (no new code).
 
-### A10. Show Values As — `ShowValuesAsModule` (partial)
+### A10. Show Values As — `ShowValuesAsModule` ✅ **shipped**
 - **Site:** `aggregation-show-values-as` page — percent of grand total / parent
   group modes.
-- **State:** implemented in `@libregrid/row-grouping` but 🟡: no `modes`
-  configuration and not wired into `@libregrid/menu`'s column menu
-  (`docs/parity/aggregation.md`).
-- **Proposed:** complete the 🟡 (add modes, register the menu item) — no new package.
+- **State:** ✅ **Completed in Phase 14** — `colDef.showValuesAsDef`, built-in
+  modes, `showValuesAs` menu item, `setColumnShowValuesAs` API in
+  `@libregrid/row-grouping`; parity `docs/parity/aggregation.md`.
 
-### A11. Group Row Dragging — (grouping DnD)
+### A11. Group Row Dragging — (grouping DnD) ⬜ **remaining**
 - **Site:** `grouping-row-dragging` page (Enterprise) — reordering group rows by
   drag.
 - **State:** **untracked** — no parity row exists and no package references the
@@ -152,24 +163,45 @@ All proposals are pending user decision.
 
 ## 4. Class B — shipped packages with documented gaps
 
-From `docs/parity/` (audited 2026-08-15). These are *not* "missing features" but
+From `docs/parity/` (audited 2026-08-23). These are *not* "missing features" but
 the residual ❌/🟡 rows inside them — included so the plan covers the full
 "missing from our offerings" picture:
 
 | Package | Gaps (❌ / 🟡) |
 | --- | --- |
-| `row-grouping` | sticky rows ❌ (`stickyRowSvc` never registered); `groupDisplayType` 🟡 (singleColumn only); group row renderer + params ❌; grand total row 🟡 (no `pinnedTop`/`pinnedBottom`); `groupHideColumnsUntilExpanded` ❌; `groupMaintainOrder` ❌; `groupLockGroupColumns` ❌; `groupHierarchyConfig` ❌; `suppressDragLeaveHidesColumns` ❌; `suppressGroupChangesColumnVisibility` ❌; `rowGroupPanelSuppressSort` ❌; `rowGroupOpened`/`expandOrCollapseAll` events ❌; group filter icon ❌ |
-| `aggregation` (in row-grouping) | `suppressAggFuncInHeader` ❌; `aggregateOnlyChangedColumns` 🟡; show values as 🟡 (see A10); `percentOfParentColumnTotal` note says "no pivot support" — **needs re-verification**, pivot shipped in Phase 8 |
+| `row-grouping` | sticky rows ❌ (`stickyRowSvc` never registered); `groupDisplayType` 🟡 (singleColumn only); group row renderer + params ❌; grand total row 🟡 (no `pinnedTop`/`pinnedBottom`); `groupHideColumnsUntilExpanded` ❌; `groupMaintainOrder` ❌; `groupLockGroupColumns` ❌; `groupHierarchyConfig` ❌; `suppressDragLeaveHidesColumns` ❌; `suppressGroupChangesColumnVisibility` ❌; `rowGroupPanelSuppressSort` ❌; `rowGroupOpened`/`expandOrCollapseAll` events ❌; group filter icon ❌; `refreshAfterGroupEdit` ❌ (A8) |
+| `aggregation` (in row-grouping) | `suppressAggFuncInHeader` ❌; `aggregateOnlyChangedColumns` 🟡; show values as ✅ (A10, Phase 14) |
 | `excel-export` | images ❌ (`addImageToCell`); tables ❌ (`exportAsExcelTable`); notes ❌ (`processNoteCallback`, `suppressGridNotesExport`, `suppressPrependAuthorToNotes`) — the 5.9 descoped set |
 | `integrated-charts` | commercial chart types ❌ (polar / statistical / funnel — commercial AG Charts only; on the pricing page they are **Bundle-only**, see Class C) |
 | `columns-tool-panel` | `allowDragFromColumnsToolPanel` ❌; `dragAndDropImageComponent(Params)` ❌; `rowGroupPanelSuppressSort` ❌ (drag long tail) |
-| `menu` (context) | stubs not yet wired: pinRow/pinTop/pinBottom/unpinRow, expandAll/contractAll, copy/copyWithHeaders/copyWithGroupHeaders/cut/paste, csvExport/excelExport, note |
-| `menu` (column) | stubs: columnFilter, pinSubMenu, editColumnName (post-1.0), calculatedColumn; rowGroup/rowUnGroup/expandAll/contractAll/valueAggSubMenu opt-in (not in default set) |
+| `menu` (context) | stubs not yet wired: pinRow/pinTop/pinBottom/unpinRow, expandAll/contractAll, copy/copyWithHeaders/copyWithGroupHeaders/cut/paste, csvExport/excelExport (note ✅ — Phase 15) |
+| `menu` (column) | stubs: columnFilter, pinSubMenu, valueAggSubMenu, rowGroup/rowUnGroup/expandAll/contractAll opt-in (not in default set); editColumnName ✅ and calculatedColumn ✅ (Phase 14/18) |
 | `cell-selection` | handle direction/reduction options 🟡 (deferred) |
 | `multi-filter` | custom reactive display component 🟡 |
 | `tree-data` | `treeDataChildrenField`/`treeDataParentIdField` 🟡 (blank leaf names); sticky rows ❌ |
 | `pivot` | `pivotPanelSuppressSort` 🟡 (interactive sort) |
-| `find` | its single ❌ row is **stale** (`toolbar` — shipped; see §7) |
+| `batch-edit` | SSRM batch editing ❌ (Enterprise is CSR only); single-undo-action grouping 🟡; `batchEditingStopped.changes` record shape 🟡; custom-renderer refresh spec 🟡 |
+| `calculated-columns` | `dataTypes` validation 🟡; explicit `colId` gating 🟡; pivot-result integration 🟡; non-CSR row models 🟡; group-path display references 🟡; `SUMIF`/`COUNTIF` cell ranges 🟡 (arrive with A1) |
+| `find` | no unresolved rows (toolbar ✅ since 1.1.0) |
+
+---
+
+## 4a. Class A items shipped since the original research (Phases 14–18)
+
+| Item | Phase | Package | Parity |
+| --- | --- | --- | --- |
+| A2 Calculated Columns | 18 | `@libregrid/calculated-columns` | [`calculated-columns.md`](docs/parity/calculated-columns.md) |
+| A3 Batch Editing | 17 | `@libregrid/batch-edit` | [`batch-edit.md`](docs/parity/batch-edit.md) |
+| A4 Cell Notes | 15 | `@libregrid/notes` | [`cell-notes.md`](docs/parity/cell-notes.md) |
+| A5 Row Numbers | 14 | `@libregrid/row-numbers` | [`row-numbers.md`](docs/parity/row-numbers.md) |
+| A7 Column Header Editing | 14 | `@libregrid/column-header-edit` | [`column-header-edit.md`](docs/parity/column-header-edit.md) |
+| A9 SSRM API verification | 14 | (closed — no new code) | `server-side-row-model.md` |
+| A10 Show Values As completion | 14 | `@libregrid/row-grouping` | [`aggregation.md`](docs/parity/aggregation.md) |
+| §7 doc-hygiene pass | 14 | (docs-only) | `gap-list.md` |
+
+**Beyond parity (no Enterprise counterpart):** Phase 16 shipped
+`@libregrid/server-side-selection` — durable spec-based SSRM selection
+(`docs/phases/phase-16-server-side-selection.md`).
 
 ---
 
@@ -213,37 +245,18 @@ Community") say otherwise. **No LibreGrid work is required** for these — stock
 
 ## 7. Doc hygiene — stale notes this research surfaced
 
-The toolbar shipped in **1.1.0** (`@libregrid/toolbar`, `docs/parity/toolbar.md`
-audited 2026-08-15: `toolbar` option ✅ and all built-in items ✅; only
-`toolbarItem` registered-name lookup 🟡), but several documents still call it
-❌ / post-1.0:
+The toolbar shipped in **1.1.0** (`@libregrid/toolbar`, `docs/parity/toolbar.md`).
+The original research found five stale rows; **all were corrected in Phase 14**
+(2026-08-18/19): `find.md` + `pivoting.md` toolbar rows ✅, migration guide
+post-1.0 list trimmed, phase-13 13A toolbar row marked shipped, `gap-list.md`
+counts refreshed. The `percentOfParentColumnTotal` note was re-verified (it
+describes our `showValuesAs` service, not the Enterprise baseline).
 
-1. `docs/parity/find.md:15` — `toolbar` ❌ row (stale; also inflates the gap-list
-   find count to "1 ❌").
-2. `docs/parity/pivoting.md:17` — `agPivotPanelToolbarItem` ❌ row (stale).
-3. `docs/guides/migration-guide.md` — "Notes, RowNumbers, **Toolbar**, AI toolkit
-   — post-1.0 candidates" (Toolbar part stale).
-4. `docs/phases/phase-13-hardening.md` 13A — `Toolbar` listed under
-   `[x] ❌ post-1.0`.
-5. `docs/parity/gap-list.md` — 13A list omits the shipped toolbar; per-domain
-   counts inherit the stale rows.
-
-Also: `docs/parity/aggregation.md` `percentOfParentColumnTotal` note ("no pivot
-support") predates the Phase 8 pivot package — re-verify.
-
-**Proposed action:** a docs-only pass correcting items 1–5 and re-verifying the
-aggregation note. No code.
-
-**Done in Phase 14 (P0-1), 2026-08-18/19.** Items 1–5 corrected as listed
-(`find.md` + `pivoting.md` toolbar rows ✅, migration guide post-1.0 list
-trimmed to Notes/AI toolkit, phase-13 13A toolbar row marked shipped,
-`gap-list.md` counts + 13A list refreshed). The `percentOfParentColumnTotal`
-note lives in the Show Values As section of `docs/parity/row-grouping.md`
-(referenced from `aggregation.md`): re-verified — it describes **our**
-`showValuesAs` service, not the Enterprise baseline; the service does not
-compute pivot-axis totals, so the mode reports `applicability: 'hide'` outside
-pivot (omitted from the menu) and `'inapplicable'` inside, with `isApplying`
-`false` so cells show the raw value.
+**Refresh 2026-08-23 (this document):** the stale rows this refresh corrected are
+the Class A statuses above — A2/A3/A4/A5/A7/A9/A10 were still marked "no package"
+in the original 2026-08-18 plan despite shipping in Phases 14–18. The remaining
+Class A list is now exactly: A1 Formulas, A6 AI Toolkit, A8 group-value editing,
+A11 group-row dragging.
 
 ---
 
@@ -264,50 +277,26 @@ so the plan is complete on the page the user asked about.
 
 ---
 
-## 9. Proposed priorities (proposal — needs decision)
+## 9. Remaining priorities (proposal — needs decision)
 
 Ordered by (value ÷ effort) and by unblocking existing stubs first:
 
-**P0 — small, unblocks stubs and docs (candidates for the next release):**
+**P0 — small, self-contained (candidates for the next release):**
+1. A8 Group value editing — option + re-aggregation timing in `@libregrid/row-grouping`
+   (stale blocker resolved; cell editing is Community stock).
+2. A11 Group row dragging — add the parity row, then the drag surface (pairs with
+   the columns-panel drag long tail).
 
-**Shipped — Phase 14 (`docs/phases/phase-14-p0-batch.md`), 2026-08-18/19:**
-1. ✅ §7 doc-hygiene pass (docs-only) — items 1–5 corrected, aggregation note re-verified.
-2. ✅ A9 SSRM API verification — closed with a note: the v36.1.0 module's nine-method
-   `_ServerSideRowModelGridApi` surface is fully exposed (no new code).
-3. ✅ A7 Column header editing — new `@libregrid/column-header-edit`; group entry point
-   is the group-header right-click context menu (Community v36 renders no group menu
-   button), per-column menu items hide for group targets.
-4. ✅ A5 Row numbers — new `@libregrid/row-numbers`; row-number click selects the
-   whole visible row; cell-selection never starts a drag from the column; row resizer
-   included.
-5. ✅ A10 Show values as completion — `colDef.showValuesAsDef`, built-in modes,
-   `showValuesAs` menu item, `setColumnShowValuesAs` API in `@libregrid/row-grouping`.
-6. ✅ Context-menu clipboard/export wiring — clipboard and Excel-export items resolve
-   through the menu registry when their modules are registered.
-
-New lockstep version: 1.2.0 (pending changeset consumption).
-
-**Shipped — Phase 15 (`docs/phases/phase-15-cell-notes.md`), 2026-08-19:**
-8. ✅ A4 Cell notes — new `@libregrid/notes`; hover/click/`Shift+F2` note
-   popups, read-only notes, `suppressNoteActions`, full-width row notes,
-   runtime `notesDataSource` swap; the `note` context-menu token joins
-   `DEFAULT_CONTEXT_MENU_ITEMS` (resolves to nothing without the module).
-
-**P1 — self-contained new packages (post-1.0 wave):**
-7. A2 Calculated columns.
-8. ✅ A4 Cell notes (unblocks `note` menu stub) — shipped in Phase 15.
-9. A3 Batch editing (pure add-on to Community editing).
-10. A8 Group value editing (option in `row-grouping`; stale blocker resolved).
-11. A1 Formulas (larger: engine + editor + custom functions).
+**P1 — self-contained new packages:**
+3. A1 Formulas — the largest remaining Class A item; the Phase 18 expression
+   engine is the shared core (`formula` seam + function registry).
 
 **P2 — strategic / larger (decide later):**
-12. A6 AI toolkit.
-13. A11 Group row dragging (after parity row is added).
-14. Class B long tail: sticky rows, groupDisplayType modes, group row renderer,
-    Excel images/tables/notes, columns-panel drag interactions.
+4. A6 AI toolkit.
+5. Class B long tail: sticky rows, groupDisplayType modes, group row renderer,
+   Excel images/tables/notes, columns-panel drag interactions, SSRM batch editing.
 
-**Declined:** Class C items. **No work:** Class D items (docs-only if anything —
-see §7).
+**Declined:** Class C items. **No work:** Class D items.
 
 ---
 
