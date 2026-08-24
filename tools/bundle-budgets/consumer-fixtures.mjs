@@ -42,6 +42,8 @@ const packages = [
   'integrated-charts',
   'sparklines',
   'toolbar',
+  'calculated-columns',
+  'ai-toolkit',
 ];
 const packageName = (name) => `@libregrid/${name}`;
 
