@@ -18,8 +18,16 @@ interface FakeEngineHooks {
   lastTools: string;
   concurrency: number;
   maxConcurrency: number;
+  /** Pointers handed out by `_malloc` and not yet `_free`d. */
+  live: Set<number>;
 }
 
+/**
+ * A fake engine that behaves like the real allocator in the ways that matter:
+ * `_malloc` returns **dirty** memory (emscripten's dlmalloc does not zero it),
+ * and `_free` is tracked so a test can assert nothing leaks. A fake that hands
+ * back zeroed memory silently passes code that forgets its NUL terminator.
+ */
 function makeFakeEngine(handlers: (input: string) => object): { engine: NeedleEngine; hooks: FakeEngineHooks } {
   const heap = new Uint8Array(1 << 20);
   let nextPtr = 4096;
@@ -31,15 +39,20 @@ function makeFakeEngine(handlers: (input: string) => object): { engine: NeedleEn
     lastTools: '',
     concurrency: 0,
     maxConcurrency: 0,
+    live: new Set<number>(),
   };
 
   const engine: NeedleEngine = {
     _malloc(n) {
       const p = nextPtr;
       nextPtr += n + 4096;
+      heap.fill(0xff, p, p + n);
+      hooks.live.add(p);
       return p;
     },
-    _free() {},
+    _free(p) {
+      hooks.live.delete(p);
+    },
     HEAPU8: heap,
     UTF8ToString(p) {
       let end = p;
@@ -80,8 +93,9 @@ function needleProvider(handlers: (input: string) => object) {
   return { provider: new NeedleWasmProvider({ loadEngine: async () => engine }), hooks };
 }
 
-function fakeCaches(initial: Map<string, Response>, openShouldReject = false) {
+function fakeCaches(initial: Map<string, Response>, openShouldReject = false, otherCacheNames: string[] = []) {
   const store = new Map(initial);
+  const names = new Set(['libregrid-needle-v1', ...otherCacheNames]);
   const cache = {
     match: vi.fn(async (url: string) => store.get(url)),
     put: vi.fn(async (url: string, res: Response) => {
@@ -92,8 +106,10 @@ function fakeCaches(initial: Map<string, Response>, openShouldReject = false) {
     if (openShouldReject) throw new Error('insecure context');
     return cache;
   });
-  vi.stubGlobal('caches', { open });
-  return { cache, open, store };
+  const keys = vi.fn(async () => [...names]);
+  const deleteFn = vi.fn(async (name: string) => names.delete(name));
+  vi.stubGlobal('caches', { open, keys, delete: deleteFn });
+  return { cache, open, store, names, keys, delete: deleteFn };
 }
 
 describe('NeedleWasmProvider', () => {
@@ -139,6 +155,44 @@ describe('NeedleWasmProvider', () => {
     await provider.complete(request);
     expect(hooks.lastSystem).toBe(request.context);
     expect(JSON.parse(hooks.lastTools)).toHaveLength(1);
+  });
+
+  it('NUL-terminates every string it copies into dirty engine memory', async () => {
+    const { provider, hooks } = needleProvider(() => ({ type: 'call', function_calls: [], confidence: 1 }));
+    await provider.complete(request);
+    // The fake fills each allocation with 0xff first, so an unterminated string
+    // reads back with trailing garbage rather than matching exactly.
+    expect(hooks.lastSystem).toBe(request.context);
+    expect(JSON.parse(hooks.lastTools)).toEqual(request.tools);
+  });
+
+  it('frees every pointer it allocates, including the init strings', async () => {
+    const { provider, hooks } = needleProvider(() => ({ type: 'call', function_calls: [], confidence: 1 }));
+    await provider.complete(request);
+    await provider.complete({ ...request, context: 'changed system turn' });
+    expect(hooks.live.size).toBe(0);
+  });
+
+  it('frees the completion pointers even when the engine fails', async () => {
+    const { engine, hooks } = makeFakeEngine(() => ({}));
+    const failing: NeedleEngine = { ...engine, _needle_complete: () => -7 };
+    const provider = new NeedleWasmProvider({ loadEngine: async () => failing });
+    await expect(provider.complete(request)).rejects.toThrowError(/needle_complete failed \(rc=-7\)/);
+    expect(hooks.live.size).toBe(0);
+  });
+
+  it('reports an engine failure as such, not as a parse error', async () => {
+    const { engine } = makeFakeEngine(() => ({}));
+    const provider = new NeedleWasmProvider({ loadEngine: async () => ({ ...engine, _needle_complete: () => -1 }) });
+    await expect(provider.complete(request)).rejects.toThrowError(/needle_complete failed/);
+  });
+
+  it('does not read stale heap bytes when the engine writes no output', async () => {
+    const { engine } = makeFakeEngine(() => ({}));
+    // rc >= 0 but nothing written: the out buffer is still 0xff-filled.
+    const silent: NeedleEngine = { ...engine, _needle_complete: () => 0 };
+    const provider = new NeedleWasmProvider({ loadEngine: async () => silent });
+    await expect(provider.complete(request)).rejects.toThrowError(/malformed Needle response/);
   });
 
   it('serialises concurrent requests on one session', async () => {
@@ -258,6 +312,19 @@ describe('runToolkit (ADR 0006 escalation)', () => {
     expect(outcome).toEqual({ status: 'selected', call: highConf.calls[0], confidence: 0.8, via: 'openai-compatible', result: highConf });
   });
 
+  it('clarifies rather than applying a fallback that is also below the threshold', async () => {
+    // The fallback is any AiProvider, not necessarily a trusted remote one —
+    // escalation must not become a way to apply an under-confident answer.
+    const primary = stubProvider(lowConf, 'needle-wasm');
+    const fallback = stubProvider({ calls: [{ name: 'resetGrid', arguments: {} }], confidence: 0.3 }, 'openai-compatible');
+    const outcome = await runToolkit(primary, request, { fallback });
+    expect(outcome).toMatchObject({
+      status: 'clarify',
+      reason: expect.stringContaining('after escalation to openai-compatible'),
+    });
+    expect(fallback.complete).toHaveBeenCalled();
+  });
+
   it('clarifies when the selected result carries no actionable call', async () => {
     const outcome = await runToolkit(stubProvider({ calls: [], confidence: 0.9 }, 'needle-wasm'), request);
     expect(outcome).toMatchObject({ status: 'clarify', reason: expect.stringContaining('off-topic') });
@@ -292,16 +359,30 @@ describe('NeedleWasmProvider weight caching (built-in loader)', () => {
     return { engine, hooks };
   }
 
+  interface FakeScript {
+    src: string;
+    integrity?: string;
+    crossOrigin?: string;
+    onload?: (() => void) | undefined;
+    onerror?: (() => void) | undefined;
+  }
+
   function stubBrowser(engine: NeedleEngine) {
+    const scripts: FakeScript[] = [];
     vi.stubGlobal('document', {
       head: {
-        appendChild(script: { onload?: () => void }) {
+        appendChild(script: FakeScript) {
           queueMicrotask(() => script.onload?.());
         },
       },
-      createElement: () => ({ src: '', onload: undefined as (() => void) | undefined, onerror: undefined as (() => void) | undefined }),
+      createElement: () => {
+        const script: FakeScript = { src: '', onload: undefined, onerror: undefined };
+        scripts.push(script);
+        return script;
+      },
     });
     vi.stubGlobal('createNeedle', () => Promise.resolve(engine));
+    return scripts;
   }
 
   function fakeFetch(cact: Uint8Array): string[] {
@@ -374,6 +455,96 @@ describe('NeedleWasmProvider weight caching (built-in loader)', () => {
 
     expect(calls).toEqual([WEIGHTS_URL]);
     expect(hooks.loadedBytes).toBe(4n);
+  });
+
+  it('stores the weights without teeing the body through response.clone()', async () => {
+    const cact = new Uint8Array([1, 2, 3, 4]);
+    const { engine } = makeBuiltInEngine();
+    stubBrowser(engine);
+    const { store } = fakeCaches(new Map());
+    let cloned = false;
+    vi.stubGlobal('fetch', ((url: string) => {
+      const response = new Response(url.endsWith('.cact') ? cact : new Uint8Array());
+      response.clone = () => {
+        cloned = true;
+        return response;
+      };
+      return Promise.resolve(response);
+    }) as unknown as typeof fetch);
+
+    await new NeedleWasmProvider({ baseUrl: BASE }).ensureEngine();
+
+    // A ~14 MB body must not be buffered twice just to feed the cache.
+    expect(cloned).toBe(false);
+    expect(new Uint8Array(await (store.get(WEIGHTS_URL) as Response).arrayBuffer())).toEqual(cact);
+  });
+
+  it('sweeps artifact caches left by earlier generations', async () => {
+    const cact = new Uint8Array([1]);
+    const { engine } = makeBuiltInEngine();
+    stubBrowser(engine);
+    const { names } = fakeCaches(new Map(), false, ['libregrid-needle-v0', 'unrelated-app-cache']);
+    fakeFetch(cact);
+
+    await new NeedleWasmProvider({ baseUrl: BASE }).ensureEngine();
+
+    expect(names.has('libregrid-needle-v0')).toBe(false);
+    expect(names.has('libregrid-needle-v1')).toBe(true);
+    // Only our own generations are ours to delete.
+    expect(names.has('unrelated-app-cache')).toBe(true);
+  });
+
+  it('sets SRI attributes on the glue tag only when an integrity hash is given', async () => {
+    const cact = new Uint8Array([1]);
+    const { engine } = makeBuiltInEngine();
+
+    const plain = stubBrowser(engine);
+    fakeCaches(new Map());
+    fakeFetch(cact);
+    await new NeedleWasmProvider({ baseUrl: BASE }).ensureEngine();
+    expect(plain[0]?.integrity).toBeUndefined();
+    expect(plain[0]?.crossOrigin).toBeUndefined();
+
+    const pinned = stubBrowser(engine);
+    fakeCaches(new Map());
+    fakeFetch(cact);
+    await new NeedleWasmProvider({ baseUrl: BASE, scriptIntegrity: 'sha384-abc' }).ensureEngine();
+    expect(pinned[0]?.integrity).toBe('sha384-abc');
+    expect(pinned[0]?.crossOrigin).toBe('anonymous');
+  });
+
+  it('shares one load between concurrent callers and injects the glue once', async () => {
+    const cact = new Uint8Array([1, 2]);
+    const { engine, hooks } = makeBuiltInEngine();
+    const scripts = stubBrowser(engine);
+    fakeCaches(new Map());
+    const calls = fakeFetch(cact);
+    const provider = new NeedleWasmProvider({ baseUrl: BASE });
+
+    await Promise.all([provider.ensureEngine(), provider.ensureEngine(), provider.willDownloadWeights()]);
+
+    expect(scripts).toHaveLength(1);
+    expect(calls).toEqual([WEIGHTS_URL]);
+    expect(hooks.loadedBytes).toBe(2n);
+  });
+
+  it('reuses the instantiated engine when a weight fetch fails, rather than re-injecting the glue', async () => {
+    const cact = new Uint8Array([3, 4]);
+    const { engine, hooks } = makeBuiltInEngine();
+    const scripts = stubBrowser(engine);
+    fakeCaches(new Map());
+    let attempt = 0;
+    vi.stubGlobal('fetch', (() => {
+      attempt++;
+      return attempt === 1 ? Promise.resolve(new Response('', { status: 503 })) : Promise.resolve(new Response(cact));
+    }) as unknown as typeof fetch);
+
+    const provider = new NeedleWasmProvider({ baseUrl: BASE });
+    await expect(provider.ensureEngine()).rejects.toThrowError(/artifact fetch failed \(503\)/);
+    await provider.ensureEngine();
+
+    expect(scripts).toHaveLength(1);
+    expect(hooks.loadedBytes).toBe(2n);
   });
 
   it('degrades to a network fetch if the cache cannot be opened', async () => {

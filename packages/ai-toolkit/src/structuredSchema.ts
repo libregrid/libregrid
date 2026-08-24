@@ -1,10 +1,10 @@
-import type { StructuredSchemaColumnParams, StructuredSchemaParams } from 'ag-grid-community';
+import type { StructuredSchemaColumnParams, StructuredSchemaFeature, StructuredSchemaParams } from 'ag-grid-community';
 
 /** A leaf column as seen by the schema builder. */
 export interface AiColumnInfo {
   colId: string;
   headerName?: string;
-  /** Whether the column accepts value filters (`colDef.filter !== false`). */
+  /** Whether the column accepts value filters (Community's `isFilterAllowed()`). */
   filterable: boolean;
 }
 
@@ -16,7 +16,7 @@ export interface StructuredSchemaInput {
 }
 
 /** Features the v1 schema can express (the rest are ignored in `exclude`). */
-export const V1_FEATURES = ['filter', 'sort', 'columnVisibility'] as const;
+export const V1_FEATURES = ['filter', 'sort', 'columnVisibility'] as const satisfies readonly StructuredSchemaFeature[];
 
 const MAX_SET_VALUES = 8;
 

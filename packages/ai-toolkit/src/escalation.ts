@@ -18,9 +18,13 @@ export interface RunToolkitOptions {
 /**
  * The ADR 0006 escalation loop: run the primary provider, and if its
  * confidence is below the threshold, try the optional remote fallback.
- * Below-threshold results are never applied — the failure mode is a
+ * Below-threshold results are never applied — including the fallback's, which
+ * is gated on the same threshold — so the failure mode is always a
  * clarification, not a guessed state change. The selected call still has to
  * pass `validateToolCall` before `applyToolCall`.
+ *
+ * v1 acts on the first call only; `outcome.result.calls` carries the rest for
+ * consumers that want them.
  */
 export async function runToolkit(
   primary: AiProvider,
@@ -38,6 +42,12 @@ export async function runToolkit(
     }
     result = await options.fallback.complete(request);
     via = options.fallback.name;
+    // The fallback is gated too. `OpenAiCompatibleProvider` reports 1 by
+    // design, but `fallback` is any `AiProvider` — a second local model must
+    // not become the way an under-confident answer gets applied anyway.
+    if (result.confidence < threshold) {
+      return { status: 'clarify', reason: `low confidence after escalation to ${via} (${result.confidence.toFixed(2)} < ${threshold})`, result };
+    }
   }
 
   const call = result.calls[0];

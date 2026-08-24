@@ -4,6 +4,7 @@
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 import { createGrid, ModuleRegistry, AllCommunityModule, type GridApi, type GridOptions } from 'ag-grid-community';
 import { EnterpriseCoreModule } from '@libregrid/core';
+import { SetFilterModule } from '@libregrid/set-filter';
 import { AiToolkitModule } from './aiToolkitModule';
 import { buildGridTools, validateToolCall, type RawToolCall } from './tools';
 import { toolCallToStatePatch } from './applyToolCall';
@@ -11,7 +12,7 @@ import { toolCallToStatePatch } from './applyToolCall';
 let api: GridApi | undefined;
 
 beforeAll(() => {
-  ModuleRegistry.registerModules([AllCommunityModule, EnterpriseCoreModule, AiToolkitModule]);
+  ModuleRegistry.registerModules([AllCommunityModule, EnterpriseCoreModule, SetFilterModule, AiToolkitModule]);
 });
 
 afterEach(() => {
@@ -28,10 +29,14 @@ function mountGrid(options: GridOptions = {}): GridApi {
   return createGrid(
     el,
     {
+      // The filter config matters twice over: without any `filter` Community
+      // reports the column as not filterable, and `setFilters` emits a
+      // `filterType: 'set'` model that only an `agSetColumnFilter` accepts —
+      // a text filter drops it silently.
       columnDefs: [
-        { field: 'name', headerName: 'Name' },
-        { field: 'age', headerName: 'Age' },
-        { field: 'city', headerName: 'City' },
+        { field: 'name', headerName: 'Name', filter: 'agSetColumnFilter' },
+        { field: 'age', headerName: 'Age', filter: 'agSetColumnFilter' },
+        { field: 'city', headerName: 'City', filter: 'agSetColumnFilter' },
       ],
       rowData: [
         { name: 'Ada', age: 36, city: 'London' },
@@ -97,16 +102,11 @@ describe('AiToolkitModule on a live grid', () => {
     if (hide.ok) api.setState(toolCallToStatePatch(hide));
     await vi.waitFor(() => expect(columnHidden(api, 'age')).toBe(true));
 
-    // Filter patches are asserted in unit tests: jsdom never instantiates the
-    // header filter UI, so set-filter models do not round-trip through a live
-    // grid here (verified by probe). Sort and visibility do.
+    // Filter, on the live grid: a set-filter model applies and drops rows.
     const filter = validateToolCall({ name: 'setFilters', arguments: { column: 'city', values: ['London'] } } as RawToolCall, columns);
     expect(filter.ok).toBe(true);
-    if (filter.ok) {
-      expect(toolCallToStatePatch(filter)).toEqual({
-        filter: { filterModel: { city: { filterType: 'set', values: ['London'] } } },
-      });
-    }
+    if (filter.ok) api.setState(toolCallToStatePatch(filter, api.getFilterModel()));
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(2));
 
     // Sort.
     const sort = validateToolCall({ name: 'setSort', arguments: { sortModel: [{ colId: 'age', sort: 'desc' }] } } as RawToolCall, columns);
@@ -120,6 +120,36 @@ describe('AiToolkitModule on a live grid', () => {
     if (reset.ok) api.setState(toolCallToStatePatch(reset));
     await vi.waitFor(() => expect(columnHidden(api, 'age')).toBe(false));
     await vi.waitFor(() => expect(api.getColumnState().find((c) => c.colId === 'age')?.sort).toBeNull());
+  });
+
+  it('filtering a second column keeps the first column filter (live grid)', async () => {
+    api = mountGrid();
+    await columnsReady(api);
+    const columns = [
+      { colId: 'name', headerName: 'Name', filterable: true },
+      { colId: 'city', headerName: 'City', filterable: true },
+    ];
+
+    const first = validateToolCall({ name: 'setFilters', arguments: { column: 'city', values: ['London'] } } as RawToolCall, columns);
+    if (first.ok) api.setState(toolCallToStatePatch(first, api.getFilterModel()));
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(2));
+
+    // Without merging over the current model, `setState` replaces the filter
+    // model outright and the City filter silently disappears.
+    const second = validateToolCall({ name: 'setFilters', arguments: { column: 'name', values: ['Ada'] } } as RawToolCall, columns);
+    if (second.ok) api.setState(toolCallToStatePatch(second, api.getFilterModel()));
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(1));
+
+    expect(api.getFilterModel()).toEqual({
+      city: { filterType: 'set', values: ['London'] },
+      name: { filterType: 'set', values: ['Ada'] },
+    });
+
+    // Clearing one column leaves the other in place.
+    const clear = validateToolCall({ name: 'setFilters', arguments: { column: 'name', values: [] } } as RawToolCall, columns);
+    if (clear.ok) api.setState(toolCallToStatePatch(clear, api.getFilterModel()));
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(2));
+    expect(api.getFilterModel()).toEqual({ city: { filterType: 'set', values: ['London'] } });
   });
 
   it('rejects a tool call that names an unknown column', () => {

@@ -4,6 +4,8 @@ import { buildStructuredSchema, type AiColumnInfo, type StructuredSchemaInput } 
 interface ColumnLike {
   getColId(): string;
   getColDef(): { headerName?: string; field?: string; filter?: unknown };
+  /** Community's own answer, which accounts for `defaultColDef` and cell data types. */
+  isFilterAllowed?(): boolean;
 }
 
 interface ColModelLike {
@@ -27,7 +29,13 @@ export function getStructuredSchema(beans: BeanCollection, params?: StructuredSc
   const columns: AiColumnInfo[] = colModel.getCols().map((col) => {
     const colDef = col.getColDef();
     const headerName = colDef.headerName ?? (typeof colDef.field === 'string' ? colDef.field : undefined);
-    const info: AiColumnInfo = { colId: col.getColId(), filterable: colDef.filter !== false };
+    // Ask the column, not the colDef: a column is filterable only when `filter`
+    // is actually configured (directly or via `defaultColDef`), so reading
+    // `colDef.filter !== false` reports every unconfigured column as filterable.
+    const info: AiColumnInfo = {
+      colId: col.getColId(),
+      filterable: col.isFilterAllowed?.() ?? (colDef.filter !== undefined && colDef.filter !== false),
+    };
     if (headerName !== undefined) info.headerName = headerName;
     return info;
   });

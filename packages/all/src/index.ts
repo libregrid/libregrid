@@ -229,15 +229,32 @@ export { SparklineCellRenderer, SparklinesModule } from '@libregrid/sparklines';
 
 export {
   AiToolkitModule,
+  DEFAULT_CONFIDENCE_THRESHOLD,
+  MAX_FILTER_VALUES,
   NeedleWasmProvider,
   OpenAiCompatibleProvider,
+  V1_FEATURES,
+  applyToolCall,
   buildGridTools,
+  buildStructuredSchema,
   getStructuredSchema,
   runToolkit,
   toolCallToStatePatch,
   validateToolCall,
 } from '@libregrid/ai-toolkit';
-export type { AiProvider, AiRequest, RawToolCall, ValidatedCall } from '@libregrid/ai-toolkit';
+export type {
+  AiColumnInfo,
+  AiProvider,
+  AiProviderResult,
+  AiRequest,
+  NeedleWasmOptions,
+  RawToolCall,
+  RunToolkitOptions,
+  StructuredSchemaInput,
+  ToolkitOutcome,
+  ValidatedCall,
+  ValidationFailure,
+} from '@libregrid/ai-toolkit';
 
 export {
   createColumnDefs,

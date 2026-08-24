@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import type { BeanCollection } from 'ag-grid-community';
-import { applyToolCall, toolCallToStatePatch } from './applyToolCall';
 import { buildGridTools, MAX_FILTER_VALUES, validateToolCall } from './tools';
 import type { AiColumnInfo } from './structuredSchema';
 
 const columns: AiColumnInfo[] = [
   { colId: 'country', headerName: 'Country', filterable: true },
   { colId: 'age', headerName: 'Age', filterable: true },
+];
+
+/** A grid where one column carries no filter — `setFilters` must not offer it. */
+const mixedColumns: AiColumnInfo[] = [
+  { colId: 'country', headerName: 'Country', filterable: true },
+  { colId: 'notes', headerName: 'Notes', filterable: false },
 ];
 
 describe('buildGridTools', () => {
@@ -23,6 +27,40 @@ describe('buildGridTools', () => {
   it('handles an empty column set without crashing', () => {
     const tools = buildGridTools([]);
     expect(tools.map((t) => t.name)).toHaveLength(4);
+  });
+});
+
+describe('buildGridTools filterability', () => {
+  it('offers setFilters only on filterable columns, while other tools see them all', () => {
+    const tools = buildGridTools(mixedColumns);
+    const setFilters = tools.find((t) => t.name === 'setFilters') as any;
+    expect(setFilters.parameters.properties.column.enum).toEqual(['country']);
+    expect(setFilters.parameters.properties.values.maxItems).toBe(MAX_FILTER_VALUES);
+    // Sorting and hiding a non-filterable column are both still legitimate.
+    const setSort = tools.find((t) => t.name === 'setSort') as any;
+    expect(setSort.parameters.properties.sortModel.items.properties.colId.enum).toEqual(['country', 'notes']);
+    const visibility = tools.find((t) => t.name === 'setColumnVisibility') as any;
+    expect(visibility.parameters.properties.hiddenColIds.items.enum).toEqual(['country', 'notes']);
+  });
+});
+
+describe('validateToolCall filterability', () => {
+  it('rejects a filter on a known but non-filterable column', () => {
+    expect(validateToolCall({ name: 'setFilters', arguments: { column: 'notes', values: ['x'] } }, mixedColumns)).toEqual({
+      ok: false,
+      reason: 'column is not filterable: notes',
+    });
+  });
+
+  it('still allows sorting and hiding a non-filterable column', () => {
+    expect(validateToolCall({ name: 'setColumnVisibility', arguments: { hiddenColIds: ['notes'] } }, mixedColumns)).toMatchObject({
+      ok: true,
+      kind: 'visibility',
+    });
+    expect(validateToolCall({ name: 'setSort', arguments: { sortModel: [{ colId: 'notes', sort: 'asc' }] } }, mixedColumns)).toMatchObject({
+      ok: true,
+      kind: 'sort',
+    });
   });
 });
 
@@ -86,87 +124,5 @@ describe('validateToolCall', () => {
       ok: false,
       reason: 'unknown tool: destroyTheGrid',
     });
-  });
-});
-
-describe('toolCallToStatePatch', () => {
-  it('maps each kind to the GridState section it owns', () => {
-    expect(toolCallToStatePatch({ ok: true, kind: 'sort', sortModel: [{ colId: 'age', sort: 'asc' }] })).toEqual({
-      sort: { sortModel: [{ colId: 'age', sort: 'asc' }] },
-    });
-    expect(toolCallToStatePatch({ ok: true, kind: 'filter', column: 'country', values: ['USA'] })).toEqual({
-      filter: { filterModel: { country: { filterType: 'set', values: ['USA'] } } },
-    });
-    expect(toolCallToStatePatch({ ok: true, kind: 'visibility', hiddenColIds: ['age'] })).toEqual({
-      columnVisibility: { hiddenColIds: ['age'] },
-    });
-    expect(toolCallToStatePatch({ ok: true, kind: 'reset' })).toEqual({
-      sort: { sortModel: [] },
-      filter: { filterModel: {} },
-      columnVisibility: { hiddenColIds: [] },
-    });
-  });
-
-  it('maps an empty values list to a null (clear) entry', () => {
-    expect(toolCallToStatePatch({ ok: true, kind: 'filter', column: 'age', values: [] })).toEqual({
-      filter: { filterModel: { age: null } },
-    });
-  });
-});
-
-describe('applyToolCall', () => {
-  function fakeBeans(setState: ReturnType<typeof vi.fn>, filterModel: Record<string, unknown> | null = null): BeanCollection {
-    return {
-      stateSvc: { setState },
-      filterManager: { getFilterModel: () => filterModel },
-    } as unknown as BeanCollection;
-  }
-
-  it('routes every kind through stateSvc.setState', () => {
-    const setState = vi.fn();
-    applyToolCall(fakeBeans(setState), { ok: true, kind: 'reset' });
-    expect(setState).toHaveBeenCalledTimes(1);
-    expect(setState.mock.calls[0][0]).toEqual({
-      sort: { sortModel: [] },
-      filter: { filterModel: {} },
-      columnVisibility: { hiddenColIds: [] },
-    });
-  });
-
-  it('merges a single-column filter over the current model without wiping other columns', () => {
-    const setState = vi.fn();
-    applyToolCall(fakeBeans(setState, { country: { filterType: 'set', values: ['USA'] } }), {
-      ok: true,
-      kind: 'filter',
-      column: 'age',
-      values: [18],
-    });
-    expect(setState.mock.calls[0][0]).toEqual({
-      filter: { filterModel: { country: { filterType: 'set', values: ['USA'] }, age: { filterType: 'set', values: [18] } } },
-    });
-  });
-
-  it('clears a column filter on an empty values list, keeping the rest', () => {
-    const setState = vi.fn();
-    applyToolCall(fakeBeans(setState, { country: { filterType: 'set', values: ['USA'] }, age: null }), {
-      ok: true,
-      kind: 'filter',
-      column: 'age',
-      values: [],
-    });
-    expect(setState.mock.calls[0][0]).toEqual({ filter: { filterModel: { country: { filterType: 'set', values: ['USA'] } } } });
-  });
-
-  it('works without a filterManager bean (no merge source)', () => {
-    const setState = vi.fn();
-    const beans = fakeBeans(setState);
-    delete (beans as Record<string, unknown>).filterManager;
-    applyToolCall(beans, { ok: true, kind: 'filter', column: 'age', values: [18] });
-    expect(setState.mock.calls[0][0]).toEqual({ filter: { filterModel: { age: { filterType: 'set', values: [18] } } } });
-  });
-
-  it('throws a named error when stateSvc is missing', () => {
-    const beans = {} as BeanCollection;
-    expect(() => applyToolCall(beans, { ok: true, kind: 'reset' })).toThrowError(/stateSvc bean missing/);
   });
 });

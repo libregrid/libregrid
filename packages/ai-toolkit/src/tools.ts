@@ -19,6 +19,13 @@ export const MAX_FILTER_VALUES = 50;
 export function buildGridTools(columns: AiColumnInfo[]): Record<string, unknown>[] {
   const colIds = columns.map((c) => c.colId);
   const colIdSchema: Record<string, unknown> = { type: 'string', enum: colIds, description: 'column id' };
+  // Only filterable columns may be filtered — same rule `buildStructuredSchema`
+  // applies, and `validateToolCall` enforces it if the model ignores the enum.
+  const filterColIdSchema: Record<string, unknown> = {
+    type: 'string',
+    enum: columns.filter((c) => c.filterable).map((c) => c.colId),
+    description: 'column id',
+  };
 
   return [
     {
@@ -45,13 +52,15 @@ export function buildGridTools(columns: AiColumnInfo[]): Record<string, unknown>
     },
     {
       name: 'setFilters',
+      // No "call once per column" hint: `runToolkit` acts on the first call
+      // only, so inviting a multi-call answer would just discard the rest.
       description:
-        'Keep only the rows whose value in one column is among the given values (set semantics). Call once per column; an empty values array clears that column filter.',
+        'Keep only the rows whose value in one column is among the given values (set semantics). Filters one column; an empty values array clears that column filter.',
       parameters: {
         type: 'object',
         properties: {
-          column: colIdSchema,
-          values: { type: 'array', description: 'values to keep' },
+          column: filterColIdSchema,
+          values: { type: 'array', description: 'values to keep', maxItems: MAX_FILTER_VALUES },
         },
         required: ['column', 'values'],
       },
@@ -104,6 +113,7 @@ function isStringArray(value: unknown, known: Set<string>): string[] | null {
  */
 export function validateToolCall(call: RawToolCall, columns: AiColumnInfo[]): Result {
   const known = new Set(columns.map((c) => c.colId));
+  const filterable = new Set(columns.filter((c) => c.filterable).map((c) => c.colId));
   const args = call.arguments ?? {};
 
   switch (call.name) {
@@ -126,6 +136,9 @@ export function validateToolCall(call: RawToolCall, columns: AiColumnInfo[]): Re
     case 'setFilters': {
       if (typeof args.column !== 'string' || !known.has(args.column)) {
         return { ok: false, reason: `unknown column id in setFilters: ${String(args.column)}` };
+      }
+      if (!filterable.has(args.column)) {
+        return { ok: false, reason: `column is not filterable: ${args.column}` };
       }
       if (!Array.isArray(args.values)) return { ok: false, reason: 'values must be an array' };
       if (args.values.length > MAX_FILTER_VALUES) {

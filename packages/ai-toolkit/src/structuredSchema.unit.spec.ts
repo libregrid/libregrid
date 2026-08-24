@@ -102,8 +102,8 @@ describe('getStructuredSchema (bean adapter)', () => {
     return {
       colModel: {
         getCols: () => [
-          { getColId: () => 'country', getColDef: () => ({ headerName: 'Country' }) },
-          { getColId: () => 'age', getColDef: () => ({ field: 'age', filter: false }) },
+          { getColId: () => 'country', getColDef: () => ({ headerName: 'Country', filter: true }), isFilterAllowed: () => true },
+          { getColId: () => 'age', getColDef: () => ({ field: 'age', filter: false }), isFilterAllowed: () => false },
         ],
       },
       filterManager: { getFilterModel: () => ({ country: { values: ['USA'] } }) },
@@ -111,10 +111,37 @@ describe('getStructuredSchema (bean adapter)', () => {
     } as unknown as BeanCollection;
   }
 
-  it('maps colDefs to column info (headerName ?? field, filter !== false)', () => {
+  it('maps colDefs to column info (headerName ?? field) and asks the column about filtering', () => {
     const schema = getStructuredSchema(fakeBeans());
     expect((sections(schema).filterModel as any).properties.country.description).toBe('column "Country"');
     expect(sections(schema).filterModel && Object.keys((sections(schema).filterModel as any).properties)).toEqual(['country']);
+  });
+
+  it('does not report an unconfigured column as filterable', () => {
+    // A plain colDef with no `filter` is not filterable in Community — reading
+    // `colDef.filter !== false` would wrongly advertise it to the model.
+    const beans = fakeBeans({
+      colModel: {
+        getCols: () => [
+          { getColId: () => 'plain', getColDef: () => ({ field: 'plain' }), isFilterAllowed: () => false },
+          { getColId: () => 'typed', getColDef: () => ({ field: 'typed' }), isFilterAllowed: () => true },
+        ],
+      },
+    });
+    expect(Object.keys((sections(getStructuredSchema(beans)).filterModel as any).properties)).toEqual(['typed']);
+  });
+
+  it('falls back to the colDef when a column cannot answer isFilterAllowed', () => {
+    const beans = fakeBeans({
+      colModel: {
+        getCols: () => [
+          { getColId: () => 'unset', getColDef: () => ({ field: 'unset' }) },
+          { getColId: () => 'off', getColDef: () => ({ field: 'off', filter: false }) },
+          { getColId: () => 'on', getColDef: () => ({ field: 'on', filter: 'agTextColumnFilter' }) },
+        ],
+      },
+    });
+    expect(Object.keys((sections(getStructuredSchema(beans)).filterModel as any).properties)).toEqual(['on']);
   });
 
   it('passes current filter values through for includeSetValues hints', () => {
