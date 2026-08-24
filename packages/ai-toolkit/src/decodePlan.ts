@@ -1,7 +1,7 @@
 import type { RawToolCall } from './tools';
 import type { GridAiEnvironment } from './environment';
 import type { AiFilterCondition, AiGridPlan, AiSort, AiVisibilityChange } from './plan';
-import type { AiFilterOperator, AiScalar } from './capabilities';
+import { isAiFilterOperator, type AiScalar } from './capabilities';
 
 export type DecodeResult = { ok: true; plan: AiGridPlan } | { ok: false; reason: string };
 
@@ -69,11 +69,12 @@ function decodeConditions(
     const columnId = resolve(entry.column, environment);
     if (!columnId) return { ok: false, reason: `unknown column reference: ${String(entry.column)}` };
     if (typeof entry.operator !== 'string') return { ok: false, reason: 'condition operator must be a string' };
+    if (!isAiFilterOperator(entry.operator)) return { ok: false, reason: `unknown filter operator: ${entry.operator}` };
 
     const operands = normaliseOperands(entry.operands);
     if (operands === null) return { ok: false, reason: 'operands must be strings, numbers or booleans' };
 
-    conditions.push({ columnId, operator: entry.operator as AiFilterOperator, operands });
+    conditions.push({ columnId, operator: entry.operator, operands });
   }
 
   return { ok: true, conditions };

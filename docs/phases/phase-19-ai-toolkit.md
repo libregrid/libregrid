@@ -151,6 +151,9 @@ it must not depend on predefined business column names.
   Train/validation/test schemas must use split-exclusive headers, raw IDs, and
   values; evaluation grids must contain vocabulary unseen during training.
   Include typed multi-column AND filters, negation, and commands whose intent
-  depends on current grid state.
+  depends on current grid state. The corpus must cover every advertised filter
+  operator in every split, including Advanced Filter text `contains`,
+  `notContains`, `startsWith`, `endsWith`, `eq`, `neq`, `isBlank`, and
+  `isNotBlank`; add a coverage audit which fails on drift.
 - [ ] Browser tests for cached local-model loading, WebGPU/WASM fallback, final
   ONNX artifact size, and the full validator-before-apply path.

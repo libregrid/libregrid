@@ -3,7 +3,7 @@ import { buildAiEnvironment } from './environment';
 import { decodePlan } from './decodePlan';
 import { validatePlan } from './validatePlan';
 import { compilePlan } from './compilePlan';
-import { operatorsFor, type AiFilterKind } from './capabilities';
+import { operatorsFor, type AiFilterKind, type AiFilterOperator } from './capabilities';
 import { revisionOf, type AiColumnSnapshot, type AiGridSnapshot } from './gridSnapshot';
 import type { RawToolCall } from './tools';
 
@@ -82,6 +82,21 @@ describe('decodePlan', () => {
 
   it('rejects an unknown tool', () => {
     expect(decode([{ name: 'dropTable', arguments: {} }])).toEqual({ ok: false, reason: 'unknown tool: dropTable' });
+  });
+
+  it('decodes every Advanced Filter text operator and rejects invented ones', () => {
+    const textOperators: AiFilterOperator[] = ['eq', 'neq', 'contains', 'notContains', 'startsWith', 'endsWith', 'isBlank', 'isNotBlank'];
+    for (const operator of textOperators) {
+      const operands = operator === 'isBlank' || operator === 'isNotBlank' ? [] : ['North'];
+      expect(decode([{ name: 'setFilter', arguments: { conditions: [{ column: ref('location'), operator, operands }] } }])).toMatchObject({
+        ok: true,
+        plan: { filter: [{ columnId: 'location', operator, operands }] },
+      });
+    }
+    expect(decode([{ name: 'setFilter', arguments: { conditions: [{ column: ref('location'), operator: 'matchesRegex', operands: ['.*'] }] } }])).toEqual({
+      ok: false,
+      reason: 'unknown filter operator: matchesRegex',
+    });
   });
 
   it('treats an empty condition list as clearing the filter', () => {
@@ -201,6 +216,25 @@ describe('compilePlan', () => {
   it('emits a range model for between', () => {
     const patch = compilePlan({ version: 1, filter: [{ columnId: 'sales', operator: 'between', operands: [10, 20] }] }, grid);
     expect(patch.filter).toEqual({ filterModel: { sales: { filterType: 'number', type: 'inRange', filter: 10, filterTo: 20 } } });
+  });
+
+  it('compiles every Advanced Filter text operator to its exact provided-filter type', () => {
+    const expected: Record<AiFilterOperator, string> = {
+      eq: 'equals', neq: 'notEqual', contains: 'contains', notContains: 'notContains', startsWith: 'startsWith', endsWith: 'endsWith',
+      gt: 'greaterThan', gte: 'greaterThanOrEqual', lt: 'lessThan', lte: 'lessThanOrEqual', between: 'inRange', in: '', isBlank: 'blank', isNotBlank: 'notBlank',
+    };
+    const textOperators: AiFilterOperator[] = ['eq', 'neq', 'contains', 'notContains', 'startsWith', 'endsWith', 'isBlank', 'isNotBlank'];
+    for (const operator of textOperators) {
+      const operands = operator === 'isBlank' || operator === 'isNotBlank' ? [] : ['North'];
+      const patch = compilePlan({ version: 1, filter: [{ columnId: 'location', operator, operands }] }, grid);
+      expect(patch.filter).toEqual({
+        filterModel: {
+          location: operator === 'isBlank' || operator === 'isNotBlank'
+            ? { filterType: 'text', type: expected[operator] }
+            : { filterType: 'text', type: expected[operator], filter: 'North' },
+        },
+      });
+    }
   });
 
   it('converts dates to the wire format Community reads', () => {

@@ -30,6 +30,37 @@ export type AiFilterOperator =
   | 'isBlank'
   | 'isNotBlank';
 
+/**
+ * The complete, stable filter vocabulary accepted by the AI plan decoder.
+ *
+ * This deliberately includes the compact spellings for every operator the
+ * Advanced Filter UI exposes (for example `startsWith` and `endsWith`). The
+ * compiler maps those spellings to the provided-filter wire types below.
+ */
+export const AI_FILTER_OPERATORS = [
+  'eq',
+  'neq',
+  'gt',
+  'gte',
+  'lt',
+  'lte',
+  'contains',
+  'notContains',
+  'startsWith',
+  'endsWith',
+  'in',
+  'between',
+  'isBlank',
+  'isNotBlank',
+] as const satisfies readonly AiFilterOperator[];
+
+const AI_FILTER_OPERATOR_SET = new Set<string>(AI_FILTER_OPERATORS);
+
+/** Whether an untrusted model output names a recognised filter operator. */
+export function isAiFilterOperator(value: string): value is AiFilterOperator {
+  return AI_FILTER_OPERATOR_SET.has(value);
+}
+
 export type AiScalar = string | number | boolean;
 
 /** `ISimpleFilterModelType` values this maps onto (community text/number/date filters). */
