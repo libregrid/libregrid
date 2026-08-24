@@ -28,6 +28,40 @@ const COLUMNS: AiColumnInfo[] = [
 
 const SUGGESTIONS = ['Hide the region column', 'Sort by revenue, highest first', 'Show every column and clear the sort'];
 
+/** The editable request shape sent to the model (the "configuration file"). */
+interface ToolkitConfig {
+  /** System turn — what the model knows about this grid. */
+  context: string;
+  /** Tool catalogue in standard function-schema form. */
+  tools: Record<string, unknown>[];
+  maxNewTokens?: number;
+  threshold?: number;
+}
+
+const DEFAULT_CONFIG: ToolkitConfig = {
+  context: `Grid columns:\n${COLUMNS.map((c) => `${c.colId}: ${c.headerName}`).join('\n')}`,
+  tools: buildGridTools(COLUMNS),
+  maxNewTokens: 256,
+  threshold: 0.5,
+};
+
+const DEFAULT_CONFIG_JSON = JSON.stringify(DEFAULT_CONFIG, null, 2);
+
+function parseConfig(raw: string): ToolkitConfig {
+  const parsed = JSON.parse(raw) as Partial<ToolkitConfig>;
+  if (typeof parsed.context !== 'string') throw new Error('"context" must be a string');
+  if (!Array.isArray(parsed.tools)) throw new Error('"tools" must be an array of tool schemas');
+  for (const tool of parsed.tools) {
+    if (typeof (tool as Record<string, unknown> | undefined)?.name !== 'string') {
+      throw new Error('every tool needs a "name" string');
+    }
+  }
+  const config: ToolkitConfig = { context: parsed.context, tools: parsed.tools };
+  if (typeof parsed.maxNewTokens === 'number') config.maxNewTokens = parsed.maxNewTokens;
+  if (typeof parsed.threshold === 'number') config.threshold = parsed.threshold;
+  return config;
+}
+
 function makeRows(): Row[] {
   const products: [string, number, string, number][] = [
     ['Widget', 4200, 'Europe', 31],
@@ -83,6 +117,23 @@ function makeRows(): Row[] {
       font-style: italic;
       color: light-dark(#5a5759, #b8b5b9);
     }
+    .lgr-ai-hint {
+      margin: 8px 0;
+      color: light-dark(#5a5759, #b8b5b9);
+    }
+    .lgr-ai-config {
+      width: 100%;
+      padding: 8px 12px;
+      margin: 8px 0;
+      border: 1px solid light-dark(#c9c6ca, #5a5759);
+      border-radius: 4px;
+      background: transparent;
+      color: inherit;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      resize: vertical;
+    }
     /* Explicit colours in both themes: webkit's UA default button rendering
        fails WCAG contrast in dark mode (#fff on #c0c0c0 ≈ 1.8:1). */
     .lgr-ai-ask {
@@ -116,6 +167,22 @@ function makeRows(): Row[] {
         style="height: 320px; width: 100%"
         data-testid="ai-toolkit-grid"
       />
+      <h2>Model configuration</h2>
+      <p class="lgr-ai-hint">
+        The exact request shape sent to the model — system turn, tool catalogue, token budget and
+        confidence gate. Edit it, then reload.
+      </p>
+      <textarea
+        class="lgr-ai-config"
+        data-testid="ai-config"
+        aria-label="Model configuration JSON"
+        rows="14"
+        [value]="configText()"
+        (input)="onConfigInput($event)"
+      ></textarea>
+      <button type="button" class="lgr-ai-chip" data-testid="ai-reload-config" (click)="reloadConfig()">
+        Reload configuration
+      </button>
       <h2>Ask the grid</h2>
       <input
         class="lgr-ai-input"
@@ -152,6 +219,8 @@ export class AiToolkitDemo {
   protected readonly prompt = signal('');
   protected readonly busy = signal(false);
   protected readonly busyLabel = signal('Thinking…');
+  protected readonly configText = signal(DEFAULT_CONFIG_JSON);
+  protected readonly config = signal<ToolkitConfig>(DEFAULT_CONFIG);
   protected readonly log = signal<string[]>([]);
 
   protected gridOptions: GridOptions<Row> = {
@@ -168,11 +237,27 @@ export class AiToolkitDemo {
   };
 
   private api: GridApi<Row> | undefined;
-  // One session per page: the ~14 MB model is fetched and initialised once.
+  // One provider per page; the engine re-initialises automatically when the
+  // configuration's context or tools change.
   private provider: NeedleWasmProvider | undefined;
 
   protected onPromptInput(event: Event): void {
     this.prompt.set((event.target as HTMLInputElement).value);
+  }
+
+  protected onConfigInput(event: Event): void {
+    this.configText.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  /** Parse the configuration box and apply it; invalid JSON is logged, not thrown. */
+  protected reloadConfig(): void {
+    try {
+      const config = parseConfig(this.configText());
+      this.config.set(config);
+      this.pushLog(`config reloaded (threshold ${config.threshold ?? 'default'}, maxNewTokens ${config.maxNewTokens ?? 'default'})`);
+    } catch (error) {
+      this.pushLog(`config invalid: ${(error as Error).message}`);
+    }
   }
 
   protected async ask(rawPrompt?: string): Promise<void> {
@@ -184,11 +269,21 @@ export class AiToolkitDemo {
       // Only announce a download when the weights actually come from the
       // network — repeat visits serve them from Cache Storage.
       this.busyLabel.set((await provider.willDownloadWeights()) ? 'Thinking… (downloading the ~14 MB model)' : 'Thinking…');
-      const outcome = await runToolkit(provider, {
-        prompt,
-        context: `Grid columns:\n${COLUMNS.map((c) => `${c.colId}: ${c.headerName}`).join('\n')}`,
-        tools: buildGridTools(COLUMNS),
-      });
+      const cfg = this.config();
+      const outcome = await runToolkit(
+        provider,
+        {
+          prompt,
+          context: cfg.context,
+          tools: cfg.tools,
+          ...(cfg.maxNewTokens !== undefined ? { maxNewTokens: cfg.maxNewTokens } : {}),
+        },
+        cfg.threshold !== undefined ? { threshold: cfg.threshold } : {},
+      );
+
+      // Verbose: the model's entire normalised response — every call, the
+      // confidence and the reasoning, not just the selected decision.
+      this.pushLog(`model: ${JSON.stringify(outcome.result)}`);
 
       if (outcome.status === 'clarify') {
         this.pushLog(`clarify: ${outcome.reason}`);

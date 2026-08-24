@@ -146,11 +146,14 @@ export class NeedleWasmProvider implements AiProvider {
 
   private async completeOnce(request: AiRequest): Promise<AiProviderResult> {
     const engine = await this.ensureEngine();
+    // Re-initialise when either the system turn or the tool catalogue changes —
+    // both are part of the engine's session state.
     const toolsJson = JSON.stringify(request.tools);
-    if (this.initKey !== toolsJson) {
+    const sessionKey = `${request.context}\u0000${toolsJson}`;
+    if (this.initKey !== sessionKey) {
       const rc = engine._needle_init(strPtr(engine, request.context), strPtr(engine, toolsJson), 0);
       if (rc < 0) throw new Error(`ai-toolkit: needle_init failed (rc=${rc})`);
-      this.initKey = toolsJson;
+      this.initKey = sessionKey;
     }
 
     engine._needle_reset();

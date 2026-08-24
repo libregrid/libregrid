@@ -25,14 +25,33 @@ test.describe('AI Toolkit', () => {
     test.setTimeout(120_000);
     await page.getByRole('button', { name: 'Hide the region column' }).click();
 
-    const first = page.getByTestId('ai-log-item').first();
-    await expect(first).toContainText(/applied|clarify/, { timeout: 100_000 });
+    // The first log line is the model's full response; the decision follows it.
+    const decision = page.getByTestId('ai-log-item').filter({ hasText: /^(applied|clarify|rejected)/ }).first();
+    await expect(decision).toBeVisible({ timeout: 100_000 });
 
-    const text = (await first.textContent()) ?? '';
+    const text = (await decision.textContent()) ?? '';
     if (text.startsWith('applied')) {
       // The visibility tool call took effect on the live grid.
       await expect(page.getByTestId('ai-toolkit-grid').locator('.ag-cell[col-id="region"]')).toHaveCount(0);
     }
+  });
+
+  test('edits the model configuration and reloads it', async ({ page }) => {
+    const box = page.getByTestId('ai-config');
+    await expect(box).toBeVisible();
+    const parsed = JSON.parse((await box.inputValue()) ?? '{}') as Record<string, unknown>;
+    expect(typeof parsed.context).toBe('string');
+    expect(Array.isArray(parsed.tools)).toBe(true);
+
+    // Invalid configuration is rejected and logged, not thrown.
+    await box.fill('{ not json');
+    await page.getByTestId('ai-reload-config').click();
+    await expect(page.getByTestId('ai-log-item').last()).toContainText(/config invalid/);
+
+    // A valid edit applies and logs.
+    await box.fill(JSON.stringify({ ...parsed, threshold: 0.9 }, null, 2));
+    await page.getByTestId('ai-reload-config').click();
+    await expect(page.getByTestId('ai-log-item').last()).toContainText(/config reloaded/);
   });
 });
 

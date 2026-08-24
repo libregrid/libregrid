@@ -117,7 +117,7 @@ describe('NeedleWasmProvider', () => {
     expect(await provider.complete(request)).toMatchObject({ calls: [] });
   });
 
-  it('resets the session before every completion and initialises only when tools change', async () => {
+  it('resets the session before every completion and initialises only when context or tools change', async () => {
     const { provider, hooks } = needleProvider(() => ({ type: 'call', function_calls: [], confidence: 1 }));
     await provider.complete(request);
     await provider.complete({ ...request, prompt: 'Reset everything' });
@@ -126,8 +126,11 @@ describe('NeedleWasmProvider', () => {
     // A custom loadEngine hook owns weight loading — the provider never calls _needle_load.
     expect(hooks.loadCount).toBe(0);
 
-    await provider.complete({ ...request, tools: [{ name: 'resetGrid', parameters: {} }] });
+    await provider.complete({ ...request, context: 'changed system turn' });
     expect(hooks.initCount).toBe(2);
+
+    await provider.complete({ ...request, tools: [{ name: 'resetGrid', parameters: {} }] });
+    expect(hooks.initCount).toBe(3);
     expect(hooks.loadCount).toBe(0);
   });
 
@@ -238,7 +241,7 @@ describe('runToolkit (ADR 0006 escalation)', () => {
     const primary = stubProvider(highConf, 'needle-wasm');
     const fallback = stubProvider({ calls: [], confidence: 1 }, 'openai-compatible');
     const outcome = await runToolkit(primary, request, { fallback });
-    expect(outcome).toEqual({ status: 'selected', call: highConf.calls[0], confidence: 0.8, via: 'needle-wasm' });
+    expect(outcome).toEqual({ status: 'selected', call: highConf.calls[0], confidence: 0.8, via: 'needle-wasm', result: highConf });
     expect(fallback.complete).not.toHaveBeenCalled();
     expect(DEFAULT_CONFIDENCE_THRESHOLD).toBe(0.5);
   });
@@ -252,7 +255,7 @@ describe('runToolkit (ADR 0006 escalation)', () => {
     const primary = stubProvider(lowConf, 'needle-wasm');
     const fallback = stubProvider(highConf, 'openai-compatible');
     const outcome = await runToolkit(primary, request, { fallback });
-    expect(outcome).toEqual({ status: 'selected', call: highConf.calls[0], confidence: 0.8, via: 'openai-compatible' });
+    expect(outcome).toEqual({ status: 'selected', call: highConf.calls[0], confidence: 0.8, via: 'openai-compatible', result: highConf });
   });
 
   it('clarifies when the selected result carries no actionable call', async () => {

@@ -5,8 +5,8 @@ import type { RawToolCall } from './tools';
 export const DEFAULT_CONFIDENCE_THRESHOLD = 0.5;
 
 export type ToolkitOutcome =
-  | { status: 'selected'; call: RawToolCall; confidence: number; via: string }
-  | { status: 'clarify'; reason: string };
+  | { status: 'selected'; call: RawToolCall; confidence: number; via: string; result: AiProviderResult }
+  | { status: 'clarify'; reason: string; result: AiProviderResult };
 
 export interface RunToolkitOptions {
   /** Confidence gate (default 0.5 — spike §4-A). */
@@ -34,13 +34,13 @@ export async function runToolkit(
 
   if (result.confidence < threshold) {
     if (!options.fallback) {
-      return { status: 'clarify', reason: `low confidence (${result.confidence.toFixed(2)} < ${threshold}) and no fallback configured` };
+      return { status: 'clarify', reason: `low confidence (${result.confidence.toFixed(2)} < ${threshold}) and no fallback configured`, result };
     }
     result = await options.fallback.complete(request);
     via = options.fallback.name;
   }
 
   const call = result.calls[0];
-  if (!call) return { status: 'clarify', reason: 'no actionable tool call (off-topic request)' };
-  return { status: 'selected', call, confidence: result.confidence, via };
+  if (!call) return { status: 'clarify', reason: 'no actionable tool call (off-topic request)', result };
+  return { status: 'selected', call, confidence: result.confidence, via, result };
 }
