@@ -1,6 +1,7 @@
 # Design — AI Toolkit (gap-plan A6)
 
-**Status:** Planned — Phase 19, docs-only research landed 2026-08-23; implementation not started.
+**Status:** Phase 19 implementation shipped; full live-snapshot local-model
+contract recorded 2026-08-24 and remains follow-on work.
 **Package:** new `@libregrid/ai-toolkit` (feature tier) · **Module:** `AiToolkit`
 **ADR:** [0006 — local-first AI inference](../adr/0006-local-first-ai-inference.md)
 **Phase:** [`phases/phase-19-ai-toolkit.md`](../phases/phase-19-ai-toolkit.md) · **Parity:** [`parity/ai-toolkit.md`](../parity/ai-toolkit.md)
@@ -128,6 +129,16 @@ Decisions:
    clarification result instead of guessing.
 5. **No conversation state in v1.** Each request is stateless, matching the
    Ag-Grid module's contract.
+
+### Full live-snapshot contract (follow-on)
+
+Stateless does not mean context-free. Each request must carry a complete,
+canonical snapshot of the **current** grid so a model can resolve a command
+against an arbitrary consumer-defined schema without relying on remembered
+business column names. The snapshot contains static column metadata, current
+filters/sort/visibility/order, and relevant read-only view metadata (such as
+total record count, pagination, and density). See the explicit Phase 19
+follow-on plan for implementation and verification requirements.
 
 ## 4. Module and API design
 

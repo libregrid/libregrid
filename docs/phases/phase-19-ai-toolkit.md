@@ -93,3 +93,62 @@ Aggregation/pivot/row-group are post-v1.
   them later is additive.
 - Needle fine-tuning on domain data is a documented recommendation, not a v1
   requirement.
+
+## Follow-on — full live-snapshot local-model contract (recorded 2026-08-24)
+
+The original implementation scope is shipped, but the local provider contract
+must be expanded before the SmolLM2 browser provider replaces the experimental
+Needle model. This is a package-level requirement, not a consumer convention:
+LibreGrid is distributed to developers whose column IDs, headers, aliases, and
+grid configuration are unknowable at library-build time.
+
+### Required runtime context
+
+For every natural-language request, construct one canonical, request-local
+snapshot containing:
+
+- schema: generated stable references, developer `colId`, header, data type,
+  descriptions/synonyms, supported operators, and sort/visibility capability;
+- mutable grid state: current filter model, sort model, hidden columns, and
+  visible column order;
+- non-column state: total record count when known, pagination, density, and
+  any other supported view metadata;
+- the capability-scoped action schema for the installed package version.
+
+The model may only emit actions declared by that action schema. Context-only
+metadata does not imply a writable action. No row values are included by
+default. The compact snapshot is the complete source of truth for the model;
+it must not depend on predefined business column names.
+
+### Implementation plan
+
+- [ ] Extend `AiGridSnapshot` and the live-grid snapshot collector with a
+  typed, canonical representation of filter/sort/visibility/order and optional
+  page, row-count, and density metadata.
+- [ ] Make `buildAiEnvironment()` serialize both schema and current state in a
+  versioned, deterministic format. Preserve its generated references and
+  capability-scoped tool enums.
+- [ ] Include that full environment in every local and remote provider call;
+  providers must never reconstruct or infer omitted state.
+- [ ] Define a prompt-budget policy for wide grids: retain state, rank schema
+  candidates deterministically, report omitted actionable columns, and ask the
+  user to narrow a request rather than silently guessing.
+- [ ] Add only explicitly supported actions for pagination/density/order. Until
+  then those fields remain read-only context and validators reject invented
+  action names or unsupported state mutations.
+- [ ] Migrate the local default to the merged SmolLM2 ONNX q4 artifact once its
+  held-out reliability gate is met; retain BYOM structured-output providers for
+  broad or domain-heavy grids.
+
+### Required verification
+
+- [ ] Unit tests for deterministic full-snapshot serialization, state changes,
+  capability exclusion, omission reporting, and no-row-data default.
+- [ ] Integration tests proving commands can depend on currently applied
+  filters/sort/visibility and that unsupported page/density mutations cannot
+  apply.
+- [ ] Prompt-contract fixtures shared by runtime and training-data generation.
+  Train/validation/test schemas must use split-exclusive headers, raw IDs, and
+  values; evaluation grids must contain vocabulary unseen during training.
+- [ ] Browser tests for cached local-model loading, WebGPU/WASM fallback, final
+  ONNX artifact size, and the full validator-before-apply path.
