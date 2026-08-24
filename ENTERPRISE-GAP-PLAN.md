@@ -112,17 +112,17 @@ Each entry: site evidence (inventory §refs) → current state → proposed acti
   visible row; cell-selection never starts a drag from the column; row resizer
   included.
 
-### A6. AI Toolkit — `AiToolkitModule` ⬜ **planned — Phase 19**
+### A6. AI Toolkit — `AiToolkitModule` ✅ **shipped — Phase 19**
 - **Site:** `ai-toolkit` page — LLM integration for grid state via natural
   language with structured outputs; pricing row: AI Toolkit = E. (The AI Features
   section's other two features — **MCP Server** and **AI Skills** — are
   **Community** on the site; not gaps.)
-- **State:** planned in Phase 19 (docs-only research landed 2026-08-23). New
-  `@libregrid/ai-toolkit` implements Community's reserved `getStructuredSchema`
-  API slot (`gridApi.d.ts:1715`; dist stub) over the Community
-  `GridStateModule` round-trip. Local-first inference (Cactus Needle 2 WASM,
-  ADR 0006) with an opt-in OpenAI-compatible remote fallback. v1 scope:
-  filter/sort/column visibility/reset; schema+state-only context. Design
+- **State:** shipped in Phase 19. `@libregrid/ai-toolkit` implements Community's
+  reserved `getStructuredSchema` API slot (`gridApi.d.ts:1715`; dist stub) and
+  `applyAiCommand` over the Community `GridStateModule` round-trip. Local-first
+  inference uses Cactus Needle 2 WASM (ADR 0006); applications can substitute a
+  provider through the advanced seam. v1 scope: filter/sort/column
+  visibility/reset; schema+state-only context. Design
   [`docs/design/ai-toolkit.md`](docs/design/ai-toolkit.md); phase
   [`docs/phases/phase-19-ai-toolkit.md`](docs/phases/phase-19-ai-toolkit.md);
   parity [`docs/parity/ai-toolkit.md`](docs/parity/ai-toolkit.md).
@@ -261,8 +261,8 @@ describes our `showValuesAs` service, not the Enterprise baseline).
 **Refresh 2026-08-23 (this document):** the stale rows this refresh corrected are
 the Class A statuses above — A2/A3/A4/A5/A7/A9/A10 were still marked "no package"
 in the original 2026-08-18 plan despite shipping in Phases 14–18. The remaining
-Class A list is now exactly: A1 Formulas, A6 AI Toolkit, A8 group-value editing,
-A11 group-row dragging.
+Class A list is now exactly: A1 Formulas, A8 group-value editing, A11 group-row
+dragging.
 
 ---
 
@@ -298,8 +298,7 @@ Ordered by (value ÷ effort) and by unblocking existing stubs first:
    engine is the shared core (`formula` seam + function registry).
 
 **P2 — strategic / larger (decide later):**
-4. A6 AI toolkit.
-5. Class B long tail: sticky rows, groupDisplayType modes, group row renderer,
+4. Class B long tail: sticky rows, groupDisplayType modes, group row renderer,
    Excel images/tables/notes, columns-panel drag interactions, SSRM batch editing.
 
 **Declined:** Class C items. **No work:** Class D items.

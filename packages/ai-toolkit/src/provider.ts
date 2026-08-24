@@ -4,8 +4,13 @@ import type { RawToolCall } from './tools';
 export interface AiProviderResult {
   /** Tool calls to apply (empty = off-topic / nothing actionable). */
   calls: RawToolCall[];
-  /** Calibrated confidence in the calls (Needle) or trust-by-design 1 (remote). */
-  confidence: number;
+  /**
+   * Calibrated confidence, or `undefined` when the provider does not report
+   * one. Tuned Needle weights report no confidence at all — fine-tuning does
+   * not update the confidence head — so this must stay distinct from 0, which
+   * means "certainly wrong" and would reject every tuned response.
+   */
+  confidence: number | undefined;
   reasoning?: string;
 }
 
@@ -348,7 +353,7 @@ function parseCompletion(raw: string): AiProviderResult {
   }
   return {
     calls: (parsed.function_calls ?? []).map((c) => ({ name: c.name, arguments: c.arguments ?? {} })),
-    confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
+    confidence: typeof parsed.confidence === 'number' ? parsed.confidence : undefined,
     ...(parsed.reasoning !== undefined ? { reasoning: parsed.reasoning } : {}),
   };
 }

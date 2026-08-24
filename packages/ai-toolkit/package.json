@@ -1,1 +1,44 @@
-{"name":"@libregrid/ai-toolkit","version":"1.2.3","description":"AI Toolkit for AG Grid Community — natural-language grid state via local-first inference, part of LibreGrid","keywords":["libregrid","ag-grid","ai-toolkit"],"homepage":"https://github.com/libregrid/libregrid#readme","repository":{"type":"git","url":"git+https://github.com/libregrid/libregrid.git","directory":"packages/ai-toolkit"},"bugs":{"url":"https://github.com/libregrid/libregrid/issues"},"license":"MIT","type":"module","sideEffects":false,"peerDependencies":{"ag-grid-community":">=36.1.0 <37"},"dependencies":{"@libregrid/core":"^1.2.3"},"files":["dist","LICENSE","NOTICE","README.md"],"exports":{".":{"types":"./dist/index.d.ts","import":"./dist/index.js"}}}
+{
+  "name": "@libregrid/ai-toolkit",
+  "version": "1.2.3",
+  "description": "AI Toolkit for AG Grid Community \u2014 natural-language grid state via local-first inference, part of LibreGrid",
+  "keywords": [
+    "libregrid",
+    "ag-grid",
+    "ai-toolkit"
+  ],
+  "homepage": "https://github.com/libregrid/libregrid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libregrid/libregrid.git",
+    "directory": "packages/ai-toolkit"
+  },
+  "bugs": {
+    "url": "https://github.com/libregrid/libregrid/issues"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "peerDependencies": {
+    "ag-grid-community": ">=36.1.0 <37"
+  },
+  "dependencies": {
+    "@libregrid/core": "^1.2.3"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./advanced": {
+      "types": "./dist/advanced.d.ts",
+      "import": "./dist/advanced.js"
+    }
+  }
+}

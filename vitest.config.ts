@@ -109,6 +109,9 @@ export default defineConfig({
       '@libregrid/sparklines': fileURLToPath(
         new URL('./packages/sparklines/src/index.ts', import.meta.url),
       ),
+      '@libregrid/ai-toolkit/advanced': fileURLToPath(
+        new URL('./packages/ai-toolkit/src/advanced.ts', import.meta.url),
+      ),
       '@libregrid/ai-toolkit': fileURLToPath(
         new URL('./packages/ai-toolkit/src/index.ts', import.meta.url),
       ),

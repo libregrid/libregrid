@@ -4,8 +4,8 @@ import AxeBuilder from '@axe-core/playwright';
 /**
  * AI Toolkit demo (/ai-toolkit). The slow test runs a real local inference
  * round trip in the browser: Needle WASM engine + ~14 MB of weights fetched
- * from the pinned Hugging Face commit, then a validated tool call applied to
- * the live grid. No remote LLM is involved.
+ * from the pinned Hugging Face commit, then a validated plan applied to the
+ * live grid. No remote LLM is involved.
  */
 test.describe('AI Toolkit', () => {
   test.beforeEach(async ({ page }) => {
@@ -20,41 +20,43 @@ test.describe('AI Toolkit', () => {
     await expect(page.getByRole('button', { name: 'Hide the region column' })).toBeVisible();
   });
 
+  test('shows the environment it builds from the live grid', async ({ page }) => {
+    await page.getByTestId('ai-show-env').click();
+    const env = page.getByTestId('ai-env');
+    await expect(env).toBeVisible();
+
+    const text = (await env.textContent()) ?? '';
+    // Columns are addressed by request-local references, and each line carries
+    // the capabilities the toolkit read off the column itself.
+    expect(text).toContain('c0 | id=product');
+    expect(text).toContain('type=number');
+    // A number column must be offered comparison operators, not set membership.
+    expect(text).toMatch(/id=revenue.*filter:.*\bgt\b/);
+    expect(text).toContain('"name": "setFilter"');
+  });
+
   test('completes a local inference round trip and applies the result', async ({ page }) => {
     // First run downloads ~14 MB of weights and initialises the engine.
     test.setTimeout(120_000);
     await page.getByRole('button', { name: 'Hide the region column' }).click();
 
-    // The first log line is the model's full response; the decision follows it.
-    const decision = page.getByTestId('ai-log-item').filter({ hasText: /^(applied|clarify|rejected)/ }).first();
+    const decision = page
+      .getByTestId('ai-log-item')
+      .filter({ hasText: /^(applied|ambiguous|unsupported|off-topic|invalid|error)/ })
+      .first();
     await expect(decision).toBeVisible({ timeout: 100_000 });
 
     const text = (await decision.textContent()) ?? '';
     if (text.startsWith('applied')) {
-      // The visibility tool call took effect on the live grid.
       await expect(page.getByTestId('ai-toolkit-grid').locator('.ag-cell[col-id="region"]')).toHaveCount(0);
     }
   });
 
-  test('edits the model configuration and reloads it', async ({ page }) => {
-    const box = page.getByTestId('ai-config');
-    await expect(box).toBeVisible();
-    const parsed = JSON.parse((await box.inputValue()) ?? '{}') as Record<string, unknown>;
-    expect(typeof parsed.context).toBe('string');
-    expect(Array.isArray(parsed.tools)).toBe(true);
-    expect(Array.isArray(parsed.columns)).toBe(true);
+  test('clears the log back to the placeholder', async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.getByRole('button', { name: 'Reset everything' }).click();
+    await expect(page.getByTestId('ai-log-item').first()).toBeVisible({ timeout: 100_000 });
 
-    // Invalid configuration is rejected and logged, not thrown.
-    await box.fill('{ not json');
-    await page.getByTestId('ai-reload-config').click();
-    await expect(page.getByTestId('ai-log-item').last()).toContainText(/config invalid/);
-
-    // A valid edit applies and logs.
-    await box.fill(JSON.stringify({ ...parsed, threshold: 0.9 }, null, 2));
-    await page.getByTestId('ai-reload-config').click();
-    await expect(page.getByTestId('ai-log-item').last()).toContainText(/config reloaded/);
-
-    // Clearing the log empties it back to the placeholder.
     await page.getByTestId('ai-clear-log').click();
     await expect(page.getByTestId('ai-log-item')).toHaveCount(0);
     await expect(page.locator('.lgr-ai-log-empty')).toContainText('No requests yet.');
@@ -69,6 +71,8 @@ test.describe('AI Toolkit accessibility', () => {
       if (mode === 'dark') {
         await page.getByRole('button', { name: 'Switch to dark theme' }).click();
       }
+      // Include the generated environment panel in the sweep.
+      await page.getByTestId('ai-show-env').click();
       const results = await new AxeBuilder({ page }).include('.lgr-page').analyze();
       expect(results.violations).toEqual([]);
     });

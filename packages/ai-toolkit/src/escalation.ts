@@ -1,11 +1,11 @@
 import type { AiProvider, AiProviderResult, AiRequest } from './provider';
 import type { RawToolCall } from './tools';
+import { DEFAULT_CONFIDENCE_THRESHOLD, formatConfidence, passesConfidenceGate } from './confidence';
 
-/** ADR 0006: act at or above this confidence; below it, escalate or clarify. */
-export const DEFAULT_CONFIDENCE_THRESHOLD = 0.5;
+export { DEFAULT_CONFIDENCE_THRESHOLD };
 
 export type ToolkitOutcome =
-  | { status: 'selected'; call: RawToolCall; confidence: number; via: string; result: AiProviderResult }
+  | { status: 'selected'; call: RawToolCall; confidence: number | undefined; via: string; result: AiProviderResult }
   | { status: 'clarify'; reason: string; result: AiProviderResult };
 
 export interface RunToolkitOptions {
@@ -36,17 +36,17 @@ export async function runToolkit(
   let result: AiProviderResult = await primary.complete(request);
   let via = primary.name;
 
-  if (result.confidence < threshold) {
+  if (!passesConfidenceGate(result.confidence, threshold)) {
     if (!options.fallback) {
-      return { status: 'clarify', reason: `low confidence (${result.confidence.toFixed(2)} < ${threshold}) and no fallback configured`, result };
+      return { status: 'clarify', reason: `low confidence (${formatConfidence(result.confidence)} < ${threshold}) and no fallback configured`, result };
     }
     result = await options.fallback.complete(request);
     via = options.fallback.name;
     // The fallback is gated too. `OpenAiCompatibleProvider` reports 1 by
     // design, but `fallback` is any `AiProvider` — a second local model must
     // not become the way an under-confident answer gets applied anyway.
-    if (result.confidence < threshold) {
-      return { status: 'clarify', reason: `low confidence after escalation to ${via} (${result.confidence.toFixed(2)} < ${threshold})`, result };
+    if (!passesConfidenceGate(result.confidence, threshold)) {
+      return { status: 'clarify', reason: `low confidence after escalation to ${via} (${formatConfidence(result.confidence)} < ${threshold})`, result };
     }
   }
 
