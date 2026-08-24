@@ -27,7 +27,9 @@ Audited 2026-08-14; counts refreshed 2026-08-23 against the domain files (1.2.3 
 6. **The remaining Class A wave is Formulas, the AI toolkit, group-value editing and
    group-row dragging.** Calculated columns, batch editing, cell notes, row numbers,
    column header editing and show-values-as all shipped in Phases 14–18
-   (see [`ENTERPRISE-GAP-PLAN.md`](../../ENTERPRISE-GAP-PLAN.md)).
+   (see [`ENTERPRISE-GAP-PLAN.md`](../../ENTERPRISE-GAP-PLAN.md)). The AI toolkit is
+   planned as Phase 19 — local-first inference design landed 2026-08-23
+   (see [`ai-toolkit.md`](ai-toolkit.md), ADR 0006).
 
 ## Post-1.0 candidates (phase-13 13A) and remaining Class A items
 
@@ -39,7 +41,7 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 - Columns-panel header-area drag target, custom drag-image component, function-member reordering
 - rowGroupPanelSuppressSort alongside a real row-group sorting surface
 - Formulas (`@libregrid/formulas` — the largest remaining Class A item; Phase 18's expression engine is the shared core)
-- AI toolkit (`@libregrid/ai-toolkit`)
+- AI toolkit (`@libregrid/ai-toolkit` — planned Phase 19; local-first design in [ADR 0006](../adr/0006-local-first-ai-inference.md))
 - Group-value editing (`refreshAfterGroupEdit` in `row-grouping`)
 - Group row dragging (parity row first, then the drag surface)
 
@@ -75,6 +77,7 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 | Excel export | 61 | 8 | 5 | [`excel-export.md`](excel-export.md) — shipped; images, tables and notes descoped (5.9) |
 | Batch edit | 13 | 3 | 1 | [`batch-edit.md`](batch-edit.md) — SSRM batch editing ❌ (Enterprise is CSR only) |
 | Calculated columns | 26 | 6 | 0 | [`calculated-columns.md`](calculated-columns.md) |
+| AI toolkit | 0 | 0 | 4 | [`ai-toolkit.md`](ai-toolkit.md) — planned Phase 19; not started (10 ⬜ rows) |
 
 The menu domains carry the most 🟡 rows: their checklists track per-item state, and each 🟡
 names the exact missing item. Read the domain file before treating a 🟡 count as a
