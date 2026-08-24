@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 /**
  * AI Toolkit demo (/ai-toolkit). The slow test runs a real local inference
@@ -33,4 +34,18 @@ test.describe('AI Toolkit', () => {
       await expect(page.getByTestId('ai-toolkit-grid').locator('.ag-cell[col-id="region"]')).toHaveCount(0);
     }
   });
+});
+
+test.describe('AI Toolkit accessibility', () => {
+  for (const mode of ['light', 'dark'] as const) {
+    test(`${mode} theme has no axe violations`, async ({ page }) => {
+      await page.goto('/ai-toolkit');
+      await expect(page.locator('.ag-root-wrapper')).toBeVisible({ timeout: 15_000 });
+      if (mode === 'dark') {
+        await page.getByRole('button', { name: 'Switch to dark theme' }).click();
+      }
+      const results = await new AxeBuilder({ page }).include('.lgr-page').analyze();
+      expect(results.violations).toEqual([]);
+    });
+  }
 });

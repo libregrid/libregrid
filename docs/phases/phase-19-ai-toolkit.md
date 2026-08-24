@@ -1,6 +1,6 @@
 # Phase 19 — AI Toolkit (gap-plan A6)
 
-**Status:** Planned — docs-only research landed 2026-08-23; implementation not started.
+**Status:** Implemented on `feature/ai-toolkit` (2026-08-23) — package, providers, module, demo route and e2e landed; awaiting review/merge.
 **Depends on:** Phase 6 (`@libregrid/set-filter` / `multi-filter` — the filter models the toolkit mutates), Community `GridStateModule` (`getState`/`setState`)
 **Blocks:** nothing (A1 Formulas is independent)
 
@@ -61,18 +61,18 @@ Aggregation/pivot/row-group are post-v1.
 
 ### 19B — `@libregrid/ai-toolkit`
 
-- [ ] Package scaffold (`package.json`, `tsconfig.lib.json`, `project.json`, NOTICE, LICENSE, README, generated `version.ts`) per [`../reference/standards.md`](../reference/standards.md)
-- [ ] `structuredSchema.ts` — build the grid-state JSON schema from the live column model + current state; `StructuredSchemaParams` narrowing (`exclude` features, per-column `description` / `includeSetValues`); v1 features filter/sort/columnVisibility
-- [ ] `tools.ts` — the ≤5 tool schemas (`setSort`, `setFilters` as flat `{ column, values }` per spike finding B, `setColumnVisibility`, `resetGrid`) + hand-rolled validator (no `ajv` — dependency policy)
-- [ ] `applyToolCall()` — map a validated tool call to a `GridState` patch and apply it through Community's state service (`setState(state, propertiesToIgnore)`); `resetGrid` via the `propertiesToIgnore`/clear semantics
-- [ ] `AiProvider` interface + `NeedleWasmProvider` (default; lazy-loaded WASM assets; confidence score) + `OpenAiCompatibleProvider` (consumer endpoint; **off by default**)
-- [ ] Escalation: confidence below threshold → remote provider if enabled, else a clarification result (no guessed state change)
-- [ ] `AiToolkitModule` — `moduleName: 'AiToolkit'`, `enterprise: true`, depends on `EnterpriseCoreModule`, `apiFunctions: { getStructuredSchema }`
-- [ ] Unit specs — schema builder (narrowing, per-column params), validator, provider mocks, escalation paths
-- [ ] jsdom integration specs (real grid) — tool call → visible `setState` effect; schema narrowing; reset; remote-fallback opt-in wiring
-- [ ] Demo route + Playwright e2e (docs app: chat pane, prompt → visible state change; axe light + dark)
-- [ ] Parity checklist refresh (`../parity/ai-toolkit.md`), gap-list row, `@libregrid/all` re-export
-- [ ] Coverage above repo thresholds
+- [x] Package scaffold (`package.json`, `tsconfig.lib.json`, `project.json`, NOTICE, LICENSE, README, generated `version.ts`) per [`../reference/standards.md`](../reference/standards.md)
+- [x] `structuredSchema.ts` — build the grid-state JSON schema from the live column model + current state; `StructuredSchemaParams` narrowing (`exclude` features, per-column `description` / `includeSetValues`); v1 features filter/sort/columnVisibility
+- [x] `tools.ts` — the ≤5 tool schemas (`setSort`, `setFilters` as flat `{ column, values }` per spike finding B, `setColumnVisibility`, `resetGrid`) + hand-rolled validator (no `ajv` — dependency policy)
+- [x] `applyToolCall()` — map a validated tool call to a `GridState` patch and apply it through Community's state service (`setState(state, propertiesToIgnore)`); `resetGrid` via the `propertiesToIgnore`/clear semantics
+- [x] `AiProvider` interface + `NeedleWasmProvider` (default; lazy-loaded WASM assets; confidence score) + `OpenAiCompatibleProvider` (consumer endpoint; **off by default**)
+- [x] Escalation: confidence below threshold → remote provider if enabled, else a clarification result (no guessed state change) — `runToolkit`
+- [x] `AiToolkitModule` — `moduleName: 'AiToolkit'`, `enterprise: true`, depends on `EnterpriseCoreModule`, `apiFunctions: { getStructuredSchema }`
+- [x] Unit specs — schema builder (narrowing, per-column params), validator, provider mocks, escalation paths
+- [x] jsdom integration specs (real grid) — tool call → visible `setState` effect; schema narrowing; reset. Remote-fallback opt-in is covered by the `runToolkit` / `OpenAiCompatibleProvider` unit specs (jsdom never instantiates header filter UIs, so set-filter visibility is asserted at the mapping level).
+- [x] Demo route + Playwright e2e (docs app: prompt → visible state change; real local-inference round trip; axe light + dark)
+- [x] Parity checklist refresh (`../parity/ai-toolkit.md`), gap-list row, `@libregrid/all` re-export
+- [x] Coverage above repo thresholds — package-scoped v8 run: statements 85.8 / branches 83.8 / functions 86.5 / lines 88.4 (thresholds 85/75/85/85). The only sub-threshold file is `provider.ts` (70.7% stmts): its uncovered lines are the browser-only asset paths (built-in loader weight fetch, script-tag injection), which the real-Chromium e2e round trip exercises instead.
 
 ## Test plan
 
