@@ -32,6 +32,8 @@ const SUGGESTIONS = ['Hide the region column', 'Sort by revenue, highest first',
 interface ToolkitConfig {
   /** System turn — what the model knows about this grid. */
   context: string;
+  /** Columns the call is validated against — edit these and validation follows. */
+  columns: AiColumnInfo[];
   /** Tool catalogue in standard function-schema form. */
   tools: Record<string, unknown>[];
   maxNewTokens?: number;
@@ -40,6 +42,7 @@ interface ToolkitConfig {
 
 const DEFAULT_CONFIG: ToolkitConfig = {
   context: `Grid columns:\n${COLUMNS.map((c) => `${c.colId}: ${c.headerName}`).join('\n')}`,
+  columns: COLUMNS,
   tools: buildGridTools(COLUMNS),
   maxNewTokens: 256,
   threshold: 0.5,
@@ -56,7 +59,13 @@ function parseConfig(raw: string): ToolkitConfig {
       throw new Error('every tool needs a "name" string');
     }
   }
-  const config: ToolkitConfig = { context: parsed.context, tools: parsed.tools };
+  if (!Array.isArray(parsed.columns)) throw new Error('"columns" must be an array of column info');
+  for (const column of parsed.columns) {
+    if (typeof (column as Partial<AiColumnInfo> | undefined)?.colId !== 'string') {
+      throw new Error('every column needs a "colId" string');
+    }
+  }
+  const config: ToolkitConfig = { context: parsed.context, columns: parsed.columns, tools: parsed.tools };
   if (typeof parsed.maxNewTokens === 'number') config.maxNewTokens = parsed.maxNewTokens;
   if (typeof parsed.threshold === 'number') config.threshold = parsed.threshold;
   return config;
@@ -167,11 +176,12 @@ function makeRows(): Row[] {
       <h1>AI Toolkit</h1>
       <p>
         Natural-language control of grid state, inferred <strong>locally in the
-        browser</strong> by a 27M-parameter Needle model running on WebAssembly
-        (ADR 0006). Nothing leaves this page: the prompt, the schema and the
-        inference all happen client-side. Type a request or pick a suggestion —
-        below the confidence threshold the toolkit asks for clarification
-        instead of guessing.
+        browser</strong> by a 45M-parameter Needle model running on WebAssembly
+        (ADR 0006). Your prompt, the schema and the inference stay on this page —
+        the only network request is the one-time model download from the pinned
+        Hugging Face URL. Type a request or pick a suggestion — below the
+        confidence threshold the toolkit asks for clarification instead of
+        guessing.
       </p>
       <ag-grid-angular
         [theme]="theme.gridTheme()"
@@ -200,34 +210,36 @@ function makeRows(): Row[] {
       <input
         class="lgr-ai-input"
         data-testid="ai-prompt"
+        aria-label="Ask the grid"
         [value]="prompt()"
         (input)="onPromptInput($event)"
         placeholder="e.g. Hide the region column"
       />
       <div class="lgr-ai-chips">
         @for (suggestion of SUGGESTIONS; track suggestion) {
-          <button type="button" class="lgr-ai-chip" (click)="ask(suggestion)">{{ suggestion }}</button>
+          <button type="button" class="lgr-ai-chip" [disabled]="busy()" (click)="ask(suggestion)">{{ suggestion }}</button>
         }
       </div>
       <button type="button" class="lgr-ai-ask" data-testid="ai-ask" [disabled]="busy()" (click)="ask(prompt())">Ask</button>
-      @if (busy()) {
-        <span data-testid="ai-busy">{{ busyLabel() }}</span>
-      }
+      <span role="status" aria-live="polite" data-testid="ai-busy">{{ busy() ? busyLabel() : '' }}</span>
       <div class="lgr-ai-log-head">
         <h2>Log</h2>
         <button type="button" class="lgr-ai-chip" data-testid="ai-clear-log" [disabled]="log().length === 0" (click)="clearLog()">
           Clear log
         </button>
       </div>
-      @if (log().length === 0) {
-        <ul class="lgr-ai-log lgr-ai-log-empty"><li>No requests yet.</li></ul>
-      } @else {
-        <ul class="lgr-ai-log">
-          @for (entry of log(); track $index) {
-            <li data-testid="ai-log-item">{{ entry }}</li>
-          }
-        </ul>
-      }
+      <!-- The log is where the answer appears, so it has to be announced. -->
+      <div role="status" aria-live="polite">
+        @if (log().length === 0) {
+          <ul class="lgr-ai-log lgr-ai-log-empty"><li>No requests yet.</li></ul>
+        } @else {
+          <ul class="lgr-ai-log">
+            @for (entry of log(); track $index) {
+              <li data-testid="ai-log-item">{{ entry }}</li>
+            }
+          </ul>
+        }
+      </div>
     </div>
   `,
 })
@@ -242,11 +254,13 @@ export class AiToolkitDemo {
   protected readonly log = signal<string[]>([]);
 
   protected gridOptions: GridOptions<Row> = {
+    // `agSetColumnFilter` is required, not decorative: `setFilters` emits a
+    // `filterType: 'set'` model, which any other filter silently discards.
     columnDefs: [
-      { field: 'product', headerName: 'Product' },
-      { field: 'revenue', headerName: 'Revenue', cellDataType: 'number' },
-      { field: 'region', headerName: 'Region' },
-      { field: 'units', headerName: 'Units', cellDataType: 'number' },
+      { field: 'product', headerName: 'Product', filter: 'agSetColumnFilter' },
+      { field: 'revenue', headerName: 'Revenue', cellDataType: 'number', filter: 'agSetColumnFilter' },
+      { field: 'region', headerName: 'Region', filter: 'agSetColumnFilter' },
+      { field: 'units', headerName: 'Units', cellDataType: 'number', filter: 'agSetColumnFilter' },
     ],
     rowData: makeRows(),
     onGridReady: (params) => {
@@ -308,13 +322,15 @@ export class AiToolkitDemo {
         return;
       }
 
-      const validated = validateToolCall(outcome.call, COLUMNS);
+      const validated = validateToolCall(outcome.call, cfg.columns);
       if (!validated.ok) {
         this.pushLog(`rejected: ${validated.reason}`);
         return;
       }
 
-      this.api?.setState(toolCallToStatePatch(validated));
+      // Merge over the live filter model: setState replaces it wholesale, so
+      // filtering one column would otherwise clear every other column filter.
+      this.api?.setState(toolCallToStatePatch(validated, this.api.getFilterModel()));
       this.pushLog(`applied via ${outcome.via} @ ${outcome.confidence.toFixed(2)}: ${JSON.stringify(outcome.call)}`);
     } catch (error) {
       this.pushLog(`error: ${String(error)}`);

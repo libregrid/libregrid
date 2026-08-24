@@ -42,6 +42,7 @@ test.describe('AI Toolkit', () => {
     const parsed = JSON.parse((await box.inputValue()) ?? '{}') as Record<string, unknown>;
     expect(typeof parsed.context).toBe('string');
     expect(Array.isArray(parsed.tools)).toBe(true);
+    expect(Array.isArray(parsed.columns)).toBe(true);
 
     // Invalid configuration is rejected and logged, not thrown.
     await box.fill('{ not json');
