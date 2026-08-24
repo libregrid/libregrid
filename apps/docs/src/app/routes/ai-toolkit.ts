@@ -83,6 +83,20 @@ function makeRows(): Row[] {
       font-style: italic;
       color: light-dark(#5a5759, #b8b5b9);
     }
+    /* Explicit colours in both themes: webkit's UA default button rendering
+       fails WCAG contrast in dark mode (#fff on #c0c0c0 ≈ 1.8:1). */
+    .lgr-ai-ask {
+      padding: 6px 16px;
+      border: none;
+      border-radius: 4px;
+      background: light-dark(#3d3d3d, #e0e0e0);
+      color: light-dark(#ffffff, #3d3d3d);
+      font: inherit;
+      cursor: pointer;
+    }
+    .lgr-ai-ask:disabled {
+      cursor: default;
+    }
   `,
   template: `
     <div class="lgr-page">
@@ -115,7 +129,7 @@ function makeRows(): Row[] {
           <button type="button" class="lgr-ai-chip" (click)="ask(suggestion)">{{ suggestion }}</button>
         }
       </div>
-      <button type="button" data-testid="ai-ask" [disabled]="busy()" (click)="ask(prompt())">Ask</button>
+      <button type="button" class="lgr-ai-ask" data-testid="ai-ask" [disabled]="busy()" (click)="ask(prompt())">Ask</button>
       @if (busy()) {
         <span data-testid="ai-busy">Thinking… (first run downloads the ~14 MB model)</span>
       }
