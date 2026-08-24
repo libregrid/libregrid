@@ -59,6 +59,8 @@ export const VERSIONED_PACKAGES = [
   'integrated-charts',
   'sparklines',
   'batch-edit',
+  'calculated-columns',
+  'ai-toolkit',
 ];
 
 export function generate(rootDir = root) {

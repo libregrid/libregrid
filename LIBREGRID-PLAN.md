@@ -165,6 +165,9 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 - [x] **Phase 18 — Calculated columns** · [`phases/phase-18-calculated-columns.md`](docs/phases/phase-18-calculated-columns.md)
       `@libregrid/calculated-columns`; expression engine reused by A1 Formulas.
 
+- [ ] **Phase 19 — AI toolkit** · [`phases/phase-19-ai-toolkit.md`](docs/phases/phase-19-ai-toolkit.md)
+      `@libregrid/ai-toolkit`; Community's `getStructuredSchema` slot, local-first inference (ADR 0006). Docs-only research landed 2026-08-23; implementation pending.
+
 ---
 
 ## 6. Package inventory
@@ -203,6 +206,7 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 | `@libregrid/server-side-selection` | 16    | `RowSelection` (SSRM; beyond parity)   |
 | `@libregrid/batch-edit`            | 17    | `BatchEdit`                            |
 | `@libregrid/calculated-columns`    | 18    | `CalculatedColumns`                    |
+| `@libregrid/ai-toolkit`            | 19    | `AiToolkit`                            |
 
 ---
 

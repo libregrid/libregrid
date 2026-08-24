@@ -34,6 +34,7 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'row-numbers', label: 'Row Numbers' },
   { path: 'column-header-edit', label: 'Column Header Edit' },
   { path: 'notes', label: 'Cell Notes' },
+  { path: 'ai-toolkit', label: 'AI Toolkit' },
   { path: 'angular', label: 'Angular' },
   { path: 'material', label: 'Material theme bridge' },
   { path: 'api', label: 'API Reference' },
@@ -179,6 +180,11 @@ export const routes: Routes = [
     path: 'notes',
     loadComponent: () => import('./routes/notes').then((m) => m.NotesDemo),
     title: 'LibreGrid — Cell Notes',
+  },
+  {
+    path: 'ai-toolkit',
+    loadComponent: () => import('./routes/ai-toolkit').then((m) => m.AiToolkitDemo),
+    title: 'LibreGrid — AI Toolkit',
   },
   {
     path: 'benchmark',

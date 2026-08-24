@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AiToolkitModule,
   AdvancedFilterModule,
   CellSelectionModule,
   ClipboardModule,
@@ -53,6 +54,7 @@ describe('@libregrid/all', () => {
       RichSelectModule,
       IntegratedChartsModule,
       SparklinesModule,
+      AiToolkitModule,
     ];
     for (const module of modules) {
       expect(module.moduleName).toBeTypeOf('string');

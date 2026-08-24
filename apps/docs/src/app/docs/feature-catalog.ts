@@ -200,6 +200,16 @@ export const DOCS_FEATURES: readonly DocsFeature[] = [
     keywords: ['formula', 'derived'],
   },
   {
+    path: 'ai-toolkit',
+    label: 'AI Toolkit',
+    icon: 'auto_awesome',
+    section: 'organize',
+    packages: ['@libregrid/ai-toolkit'],
+    outcome: 'Control grid state in plain language, inferred locally in the browser.',
+    boundary: 'Browser',
+    keywords: ['natural language', 'local inference', 'tool calls'],
+  },
+  {
     path: 'selection',
     label: 'Selection & Clipboard',
     icon: 'select_all',

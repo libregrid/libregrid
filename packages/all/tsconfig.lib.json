@@ -5,6 +5,7 @@
     "rootDir": "./src",
     "paths": {
       "@libregrid/advanced-filter": ["../advanced-filter/dist/index.d.ts"],
+      "@libregrid/ai-toolkit": ["../ai-toolkit/dist/index.d.ts"],
       "@libregrid/angular": ["../angular/dist/index.d.ts"],
       "@libregrid/batch-edit": ["../batch-edit/dist/index.d.ts"],
       "@libregrid/cell-selection": ["../cell-selection/dist/index.d.ts"],
