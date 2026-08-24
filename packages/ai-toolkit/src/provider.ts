@@ -148,7 +148,9 @@ async function loadBrowserEngine(baseUrl: string): Promise<NeedleEngine> {
   if (typeof document === 'undefined') {
     throw new Error('ai-toolkit: NeedleWasmProvider needs a browser (or pass options.loadEngine for Node/SSR tests)');
   }
-  await injectScript(`${baseUrl}/needle.js`);
+  // The emscripten glue lives under wasm/ in the pinned HF commit; it then
+  // resolves needle.wasm relative to its own location.
+  await injectScript(`${baseUrl}/wasm/needle.js`);
   const factory = (globalThis as Record<string, unknown>).createNeedle;
   if (typeof factory !== 'function') {
     throw new Error('ai-toolkit: createNeedle global missing after loading needle.js');

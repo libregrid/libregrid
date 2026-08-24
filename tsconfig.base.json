@@ -49,7 +49,8 @@
       "@libregrid/angular": ["./packages/angular/src/index.ts"],
       "@libregrid/all": ["./packages/all/src/index.ts"],
       "@libregrid/batch-edit": ["./packages/batch-edit/src/index.ts"],
-      "@libregrid/calculated-columns": ["./packages/calculated-columns/src/index.ts"]
+      "@libregrid/calculated-columns": ["./packages/calculated-columns/src/index.ts"],
+      "@libregrid/ai-toolkit": ["./packages/ai-toolkit/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

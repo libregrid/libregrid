@@ -32,6 +32,7 @@ import { SparklinesModule } from '@libregrid/sparklines';
 import { RowNumbersModule } from '@libregrid/row-numbers';
 import { ColumnHeaderEditModule } from '@libregrid/column-header-edit';
 import { NotesModule } from '@libregrid/notes';
+import { AiToolkitModule } from '@libregrid/ai-toolkit';
 import { provideLibreGridMaterialTheme } from '@libregrid/material';
 
 import { App } from './app/app';
@@ -100,6 +101,8 @@ bootstrapApplication(App, {
       ColumnHeaderEditModule,
       // Phase 15
       NotesModule,
+      // Phase 19
+      AiToolkitModule,
       // Phase 16
       ServerSideSelectionModule,
       // Phase 17
