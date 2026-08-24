@@ -43,7 +43,9 @@ Artifacts are fetched at runtime from a pinned, self-hostable base URL; nothing
 is bundled into this package. The ~14 MB weights file is cached cache-first in
 Cache Storage (`libregrid-needle-v1`, keyed by artifact URL), so repeat visits
 load with zero model downloads; pass `cacheWeights: false` to force a network
-fetch.
+fetch. Call `provider.willDownloadWeights()` before a request to label UI
+accurately — it resolves true only when the next load actually fetches from
+the network (false for cache hits and in-memory weights).
 
 ## Parity
 

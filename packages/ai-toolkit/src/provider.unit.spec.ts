@@ -80,6 +80,22 @@ function needleProvider(handlers: (input: string) => object) {
   return { provider: new NeedleWasmProvider({ loadEngine: async () => engine }), hooks };
 }
 
+function fakeCaches(initial: Map<string, Response>, openShouldReject = false) {
+  const store = new Map(initial);
+  const cache = {
+    match: vi.fn(async (url: string) => store.get(url)),
+    put: vi.fn(async (url: string, res: Response) => {
+      store.set(url, res);
+    }),
+  };
+  const open = vi.fn(async () => {
+    if (openShouldReject) throw new Error('insecure context');
+    return cache;
+  });
+  vi.stubGlobal('caches', { open });
+  return { cache, open, store };
+}
+
 describe('NeedleWasmProvider', () => {
   it('normalises a tool call with confidence and reasoning', async () => {
     const { provider } = needleProvider(() => ({
@@ -285,22 +301,6 @@ describe('NeedleWasmProvider weight caching (built-in loader)', () => {
     vi.stubGlobal('createNeedle', () => Promise.resolve(engine));
   }
 
-  function fakeCaches(initial: Map<string, Response>, openShouldReject = false) {
-    const store = new Map(initial);
-    const cache = {
-      match: vi.fn(async (url: string) => store.get(url)),
-      put: vi.fn(async (url: string, res: Response) => {
-        store.set(url, res);
-      }),
-    };
-    const open = vi.fn(async () => {
-      if (openShouldReject) throw new Error('insecure context');
-      return cache;
-    });
-    vi.stubGlobal('caches', { open });
-    return { cache, open, store };
-  }
-
   function fakeFetch(cact: Uint8Array): string[] {
     const calls: string[] = [];
     vi.stubGlobal(
@@ -384,5 +384,57 @@ describe('NeedleWasmProvider weight caching (built-in loader)', () => {
 
     expect(calls).toEqual([WEIGHTS_URL]);
     expect(hooks.loadedBytes).toBe(2n);
+  });
+});
+
+describe('NeedleWasmProvider.willDownloadWeights', () => {
+  const BASE = 'https://artifacts.test/needle2';
+  const WEIGHTS_URL = `${BASE}/needle2.cact`;
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('reports no download once the weights are resident', async () => {
+    const { engine } = makeFakeEngine(() => ({}));
+    const provider = new NeedleWasmProvider({ baseUrl: BASE, loadEngine: async () => engine });
+    await provider.ensureEngine();
+    expect(await provider.willDownloadWeights()).toBe(false);
+  });
+
+  it('reports no download when a custom loader owns weight loading', async () => {
+    const { engine } = makeFakeEngine(() => ({}));
+    const provider = new NeedleWasmProvider({ baseUrl: BASE, loadEngine: async () => engine });
+    expect(await provider.willDownloadWeights()).toBe(false);
+  });
+
+  it('reports a download when Cache Storage is unavailable', async () => {
+    vi.stubGlobal('caches', undefined);
+    const provider = new NeedleWasmProvider({ baseUrl: BASE });
+    expect(await provider.willDownloadWeights()).toBe(true);
+  });
+
+  it('reports a download when caching is disabled, even with a warm cache', async () => {
+    fakeCaches(new Map([[WEIGHTS_URL, new Response([1])]]));
+    const provider = new NeedleWasmProvider({ baseUrl: BASE, cacheWeights: false });
+    expect(await provider.willDownloadWeights()).toBe(true);
+  });
+
+  it('reports no download when the weights are already cached', async () => {
+    fakeCaches(new Map([[WEIGHTS_URL, new Response([1])]]));
+    const provider = new NeedleWasmProvider({ baseUrl: BASE });
+    expect(await provider.willDownloadWeights()).toBe(false);
+  });
+
+  it('reports a download on a cache miss', async () => {
+    fakeCaches(new Map());
+    const provider = new NeedleWasmProvider({ baseUrl: BASE });
+    expect(await provider.willDownloadWeights()).toBe(true);
+  });
+
+  it('reports a download if the cache cannot be opened', async () => {
+    fakeCaches(new Map(), true);
+    const provider = new NeedleWasmProvider({ baseUrl: BASE });
+    expect(await provider.willDownloadWeights()).toBe(true);
   });
 });

@@ -93,6 +93,28 @@ export class NeedleWasmProvider implements AiProvider {
     this.cacheWeights = options.cacheWeights ?? true;
   }
 
+  private get weightsUrl(): string {
+    return `${this.baseUrl}/needle2.cact`;
+  }
+
+  /**
+   * Whether the next `ensureEngine()` will fetch the weights from the network
+   * (true) or serve them from memory / Cache Storage (false). Cheap — at most
+   * one `Cache.match`. Use it to label UI accurately: only announce a model
+   * download when this returns true.
+   */
+  async willDownloadWeights(): Promise<boolean> {
+    if (this.weightsLoaded || this.loadEngine) return false;
+    if (!this.cacheWeights || typeof caches === 'undefined') return true;
+    try {
+      const cache = await caches.open(ARTIFACT_CACHE);
+      return (await cache.match(this.weightsUrl)) === undefined;
+    } catch {
+      // Cache unusable — fetchArtifact will fall back to the network too.
+      return true;
+    }
+  }
+
   /**
    * Load the engine + weights once (lazy). With the built-in browser loader
    * the .cact weights are fetched from `baseUrl` (cache-first via Cache
@@ -103,7 +125,7 @@ export class NeedleWasmProvider implements AiProvider {
     if (this.engine) return this.engine;
     const engine = this.loadEngine ? await this.loadEngine() : await loadBrowserEngine(this.baseUrl);
     if (!this.weightsLoaded && !this.loadEngine) {
-      const cact = new Uint8Array(await fetchArtifact(`${this.baseUrl}/needle2.cact`, this.cacheWeights));
+      const cact = new Uint8Array(await fetchArtifact(this.weightsUrl, this.cacheWeights));
       const p = engine._malloc(cact.length);
       engine.HEAPU8.set(cact, p);
       const rc = engine._needle_load(p, BigInt(cact.length));

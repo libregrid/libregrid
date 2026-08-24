@@ -131,7 +131,7 @@ function makeRows(): Row[] {
       </div>
       <button type="button" class="lgr-ai-ask" data-testid="ai-ask" [disabled]="busy()" (click)="ask(prompt())">Ask</button>
       @if (busy()) {
-        <span data-testid="ai-busy">Thinking… (first run downloads the ~14 MB model)</span>
+        <span data-testid="ai-busy">{{ busyLabel() }}</span>
       }
       <h2>Log</h2>
       @if (log().length === 0) {
@@ -151,6 +151,7 @@ export class AiToolkitDemo {
   protected readonly SUGGESTIONS = SUGGESTIONS;
   protected readonly prompt = signal('');
   protected readonly busy = signal(false);
+  protected readonly busyLabel = signal('Thinking…');
   protected readonly log = signal<string[]>([]);
 
   protected gridOptions: GridOptions<Row> = {
@@ -180,6 +181,9 @@ export class AiToolkitDemo {
     this.busy.set(true);
     try {
       const provider = (this.provider ??= new NeedleWasmProvider());
+      // Only announce a download when the weights actually come from the
+      // network — repeat visits serve them from Cache Storage.
+      this.busyLabel.set((await provider.willDownloadWeights()) ? 'Thinking… (downloading the ~14 MB model)' : 'Thinking…');
       const outcome = await runToolkit(provider, {
         prompt,
         context: `Grid columns:\n${COLUMNS.map((c) => `${c.colId}: ${c.headerName}`).join('\n')}`,
