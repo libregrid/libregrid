@@ -43,11 +43,21 @@ export interface NeedleEngine {
 
 const DEFAULT_BASE_URL = 'https://huggingface.co/Cactus-Compute/needle2/resolve/98fbd955b0347e78059be0c253cc1ffa09b87bc7';
 
+/** Cache Storage name for pinned artifacts — bump when the artifact set changes. */
+const ARTIFACT_CACHE = 'libregrid-needle-v1';
+
 export interface NeedleWasmOptions {
   /** Base URL of the pinned artifact set (self-hostable). Defaults to the HF CDN. */
   baseUrl?: string;
   /** Test/SSR hook: return a ready engine instead of fetching artifacts. */
-  loadEngine?: () => Promise<NeedleEngine>;
+  loadEngine?: (() => Promise<NeedleEngine>) | undefined;
+  /**
+   * Persist fetched weights in Cache Storage (cache-first, keyed by artifact
+   * URL so CDN and self-hosted base URLs coexist). Enabled by default
+   * wherever the browser exposes `caches` (secure contexts); set false to
+   * force a network fetch (tests, or a self-hosted URL that changes in place).
+   */
+  cacheWeights?: boolean;
 }
 
 function strPtr(engine: NeedleEngine, s: string): number {
@@ -60,7 +70,9 @@ function strPtr(engine: NeedleEngine, s: string): number {
 /**
  * The default provider (ADR 0006): Cactus Needle 2 running entirely in the
  * browser via WebAssembly. No network traffic except the one-time artifact
- * fetch from a pinned, self-hostable base URL. Requests are stateless —
+ * fetch from a pinned, self-hostable base URL — and even that is cached:
+ * weights are served cache-first from Cache Storage (`libregrid-needle-v1`),
+ * so repeat visits load with zero model downloads. Requests are stateless —
  * `needle_reset()` before every completion keeps the 256-token window clean
  * (spike finding C) — and serialised on a single session queue.
  */
@@ -69,6 +81,7 @@ export class NeedleWasmProvider implements AiProvider {
 
   private readonly baseUrl: string;
   private readonly loadEngine: (() => Promise<NeedleEngine>) | undefined;
+  private readonly cacheWeights: boolean;
   private engine: NeedleEngine | null = null;
   private weightsLoaded = false;
   private initKey: string | null = null;
@@ -77,19 +90,20 @@ export class NeedleWasmProvider implements AiProvider {
   constructor(options: NeedleWasmOptions = {}) {
     this.baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
     this.loadEngine = options.loadEngine;
+    this.cacheWeights = options.cacheWeights ?? true;
   }
 
   /**
    * Load the engine + weights once (lazy). With the built-in browser loader
-   * the .cact weights are fetched from `baseUrl`; a custom `loadEngine` hook
-   * is trusted to return an already-loaded engine (tests, SSR, self-hosted
-   * bundles).
+   * the .cact weights are fetched from `baseUrl` (cache-first via Cache
+   * Storage when available); a custom `loadEngine` hook is trusted to return
+   * an already-loaded engine (tests, SSR, self-hosted bundles).
    */
   async ensureEngine(): Promise<NeedleEngine> {
     if (this.engine) return this.engine;
     const engine = this.loadEngine ? await this.loadEngine() : await loadBrowserEngine(this.baseUrl);
     if (!this.weightsLoaded && !this.loadEngine) {
-      const cact = new Uint8Array(await fetchArtifact(`${this.baseUrl}/needle2.cact`));
+      const cact = new Uint8Array(await fetchArtifact(`${this.baseUrl}/needle2.cact`, this.cacheWeights));
       const p = engine._malloc(cact.length);
       engine.HEAPU8.set(cact, p);
       const rc = engine._needle_load(p, BigInt(cact.length));
@@ -168,9 +182,40 @@ function injectScript(src: string): Promise<void> {
   });
 }
 
-async function fetchArtifact(url: string): Promise<ArrayBuffer> {
+/**
+ * Fetch an artifact cache-first. Pinned artifact URLs are immutable (the base
+ * URL embeds the HF commit), so a Cache Storage hit is always valid — no
+ * revalidation needed. Entries are keyed by full URL, so CDN and self-hosted
+ * base URLs coexist in one versioned cache. Any Cache Storage failure
+ * (insecure context, quota) degrades to a plain network fetch: caching must
+ * never break loading. The emscripten glue/wasm stay on the browser HTTP
+ * cache deliberately — intercepting their load would risk breaking the glue's
+ * relative `needle.wasm` resolution.
+ */
+async function fetchArtifact(url: string, useCache: boolean): Promise<ArrayBuffer> {
+  let cache: Cache | null = null;
+  if (useCache && typeof caches !== 'undefined') {
+    try {
+      cache = await caches.open(ARTIFACT_CACHE);
+    } catch {
+      cache = null;
+    }
+  }
+  if (cache) {
+    const hit = await cache.match(url).catch(() => undefined);
+    if (hit) return hit.arrayBuffer();
+  }
+
   const response = await fetch(url);
   if (!response.ok) throw new Error(`ai-toolkit: artifact fetch failed (${response.status}) for ${url}`);
+  if (cache) {
+    try {
+      // Best-effort store; the original body is consumed below, so clone it.
+      await cache.put(url, response.clone());
+    } catch {
+      // Quota exceeded or opaque response — this load still succeeds from network.
+    }
+  }
   return response.arrayBuffer();
 }
 

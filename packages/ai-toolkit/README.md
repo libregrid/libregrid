@@ -40,7 +40,10 @@ row data leaves the page. A remote OpenAI-compatible provider is available as an
 opt-in fallback for requests the local model declines (see ADR 0006).
 
 Artifacts are fetched at runtime from a pinned, self-hostable base URL; nothing
-is bundled into this package.
+is bundled into this package. The ~14 MB weights file is cached cache-first in
+Cache Storage (`libregrid-needle-v1`, keyed by artifact URL), so repeat visits
+load with zero model downloads; pass `cacheWeights: false` to force a network
+fetch.
 
 ## Parity
 

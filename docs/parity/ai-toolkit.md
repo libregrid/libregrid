@@ -18,7 +18,7 @@
 
 | Requirement | Status | Notes |
 |---|---|---|
-| Browser-local default (`NeedleWasmProvider`) | ✅ | Needle 2 WASM pinned at HF commit `98fbd95` (Apache-2.0); assets lazy-fetched, never bundled; one session per page, `needle_reset()` per request; real-browser round trip in the docs e2e |
+| Browser-local default (`NeedleWasmProvider`) | ✅ | Needle 2 WASM pinned at HF commit `98fbd95` (Apache-2.0); assets lazy-fetched, never bundled; weights cached cache-first in Cache Storage (`libregrid-needle-v1`, keyed by URL — repeat visits download nothing); one session per page, `needle_reset()` per request; real-browser round trip in the docs e2e |
 | Optional OpenAI-compatible remote fallback | ✅ | Consumer endpoint; **off by default**, explicit opt-in (`OpenAiCompatibleProvider`) |
 | Confidence gating + escalation | ✅ | `runToolkit`: below threshold → remote (if enabled) or clarification result; no guessed state change (unit-tested) |
 

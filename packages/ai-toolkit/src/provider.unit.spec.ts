@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OpenAiCompatibleProvider, type AiProvider, type AiRequest, type NeedleEngine } from './provider';
 import { runToolkit, DEFAULT_CONFIDENCE_THRESHOLD } from './escalation';
 import { NeedleWasmProvider } from './provider';
@@ -247,5 +247,142 @@ describe('runToolkit (ADR 0006 escalation)', () => {
   it('honours a custom threshold', async () => {
     const outcome = await runToolkit(stubProvider(lowConf, 'needle-wasm'), request, { threshold: 0.1 });
     expect(outcome).toMatchObject({ status: 'selected', via: 'needle-wasm' });
+  });
+});
+
+describe('NeedleWasmProvider weight caching (built-in loader)', () => {
+  const BASE = 'https://artifacts.test/needle2';
+  const WEIGHTS_URL = `${BASE}/needle2.cact`;
+
+  function makeBuiltInEngine() {
+    const heap = new Uint8Array(1 << 20);
+    const hooks = { loadedBytes: -1n };
+    const engine: NeedleEngine = {
+      _malloc: () => 4096,
+      _free: () => {},
+      HEAPU8: heap,
+      UTF8ToString: () => '',
+      _needle_load(_p, n) {
+        hooks.loadedBytes = n;
+        return 0;
+      },
+      _needle_init: () => 0,
+      _needle_complete: () => 0,
+      _needle_reset: () => {},
+    };
+    return { engine, hooks };
+  }
+
+  function stubBrowser(engine: NeedleEngine) {
+    vi.stubGlobal('document', {
+      head: {
+        appendChild(script: { onload?: () => void }) {
+          queueMicrotask(() => script.onload?.());
+        },
+      },
+      createElement: () => ({ src: '', onload: undefined as (() => void) | undefined, onerror: undefined as (() => void) | undefined }),
+    });
+    vi.stubGlobal('createNeedle', () => Promise.resolve(engine));
+  }
+
+  function fakeCaches(initial: Map<string, Response>, openShouldReject = false) {
+    const store = new Map(initial);
+    const cache = {
+      match: vi.fn(async (url: string) => store.get(url)),
+      put: vi.fn(async (url: string, res: Response) => {
+        store.set(url, res);
+      }),
+    };
+    const open = vi.fn(async () => {
+      if (openShouldReject) throw new Error('insecure context');
+      return cache;
+    });
+    vi.stubGlobal('caches', { open });
+    return { cache, open, store };
+  }
+
+  function fakeFetch(cact: Uint8Array): string[] {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      ((url: string) => {
+        calls.push(String(url));
+        if (String(url).endsWith('needle2.cact')) return Promise.resolve(new Response(cact));
+        return Promise.reject(new Error(`unexpected fetch ${url}`));
+      }) as unknown as typeof fetch,
+    );
+    return calls;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('serves cached weights without a network fetch', async () => {
+    const cact = new Uint8Array([9, 8, 7]);
+    const { engine, hooks } = makeBuiltInEngine();
+    stubBrowser(engine);
+    fakeCaches(new Map([[WEIGHTS_URL, new Response(cact)]]));
+    const calls = fakeFetch(cact);
+
+    await new NeedleWasmProvider({ baseUrl: BASE }).ensureEngine();
+
+    expect(calls).toEqual([]);
+    expect(hooks.loadedBytes).toBe(3n);
+  });
+
+  it('fetches on a cache miss and stores the weights for next time', async () => {
+    const cact = new Uint8Array([1, 2, 3, 4]);
+    const { engine, hooks } = makeBuiltInEngine();
+    stubBrowser(engine);
+    const { open, store } = fakeCaches(new Map());
+    const calls = fakeFetch(cact);
+
+    await new NeedleWasmProvider({ baseUrl: BASE }).ensureEngine();
+
+    expect(calls).toEqual([WEIGHTS_URL]);
+    expect(open).toHaveBeenCalled();
+    const stored = await (store.get(WEIGHTS_URL) as Response).arrayBuffer();
+    expect(new Uint8Array(stored)).toEqual(cact);
+    expect(hooks.loadedBytes).toBe(4n);
+  });
+
+  it('skips Cache Storage entirely when cacheWeights is false', async () => {
+    const cact = new Uint8Array([5, 6]);
+    const { engine } = makeBuiltInEngine();
+    stubBrowser(engine);
+    const { open } = fakeCaches(new Map());
+    const calls = fakeFetch(cact);
+
+    await new NeedleWasmProvider({ baseUrl: BASE, cacheWeights: false }).ensureEngine();
+
+    expect(open).not.toHaveBeenCalled();
+    expect(calls).toEqual([WEIGHTS_URL]);
+  });
+
+  it('falls back to a plain fetch when Cache Storage is unavailable', async () => {
+    const cact = new Uint8Array([7, 8, 9, 10]);
+    const { engine, hooks } = makeBuiltInEngine();
+    stubBrowser(engine);
+    vi.stubGlobal('caches', undefined);
+    const calls = fakeFetch(cact);
+
+    await new NeedleWasmProvider({ baseUrl: BASE }).ensureEngine();
+
+    expect(calls).toEqual([WEIGHTS_URL]);
+    expect(hooks.loadedBytes).toBe(4n);
+  });
+
+  it('degrades to a network fetch if the cache cannot be opened', async () => {
+    const cact = new Uint8Array([11, 12]);
+    const { engine, hooks } = makeBuiltInEngine();
+    stubBrowser(engine);
+    fakeCaches(new Map(), true);
+    const calls = fakeFetch(cact);
+
+    await new NeedleWasmProvider({ baseUrl: BASE }).ensureEngine();
+
+    expect(calls).toEqual([WEIGHTS_URL]);
+    expect(hooks.loadedBytes).toBe(2n);
   });
 });
