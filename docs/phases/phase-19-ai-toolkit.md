@@ -150,5 +150,7 @@ it must not depend on predefined business column names.
 - [ ] Prompt-contract fixtures shared by runtime and training-data generation.
   Train/validation/test schemas must use split-exclusive headers, raw IDs, and
   values; evaluation grids must contain vocabulary unseen during training.
+  Include typed multi-column AND filters, negation, and commands whose intent
+  depends on current grid state.
 - [ ] Browser tests for cached local-model loading, WebGPU/WASM fallback, final
   ONNX artifact size, and the full validator-before-apply path.
