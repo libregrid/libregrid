@@ -85,7 +85,7 @@ Assessment:
 | Browser-local, no network by default | ✅ WASM build |
 | General conversational quality | ❌ not a general LLM — complex multi-step requests will fail |
 | Large grids / many columns | ⚠️ 256-token context caps the schema size; `exclude` + per-column `description` are the mitigation |
-| Distribution | ⚠️ no official npm browser package yet — artifacts ship as HF release files; a spike must pin load strategy and licenses (engine **and** weights) |
+| Distribution | ✅ resolved by the 2026-08-23 spike: runtime fetch of `wasm/needle.js` + `wasm/needle.wasm` + `needle2.cact` from a pinned HF commit, self-hostable base URL; Apache-2.0 engine **and** weights |
 
 Conclusion: plausible for the v1 scope (filters, sort, column visibility,
 reset) on moderate grids, with an explicit quality ceiling. The architecture
@@ -155,13 +155,18 @@ Decisions:
   `setColumnVisibility`, `resetGrid`. Each tool call validates against a
   hand-rolled validator (no `ajv` — dependency policy) and maps to a
   `GridState` patch applied through Community's state service.
+- **Flat tool arguments** (spike finding B, 2026-08-23): the model reliably
+  emits flat shapes but not nested per-column objects, so `setFilters` takes
+  `{ column, values }` for a single column (multiple calls per turn allowed)
+  and the validator maps to `GridState.filterModel`. No tool takes a nested
+  object-of-objects.
 - No new runtime dependencies; no CSS; no beans beyond the provider registry.
 
 ## 5. Risks and open questions
 
 | Risk | Mitigation |
 |---|---|
-| Needle browser artifacts have no official npm package; load strategy unproven | Phase 19 task 19.1 spike (gate): pin artifact source, licenses (engine + weights), lazy-load subpath, memory/perf in Chromium; record in `reference/spike-results.md` |
+| Needle browser artifacts have no official npm package; load strategy unproven | ✅ **Resolved by the 2026-08-23 spike** (`reference/spike-results.md`): three runtime-fetched files (glue + engine wasm + `.cact` weights), Apache-2.0 throughout, sub-second per-query in Chromium, +14 MB JS heap; pinned commit `98fbd95…`, self-hostable base URL |
 | ~256-token context caps schema size on wide grids | Schema+state-only policy; `exclude` + per-column `description`; document the grid-size ceiling in parity |
 | Local model quality ceiling (complex multi-step requests) | Confidence gating → optional remote fallback; fine-tuning on domain data documented as a recommendation, not a v1 requirement |
 | ~14 MB asset download | Lazy load on first use, cacheable; consumers can self-host; never bundled |

@@ -27,7 +27,7 @@
 | Requirement | Status | Notes |
 |---|---|---|
 | `setSort` | ⬜ | Applied through Community's state service (`setState`) |
-| `setFilters` | ⬜ | `filterModel` patches over the Phase 6 filter surface |
+| `setFilters` | ⬜ | Flat `{ column, values }` single-column shape (spike finding B) mapped to `filterModel` over the Phase 6 filter surface; multiple calls per turn allowed |
 | `setColumnVisibility` | ⬜ | |
 | `resetGrid` | ⬜ | `propertiesToIgnore` / clear semantics |
 

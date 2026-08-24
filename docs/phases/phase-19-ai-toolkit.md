@@ -49,18 +49,21 @@ Aggregation/pivot/row-group are post-v1.
 
 ### 19A — Spike (gate for all provider work)
 
-- [ ] 19.1 Needle browser artifacts: obtain `needle.js` + `needle.wasm`
-      (HF release files), verify licenses (engine **and** weights), decide the
-      load strategy (lazy subpath, never bundled; self-hostable), measure
-      memory/perf in Chromium. Record the outcome in
-      [`../reference/spike-results.md`](../reference/spike-results.md). A
-      failed gate falls back to remote-provider-only and is recorded as such.
+- [x] 19.1 Needle browser artifacts: obtained `wasm/needle.js` +
+      `wasm/needle.wasm` + `needle2.cact` from HF @ commit
+      `98fbd955b0347e78059be0c253cc1ffa09b87bc7`; licenses verified
+      (Apache-2.0 engine **and** weights); load strategy = runtime fetch from a
+      pinned, self-hostable base URL (never bundled); measured in Node +
+      headless Chromium. Outcome: **✅ GO** with four design conditions (flat
+      tool args, confidence threshold 0.5, `needle_reset()` per request,
+      pinned artifact commit) — see the Needle section of
+      [`../reference/spike-results.md`](../reference/spike-results.md).
 
 ### 19B — `@libregrid/ai-toolkit`
 
 - [ ] Package scaffold (`package.json`, `tsconfig.lib.json`, `project.json`, NOTICE, LICENSE, README, generated `version.ts`) per [`../reference/standards.md`](../reference/standards.md)
 - [ ] `structuredSchema.ts` — build the grid-state JSON schema from the live column model + current state; `StructuredSchemaParams` narrowing (`exclude` features, per-column `description` / `includeSetValues`); v1 features filter/sort/columnVisibility
-- [ ] `tools.ts` — the ≤5 tool schemas (`setSort`, `setFilters`, `setColumnVisibility`, `resetGrid`) + hand-rolled validator (no `ajv` — dependency policy)
+- [ ] `tools.ts` — the ≤5 tool schemas (`setSort`, `setFilters` as flat `{ column, values }` per spike finding B, `setColumnVisibility`, `resetGrid`) + hand-rolled validator (no `ajv` — dependency policy)
 - [ ] `applyToolCall()` — map a validated tool call to a `GridState` patch and apply it through Community's state service (`setState(state, propertiesToIgnore)`); `resetGrid` via the `propertiesToIgnore`/clear semantics
 - [ ] `AiProvider` interface + `NeedleWasmProvider` (default; lazy-loaded WASM assets; confidence score) + `OpenAiCompatibleProvider` (consumer endpoint; **off by default**)
 - [ ] Escalation: confidence below threshold → remote provider if enabled, else a clarification result (no guessed state change)
