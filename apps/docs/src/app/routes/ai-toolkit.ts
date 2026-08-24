@@ -105,11 +105,24 @@ function makeRows(): Row[] {
     }
     .lgr-ai-log {
       margin: 8px 0 24px;
+      max-height: 240px;
+      overflow-y: auto;
       padding-left: 20px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 0.85rem;
       line-height: 1.6;
       color: light-dark(#3d3d3d, #e0e0e0);
+      word-break: break-word;
+    }
+    .lgr-ai-log-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .lgr-ai-chip:disabled {
+      cursor: default;
+      opacity: 0.5;
     }
     .lgr-ai-log-empty {
       list-style: none;
@@ -200,7 +213,12 @@ function makeRows(): Row[] {
       @if (busy()) {
         <span data-testid="ai-busy">{{ busyLabel() }}</span>
       }
-      <h2>Log</h2>
+      <div class="lgr-ai-log-head">
+        <h2>Log</h2>
+        <button type="button" class="lgr-ai-chip" data-testid="ai-clear-log" [disabled]="log().length === 0" (click)="clearLog()">
+          Clear log
+        </button>
+      </div>
       @if (log().length === 0) {
         <ul class="lgr-ai-log lgr-ai-log-empty"><li>No requests yet.</li></ul>
       } @else {
@@ -305,7 +323,11 @@ export class AiToolkitDemo {
     }
   }
 
+  protected clearLog(): void {
+    this.log.set([]);
+  }
+
   private pushLog(entry: string): void {
-    this.log.update((entries) => [...entries, entry].slice(-8));
+    this.log.update((entries) => [...entries, entry]);
   }
 }

@@ -52,6 +52,11 @@ test.describe('AI Toolkit', () => {
     await box.fill(JSON.stringify({ ...parsed, threshold: 0.9 }, null, 2));
     await page.getByTestId('ai-reload-config').click();
     await expect(page.getByTestId('ai-log-item').last()).toContainText(/config reloaded/);
+
+    // Clearing the log empties it back to the placeholder.
+    await page.getByTestId('ai-clear-log').click();
+    await expect(page.getByTestId('ai-log-item')).toHaveCount(0);
+    await expect(page.locator('.lgr-ai-log-empty')).toContainText('No requests yet.');
   });
 });
 
