@@ -34,8 +34,11 @@ export { passesConfidenceGate, formatConfidence } from './confidence';
 export {
   NeedleWasmProvider,
   OpenAiCompatibleProvider,
+  AnthropicProvider,
+  createRemoteProvider,
   type AiProvider,
   type AiProviderResult,
+  type AiRemoteProviderConfig,
   type AiRequest,
   type NeedleEngine,
   type NeedleWasmOptions,

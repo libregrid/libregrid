@@ -172,6 +172,26 @@ describe('applyAiCommand on a live grid', () => {
     expect(result).toMatchObject({ status: 'not-applied', reason: 'off-topic' });
   });
 
+  it('constructs an OpenAI-compatible provider from public remote configuration', async () => {
+    api = mountGrid();
+    await ready(api);
+    const fetchImpl = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { tool_calls: [{ function: { name: 'setSort', arguments: JSON.stringify({ sortModel: [{ column: refFor(api as GridApi, 'sales'), direction: 'desc' }] }) } }] } }],
+        }),
+      ),
+    ) as unknown as typeof fetch;
+
+    const result = await applyAiCommand(api, 'highest sales first', {
+      remote: { schema: 'openai', baseUrl: 'https://models.example.test/v1/', model: 'tool-model', apiKey: 'key', fetchImpl },
+    });
+
+    expect(result.status).toBe('applied');
+    expect(fetchImpl).toHaveBeenCalledWith('https://models.example.test/v1/chat/completions', expect.any(Object));
+    expect(api.getColumnState().find((c) => c.colId === 'sales')?.sort).toBe('desc');
+  });
+
   it('refuses to apply a response built against a different column set', async () => {
     api = mountGrid();
     await ready(api);

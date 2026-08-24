@@ -5,7 +5,7 @@ import { decodePlan } from './decodePlan';
 import { validatePlan, type ValidatePlanLimits } from './validatePlan';
 import { compilePlan } from './compilePlan';
 import { isEmptyPlan, type AiAppliedChanges, type AiCommandResult, type AiGridPlan, type AiNotAppliedReason } from './plan';
-import { NeedleWasmProvider, type AiProvider } from './provider';
+import { createRemoteProvider, NeedleWasmProvider, type AiProvider, type AiRemoteProviderConfig } from './provider';
 import { DEFAULT_CONFIDENCE_THRESHOLD, formatConfidence, passesConfidenceGate } from './confidence';
 
 export { DEFAULT_CONFIDENCE_THRESHOLD };
@@ -13,6 +13,13 @@ export { DEFAULT_CONFIDENCE_THRESHOLD };
 export interface ApplyAiCommandOptions extends BuildEnvironmentOptions {
   /** Inference provider. Defaults to a lazily created browser-local Needle. */
   provider?: AiProvider;
+  /**
+   * Remote model configuration for OpenAI-compatible or Anthropic Messages
+   * endpoints. Supplying this uses the remote provider for this command;
+   * omitting it keeps browser-local Needle as the default. `provider` takes
+   * precedence when an application needs a custom implementation.
+   */
+  remote?: AiRemoteProviderConfig;
   /** Per-column hints, keyed by colId. Optional enrichment, never required. */
   columns?: Record<string, AiColumnHints>;
   /** Plan size limits. */
@@ -61,7 +68,7 @@ export async function applyAiCommand(
   if (snapshot.columns.length === 0) return notApplied('unsupported', 'the grid has no columns to act on');
 
   const environment = buildAiEnvironment(snapshot, { ...options, prompt: trimmed });
-  const provider = options.provider ?? (sharedProvider ??= new NeedleWasmProvider());
+  const provider = options.provider ?? (options.remote ? createRemoteProvider(options.remote) : (sharedProvider ??= new NeedleWasmProvider()));
 
   const result = await provider.complete({
     prompt: trimmed,

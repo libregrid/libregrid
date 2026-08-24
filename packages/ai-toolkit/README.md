@@ -46,23 +46,27 @@ only operational failures such as a failed model load reject the promise.
 
 Pass `dryRun: true` to inspect validated changes without applying them, `onPlan`
 to observe the semantic plan, and `columns` to enrich live columns with
-descriptions or allowed values. The default local provider is shared per page;
-pass a provider from the advanced subpath when your application owns inference:
+descriptions or allowed values. The default local provider is shared per page.
+To use a hosted or self-hosted model, provide its API schema, base URL, model,
+and (where needed) API key directly:
 
 ```ts
-import { OpenAiCompatibleProvider } from '@libregrid/ai-toolkit/advanced';
-
-const provider = new OpenAiCompatibleProvider({
-  endpoint: 'https://models.example.com/v1/chat/completions',
-  model: 'your-tool-calling-model',
-  apiKey: '…',
+await applyAiCommand(api, 'Hide internal notes', {
+  remote: {
+    schema: 'openai', // or 'anthropic'
+    baseUrl: 'https://models.example.com/v1',
+    model: 'your-tool-calling-model',
+    apiKey: '…',
+  },
 });
-
-await applyAiCommand(api, 'Hide internal notes', { provider });
 ```
 
 The advanced APIs are deliberately separate: they expose the environment
 builder, plan decoder/validator/compiler, and provider seam for bespoke flows.
+For `schema: 'openai'`, LibreGrid appends `/chat/completions`; for
+`schema: 'anthropic'`, it appends `/v1/messages`. That means any gateway or
+self-hosted model speaking either tool-calling wire format can be used without
+an adapter.
 
 ## Local-first inference
 

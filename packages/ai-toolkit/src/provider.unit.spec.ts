@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { OpenAiCompatibleProvider, type AiProvider, type AiRequest, type NeedleEngine } from './provider';
+import { AnthropicProvider, OpenAiCompatibleProvider, type AiProvider, type AiRequest, type NeedleEngine } from './provider';
 import { runToolkit, DEFAULT_CONFIDENCE_THRESHOLD } from './escalation';
 import { NeedleWasmProvider } from './provider';
 
@@ -283,8 +283,52 @@ describe('OpenAiCompatibleProvider', () => {
   });
 });
 
+describe('AnthropicProvider', () => {
+  function fakeFetch(body: object, status = 200): [typeof fetch, () => { url: string; init: RequestInit | undefined }] {
+    let captured: { url: string; init: RequestInit | undefined } | undefined;
+    const fn = (url: string, init?: RequestInit) => {
+      captured = { url, init };
+      return Promise.resolve(new Response(JSON.stringify(body), { status }));
+    };
+    return [fn as unknown as typeof fetch, () => captured as { url: string; init: RequestInit | undefined }];
+  }
+
+  it('posts Messages tool use and parses tool_use blocks', async () => {
+    const [fetchImpl, capture] = fakeFetch({
+      content: [
+        { type: 'text', text: 'I can do that.' },
+        { type: 'tool_use', name: 'setSort', input: { sortModel: [{ colId: 'age', sort: 'asc' }] } },
+      ],
+    });
+    const provider = new AnthropicProvider({ baseUrl: 'https://example.test/', model: 'claude-test', apiKey: 'k', fetchImpl });
+    const result = await provider.complete(request);
+
+    expect(result).toEqual({ calls: [{ name: 'setSort', arguments: { sortModel: [{ colId: 'age', sort: 'asc' }] } }], confidence: 1 });
+    const { url, init } = capture();
+    expect(url).toBe('https://example.test/v1/messages');
+    expect(init?.headers).toEqual({ 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'x-api-key': 'k' });
+    expect(JSON.parse(String(init?.body))).toMatchObject({
+      model: 'claude-test',
+      max_tokens: 256,
+      system: request.context,
+      messages: [{ role: 'user', content: request.prompt }],
+      tools: [{ name: 'setColumnVisibility', input_schema: { type: 'object' } }],
+    });
+  });
+
+  it('returns no calls for a text reply and reports non-successful requests', async () => {
+    const [okFetch] = fakeFetch({ content: [{ type: 'text', text: 'No action.' }] });
+    expect((await new AnthropicProvider({ baseUrl: 'https://example.test', model: 'm', fetchImpl: okFetch }).complete(request)).calls).toEqual([]);
+
+    const [failingFetch] = fakeFetch({}, 429);
+    await expect(new AnthropicProvider({ baseUrl: 'https://example.test', model: 'm', fetchImpl: failingFetch }).complete(request)).rejects.toThrowError(
+      /Anthropic provider failed \(429\)/,
+    );
+  });
+});
+
 describe('runToolkit (ADR 0006 escalation)', () => {
-  function stubProvider(result: object, name: 'needle-wasm' | 'openai-compatible') {
+  function stubProvider(result: object, name: 'needle-wasm' | 'openai-compatible' | 'anthropic') {
     return { name, complete: vi.fn(async () => result) } as unknown as AiProvider;
   }
 

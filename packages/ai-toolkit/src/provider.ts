@@ -25,13 +25,36 @@ export interface AiRequest {
 }
 
 export interface AiProvider {
-  readonly name: 'needle-wasm' | 'openai-compatible';
+  /** Diagnostic label; custom local or hosted providers may use any value. */
+  readonly name: string;
   complete(request: AiRequest): Promise<AiProviderResult>;
+}
+
+/**
+ * Configuration for a remote, tool-calling model. `baseUrl` is the API root,
+ * not an individual endpoint: `/chat/completions` or `/v1/messages` is added
+ * according to `schema`. This intentionally supports self-hosted gateways as
+ * long as they implement one of these two wire formats.
+ */
+export interface AiRemoteProviderConfig {
+  schema: 'openai' | 'anthropic';
+  baseUrl: string;
+  apiKey?: string;
+  model: string;
+  /** Test hook or a custom browser/server fetch implementation. */
+  fetchImpl?: typeof fetch;
 }
 
 /** Wire shape of an OpenAI-compatible tool call. */
 interface ToolCallWire {
   function?: { name: string; arguments?: string };
+}
+
+/** Wire shape of an Anthropic Messages API tool-use content block. */
+interface AnthropicToolUseWire {
+  type?: string;
+  name?: string;
+  input?: Record<string, unknown>;
 }
 
 /** The emscripten surface of the Needle engine (wasm/needle.h). */
@@ -409,6 +432,82 @@ export class OpenAiCompatibleProvider implements AiProvider {
       confidence: 1,
     };
   }
+}
+
+/**
+ * Direct Anthropic Messages API provider. It maps the shared function schemas
+ * to Anthropic's `input_schema` shape and returns only `tool_use` blocks; text
+ * replies deliberately become an empty call list so the pipeline safely
+ * reports the request as off-topic rather than guessing.
+ */
+export class AnthropicProvider implements AiProvider {
+  readonly name = 'anthropic' as const;
+
+  private readonly endpoint: string;
+  private readonly apiKey: string | undefined;
+  private readonly model: string;
+  private readonly fetchImpl: typeof fetch;
+
+  constructor(options: { baseUrl: string; model: string; apiKey?: string; fetchImpl?: typeof fetch }) {
+    this.endpoint = endpointFor(options.baseUrl, '/v1/messages');
+    this.model = options.model;
+    this.apiKey = options.apiKey;
+    this.fetchImpl = options.fetchImpl ?? fetch;
+  }
+
+  async complete(request: AiRequest): Promise<AiProviderResult> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+    };
+    if (this.apiKey) headers['x-api-key'] = this.apiKey;
+
+    const response = await this.fetchImpl(this.endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: this.model,
+        max_tokens: request.maxNewTokens ?? DEFAULT_MAX_NEW_TOKENS,
+        system: request.context,
+        messages: [{ role: 'user', content: request.prompt }],
+        tools: request.tools.map(toAnthropicTool),
+      }),
+    });
+    if (!response.ok) throw new Error(`ai-toolkit: Anthropic provider failed (${response.status})`);
+
+    const body = (await response.json()) as { content?: AnthropicToolUseWire[] };
+    return {
+      calls: (body.content ?? [])
+        .filter((block) => block.type === 'tool_use' && typeof block.name === 'string')
+        .map((block) => ({ name: block.name as string, arguments: block.input ?? {} })),
+      confidence: 1,
+    };
+  }
+}
+
+/** Construct the configured remote provider used by `applyAiCommand`. */
+export function createRemoteProvider(config: AiRemoteProviderConfig): AiProvider {
+  if (config.schema === 'anthropic') {
+    return new AnthropicProvider(config);
+  }
+  return new OpenAiCompatibleProvider({
+    endpoint: endpointFor(config.baseUrl, '/chat/completions'),
+    model: config.model,
+    ...(config.apiKey !== undefined ? { apiKey: config.apiKey } : {}),
+    ...(config.fetchImpl !== undefined ? { fetchImpl: config.fetchImpl } : {}),
+  });
+}
+
+function endpointFor(baseUrl: string, path: string): string {
+  return `${baseUrl.replace(/\/+$/, '')}${path}`;
+}
+
+function toAnthropicTool(tool: Record<string, unknown>): Record<string, unknown> {
+  return {
+    name: typeof tool.name === 'string' ? tool.name : '',
+    ...(typeof tool.description === 'string' ? { description: tool.description } : {}),
+    input_schema: tool.parameters ?? { type: 'object', properties: {} },
+  };
 }
 
 function parseArguments(raw: string | undefined): Record<string, unknown> {
