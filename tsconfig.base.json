@@ -51,7 +51,9 @@
       "@libregrid/batch-edit": ["./packages/batch-edit/src/index.ts"],
       "@libregrid/calculated-columns": ["./packages/calculated-columns/src/index.ts"],
       "@libregrid/ai-toolkit": ["./packages/ai-toolkit/src/index.ts"],
-      "@libregrid/ai-toolkit/advanced": ["./packages/ai-toolkit/src/advanced.ts"]
+      "@libregrid/ai-protocol": ["./packages/ai-protocol/src/index.ts"],
+      "@libregrid/ai-client": ["./packages/ai-client/src/index.ts"],
+      "@libregrid/ai-gateway": ["./packages/ai-gateway/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

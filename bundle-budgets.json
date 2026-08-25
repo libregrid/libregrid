@@ -7,8 +7,20 @@
       "note": "Serialisable expression AST + parser, reusable staged-model builder UI, and settings menu. Raised from 34 KB after the Phase 13 audit when the reusable builder landed; clean output measures 38.0 KB unminified."
     },
     "@libregrid/ai-toolkit": {
-      "maxSize": "70 KB",
-      "note": "Grid snapshot, capability-scoped environment builder, plan decode/validate/compile, and the Needle + OpenAI-compatible providers. Missed at creation (Phase 19 landed after the Phase 13 audit); clean output measured 65.9 KB unminified when added."
+      "maxSize": "32 KB",
+      "note": "Pure live-grid capability adapter plus strict seven-feature JSON Schema builder. Reduced from the retired 70 KB local-model runtime budget under ADR 0007."
+    },
+    "@libregrid/ai-protocol": {
+      "maxSize": "28 KB",
+      "note": "Dependency-free versioned types, dynamic envelope composition, restricted JSON Schema validator, prompt contract, and deterministic revisions."
+    },
+    "@libregrid/ai-client": {
+      "maxSize": "20 KB",
+      "note": "Browser snapshot/orchestration, HTTP transport, double validation, revision guard, diff, and protected GridState application."
+    },
+    "@libregrid/ai-gateway": {
+      "maxSize": "64 KB",
+      "note": "Server-only HTTP gateway, provider port, OpenAI Responses adapter, mock, Node server, and conformance runner; no provider SDK. The 64 KB package budget includes both self-contained CLI bundles and their shared library modules; measured clean output is 59.8 KB unminified."
     },
     "@libregrid/all": {
       "maxSize": "5 KB",

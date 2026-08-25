@@ -44,6 +44,9 @@ const packages = [
   'toolbar',
   'calculated-columns',
   'ai-toolkit',
+  'ai-protocol',
+  'ai-client',
+  'ai-gateway',
 ];
 const packageName = (name) => `@libregrid/${name}`;
 
@@ -63,6 +66,7 @@ for (const name of packages) {
     },
     bundle: true,
     format: 'esm',
+    platform: name === 'ai-gateway' ? 'node' : 'browser',
     minify: true,
     metafile: true,
     write: false,

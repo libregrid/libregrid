@@ -109,11 +109,17 @@ export default defineConfig({
       '@libregrid/sparklines': fileURLToPath(
         new URL('./packages/sparklines/src/index.ts', import.meta.url),
       ),
-      '@libregrid/ai-toolkit/advanced': fileURLToPath(
-        new URL('./packages/ai-toolkit/src/advanced.ts', import.meta.url),
-      ),
       '@libregrid/ai-toolkit': fileURLToPath(
         new URL('./packages/ai-toolkit/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/ai-protocol': fileURLToPath(
+        new URL('./packages/ai-protocol/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/ai-client': fileURLToPath(
+        new URL('./packages/ai-client/src/index.ts', import.meta.url),
+      ),
+      '@libregrid/ai-gateway': fileURLToPath(
+        new URL('./packages/ai-gateway/src/index.ts', import.meta.url),
       ),
       '@libregrid/angular': fileURLToPath(
         new URL('./packages/angular/src/index.ts', import.meta.url),
@@ -133,7 +139,16 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**/*.ts'],
-      exclude: ['**/*.spec.ts', '**/testing/**', '**/version.ts', '**/index.ts'],
+      exclude: [
+        '**/*.spec.ts',
+        '**/testing/**',
+        '**/version.ts',
+        '**/index.ts',
+        // These are deliberately thin process entry points. Their reusable
+        // behavior is covered through nodeServer/conformance integration tests.
+        '**/server.ts',
+        '**/*Cli.ts',
+      ],
       thresholds: { statements: 85, branches: 75, functions: 85, lines: 85 },
     },
   },
