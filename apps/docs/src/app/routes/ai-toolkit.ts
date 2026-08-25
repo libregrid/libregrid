@@ -18,6 +18,15 @@ import {
   type GridStateKey,
   type JsonObject,
 } from '@libregrid/ai-protocol';
+import {
+  DocsBackendBoundaryComponent,
+  type DocsBoundaryContract,
+  type DocsBoundaryResponsibility,
+} from '../docs/docs-backend-boundary';
+import { DocsCodeExampleComponent, type DocsCodeExample } from '../docs/docs-code-example';
+import { DocsDemoGuideComponent, type DocsDemoStep } from '../docs/docs-demo-guide';
+import { DocsFeaturePageShellComponent } from '../docs/docs-feature-page-shell';
+import { DocsProductionChecklistComponent, type DocsChecklistItem } from '../docs/docs-production-checklist';
 
 interface SaleRow {
   order: string;
@@ -45,6 +54,122 @@ const ROWS: SaleRow[] = [
   { order: 'SO-1004', product: 'Compute Node', amountUsd: 12_300, region: 'North America', category: 'Hardware', salesRep: 'Sam', closedDate: '2026-08-11' },
   { order: 'SO-1005', product: 'Analytics Pro', amountUsd: 8_900, region: 'Asia Pacific', category: 'Software License', salesRep: 'Taylor', closedDate: '2026-08-16' },
   { order: 'SO-1006', product: 'Secure Gateway', amountUsd: 6_250, region: 'North America', category: 'Hardware', salesRep: 'Riley', closedDate: '2026-08-20' },
+];
+
+const INTEGRATION_EXAMPLES: readonly DocsCodeExample[] = [
+  {
+    id: 'browser',
+    label: 'Browser assistant',
+    language: 'TypeScript',
+    filename: 'grid-assistant.ts',
+    description: 'Register the schema module once, then give the component that owns the grid a proposal-first assistant.',
+    code: `npm install @libregrid/ai-toolkit @libregrid/ai-client
+
+// main.ts — register once before any grid mounts
+import { provideLibreGrid } from '@libregrid/angular';
+import { AiToolkitModule } from '@libregrid/ai-toolkit';
+
+bootstrapApplication(AppComponent, {
+  providers: [provideLibreGrid(AiToolkitModule)],
+});
+
+// grid-assistant.ts — beside the component that owns the grid
+import { createGridAssistant } from '@libregrid/ai-client';
+
+const assistant = createGridAssistant({
+  api, // GridApi from the (gridReady) event
+  endpoint: '/api/grid-command', // your authenticated route
+  schema: {
+    columns: {
+      amountUsd: { description: 'Order total in US dollars' },
+      region: { description: 'Sales territory', includeSetValues: true },
+    },
+  },
+  context: { density: 'comfortable', totalRecordCount: rows.length },
+});
+
+const proposal = await assistant.run(command); // capture → POST → revalidate
+showDiff(proposal.changes); // dry-run: nothing has moved yet
+if (userConfirmed) proposal.apply(); // one protected setState call`,
+  },
+  {
+    id: 'gateway',
+    label: 'Gateway server',
+    language: 'TypeScript',
+    filename: 'gateway.main.ts',
+    description: 'Keep the provider key and model choice in server configuration. For zero-code deployment, run npx libregrid-ai-gateway or the included container instead.',
+    code: `npm install @libregrid/ai-gateway
+
+import {
+  createGridCommandHandler,
+  createOpenAiResponsesProvider,
+  listenNodeGateway,
+} from '@libregrid/ai-gateway';
+
+const handler = createGridCommandHandler({
+  provider: createOpenAiResponsesProvider({
+    apiKey: () => secrets.OPENAI_API_KEY, // read per request; keep it in secret storage
+    model: process.env.AI_MODEL ?? 'gpt-5.6', // server config is the model allowlist
+  }),
+  authorize: (request) => verifySession(request), // or reverse-proxy through your auth edge
+});
+
+await listenNodeGateway({ handler, port: 8787 }); // POST /v1/grid-command · GET /health`,
+  },
+  {
+    id: 'any-language',
+    label: 'Any language',
+    language: 'bash',
+    filename: 'terminal',
+    description: 'The contract ships as JSON Schemas plus an OpenAPI 3.1 document, so any stack can own the route. Prove the result with the conformance executable.',
+    code: `# Contract files ship inside the protocol package
+node_modules/@libregrid/ai-protocol/openapi.json
+node_modules/@libregrid/ai-protocol/schemas/
+
+# Generate a server stub for your stack (java, csharp, go, python, rust, …)
+npx @openapitools/openapi-generator-cli generate \\
+  -i node_modules/@libregrid/ai-protocol/openapi.json \\
+  -g go -o ./internal/gridcommand
+
+# Prove the implementation before rollout
+npx libregrid-ai-conformance https://your-api.example/v1/grid-command`,
+  },
+];
+
+const DEMO_STEPS: readonly DocsDemoStep[] = [
+  { icon: 'auto_awesome', title: 'Generate a proposal', instruction: 'Pick a suggestion chip or type a request such as “Group by region and total the sales amount”.', expected: 'A validated diff appears; the grid keeps every row until you act.' },
+  { icon: 'rule', title: 'Apply or discard', instruction: 'Read each proposed feature change, then choose Apply or Discard.', expected: 'Only Apply touches the grid; Discard leaves the state exactly as it was.' },
+  { icon: 'manage_search', title: 'Inspect the contract', instruction: 'Select “Inspect current contract” and expand each boundary section.', expected: 'You see the exact system prompt, live request, output envelope, response, and validation report.' },
+  { icon: 'dns', title: 'Point at your gateway', instruction: 'Switch to External HTTP gateway and set your endpoint.', expected: 'The same validation runs against your server; the page never asks for a provider key.' },
+];
+
+const CLIENT_RESPONSIBILITIES: readonly DocsBoundaryResponsibility[] = [
+  { title: 'Capture the complete live state', description: 'Send the full current GridState every time; the client recaptures it immediately before apply.' },
+  { title: 'Never hold provider secrets', description: 'The browser talks only to your authenticated endpoint with the user’s normal session.' },
+  { title: 'Require explicit confirmation', description: 'Show the diff and call proposal.apply() only after the user chooses.' },
+];
+
+const BACKEND_RESPONSIBILITIES: readonly DocsBoundaryResponsibility[] = [
+  { title: 'Authenticate every request', description: 'Use your reverse proxy and session, or the handler’s authorize hook, before the provider is called.' },
+  { title: 'Own model and cost policy', description: 'Requests cannot select a model, so your configured provider is both allowlist and budget control.' },
+  { title: 'Log metadata only', description: 'Persist request IDs, results, and latency; never commands, schemas, state payloads, authorization values, or keys.' },
+];
+
+const CONTRACTS: readonly DocsBoundaryContract[] = [
+  { kind: 'Request', name: 'POST /v1/grid-command', description: 'libregrid.ai/v1 GridCommandRequest: command, strict seven-feature schema, complete current state, revision.' },
+  { kind: 'Response', name: 'GridCommandSuccess', description: 'Validated gridState, propertiesToIgnore baseline, explanation, and provider metadata.' },
+  { kind: 'Failure', name: 'GridCommandFailure', description: 'Normalized error envelope with stable codes; safe to surface to the client.' },
+];
+
+const CHECKLIST: readonly DocsChecklistItem[] = [
+  { priority: 'required', title: 'Keep provider keys on the server', description: 'Provide credentials through the apiKey callback or environment; the browser bundle must never contain them.' },
+  { priority: 'required', title: 'Authenticate the endpoint', description: 'Put POST /v1/grid-command behind your session, token check, or the authorize hook.' },
+  { priority: 'required', title: 'Disclose outbound metadata', description: 'Requests carry column IDs and descriptions, values you opted in, the complete current grid state, and counts. Row records are never sent.' },
+  { priority: 'recommended', title: 'Pin the model allowlist', description: 'The configured model is server-side configuration; review changes like any other deployment.' },
+  { priority: 'recommended', title: 'Keep default limits', description: 'Retain the 512 KiB body limit and 30-second timeout unless measured load requires a deliberate change.' },
+  { priority: 'recommended', title: 'Log metadata only', description: 'Record request ID, status, latency, and normalized error codes — not commands, state, authorization, or keys.' },
+  { priority: 'recommended', title: 'Prove custom servers', description: 'Run libregrid-ai-conformance against your endpoint before rollout, including failure paths.' },
+  { priority: 'optional', title: 'Hold chat history in your application', description: 'The protocol is stateless; every request carries a fresh authoritative snapshot.' },
 ];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -125,17 +250,26 @@ const DEMO_TRANSPORT: GridCommandTransport = {
   },
 };
 
+/** Flagship guide: try the validated BYOM flow, then integrate browser, gateway, and policy. */
 @Component({
   selector: 'lgr-ai-toolkit-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule],
+  imports: [
+    AgGridAngular,
+    MatCardModule,
+    DocsBackendBoundaryComponent,
+    DocsCodeExampleComponent,
+    DocsDemoGuideComponent,
+    DocsFeaturePageShellComponent,
+    DocsProductionChecklistComponent,
+  ],
   styles: `
     .lgr-ai-lede { max-width: 76ch; }
     .lgr-ai-architecture {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 12px;
-      margin: 20px 0 28px;
+      margin: 0 0 20px;
     }
     .lgr-ai-architecture mat-card { padding: 16px; }
     .lgr-ai-architecture h3 { margin: 0 0 6px; }
@@ -179,7 +313,6 @@ const DEMO_TRANSPORT: GridCommandTransport = {
     }
     .lgr-ai-proposal h3 { margin-top: 0; }
     .lgr-ai-diff { margin: 8px 0 14px; padding-left: 22px; }
-    .lgr-ai-inspector { margin-top: 28px; }
     .lgr-ai-inspector details { border-top: 1px solid light-dark(#dedade, #494549); padding: 10px 0; }
     .lgr-ai-inspector summary { cursor: pointer; font-weight: 600; }
     .lgr-ai-code {
@@ -194,145 +327,153 @@ const DEMO_TRANSPORT: GridCommandTransport = {
       white-space: pre-wrap;
       word-break: break-word;
     }
-    .lgr-ai-note { color: light-dark(#5a5759, #bbb5bc); }
     @media (max-width: 650px) { .lgr-ai-mode { grid-template-columns: 1fr; } }
   `,
   template: `
-    <div class="lgr-page">
-      <h1>AI Toolkit: bring your own model</h1>
-      <p class="lgr-ai-lede">
-        LibreGrid handles the grid-specific work. Your browser calls one authenticated API route;
-        your server chooses the model. Provider keys never enter the browser, and changing OpenAI
-        for another provider does not change the grid integration.
-      </p>
+    <lgr-docs-feature-page-shell
+      eyebrow="Bring your own model"
+      title="Turn plain language into validated grid changes"
+      summary="Register AiToolkitModule, point the browser client at one authenticated route on your server, and review every proposal before it reaches the grid. LibreGrid owns the schema, contract, double validation, diff, and apply path; you own the provider, key, cost, and policy. Provider keys never enter the browser."
+      [packages]="['@libregrid/ai-toolkit', '@libregrid/ai-client', '@libregrid/ai-protocol', '@libregrid/ai-gateway']"
+      [audiences]="['Product teams', 'Application developers', 'Platform teams']"
+      [values]="values"
+    >
+      <div featureDemo>
+        <div class="lgr-ai-architecture" aria-label="AI Toolkit package architecture">
+          <mat-card>
+            <h3>1. Schema</h3>
+            <code>&#64;libregrid/ai-toolkit</code>
+            <p>Reads the live columns and emits a strict seven-feature GridState schema.</p>
+          </mat-card>
+          <mat-card>
+            <h3>2. Browser safety</h3>
+            <code>&#64;libregrid/ai-client</code>
+            <p>Captures state, validates twice, shows a diff, detects stale grids, and applies.</p>
+          </mat-card>
+          <mat-card>
+            <h3>3. Your server</h3>
+            <code>POST /v1/grid-command</code>
+            <p>Use our Node gateway or generate any-language server stubs from OpenAPI.</p>
+          </mat-card>
+        </div>
 
-      <div class="lgr-ai-architecture" aria-label="AI Toolkit package architecture">
-        <mat-card>
-          <h3>1. Schema</h3>
-          <code>&#64;libregrid/ai-toolkit</code>
-          <p>Reads the live columns and emits a strict seven-feature GridState schema.</p>
-        </mat-card>
-        <mat-card>
-          <h3>2. Browser safety</h3>
-          <code>&#64;libregrid/ai-client</code>
-          <p>Captures state, validates twice, shows a diff, detects stale grids, and applies.</p>
-        </mat-card>
-        <mat-card>
-          <h3>3. Your server</h3>
-          <code>POST /v1/grid-command</code>
-          <p>Use our Node gateway or generate any-language server stubs from OpenAPI.</p>
-        </mat-card>
-      </div>
+        <ag-grid-angular
+          [theme]="theme.gridTheme()"
+          [gridOptions]="gridOptions"
+          class="ag-theme-quartz"
+          style="height: 340px; width: 100%"
+          data-testid="ai-toolkit-grid"
+        />
 
-      <p class="lgr-ai-flow">
-        Browser → your authenticated API → chosen model provider → validated response → explicit apply
-      </p>
-
-      <ag-grid-angular
-        [theme]="theme.gridTheme()"
-        [gridOptions]="gridOptions"
-        class="ag-theme-quartz"
-        style="height: 340px; width: 100%"
-        data-testid="ai-toolkit-grid"
-      />
-
-      <h2>Contract workbench</h2>
-      <p>
-        The deterministic mock exercises the exact production protocol without a network call.
-        Switch to HTTP to test your own compatible gateway—this page never asks for a provider key.
-      </p>
-      <div class="lgr-ai-controls">
-        <div class="lgr-ai-mode">
-          <select class="lgr-ai-select" aria-label="Gateway mode" data-testid="ai-mode" [value]="mode()" (change)="onMode($event)">
-            <option value="mock">Deterministic contract mock</option>
-            <option value="http">External HTTP gateway</option>
-          </select>
+        <h2>Contract workbench</h2>
+        <p>
+          The deterministic mock exercises the exact production protocol without a network call.
+          Switch to HTTP to test your own compatible gateway—this page never asks for a provider key.
+        </p>
+        <div class="lgr-ai-controls">
+          <div class="lgr-ai-mode">
+            <select class="lgr-ai-select" aria-label="Gateway mode" data-testid="ai-mode" [value]="mode()" (change)="onMode($event)">
+              <option value="mock">Deterministic contract mock</option>
+              <option value="http">External HTTP gateway</option>
+            </select>
+            <input
+              class="lgr-ai-input"
+              aria-label="Gateway endpoint"
+              data-testid="ai-endpoint"
+              [disabled]="mode() === 'mock'"
+              [value]="endpoint()"
+              (input)="onEndpoint($event)"
+            />
+          </div>
           <input
             class="lgr-ai-input"
-            aria-label="Gateway endpoint"
-            data-testid="ai-endpoint"
-            [disabled]="mode() === 'mock'"
-            [value]="endpoint()"
-            (input)="onEndpoint($event)"
+            data-testid="ai-prompt"
+            aria-label="Ask the grid"
+            [value]="prompt()"
+            (input)="onPrompt($event)"
+            placeholder="Describe a filter, sort, grouping, pivot, visibility, sizing, or aggregation"
           />
+          <div class="lgr-ai-chips">
+            @for (suggestion of SUGGESTIONS; track suggestion) {
+              <button class="lgr-ai-button" type="button" [disabled]="busy()" (click)="ask(suggestion)">{{ suggestion }}</button>
+            }
+          </div>
+          <div class="lgr-ai-actions">
+            <button class="lgr-ai-button primary" type="button" data-testid="ai-ask" [disabled]="busy()" (click)="ask(prompt())">
+              Generate proposal
+            </button>
+            <button class="lgr-ai-button" type="button" data-testid="ai-show-env" (click)="inspect()">
+              Inspect current contract
+            </button>
+          </div>
         </div>
-        <input
-          class="lgr-ai-input"
-          data-testid="ai-prompt"
-          aria-label="Ask the grid"
-          [value]="prompt()"
-          (input)="onPrompt($event)"
-          placeholder="Describe a filter, sort, grouping, pivot, visibility, sizing, or aggregation"
-        />
-        <div class="lgr-ai-chips">
-          @for (suggestion of SUGGESTIONS; track suggestion) {
-            <button class="lgr-ai-button" type="button" [disabled]="busy()" (click)="ask(suggestion)">{{ suggestion }}</button>
-          }
-        </div>
-        <div class="lgr-ai-actions">
-          <button class="lgr-ai-button primary" type="button" data-testid="ai-ask" [disabled]="busy()" (click)="ask(prompt())">
-            Generate proposal
-          </button>
-          <button class="lgr-ai-button" type="button" data-testid="ai-show-env" (click)="inspect()">
-            Inspect current contract
-          </button>
-        </div>
+
+        <p class="lgr-ai-status" role="status" aria-live="polite" data-testid="ai-status">{{ status() }}</p>
+
+        @if (proposal(); as pending) {
+          <section class="lgr-ai-proposal" data-testid="ai-proposal">
+            <h3>Review before applying</h3>
+            <p>{{ pending.response.output.explanation }}</p>
+            <ul class="lgr-ai-diff" data-testid="ai-diff">
+              @for (change of pending.changes; track change.feature) {
+                <li><strong>{{ change.feature }}</strong>: {{ json(change.before) }} → {{ json(change.after) }}</li>
+              } @empty {
+                <li>No grid-state changes proposed.</li>
+              }
+            </ul>
+            <div class="lgr-ai-actions">
+              <button class="lgr-ai-button primary" type="button" data-testid="ai-apply" (click)="applyProposal()">Apply to grid</button>
+              <button class="lgr-ai-button" type="button" data-testid="ai-discard" (click)="discardProposal()">Discard</button>
+            </div>
+          </section>
+        }
+
+        @if (artifacts(); as view) {
+          <section class="lgr-ai-inspector" data-testid="ai-inspector">
+            <h2>What crosses each boundary</h2>
+            <details open>
+              <summary>System prompt</summary>
+              <pre class="lgr-ai-code" data-testid="ai-system-prompt" tabindex="0">{{ view.systemPrompt }}</pre>
+            </details>
+            <details>
+              <summary>Live grid schema and current state request</summary>
+              <pre class="lgr-ai-code" data-testid="ai-request" tabindex="0">{{ view.request }}</pre>
+            </details>
+            <details>
+              <summary>Strict provider output envelope</summary>
+              <pre class="lgr-ai-code" data-testid="ai-envelope" tabindex="0">{{ view.envelope }}</pre>
+            </details>
+            <details>
+              <summary>Validated gateway response</summary>
+              <pre class="lgr-ai-code" data-testid="ai-response" tabindex="0">{{ view.response }}</pre>
+            </details>
+            <details>
+              <summary>Validation report</summary>
+              <pre class="lgr-ai-code" data-testid="ai-validation" tabindex="0">{{ view.validation }}</pre>
+            </details>
+          </section>
+        }
       </div>
 
-      <p class="lgr-ai-status" role="status" aria-live="polite" data-testid="ai-status">{{ status() }}</p>
+      <lgr-docs-demo-guide featureGuide intro="Every step runs against the real protocol on this page's live grid." [steps]="demoSteps" />
 
-      @if (proposal(); as pending) {
-        <section class="lgr-ai-proposal" data-testid="ai-proposal">
-          <h3>Review before applying</h3>
-          <p>{{ pending.response.output.explanation }}</p>
-          <ul class="lgr-ai-diff" data-testid="ai-diff">
-            @for (change of pending.changes; track change.feature) {
-              <li><strong>{{ change.feature }}</strong>: {{ json(change.before) }} → {{ json(change.after) }}</li>
-            } @empty {
-              <li>No grid-state changes proposed.</li>
-            }
-          </ul>
-          <div class="lgr-ai-actions">
-            <button class="lgr-ai-button primary" type="button" data-testid="ai-apply" (click)="applyProposal()">Apply to grid</button>
-            <button class="lgr-ai-button" type="button" data-testid="ai-discard" (click)="discardProposal()">Discard</button>
-          </div>
-        </section>
-      }
+      <div featureImplementation>
+        <lgr-docs-code-example heading="Add the AI Toolkit to your application" [examples]="integrationExamples" />
+      </div>
 
-      @if (artifacts(); as view) {
-        <section class="lgr-ai-inspector" data-testid="ai-inspector">
-          <h2>What crosses each boundary</h2>
-          <details open>
-            <summary>System prompt</summary>
-            <pre class="lgr-ai-code" data-testid="ai-system-prompt" tabindex="0">{{ view.systemPrompt }}</pre>
-          </details>
-          <details>
-            <summary>Live grid schema and current state request</summary>
-            <pre class="lgr-ai-code" data-testid="ai-request" tabindex="0">{{ view.request }}</pre>
-          </details>
-          <details>
-            <summary>Strict provider output envelope</summary>
-            <pre class="lgr-ai-code" data-testid="ai-envelope" tabindex="0">{{ view.envelope }}</pre>
-          </details>
-          <details>
-            <summary>Validated gateway response</summary>
-            <pre class="lgr-ai-code" data-testid="ai-response" tabindex="0">{{ view.response }}</pre>
-          </details>
-          <details>
-            <summary>Validation report</summary>
-            <pre class="lgr-ai-code" data-testid="ai-validation" tabindex="0">{{ view.validation }}</pre>
-          </details>
-        </section>
-      }
+      <div featureIntegration>
+        <lgr-docs-backend-boundary
+          summary="LibreGrid defines the versioned contract and validates both directions of it. Your application owns authentication, provider and model policy, secrets, logging, retention, and residency."
+          [clientResponsibilities]="clientResponsibilities"
+          [backendResponsibilities]="backendResponsibilities"
+          [contracts]="contracts"
+        />
+      </div>
 
-      <h2>Production integration</h2>
-      <pre class="lgr-ai-code"><code>{{ integrationCode }}</code></pre>
-      <p class="lgr-ai-note">
-        Deploy <code>&#64;libregrid/ai-gateway</code>, or implement the same OpenAPI operation in
-        your existing Java, C#, Go, Python, Rust, PHP, Ruby, or Node server. Your application owns
-        endpoint authentication and secret storage; LibreGrid owns the model schema and validation.
-      </p>
-    </div>
+      <div featureProduction>
+        <lgr-docs-production-checklist heading="Ship the gateway safely" intro="Confirm these items before users send real commands." [items]="checklist" />
+      </div>
+    </lgr-docs-feature-page-shell>
   `,
 })
 export class AiToolkitDemo {
@@ -344,10 +485,18 @@ export class AiToolkitDemo {
   protected readonly busy = signal(false);
   protected readonly status = signal('Ready. Generate a proposal or inspect the current contract.');
   protected readonly proposal = signal<GridCommandProposal | null>(null);
-  protected readonly integrationCode = `const assistant = createGridAssistant({ api, endpoint: '/v1/grid-command' });
-const proposal = await assistant.run(command);
-showDiff(proposal.changes);
-proposal.apply(); // only after confirmation`;
+  protected readonly integrationExamples = INTEGRATION_EXAMPLES;
+  protected readonly demoSteps = DEMO_STEPS;
+  protected readonly clientResponsibilities = CLIENT_RESPONSIBILITIES;
+  protected readonly backendResponsibilities = BACKEND_RESPONSIBILITIES;
+  protected readonly contracts = CONTRACTS;
+  protected readonly checklist = CHECKLIST;
+  protected readonly values = [
+    { icon: 'auto_awesome', title: 'Plain-language control', description: 'Users ask for filters, sorts, grouping, pivot, sizing, visibility, and aggregation across seven supported features.' },
+    { icon: 'key', title: 'Keys stay server-side', description: 'The browser calls only your endpoint; provider credentials and model choice never leave your infrastructure.' },
+    { icon: 'fact_check', title: 'Nothing applies silently', description: 'Every response is revalidated against the live grid, shown as a diff, and applied only by an explicit user action.' },
+    { icon: 'sync_alt', title: 'One contract, any provider', description: 'The versioned libregrid.ai/v1 envelope works with the Node gateway, another provider port, or an OpenAPI-generated server.' },
+  ];
   protected readonly artifacts = signal<{
     systemPrompt: string;
     request: string;
