@@ -1,159 +1,74 @@
-# Phase 19 — AI Toolkit (gap-plan A6)
+# Phase 19 — AI Toolkit and BYOM
 
-**Status:** Implemented on `feature/ai-toolkit` (2026-08-23) — package, providers, module, demo route and e2e landed; awaiting review/merge.
-**Depends on:** Phase 6 (`@libregrid/set-filter` / `multi-filter` — the filter models the toolkit mutates), Community `GridStateModule` (`getState`/`setState`)
-**Blocks:** nothing (A1 Formulas is independent)
+**Status:** re-architected, locally validated, and live-provider validated
+2026-08-25 (OpenAI battery passed after approved egress)
 
-**Packages:** new `@libregrid/ai-toolkit` (`AiToolkit`); modified `@libregrid/all` (barrel re-export)
-**Parity:** [`../parity/ai-toolkit.md`](../parity/ai-toolkit.md) · **Design:** [`../design/ai-toolkit.md`](../design/ai-toolkit.md) · **ADR:** [`../adr/0006-local-first-ai-inference.md`](../adr/0006-local-first-ai-inference.md)
+**Packages:** `@libregrid/ai-toolkit`, `@libregrid/ai-protocol`,
+`@libregrid/ai-client`, `@libregrid/ai-gateway`
 
----
+**Plan:** [`../plans/ai-toolkit-byom.md`](../plans/ai-toolkit-byom.md) ·
+**Design:** [`../design/ai-toolkit.md`](../design/ai-toolkit.md) ·
+**Parity:** [`../parity/ai-toolkit.md`](../parity/ai-toolkit.md) ·
+**ADR:** [`../adr/0007-pure-ai-schema-and-byom-gateway.md`](../adr/0007-pure-ai-schema-and-byom-gateway.md)
 
-## Context
+## Outcome
 
-Gap-plan A6 — natural-language control of grid state via LLM tool calls with
-structured outputs. Community v36.1.0 already reserves the whole contract:
-the `AiToolkit` module name, the `getStructuredSchema` API slot (stubbed in
-the Community dist) and the `GridStateModule` round-trip (`getState` /
-`setState`). This package is the **implementation layer**: a real
-schema generator over the live column model, a tool-call execution path into
-Community's state service, and a provider abstraction whose default runs
-entirely in the browser (ADR 0006).
+The grid package is a pure deep module: register `AiToolkitModule`, then call
+`GridApi.getStructuredSchema(params?)`. Provider choice, credentials, prompt
+orchestration, transport, response validation, and state application do not
+enter that package.
 
-v1 scope (decided): **filter, sort, column visibility, reset.** Context
-policy: **schema + current state only** — no row values by default.
-Aggregation/pivot/row-group are post-v1.
+BYOM is delivered by three optional packages. The protocol supplies a stable
+language-neutral HTTP contract and generators' OpenAPI input; the browser
+client turns a response into a revalidated dry-run proposal; and the Node
+gateway offers a zero-provider-SDK OpenAI deployment plus a tiny provider port.
 
-## Contracts (verified against `ag-grid-community@36.1.0` dist + public docs)
+## Completed scope
 
-- `_AiToolkitGridApi` (`gridApi.d.ts:1715`): `getStructuredSchema(params?:
-  StructuredSchemaParams): any`; `GridApi` extends it (`gridApi.d.ts:1723`).
-- `EnterpriseModuleName` includes `'AiToolkit'`, `AgModuleName` includes
-  `'AiToolkitModule'` (`iModule.d.ts:77,79`). Community dist ships a stub —
-  `mod("AiToolkit", { getStructuredSchema: 0 })` (`main.esm.mjs:13182`) — so
-  the slot is reserved; the implementation is ours to provide.
-- `StructuredSchemaParams` (`structuredSchemaParams.d.ts`):
-  `exclude?: StructuredSchemaFeature[]` where
-  `StructuredSchemaFeature = 'aggregation' | 'filter' | 'sort' | 'pivot' |
-  'columnVisibility' | 'columnSizing' | 'rowGroup'`; plus per-column
-  `columns?: Record<string, { description?, includeSetValues? }>`.
-- `_StateGridApi` (`gridApi.d.ts:1033–1041`): `getState(): GridState`,
-  `setState(state: GridState, propertiesToIgnore?: GridStateKey[])`;
-  Community's `GridStateModule` (`main.d.ts:171`) is the state round-trip.
-- Public docs (ag-grid.com AI Toolkit page): consumer-built chat UI pattern —
-  `getStructuredSchema()` wrapped as `properties.gridState`, LLM emits state,
-  applied via `setState`; **no conversation state**; suggested prompts cover
-  filter/sort/group intents.
+- [x] Record specification errata, pause local training, and accept ADR 0007.
+- [x] Generate strict schemas for aggregation, filter, sort, pivot, column
+      visibility, column sizing, and row grouping from live capabilities.
+- [x] Cover simple/set/advanced filters, every built-in operator shape,
+      descriptions, opt-in set values, exclusions, empty grids, and recursive
+      definitions.
+- [x] Remove Needle/SmolLM/providers/prompts/actions and the `advanced` subpath
+      from the published toolkit.
+- [x] Publish `libregrid.ai/v1` types, validators, JSON Schemas, OpenAPI 3.1,
+      conformance fixtures, deterministic revisions, and provider envelope.
+- [x] Implement `createGridAssistant` with HTTP/custom transport, full state
+      context, double validation, stale checks, diff, explicit apply, and a
+      complete protected state-ignore baseline.
+- [x] Prove on a live grid that applying one feature preserves sort,
+      pagination, order, and every omitted state key.
+- [x] Implement provider-neutral gateway handling, auth hook, limits, timeout,
+      health, normalized errors, metadata-only logs, OpenAI Responses adapter,
+      deterministic mock, Node server/CLI, container, Compose example, and
+      conformance CLI.
+- [x] Replace the Docs route with a static contract workbench and external
+      endpoint mode; pass focused Chromium behavior and light/dark axe tests.
+- [x] Update package READMEs, legal notices, aliases, workspace dependencies,
+      docs reference surfaces, budgets, and decision records.
+- [ ] Run the live OpenAI fixture after explicit approval to send its fully
+      synthetic schema, GridState, context, and command to OpenAI.
 
-## Todo
+## Verification evidence
 
-### 19A — Spike (gate for all provider work)
-
-- [x] 19.1 Needle browser artifacts: obtained `wasm/needle.js` +
-      `wasm/needle.wasm` + `needle2.cact` from HF @ commit
-      `98fbd955b0347e78059be0c253cc1ffa09b87bc7`; licenses verified
-      (Apache-2.0 engine **and** weights); load strategy = runtime fetch from a
-      pinned, self-hostable base URL (never bundled); measured in Node +
-      headless Chromium. Outcome: **✅ GO** with four design conditions (flat
-      tool args, confidence threshold 0.5, `needle_reset()` per request,
-      pinned artifact commit) — see the Needle section of
-      [`../reference/spike-results.md`](../reference/spike-results.md).
-
-### 19B — `@libregrid/ai-toolkit`
-
-- [x] Package scaffold (`package.json`, `tsconfig.lib.json`, `project.json`, NOTICE, LICENSE, README, generated `version.ts`) per [`../reference/standards.md`](../reference/standards.md)
-- [x] `structuredSchema.ts` — build the grid-state JSON schema from the live column model + current state; `StructuredSchemaParams` narrowing (`exclude` features, per-column `description` / `includeSetValues`); v1 features filter/sort/columnVisibility
-- [x] `tools.ts` — the ≤5 tool schemas (`setSort`, `setFilters` as flat `{ column, values }` per spike finding B, `setColumnVisibility`, `resetGrid`) + hand-rolled validator (no `ajv` — dependency policy)
-- [x] `applyToolCall()` — map a validated tool call to a `GridState` patch and apply it through Community's state service (`setState(state, propertiesToIgnore)`); `resetGrid` via the `propertiesToIgnore`/clear semantics
-- [x] `AiProvider` interface + `NeedleWasmProvider` (default; lazy-loaded WASM assets; confidence score) + `OpenAiCompatibleProvider` (consumer endpoint; **off by default**)
-- [x] Escalation: confidence below threshold → remote provider if enabled, else a clarification result (no guessed state change) — `runToolkit`
-- [x] `AiToolkitModule` — `moduleName: 'AiToolkit'`, `enterprise: true`, depends on `EnterpriseCoreModule`, `apiFunctions: { getStructuredSchema }`
-- [x] Unit specs — schema builder (narrowing, per-column params), validator, provider mocks, escalation paths
-- [x] jsdom integration specs (real grid) — tool call → visible `setState` effect; schema narrowing; reset. Remote-fallback opt-in is covered by the `runToolkit` / `OpenAiCompatibleProvider` unit specs (jsdom never instantiates header filter UIs, so set-filter visibility is asserted at the mapping level).
-- [x] Demo route + Playwright e2e (docs app: prompt → visible state change; real local-inference round trip; axe light + dark)
-- [x] Parity checklist refresh (`../parity/ai-toolkit.md`), gap-list row, `@libregrid/all` re-export
-- [x] Coverage above repo thresholds — package-scoped v8 run: statements 85.8 / branches 83.8 / functions 86.5 / lines 88.4 (thresholds 85/75/85/85). The only sub-threshold file is `provider.ts` (70.7% stmts): its uncovered lines are the browser-only asset paths (built-in loader weight fetch, script-tag injection), which the real-Chromium e2e round trip exercises instead.
-
-## Test plan
-
-| Tier | Coverage |
+| Layer | Evidence |
 |---|---|
-| **Unit** | Schema builder (feature exclusion, per-column description/set-values, context budget); tool-call validator; provider interface + mocks; confidence-gated escalation (local→remote, local→clarify) |
-| **Integration** (jsdom, real grid) | Each tool call applied through the real state service and visible in `getState()`; `resetGrid`; schema reflects live column model; remote provider disabled by default |
-| **E2E** (Playwright) | Docs route: chat pane drives sort/filter/visibility changes; axe clean light + dark |
+| Schema/protocol/client/gateway | Focused Vitest suite, including restricted-dialect, wire-shape, failures, conformance, stale state, and real-grid preservation |
+| Docs | Angular production build succeeds; focused Chromium suite has 7/7 passing, including light/dark axe |
+| OpenAI adapter | Unit test asserts Responses `/v1/responses`, strict `text.format`, server-only bearer auth, output parsing, refusal, and rate-limit mapping |
+| Live OpenAI | Test is checked in but skipped without `OPENAI_API_KEY`; attempted run was blocked before egress by environment policy |
 
-## Notes
+| Workspace | 1,141 tests passed (one live test skipped); AI coverage passes at 88.93/80.55/94.41/94.67; all 37 production builds, lint, contamination, versions, bundle purity, and consumer fixtures pass |
 
-- No conversation state in v1 — each request is stateless, matching the
-  Ag-Grid module contract.
-- Row values never enter the model context by default (ADR 0006); the ~256
-  token Needle budget cannot hold them regardless.
-- `aggregation` / `pivot` / `rowGroup` / `columnSizing` are ❌ in parity with
-  rationale (post-v1); the schema generator's `exclude` support means adding
-  them later is additive.
-- Needle fine-tuning on domain data is a documented recommendation, not a v1
-  requirement.
+All local implementation and administrative gates are complete. Only the
+externally authorized live-provider battery remains before this phase can be
+marked fully complete.
 
-## Follow-on — full live-snapshot local-model contract (recorded 2026-08-24)
+## Historical note
 
-The original implementation scope is shipped, but the local provider contract
-must be expanded before the SmolLM2 browser provider replaces the experimental
-Needle model. This is a package-level requirement, not a consumer convention:
-LibreGrid is distributed to developers whose column IDs, headers, aliases, and
-grid configuration are unknowable at library-build time.
-
-### Required runtime context
-
-For every natural-language request, construct one canonical, request-local
-snapshot containing:
-
-- schema: generated stable references, developer `colId`, header, data type,
-  descriptions/synonyms, supported operators, and sort/visibility capability;
-- mutable grid state: current filter model, sort model, hidden columns, and
-  visible column order;
-- non-column state: total record count when known, pagination, density, and
-  any other supported view metadata;
-- the capability-scoped action schema for the installed package version.
-
-The model may only emit actions declared by that action schema. Context-only
-metadata does not imply a writable action. No row values are included by
-default. The compact snapshot is the complete source of truth for the model;
-it must not depend on predefined business column names.
-
-### Implementation plan
-
-- [ ] Extend `AiGridSnapshot` and the live-grid snapshot collector with a
-  typed, canonical representation of filter/sort/visibility/order and optional
-  page, row-count, and density metadata.
-- [ ] Make `buildAiEnvironment()` serialize both schema and current state in a
-  versioned, deterministic format. Preserve its generated references and
-  capability-scoped tool enums.
-- [ ] Include that full environment in every local and remote provider call;
-  providers must never reconstruct or infer omitted state.
-- [ ] Define a prompt-budget policy for wide grids: retain state, rank schema
-  candidates deterministically, report omitted actionable columns, and ask the
-  user to narrow a request rather than silently guessing.
-- [ ] Add only explicitly supported actions for pagination/density/order. Until
-  then those fields remain read-only context and validators reject invented
-  action names or unsupported state mutations.
-- [ ] Migrate the local default to the merged SmolLM2 ONNX q4 artifact once its
-  held-out reliability gate is met; retain BYOM structured-output providers for
-  broad or domain-heavy grids.
-
-### Required verification
-
-- [ ] Unit tests for deterministic full-snapshot serialization, state changes,
-  capability exclusion, omission reporting, and no-row-data default.
-- [ ] Integration tests proving commands can depend on currently applied
-  filters/sort/visibility and that unsupported page/density mutations cannot
-  apply.
-- [ ] Prompt-contract fixtures shared by runtime and training-data generation.
-  Train/validation/test schemas must use split-exclusive headers, raw IDs, and
-  values; evaluation grids must contain vocabulary unseen during training.
-  Include typed multi-column AND filters, negation, and commands whose intent
-  depends on current grid state. The corpus must cover every advertised filter
-  operator in every split, including Advanced Filter text `contains`,
-  `notContains`, `startsWith`, `endsWith`, `eq`, `neq`, `isBlank`, and
-  `isNotBlank`; add a coverage audit which fails on drift.
-- [ ] Browser tests for cached local-model loading, WebGPU/WASM fallback, final
-  ONNX artifact size, and the full validator-before-apply path.
+The 2026-08-23 Needle 2 spike and subsequent SmolLM2/LoRA experiments remain
+historical feasibility work in `docs/reference/spike-results.md` and the paused
+training plan. They are not active architecture, package inputs, fallbacks, or
+release gates. ADR 0006 is superseded by ADR 0007.

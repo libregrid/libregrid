@@ -27,9 +27,10 @@ Audited 2026-08-14; counts refreshed 2026-08-23 against the domain files (1.2.3 
 6. **The remaining Class A wave is Formulas, group-value editing and group-row
    dragging.** Calculated columns, batch editing, cell notes, row numbers,
    column header editing and show-values-as all shipped in Phases 14–18
-   (see [`ENTERPRISE-GAP-PLAN.md`](../../ENTERPRISE-GAP-PLAN.md)). The AI toolkit
-   (Phase 19) is implemented on `feature/ai-toolkit` — local-first inference
-   (ADR 0006), awaiting merge (see [`ai-toolkit.md`](ai-toolkit.md)).
+   (see [`ENTERPRISE-GAP-PLAN.md`](../../ENTERPRISE-GAP-PLAN.md)). The AI Toolkit
+   (Phase 19) now uses a pure live-schema module plus a language-neutral BYOM
+   protocol/client/gateway architecture (ADR 0007); live-provider egress is the
+   remaining validation gate (see [`ai-toolkit.md`](ai-toolkit.md)).
 
 ## Post-1.0 candidates (phase-13 13A) and remaining Class A items
 
@@ -41,7 +42,9 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 - Columns-panel header-area drag target, custom drag-image component, function-member reordering
 - rowGroupPanelSuppressSort alongside a real row-group sorting surface
 - Formulas (`@libregrid/formulas` — the largest remaining Class A item; Phase 18's expression engine is the shared core)
-- AI toolkit (`@libregrid/ai-toolkit` — implemented on `feature/ai-toolkit`, Phase 19; local-first design in [ADR 0006](../adr/0006-local-first-ai-inference.md); awaiting merge)
+- AI Toolkit live-provider validation (the pure module, protocol, browser
+  client, gateway, mock, and local wire tests are implemented in Phase 19;
+  [ADR 0007](../adr/0007-pure-ai-schema-and-byom-gateway.md))
 - Group-value editing (`refreshAfterGroupEdit` in `row-grouping`)
 - Group row dragging (parity row first, then the drag surface)
 
@@ -77,9 +80,8 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 | Excel export | 61 | 8 | 5 | [`excel-export.md`](excel-export.md) — shipped; images, tables and notes descoped (5.9) |
 | Batch edit | 13 | 3 | 1 | [`batch-edit.md`](batch-edit.md) — SSRM batch editing ❌ (Enterprise is CSR only) |
 | Calculated columns | 26 | 6 | 0 | [`calculated-columns.md`](calculated-columns.md) |
-| AI toolkit | 10 | 0 | 4 | [`ai-toolkit.md`](ai-toolkit.md) — implemented on `feature/ai-toolkit` (Phase 19); local-first inference, awaiting merge |
+| AI toolkit | 19 | 0 | 3 | [`ai-toolkit.md`](ai-toolkit.md) — pure seven-feature schema + protocol/client/BYOM gateway; live OpenAI battery passed 2026-08-25 (`gpt-5.6`) |
 
 The menu domains carry the most 🟡 rows: their checklists track per-item state, and each 🟡
 names the exact missing item. Read the domain file before treating a 🟡 count as a
 feature-sized gap.
-

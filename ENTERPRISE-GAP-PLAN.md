@@ -117,12 +117,12 @@ Each entry: site evidence (inventory §refs) → current state → proposed acti
   language with structured outputs; pricing row: AI Toolkit = E. (The AI Features
   section's other two features — **MCP Server** and **AI Skills** — are
   **Community** on the site; not gaps.)
-- **State:** shipped in Phase 19. `@libregrid/ai-toolkit` implements Community's
-  reserved `getStructuredSchema` API slot (`gridApi.d.ts:1715`; dist stub) and
-  `applyAiCommand` over the Community `GridStateModule` round-trip. Local-first
-  inference uses Cactus Needle 2 WASM (ADR 0006); applications can substitute a
-  provider through the advanced seam. v1 scope: filter/sort/column
-  visibility/reset; schema+state-only context. Design
+- **State:** re-architected in Phase 19. `@libregrid/ai-toolkit` implements
+  Community's reserved `getStructuredSchema` API slot (`gridApi.d.ts:1715`;
+  dist stub) as a pure strict schema module covering all seven state features.
+  `@libregrid/ai-protocol`, `@libregrid/ai-client`, and
+  `@libregrid/ai-gateway` provide a language-neutral BYOM path with server-only
+  credentials (ADR 0007). Design
   [`docs/design/ai-toolkit.md`](docs/design/ai-toolkit.md); phase
   [`docs/phases/phase-19-ai-toolkit.md`](docs/phases/phase-19-ai-toolkit.md);
   parity [`docs/parity/ai-toolkit.md`](docs/parity/ai-toolkit.md).

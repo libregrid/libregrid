@@ -29,6 +29,7 @@ Legend: ⬜ open · ✅ done · ⚠️ time-sensitive
 | B1  | Legal counsel review          | ⬜ open                | Review the trademark position in **G4** — specifically G4.1a (`agXxx` identifiers required for interoperability) and G4.2 (tagline wording). Cheap relative to the exposure. Recorded as guidance in G4; this is the tracked action. |
 | B2  | Open-source governance files  | ✅ **scheduled**       | Now **Phase 0 Task 0.13**, and a Phase 0 acceptance criterion. Must land before Task 0.14 (public push).                                                                                                                             |
 | B3  | Verify G3 attribution present | ✅ **done 2026-08-14** | Every package has `NOTICE` + README with the independence disclaimer; now **enforced by CI** (`tools/bundle-budgets/check.mjs`) so it cannot regress.                                                                                |
+| B4  | Approve synthetic OpenAI contract test | ✅ **done 2026-08-25** | Owner approved egress; the eleven-case battery passed against `gpt-5.6` in 36.99 s. Payloads are fully synthetic (four-column schema, GridState, context, commands). Key read through Node's `--env-file`; never printed or logged. Evidence recorded in [`plans/ai-toolkit-byom.md`](plans/ai-toolkit-byom.md) §Verification record. |
 
 ---
 
