@@ -1,0 +1,23 @@
+{
+  "name": "ai-gateway",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:framework-neutral"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          { "command": "node tools/clean-package-dist.mjs ai-gateway" },
+          { "command": "tsc -p packages/ai-gateway/tsconfig.lib.json" },
+          { "command": "esbuild packages/ai-gateway/src/server.ts --bundle --platform=node --format=esm --target=node20 --outfile=packages/ai-gateway/dist/server.js --banner:js=\"#!/usr/bin/env node\"" },
+          { "command": "esbuild packages/ai-gateway/src/conformanceCli.ts --bundle --platform=node --format=esm --target=node20 --outfile=packages/ai-gateway/dist/conformanceCli.js --banner:js=\"#!/usr/bin/env node\"" }
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "command": "vitest run packages/ai-gateway" }
+    }
+  }
+}

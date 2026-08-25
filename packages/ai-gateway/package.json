@@ -1,0 +1,24 @@
+{
+  "name": "@libregrid/ai-gateway",
+  "version": "1.2.3",
+  "description": "Provider-neutral AI gateway for AG Grid Community — part of LibreGrid",
+  "keywords": ["libregrid", "ag-grid", "ai", "byom", "gateway", "openai"],
+  "homepage": "https://github.com/libregrid/libregrid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libregrid/libregrid.git",
+    "directory": "packages/ai-gateway"
+  },
+  "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "engines": { "node": ">=20.19.0" },
+  "dependencies": { "@libregrid/ai-protocol": "^1.2.3" },
+  "files": ["dist", "Dockerfile", "docker-compose.example.yml", ".env.example", "LICENSE", "NOTICE", "README.md"],
+  "bin": {
+    "libregrid-ai-gateway": "./dist/server.js",
+    "libregrid-ai-conformance": "./dist/conformanceCli.js"
+  },
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+}
