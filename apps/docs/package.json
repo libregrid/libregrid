@@ -52,6 +52,8 @@
     "@libregrid/batch-edit": "^1.2.3",
     "@libregrid/calculated-columns": "^1.2.3",
     "@libregrid/ai-toolkit": "^1.2.3",
+    "@libregrid/ai-client": "^1.2.3",
+    "@libregrid/ai-protocol": "^1.2.3",
     "@libregrid/excel-export": "^1.2.3",
     "@libregrid/toolbar": "^1.2.3",
     "ag-grid-angular": "36.1.0",

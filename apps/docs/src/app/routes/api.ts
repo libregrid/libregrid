@@ -26,7 +26,10 @@ const PACKAGES: PackageEntry[] = [
   { name: '@libregrid/status-bar', modules: 'StatusBar', exports: 'StatusBarModule, StatusBarService, aggregate, TotalRowCountPanel, TotalAndFilteredRowCountPanel, FilteredRowCountPanel, SelectedRowCountPanel, AggregationPanel', notes: 'Status panels with a Material shell in @libregrid/material.' },
   { name: '@libregrid/batch-edit', modules: 'BatchEdit', exports: 'BatchEditModule, BatchEditService', notes: 'Stage, review, commit, or discard a coordinated set of cell edits.' },
   { name: '@libregrid/calculated-columns', modules: 'CalculatedColumns', exports: 'CalculatedColumnsModule, CalculatedColumnsService, CalculatedColumnFormulaService', notes: 'Read-only formulas and an authoring dialog for derived values.' },
-  { name: '@libregrid/ai-toolkit', modules: 'AiToolkit', exports: 'AiToolkitModule, getStructuredSchema, buildGridTools, validateToolCall, applyToolCall, NeedleWasmProvider, OpenAiCompatibleProvider, runToolkit', notes: 'Plain-language grid state via local-first inference (Needle WASM) with confidence-gated escalation.' },
+  { name: '@libregrid/ai-toolkit', modules: 'AiToolkit', exports: 'AiToolkitModule (registers GridApi.getStructuredSchema)', notes: 'Pure, live-grid generation of a strict seven-feature GridState schema. No model, transport, or credential code.' },
+  { name: '@libregrid/ai-protocol', modules: '—', exports: 'AI_PROTOCOL, buildProviderOutputSchema, buildProviderPrompt, validateGridCommandRequest, validateGridCommandResponse, revisionFor', notes: 'Language-neutral request/response contract, runtime validator, JSON Schemas, and OpenAPI 3.1 document.' },
+  { name: '@libregrid/ai-client', modules: '—', exports: 'createGridAssistant, createHttpGridCommandTransport, GridAssistantError', notes: 'Browser capture, gateway transport, local revalidation, dry-run diff, stale-state detection, and safe explicit apply.' },
+  { name: '@libregrid/ai-gateway', modules: '—', exports: 'createGridCommandHandler, createOpenAiResponsesProvider, createMockProvider, listenNodeGateway', notes: 'Server-only provider port, validated HTTP gateway, OpenAI Responses adapter, mock, CLI, and container.' },
   { name: '@libregrid/column-header-edit', modules: 'ColumnHeaderEdit', exports: 'ColumnHeaderEditModule, ColumnHeaderEditService', notes: 'Rename headers directly in a grid workspace.' },
   { name: '@libregrid/set-filter', modules: 'SetFilter', exports: 'SetFilterModule, SetFilter, SetFilterHandler', notes: 'Virtualised set filter.' },
   { name: '@libregrid/multi-filter', modules: 'MultiFilter', exports: 'MultiFilterModule, MultiFilter, MultiFilterHandler', notes: 'Composable multi filter.' },
@@ -57,25 +60,49 @@ const CATEGORIES: readonly (PackageCategory | 'All')[] = [
 ];
 
 const CATEGORY_BY_PACKAGE: Readonly<Record<string, PackageCategory>> = {
-  '@libregrid/core': 'Foundation', '@libregrid/angular': 'Foundation', '@libregrid/material': 'Foundation', '@libregrid/all': 'Foundation',
-  '@libregrid/row-grouping': 'Analyze', '@libregrid/pivot': 'Analyze', '@libregrid/set-filter': 'Analyze', '@libregrid/multi-filter': 'Analyze', '@libregrid/filters-tool-panel': 'Analyze', '@libregrid/advanced-filter': 'Analyze', '@libregrid/find': 'Analyze', '@libregrid/ai-toolkit': 'Analyze',
-  '@libregrid/server-side-row-model': 'Data systems', '@libregrid/server-side-selection': 'Data systems', '@libregrid/viewport-row-model': 'Data systems',
+  '@libregrid/core': 'Foundation', '@libregrid/angular': 'Foundation', '@libregrid/material': 'Foundation', '@libregrid/all': 'Foundation', '@libregrid/ai-protocol': 'Foundation',
+  '@libregrid/row-grouping': 'Analyze', '@libregrid/pivot': 'Analyze', '@libregrid/set-filter': 'Analyze', '@libregrid/multi-filter': 'Analyze', '@libregrid/filters-tool-panel': 'Analyze', '@libregrid/advanced-filter': 'Analyze', '@libregrid/find': 'Analyze', '@libregrid/ai-toolkit': 'Analyze', '@libregrid/ai-client': 'Analyze',
+  '@libregrid/server-side-row-model': 'Data systems', '@libregrid/server-side-selection': 'Data systems', '@libregrid/viewport-row-model': 'Data systems', '@libregrid/ai-gateway': 'Data systems',
   '@libregrid/menu': 'Workspace', '@libregrid/side-bar': 'Workspace', '@libregrid/columns-tool-panel': 'Workspace', '@libregrid/cell-selection': 'Workspace', '@libregrid/clipboard': 'Workspace', '@libregrid/status-bar': 'Workspace', '@libregrid/batch-edit': 'Workspace', '@libregrid/calculated-columns': 'Workspace', '@libregrid/column-header-edit': 'Workspace', '@libregrid/tree-data': 'Workspace', '@libregrid/master-detail': 'Workspace', '@libregrid/rich-select': 'Workspace', '@libregrid/notes': 'Workspace', '@libregrid/row-numbers': 'Workspace', '@libregrid/toolbar': 'Workspace',
   '@libregrid/integrated-charts': 'Visualize', '@libregrid/sparklines': 'Visualize', '@libregrid/excel-export': 'Visualize',
 };
 
 const GUIDE_BY_PACKAGE: Readonly<Record<string, string>> = {
   '@libregrid/core': 'getting-started', '@libregrid/angular': 'angular', '@libregrid/material': 'material', '@libregrid/all': 'getting-started',
-  '@libregrid/menu': 'menus', '@libregrid/side-bar': 'side-bar', '@libregrid/toolbar': 'toolbar', '@libregrid/row-grouping': 'row-grouping', '@libregrid/pivot': 'pivot', '@libregrid/columns-tool-panel': 'columns', '@libregrid/cell-selection': 'selection', '@libregrid/clipboard': 'selection', '@libregrid/status-bar': 'selection', '@libregrid/batch-edit': 'batch-edit', '@libregrid/calculated-columns': 'calculated-columns', '@libregrid/ai-toolkit': 'ai-toolkit', '@libregrid/column-header-edit': 'column-header-edit', '@libregrid/row-numbers': 'row-numbers', '@libregrid/notes': 'notes', '@libregrid/set-filter': 'filters', '@libregrid/multi-filter': 'filters', '@libregrid/filters-tool-panel': 'filters', '@libregrid/advanced-filter': 'advanced-filter-find', '@libregrid/find': 'advanced-filter-find', '@libregrid/rich-select': 'advanced-filter-find', '@libregrid/server-side-row-model': 'server-side-advanced', '@libregrid/server-side-selection': 'server-side-selection', '@libregrid/viewport-row-model': 'viewport', '@libregrid/tree-data': 'tree-data', '@libregrid/master-detail': 'master-detail', '@libregrid/integrated-charts': 'charts', '@libregrid/sparklines': 'sparklines', '@libregrid/excel-export': 'excel-export',
+  '@libregrid/menu': 'menus', '@libregrid/side-bar': 'side-bar', '@libregrid/toolbar': 'toolbar', '@libregrid/row-grouping': 'row-grouping', '@libregrid/pivot': 'pivot', '@libregrid/columns-tool-panel': 'columns', '@libregrid/cell-selection': 'selection', '@libregrid/clipboard': 'selection', '@libregrid/status-bar': 'selection', '@libregrid/batch-edit': 'batch-edit', '@libregrid/calculated-columns': 'calculated-columns', '@libregrid/ai-toolkit': 'ai-toolkit', '@libregrid/ai-protocol': 'ai-toolkit', '@libregrid/ai-client': 'ai-toolkit', '@libregrid/ai-gateway': 'ai-toolkit', '@libregrid/column-header-edit': 'column-header-edit', '@libregrid/row-numbers': 'row-numbers', '@libregrid/notes': 'notes', '@libregrid/set-filter': 'filters', '@libregrid/multi-filter': 'filters', '@libregrid/filters-tool-panel': 'filters', '@libregrid/advanced-filter': 'advanced-filter-find', '@libregrid/find': 'advanced-filter-find', '@libregrid/rich-select': 'advanced-filter-find', '@libregrid/server-side-row-model': 'server-side-advanced', '@libregrid/server-side-selection': 'server-side-selection', '@libregrid/viewport-row-model': 'viewport', '@libregrid/tree-data': 'tree-data', '@libregrid/master-detail': 'master-detail', '@libregrid/integrated-charts': 'charts', '@libregrid/sparklines': 'sparklines', '@libregrid/excel-export': 'excel-export',
 };
 
-const BACKEND_PACKAGES = new Set(['@libregrid/server-side-row-model', '@libregrid/server-side-selection', '@libregrid/viewport-row-model', '@libregrid/master-detail']);
+const BACKEND_PACKAGES = new Set(['@libregrid/server-side-row-model', '@libregrid/server-side-selection', '@libregrid/viewport-row-model', '@libregrid/master-detail', '@libregrid/ai-gateway']);
 
 function registrationExports(entry: PackageEntry): string[] {
   return entry.exports.split(', ').filter((value) => value.endsWith('Module'));
 }
 
 function examplesFor(entry: PackageEntry): readonly DocsCodeExample[] {
+  if (entry.name === '@libregrid/ai-protocol') {
+    return [{ id: 'protocol', label: 'Contract validation', language: 'TypeScript', filename: 'gateway.ts', description: 'Use the same versioned envelope on either side of the HTTP boundary; non-TypeScript servers can generate from the shipped OpenAPI document.', code: `import { validateGridCommandRequest } from '@libregrid/ai-protocol';
+
+const result = validateGridCommandRequest(await request.json());
+if (!result.ok) return Response.json(result.issues, { status: 400 });` }];
+  }
+  if (entry.name === '@libregrid/ai-client') {
+    return [{ id: 'client', label: 'Browser proposal', language: 'TypeScript', filename: 'grid-assistant.ts', description: 'Generate and review a locally revalidated proposal before applying it.', code: `import { createGridAssistant } from '@libregrid/ai-client';
+
+const assistant = createGridAssistant({ api, endpoint: '/v1/grid-command' });
+const proposal = await assistant.run(command);
+showDiff(proposal.changes);
+proposal.apply();` }];
+  }
+  if (entry.name === '@libregrid/ai-gateway') {
+    return [{ id: 'gateway', label: 'Server gateway', language: 'TypeScript', filename: 'ai-route.ts', description: 'Keep the provider key and model choice on the authenticated server.', code: `import { createGridCommandHandler, createOpenAiResponsesProvider } from '@libregrid/ai-gateway';
+
+export const handle = createGridCommandHandler({
+  provider: createOpenAiResponsesProvider({
+    apiKey: () => secrets.OPENAI_API_KEY,
+    model: 'gpt-5.6',
+  }),
+});` }];
+  }
   if (entry.name === '@libregrid/material') {
     return [{ id: 'material', label: 'Application bootstrap', language: 'TypeScript', filename: 'main.ts', description: 'Install this once at the Angular application composition root.', code: `import { provideLibreGridMaterialTheme } from '@libregrid/material';\n\nbootstrapApplication(AppComponent, {\n  providers: [provideLibreGridMaterialTheme()],\n});` }];
   }
