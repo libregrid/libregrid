@@ -125,12 +125,11 @@ See [`@libregrid/angular`](./packages/angular/README.md) and
 
 ## Status and compatibility
 
-All 26 packages are published to npm under the `@libregrid` scope and share
-one lockstep version (the latest release is shown by the [npm badge](https://www.npmjs.com/package/@libregrid/core)
+The monorepo contains 36 `@libregrid` packages. Published packages share one
+lockstep version (the latest release is shown by the [npm badge](https://www.npmjs.com/package/@libregrid/core)
 above). Unit, integration, accessibility, and browser tests cover the feature
-set. The [publishing guide](./docs/guides/publishing.md) describes how
-releases work and lists the remaining steps toward tokenless (trusted
-publisher) releases.
+set. The [publishing guide](./docs/guides/publishing.md) describes how releases
+work and lists the remaining steps toward tokenless releases.
 
 - Supported peer dependency: `ag-grid-community >=36.1.0 <37`
 - License: [MIT](./LICENSE)

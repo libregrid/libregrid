@@ -6,7 +6,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc -p tsconfig.lib.json",
+        "command": "node ../../tools/clean-package-dist.mjs ai-toolkit && tsc -p tsconfig.lib.json",
         "cwd": "packages/ai-toolkit"
       }
     },

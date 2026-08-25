@@ -227,21 +227,7 @@ export type {
 
 export { SparklineCellRenderer, SparklinesModule } from '@libregrid/sparklines';
 
-export { AiToolkitModule, applyAiCommand, DEFAULT_CONFIDENCE_THRESHOLD } from '@libregrid/ai-toolkit';
-export type {
-  AiAppliedChanges,
-  AiColumnHints,
-  AiCommandResult,
-  AiDataType,
-  AiFilterCondition,
-  AiFilterOperator,
-  AiGridPlan,
-  AiNotAppliedReason,
-  AiScalar,
-  AiSort,
-  AiVisibilityChange,
-  ApplyAiCommandOptions,
-} from '@libregrid/ai-toolkit';
+export { AiToolkitModule } from '@libregrid/ai-toolkit';
 
 export {
   createColumnDefs,
