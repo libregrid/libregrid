@@ -1,0 +1,17 @@
+{
+  "protocol": "libregrid.ai/v1",
+  "requestId": "conformance-visibility-1",
+  "revision": "fixture-revision-1",
+  "status": "ok",
+  "output": {
+    "gridState": { "columnVisibility": { "hiddenColIds": ["internalNotes"] } },
+    "propertiesToIgnore": [],
+    "explanation": "Hide the Internal notes column."
+  },
+  "provider": {
+    "service": "conformance-fixture",
+    "model": "deterministic-v1",
+    "providerRequestId": null,
+    "latencyMs": 0
+  }
+}

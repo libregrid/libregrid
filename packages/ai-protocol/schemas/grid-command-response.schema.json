@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libregrid.dev/schemas/ai/v1/grid-command-response.schema.json",
+  "title": "LibreGrid Grid Command Response",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "protocol": { "const": "libregrid.ai/v1" },
+        "requestId": { "type": "string" },
+        "revision": { "type": "string" },
+        "status": { "const": "ok" },
+        "output": {
+          "type": "object",
+          "properties": {
+            "gridState": { "type": "object" },
+            "propertiesToIgnore": { "type": "array", "items": { "$ref": "#/$defs/gridStateKey" } },
+            "explanation": { "type": "string", "maxLength": 2000 }
+          },
+          "required": ["gridState", "propertiesToIgnore", "explanation"],
+          "additionalProperties": false
+        },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "service": { "type": "string" },
+            "model": { "type": "string" },
+            "providerRequestId": { "type": ["string", "null"] },
+            "latencyMs": { "type": "number", "minimum": 0 }
+          },
+          "required": ["service", "model", "providerRequestId", "latencyMs"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["protocol", "requestId", "revision", "status", "output", "provider"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "protocol": { "const": "libregrid.ai/v1" },
+        "requestId": { "type": "string" },
+        "revision": { "type": "string" },
+        "status": { "const": "error" },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": { "enum": ["BAD_REQUEST", "MODEL_REFUSAL", "PROVIDER_ERROR", "RATE_LIMITED", "TIMEOUT", "INVALID_PROVIDER_OUTPUT", "INTERNAL_ERROR"] },
+            "message": { "type": "string" },
+            "retryable": { "type": "boolean" }
+          },
+          "required": ["code", "message", "retryable"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["protocol", "requestId", "revision", "status", "error"],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "gridStateKey": {
+      "type": "string",
+      "enum": ["aggregation", "columnGroup", "columnOrder", "columnPinning", "columnSizing", "columnVisibility", "columnHeaderName", "filter", "focusedCell", "pagination", "rowPinning", "pivot", "cellSelection", "rowGroup", "rowGroupExpansion", "ssrmRowGroupExpansion", "rowSelection", "scroll", "sideBar", "sort", "showValuesAs", "userColumns"]
+    }
+  }
+}

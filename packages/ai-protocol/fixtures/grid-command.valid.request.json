@@ -1,0 +1,26 @@
+{
+  "protocol": "libregrid.ai/v1",
+  "requestId": "conformance-visibility-1",
+  "revision": "fixture-revision-1",
+  "command": "Hide internal notes",
+  "gridSchema": {
+    "type": "object",
+    "properties": {
+      "columnVisibility": {
+        "type": ["object", "null"],
+        "properties": {
+          "hiddenColIds": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["customer", "internalNotes"] }
+          }
+        },
+        "required": ["hiddenColIds"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["columnVisibility"],
+    "additionalProperties": false
+  },
+  "currentState": { "columnVisibility": { "hiddenColIds": [] } },
+  "context": { "totalRecordCount": 2 }
+}
