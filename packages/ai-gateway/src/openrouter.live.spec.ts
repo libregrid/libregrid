@@ -130,7 +130,9 @@ for (const command of COMMANDS) {
 
     // A refusal for the unsupported intent is a pass. A schema violation is not.
     if (command === 'Order me a pizza') {
-      expect(body.status === 'ok' || body.status === 'error').toBe(true);
+      expect(
+        body.status === 'ok' || body.error.code === 'MODEL_REFUSAL' || body.error.code === 'INVALID_PROVIDER_OUTPUT',
+      ).toBe(true);
       return;
     }
     if (body.status !== 'ok') {
