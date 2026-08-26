@@ -19,8 +19,8 @@
       "note": "Browser snapshot/orchestration, HTTP transport, double validation, revision guard, diff, and protected GridState application."
     },
     "@libregrid/ai-gateway": {
-      "maxSize": "68 KB",
-      "note": "Server-only HTTP gateway, provider port, OpenAI Responses and Chat Completions adapters, mock, Node server, and conformance runner; no provider SDK. The 68 KB package budget includes both self-contained CLI bundles and their shared library modules; measured clean output is 65.8 KB unminified."
+      "maxSize": "72 KB",
+      "note": "Server-only HTTP gateway, provider port, OpenAI Responses and Chat Completions adapters, mock, Node server, and conformance runner; no provider SDK. The 72 KB package budget includes both self-contained CLI bundles and their shared library modules. server.js bundles both the Responses and Chat Completions provider adapters because the server selects between them at runtime via AI_PROVIDER; measured clean output is 71.5 KB unminified."
     },
     "@libregrid/all": {
       "maxSize": "5 KB",
