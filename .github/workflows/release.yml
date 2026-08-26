@@ -43,7 +43,14 @@ jobs:
 
       # Trusted publishing needs npm >= 11.5.1; Node 22 still bundles 10.9.x,
       # which has no OIDC support at all and publishes unauthenticated.
-      - run: npm install -g npm@latest
+      #
+      # Pinned to the 11 line, not @latest. npm 12 blocks package lifecycle
+      # scripts unless they are listed in allowScripts, which leaves esbuild's
+      # postinstall unrun and vitest.config.ts unable to resolve `esbuild` —
+      # every test project then fails to start (run 33023063903). Moving to
+      # npm 12 is a deliberate migration, not something a release should pick
+      # up on its own.
+      - run: npm install -g npm@11
 
       - run: npm ci
 
