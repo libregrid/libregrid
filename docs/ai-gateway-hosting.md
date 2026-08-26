@@ -50,14 +50,19 @@ gcloud run deploy libregrid-ai-gateway \
   --project=libregrid \
   --image=us-central1-docker.pkg.dev/libregrid/libregrid/ai-gateway:v1 \
   --region=us-central1 \
+  --service-account=libregrid-ai-gateway@libregrid.iam.gserviceaccount.com \
   --allow-unauthenticated \
   --min-instances=0 \
   --max-instances=3 \
   --concurrency=20 \
   --timeout=60s \
-  --set-env-vars=AI_PROVIDER=openai-chat,OPENAI_BASE_URL=https://openrouter.ai/api/v1,OPENAI_MODEL=openrouter/free,OPENROUTER_REQUIRE_PARAMETERS=true,HOST=0.0.0.0 \
+  --set-env-vars=AI_PROVIDER=openai-chat,OPENAI_BASE_URL=https://openrouter.ai/api/v1,OPENAI_MODEL=nvidia/nemotron-3-super-120b-a12b:free,OPENROUTER_REQUIRE_PARAMETERS=true,HOST=0.0.0.0,OPENROUTER_REFERER=https://libregrid.dev,OPENROUTER_TITLE=LibreGrid\ Docs \
   --set-secrets=OPENAI_API_KEY=libregrid-openrouter-key:latest
 ```
+
+`--service-account` is required. Without it Cloud Run uses the default compute
+service account. That account holds `roles/editor` on the whole project. A
+public endpoint must not run with project-wide Editor.
 
 `--allow-unauthenticated` is required. Firebase Hosting calls the service
 without a Google identity. Task 6 adds the Turnstile guard for real access
@@ -78,12 +83,23 @@ printf '%s' 'sk-or-v1-your-key' | gcloud secrets versions add libregrid-openrout
 The `printf` form avoids a trailing newline in the secret value and keeps the
 key out of shell history when the shell ignores leading-space commands.
 
-Grant the Cloud Run service account read access once:
+### Runtime service account
+
+Create a dedicated runtime identity once. Do not use the default compute
+service account. That account holds `roles/editor` on the whole project.
+
+```sh
+gcloud iam service-accounts create libregrid-ai-gateway \
+  --project=libregrid \
+  --display-name="LibreGrid AI Gateway (Cloud Run runtime)"
+```
+
+Give it no project-level role. Grant it read access to each secret only:
 
 ```sh
 gcloud secrets add-iam-policy-binding libregrid-openrouter-key \
   --project=libregrid \
-  --member="serviceAccount:930129144043-compute@developer.gserviceaccount.com" \
+  --member="serviceAccount:libregrid-ai-gateway@libregrid.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
 ```
 
