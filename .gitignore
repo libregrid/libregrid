@@ -26,3 +26,6 @@ packages/excel-export/src/testing/__fixtures__/verification/
 
 # Local product specifications
 specs/
+
+# Subagent-driven development scratch workspace
+.superpowers/
