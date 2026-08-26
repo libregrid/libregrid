@@ -198,24 +198,24 @@ describe('grid command gateway', () => {
   });
 });
 
-describe('OpenAI Responses provider', () => {
-  function providerRequest(): ModelProviderRequest {
-    return {
-      prompt: { system: 'system instructions', user: '{"command":"sort sales"}' },
-      outputSchema: {
-        type: 'object',
-        properties: {
-          gridState: gridSchema,
-          propertiesToIgnore: { type: 'array', items: { type: 'string' } },
-          explanation: { type: 'string' },
-        },
-        required: ['gridState', 'propertiesToIgnore', 'explanation'],
-        additionalProperties: false,
+function providerRequest(): ModelProviderRequest {
+  return {
+    prompt: { system: 'system instructions', user: '{"command":"sort sales"}' },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        gridState: gridSchema,
+        propertiesToIgnore: { type: 'array', items: { type: 'string' } },
+        explanation: { type: 'string' },
       },
-      signal: new AbortController().signal,
-    };
-  }
+      required: ['gridState', 'propertiesToIgnore', 'explanation'],
+      additionalProperties: false,
+    },
+    signal: new AbortController().signal,
+  };
+}
 
+describe('OpenAI Responses provider', () => {
   it('uses current Responses strict text.format and parses output_text content', async () => {
     const fetch = vi.fn(async () => new Response(JSON.stringify({
       id: 'resp_123',
@@ -317,112 +317,113 @@ describe('OpenAI Responses provider', () => {
     });
     await expect(failed.complete(providerRequest())).rejects.toMatchObject({ code: 'PROVIDER_ERROR', retryable: true });
   });
+});
 
-  describe('OpenAI-compatible chat completions provider', () => {
-    it('sends the chat completions wire shape with a strict schema', async () => {
-      const fetch = vi.fn(async () => new Response(JSON.stringify({
-        id: 'gen_abc',
-        choices: [{ message: { content: JSON.stringify({
-          gridState: { sort: null },
-          propertiesToIgnore: ['sort'],
-          explanation: 'No change.',
-        }) }, finish_reason: 'stop' }],
-      }), { status: 200, headers: { 'content-type': 'application/json' } }));
+describe('OpenAI-compatible chat completions provider', () => {
+  it('sends the chat completions wire shape with a strict schema', async () => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify({
+      id: 'gen_abc',
+      choices: [{ message: { content: JSON.stringify({
+        gridState: { sort: null },
+        propertiesToIgnore: ['sort'],
+        explanation: 'No change.',
+      }) }, finish_reason: 'stop' }],
+    }), { status: 200, headers: { 'content-type': 'application/json' } }));
 
-      const provider = createOpenAiChatCompletionsProvider({
-        apiKey: 'test-secret',
-        model: 'openrouter/free',
-        baseUrl: 'https://openrouter.ai/api/v1',
-        requireParameters: true,
-        referer: 'https://libregrid.dev',
-        title: 'LibreGrid Docs',
-        fetch,
-      });
-
-      await expect(provider.complete(providerRequest())).resolves.toMatchObject({ providerRequestId: 'gen_abc' });
-      expect(provider.service).toBe('openai-chat-completions');
-
-      const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
-      expect(url).toBe('https://openrouter.ai/api/v1/chat/completions');
-
-      const body = JSON.parse(String(init.body)) as Record<string, unknown>;
-      expect(body).toMatchObject({
-        model: 'openrouter/free',
-        response_format: { type: 'json_schema', json_schema: { name: 'libregrid_grid_command', strict: true } },
-        provider: { require_parameters: true },
-      });
-      expect(body.messages).toEqual([
-        { role: 'system', content: 'system instructions' },
-        { role: 'user', content: '{"command":"sort sales"}' },
-      ]);
-
-      const headers = init.headers as Record<string, string>;
-      expect(headers.authorization).toBe('Bearer test-secret');
-      expect(headers['http-referer']).toBe('https://libregrid.dev');
-      expect(headers['x-title']).toBe('LibreGrid Docs');
+    const provider = createOpenAiChatCompletionsProvider({
+      apiKey: 'test-secret',
+      model: 'openrouter/free',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      requireParameters: true,
+      referer: 'https://libregrid.dev',
+      title: 'LibreGrid Docs',
+      fetch,
     });
 
-    it('omits provider routing and attribution headers when they are not configured', async () => {
-      const fetch = vi.fn(async () => new Response(JSON.stringify({
-        choices: [{ message: { content: '{"gridState":{"sort":null},"propertiesToIgnore":[],"explanation":"ok"}' } }],
-      }), { status: 200 }));
+    await expect(provider.complete(providerRequest())).resolves.toMatchObject({ providerRequestId: 'gen_abc' });
+    expect(provider.service).toBe('openai-chat-completions');
 
-      const provider = createOpenAiChatCompletionsProvider({ apiKey: 'k', model: 'm', fetch });
-      await expect(provider.complete(providerRequest())).resolves.toMatchObject({ providerRequestId: null });
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://openrouter.ai/api/v1/chat/completions');
 
-      const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
-      expect(url).toBe('https://api.openai.com/v1/chat/completions');
-      const body = JSON.parse(String(init.body)) as Record<string, unknown>;
-      expect(body.provider).toBeUndefined();
-      expect((init.headers as Record<string, string>)['http-referer']).toBeUndefined();
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    expect(body).toMatchObject({
+      model: 'openrouter/free',
+      response_format: { type: 'json_schema', json_schema: { name: 'libregrid_grid_command', strict: true } },
+      provider: { require_parameters: true },
     });
+    expect(body.messages).toEqual([
+      { role: 'system', content: 'system instructions' },
+      { role: 'user', content: '{"command":"sort sales"}' },
+    ]);
 
-    it('maps refusals, rate limits, truncation, and bad JSON to typed failures', async () => {
-      const refusal = createOpenAiChatCompletionsProvider({
-        apiKey: 'k', model: 'm',
-        fetch: async () => new Response(JSON.stringify({
-          choices: [{ message: { refusal: 'cannot comply' } }],
-        }), { status: 200 }),
-      });
-      await expect(refusal.complete(providerRequest())).rejects.toMatchObject({ code: 'MODEL_REFUSAL', retryable: false });
+    const headers = init.headers as Record<string, string>;
+    expect(headers.authorization).toBe('Bearer test-secret');
+    expect(headers['http-referer']).toBe('https://libregrid.dev');
+    expect(headers['x-title']).toBe('LibreGrid Docs');
+  });
 
-      const limited = createOpenAiChatCompletionsProvider({
-        apiKey: 'k', model: 'm',
-        fetch: async () => new Response(JSON.stringify({ error: { message: 'slow down' } }), { status: 429 }),
-      });
-      await expect(limited.complete(providerRequest())).rejects.toMatchObject({ code: 'RATE_LIMITED', retryable: true });
+  it('omits provider routing and attribution headers when they are not configured', async () => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify({
+      choices: [{ message: { content: '{"gridState":{"sort":null},"propertiesToIgnore":[],"explanation":"ok"}' } }],
+    }), { status: 200 }));
 
-      const truncated = createOpenAiChatCompletionsProvider({
-        apiKey: 'k', model: 'm',
-        fetch: async () => new Response(JSON.stringify({
-          choices: [{ message: { content: '{"gridState"' }, finish_reason: 'length' }],
-        }), { status: 200 }),
-      });
-      await expect(truncated.complete(providerRequest())).rejects.toMatchObject({ code: 'PROVIDER_ERROR', retryable: true });
+    const provider = createOpenAiChatCompletionsProvider({ apiKey: 'k', model: 'm', fetch });
+    await expect(provider.complete(providerRequest())).resolves.toMatchObject({ providerRequestId: null });
 
-      const badJson = createOpenAiChatCompletionsProvider({
-        apiKey: 'k', model: 'm',
-        fetch: async () => new Response(JSON.stringify({
-          choices: [{ message: { content: 'not json' }, finish_reason: 'stop' }],
-        }), { status: 200 }),
-      });
-      await expect(badJson.complete(providerRequest())).rejects.toMatchObject({ code: 'INVALID_PROVIDER_OUTPUT', retryable: false });
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.openai.com/v1/chat/completions');
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    expect(body.provider).toBeUndefined();
+    expect((init.headers as Record<string, string>)['http-referer']).toBeUndefined();
+  });
+
+  it('maps refusals, rate limits, truncation, and bad JSON to typed failures', async () => {
+    const refusal = createOpenAiChatCompletionsProvider({
+      apiKey: 'k', model: 'm',
+      fetch: async () => new Response(JSON.stringify({
+        choices: [{ message: { refusal: 'cannot comply' } }],
+      }), { status: 200 }),
     });
+    await expect(refusal.complete(providerRequest())).rejects.toMatchObject({ code: 'MODEL_REFUSAL', retryable: false });
 
-    it('reports an in-body error envelope returned with HTTP 200', async () => {
-      const provider = createOpenAiChatCompletionsProvider({
-        apiKey: 'k', model: 'm',
-        fetch: async () => new Response(JSON.stringify({ error: { message: 'no endpoints found', code: 404 } }), { status: 200 }),
-      });
-      await expect(provider.complete(providerRequest())).rejects.toMatchObject({ code: 'PROVIDER_ERROR' });
+    const limited = createOpenAiChatCompletionsProvider({
+      apiKey: 'k', model: 'm',
+      fetch: async () => new Response(JSON.stringify({ error: { message: 'slow down' } }), { status: 429 }),
     });
+    await expect(limited.complete(providerRequest())).rejects.toMatchObject({ code: 'RATE_LIMITED', retryable: true });
 
-    it('rejects a missing key and an empty model', async () => {
-      expect(() => createOpenAiChatCompletionsProvider({ apiKey: 'k', model: '   ' })).toThrow(/model is required/);
-
-      const noKey = createOpenAiChatCompletionsProvider({ apiKey: '', model: 'm', fetch: async () => new Response('{}') });
-      await expect(noKey.complete(providerRequest())).rejects.toMatchObject({ code: 'PROVIDER_ERROR' });
+    const truncated = createOpenAiChatCompletionsProvider({
+      apiKey: 'k', model: 'm',
+      fetch: async () => new Response(JSON.stringify({
+        choices: [{ message: { content: '{"gridState"' }, finish_reason: 'length' }],
+      }), { status: 200 }),
     });
+    await expect(truncated.complete(providerRequest())).rejects.toMatchObject({ code: 'PROVIDER_ERROR', retryable: true });
+
+    const badJson = createOpenAiChatCompletionsProvider({
+      apiKey: 'k', model: 'm',
+      fetch: async () => new Response(JSON.stringify({
+        choices: [{ message: { content: 'not json' }, finish_reason: 'stop' }],
+      }), { status: 200 }),
+    });
+    await expect(badJson.complete(providerRequest())).rejects.toMatchObject({ code: 'INVALID_PROVIDER_OUTPUT', retryable: false });
+  });
+
+  it('reports an in-body error envelope returned with HTTP 200', async () => {
+    const provider = createOpenAiChatCompletionsProvider({
+      apiKey: 'k', model: 'm',
+      fetch: async () => new Response(JSON.stringify({ error: { message: 'no endpoints found', code: 404 } }), { status: 200 }),
+    });
+    // status 404 < 500, so mapHttpError's PROVIDER_ERROR branch marks this non-retryable.
+    await expect(provider.complete(providerRequest())).rejects.toMatchObject({ code: 'PROVIDER_ERROR', retryable: false });
+  });
+
+  it('rejects a missing key and an empty model', async () => {
+    expect(() => createOpenAiChatCompletionsProvider({ apiKey: 'k', model: '   ' })).toThrow(/model is required/);
+
+    const noKey = createOpenAiChatCompletionsProvider({ apiKey: '', model: 'm', fetch: async () => new Response('{}') });
+    await expect(noKey.complete(providerRequest())).rejects.toMatchObject({ code: 'PROVIDER_ERROR' });
   });
 });
 
