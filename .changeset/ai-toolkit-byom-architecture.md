@@ -1,6 +1,6 @@
 ---
 '@libregrid/ai-toolkit': minor
-'@libregrid/all': minor
+'@libregrid/all': major
 '@libregrid/ai-protocol': minor
 '@libregrid/ai-client': minor
 '@libregrid/ai-gateway': minor
@@ -12,6 +12,9 @@ BYOM boundary.
 - `@libregrid/ai-toolkit` now exposes only `AiToolkitModule` and the registered
   `GridApi.getStructuredSchema()` capability. The experimental command,
   provider, model, prompt, action-plan, and `advanced` APIs are removed.
+- `@libregrid/all` no longer re-exports those removed AI Toolkit values and
+  types. Consumers of that convenience barrel must migrate to the new
+  `@libregrid/ai-client` and `@libregrid/ai-protocol` boundaries.
 - Generate strict schemas for aggregation, simple/set/advanced filtering,
   sorting, pivoting, column visibility, exclusive width/flex sizing, and row
   grouping from the current grid's real capabilities.
