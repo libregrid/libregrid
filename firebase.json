@@ -25,6 +25,13 @@
     ],
     "rewrites": [
       {
+        "source": "/v1/grid-command",
+        "run": {
+          "serviceId": "libregrid-ai-gateway",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

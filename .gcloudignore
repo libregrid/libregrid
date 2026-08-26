@@ -1,0 +1,34 @@
+# Cloud Build / Cloud Run source uploads (`gcloud builds submit`, `gcloud run deploy --source`)
+# do NOT honour .gitignore. This file is the only thing that keeps a source
+# upload from shipping node_modules, build output, and secrets.
+#
+# The ai-gateway Dockerfile runs `npm ci` inside the build, so excluding
+# node_modules here is correct, not harmful.
+
+.git/
+.gcloudignore
+
+node_modules/
+.npm-cache/
+
+dist/
+**/dist/
+out-tsc/
+coverage/
+**/coverage/
+.nx/
+.angular/
+.firebase/
+.worktrees/
+
+*.tsbuildinfo
+*.log
+.DS_Store
+
+.superpowers/
+specs/
+
+# Secrets and local debugging artifacts — never upload these.
+.secrets
+.probe-*.mjs
+.claude/settings.local.json

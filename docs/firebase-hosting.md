@@ -37,6 +37,9 @@ On the `/ai-toolkit` page, set the mode to **External HTTP gateway** and keep
 the default `/v1/grid-command` endpoint. The dev server sends that path to the
 gateway on port 8787.
 
+To deploy this gateway for the live site, read
+[AI gateway hosting](ai-gateway-hosting.md).
+
 ## Custom domain
 
 In Firebase Console, open **Hosting → Add custom domain** and enter `libregrid.dev`, then add the DNS records Firebase provides. Complete certificate provisioning before redirecting any existing domain traffic. Add `www.libregrid.dev` only if it should redirect to the canonical root domain.
