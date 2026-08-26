@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/material",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "description": "Angular Material adapters for AG Grid Community — part of LibreGrid",
   "keywords": [
     "libregrid",
@@ -29,11 +29,11 @@
     "ag-grid-community": ">=36.1.0 <37"
   },
   "dependencies": {
-    "@libregrid/columns-tool-panel": "^1.2.3",
-    "@libregrid/core": "^1.2.3",
-    "@libregrid/menu": "^1.2.3",
-    "@libregrid/side-bar": "^1.2.3",
-    "@libregrid/rich-select": "^1.2.3"
+    "@libregrid/columns-tool-panel": "^1.3.0",
+    "@libregrid/core": "^1.3.0",
+    "@libregrid/menu": "^1.3.0",
+    "@libregrid/side-bar": "^1.3.0",
+    "@libregrid/rich-select": "^1.3.0"
   },
   "files": [
     "dist",
