@@ -2,7 +2,7 @@
 
 The docs site serves the AI gateway from Cloud Run on its own origin. Firebase
 Hosting sends `/v1/grid-command` to the Cloud Run service. The browser sees one
-origin, so the gateway needs no CORS header and the demo keeps the same
+origin, so the gateway needs no CORS header. The demo keeps the same
 security model that the published packages describe.
 
 ## Rewrite order
@@ -40,7 +40,7 @@ gcloud artifacts repositories create libregrid \
 A `.gcloudignore` file in the repository root excludes `node_modules`, `.git`,
 build output, and `.secrets` from the upload. `gcloud builds submit` does not
 read `.gitignore`. Without `.gcloudignore`, the upload ships gigabytes of local
-build artifacts and, worse, could ship a secret file that Git ignores but
+build artifacts. Worse, it could ship a secret file that Git ignores but
 `gcloud` does not.
 
 ## Deploy

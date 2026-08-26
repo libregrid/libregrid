@@ -33,7 +33,8 @@ Legend: ✅ done and tested · 🟡 partial · ❌ deliberately omitted
 | Stale-response rejection | ✅ | deterministic schema+state+context revision; unit tests mutate state before apply |
 | Preserve unrelated/excluded state | ✅ | protected baseline covers every AG 36.1 `GridStateKey`; unknown nested state keys are merged back after validation; live-grid tests preserve sort, pagination, order, and filter UI state |
 | Provider-neutral gateway | ✅ | standard `Request → Response` handler, provider port, limits, timeout, auth hook, normalized error and metadata-only log contracts |
-| OpenAI Responses structured-output adapter | ✅ local wire tests + live battery | Exact `text.format: { type: "json_schema", strict: true }` payload and response/refusal/rate-limit parsing are unit tested; the eleven-command live battery passed against `gpt-5.6` on 2026-08-25 |
+| OpenAI Responses structured-output adapter | ✅ local wire tests + live battery | One of two supported provider adapters. Exact `text.format: { type: "json_schema", strict: true }` payload and response/refusal/rate-limit parsing are unit tested; the eleven-command live battery passed against `gpt-5.6` on 2026-08-25 |
+| OpenAI-compatible chat completions adapter | ✅ | Strict `response_format.json_schema`, OpenRouter provider routing, refusal/rate-limit/truncation mapping; unit tested and covered by an env-guarded live battery |
 | Deterministic mock and conformance executable | ✅ | Static docs transport, gateway mock, JSON fixtures, and `libregrid-ai-conformance` |
 | Runnable deployment | ✅ | Node CLI/server, health endpoint, Dockerfile health check, Compose example, environment template |
 | Static docs workbench | ✅ | schema/request/prompt/envelope/response/validation/diff inspection; explicit apply; external endpoint mode; seven Chromium E2E/axe tests |

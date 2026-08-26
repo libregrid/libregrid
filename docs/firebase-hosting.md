@@ -20,7 +20,7 @@ firebase deploy --only hosting
 ## Local AI gateway for the docs demo
 
 The `/ai-toolkit` demo can call a real model. Run the gateway on your own
-machine and let the dev server proxy to it. The browser stays on one origin,
+machine. Let the dev server proxy to it. The browser stays on one origin,
 so the demo needs no CORS.
 
 Put your provider key in a git-ignored `.secrets` file in the repository root.
@@ -33,9 +33,17 @@ node --env-file=.secrets packages/ai-gateway/dist/server.js
 npx nx serve docs
 ```
 
-On the `/ai-toolkit` page, set the mode to **External HTTP gateway** and keep
+On the `/ai-toolkit` page, set the mode to **External HTTP gateway**. Keep
 the default `/v1/grid-command` endpoint. The dev server sends that path to the
 gateway on port 8787.
+
+The Vite dev server behind `npx nx serve docs` bundles the `cors` package as
+global middleware, and it reflects an `Access-Control-Allow-Origin` header on
+every proxied request. That header comes from the local dev server, not from
+the gateway. The LibreGrid gateway itself ships zero CORS code and never adds
+a CORS header. A direct cross-origin call to the deployed gateway fails by
+design; only the same-origin Firebase Hosting rewrite (or your own reverse
+proxy) is a supported path.
 
 To deploy this gateway for the live site, read
 [AI gateway hosting](ai-gateway-hosting.md).

@@ -105,14 +105,14 @@ dashboard. Keep the secret key private. Never put it in browser code or in
 source control.
 
 The Turnstile site key is a different value. The site key is public. You may
-put it in browser code and commit it to source control.
+put it in browser code. You may commit it to source control.
 
 ```bash
 TURNSTILE_SECRET_KEY=0x0000000000000000000000000000000AA npx libregrid-ai-gateway
 ```
 
 The browser client sends the token in the `x-turnstile-token` header. Mint a
-fresh token for every request; each Turnstile token works only once.
+fresh token for every request. Each Turnstile token works only once.
 
 The startup log line reports `turnstile enabled` or `turnstile disabled`.
 Check this line before you expose the endpoint publicly.
