@@ -24,11 +24,26 @@ jobs:
         with:
           fetch-depth: 0
 
+      # registry-url makes setup-node write an .npmrc holding
+      # `_authToken=${NODE_AUTH_TOKEN}`. It is here only for the 1.3.0
+      # bootstrap: the four new @libregrid/ai-* packages are not on the
+      # registry yet, and npm only accepts a trusted-publisher config for a
+      # package that already exists, so their first version needs NPM_TOKEN.
+      # BOOTSTRAP ONLY — delete this input, and NODE_AUTH_TOKEN below, once the
+      # ai-* packages are published and have trusted-publisher configs.
+      # Leaving it with no token set is worse than useless: NODE_AUTH_TOKEN
+      # expands to setup-node's XXXXX placeholder, npm sends that junk
+      # credential instead of exchanging the OIDC token, and every publish
+      # comes back E404 (run 33020093899).
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           registry-url: https://registry.npmjs.org
           cache: npm
+
+      # Trusted publishing needs npm >= 11.5.1; Node 22 still bundles 10.9.x,
+      # which has no OIDC support at all and publishes unauthenticated.
+      - run: npm install -g npm@latest
 
       - run: npm ci
 
@@ -53,10 +68,13 @@ jobs:
           create-github-releases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Tokenless: every @libregrid/* package trusts this workflow via an
-          # npm trusted-publisher config (id-token: write above). npm CLI
-          # detects the OIDC environment and exchanges it for a short-lived
-          # publish credential — no NPM_TOKEN secret exists.
+          # Every already-published @libregrid/* package trusts this workflow
+          # via an npm trusted-publisher config (id-token: write above). npm
+          # >= 11.5.1 detects the OIDC environment and exchanges it for a
+          # short-lived publish credential, falling back to this token only
+          # where no trusted publisher exists — which for 1.3.0 means just the
+          # four new ai-* packages. BOOTSTRAP ONLY: remove with registry-url.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
 
       # Self-sufficient: creates the tag + GitHub Release whenever the lockstep
