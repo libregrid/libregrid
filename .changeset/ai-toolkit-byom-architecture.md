@@ -1,6 +1,6 @@
 ---
 '@libregrid/ai-toolkit': minor
-'@libregrid/all': major
+'@libregrid/all': minor
 '@libregrid/ai-protocol': minor
 '@libregrid/ai-client': minor
 '@libregrid/ai-gateway': minor
