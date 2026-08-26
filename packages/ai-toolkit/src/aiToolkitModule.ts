@@ -1,18 +1,18 @@
-import type { _AiToolkitGridApi, _ModuleWithApi } from 'ag-grid-community';
+import { ColumnApiModule, type _AiToolkitGridApi, type _ModuleWithApi } from 'ag-grid-community';
 import { EnterpriseCoreModule } from '@libregrid/core';
 import { getStructuredSchema } from './aiToolkitApi';
 import { VERSION } from './version';
 
 /**
- * AI Toolkit feature boundary. Natural-language control of grid state via LLM
- * tool calls with structured outputs (gap-plan A6). Local-first inference
- * (ADR 0006); `getStructuredSchema` fills Community's reserved API slot.
+ * Pure AI schema feature boundary. `getStructuredSchema` describes the live
+ * grid as strict JSON Schema; provider transport and state application live in
+ * separate opt-in packages (ADR 0007).
  * @feature AiToolkit
  */
 export const AiToolkitModule: _ModuleWithApi<_AiToolkitGridApi> = {
   moduleName: 'AiToolkit',
   version: VERSION,
   enterprise: true,
-  dependsOn: [EnterpriseCoreModule],
+  dependsOn: [EnterpriseCoreModule, ColumnApiModule],
   apiFunctions: { getStructuredSchema },
 };

@@ -1,0 +1,20 @@
+{
+  "name": "@libregrid/ai-client",
+  "version": "1.2.3",
+  "description": "Safe browser AI orchestration for AG Grid Community — part of LibreGrid",
+  "keywords": ["libregrid", "ag-grid", "ai", "byom", "browser"],
+  "homepage": "https://github.com/libregrid/libregrid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libregrid/libregrid.git",
+    "directory": "packages/ai-client"
+  },
+  "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
+  "dependencies": { "@libregrid/ai-protocol": "^1.2.3" },
+  "files": ["dist", "LICENSE", "NOTICE", "README.md"],
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+}

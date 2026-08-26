@@ -165,8 +165,9 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 - [x] **Phase 18 — Calculated columns** · [`phases/phase-18-calculated-columns.md`](docs/phases/phase-18-calculated-columns.md)
       `@libregrid/calculated-columns`; expression engine reused by A1 Formulas.
 
-- [ ] **Phase 19 — AI toolkit** · [`phases/phase-19-ai-toolkit.md`](docs/phases/phase-19-ai-toolkit.md)
-      `@libregrid/ai-toolkit`; Community's `getStructuredSchema` slot, local-first inference (ADR 0006). Docs-only research landed 2026-08-23; implementation pending.
+- [x] **Phase 19 — AI toolkit** · [`phases/phase-19-ai-toolkit.md`](docs/phases/phase-19-ai-toolkit.md)
+      Pure `@libregrid/ai-toolkit` live schema plus `ai-protocol`, browser
+      `ai-client`, and deployable BYOM `ai-gateway` (ADR 0007).
 
 ---
 
@@ -207,6 +208,9 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 | `@libregrid/batch-edit`            | 17    | `BatchEdit`                            |
 | `@libregrid/calculated-columns`    | 18    | `CalculatedColumns`                    |
 | `@libregrid/ai-toolkit`            | 19    | `AiToolkit`                            |
+| `@libregrid/ai-protocol`           | 19    | — (language-neutral wire contract)    |
+| `@libregrid/ai-client`             | 19    | — (browser orchestration)             |
+| `@libregrid/ai-gateway`            | 19    | — (server gateway)                    |
 
 ---
 
@@ -217,7 +221,7 @@ Phases are ordered by **dependency**, not preference. **Do not start a phase unt
 | ~~Seam symbols not exported from the npm build~~   | ~~Critical~~ → **Retired** | ✅ **Verified 2026-08-11** against `ag-grid-community@36.1.0`: all 18 runtime symbols and all type-only exports resolve, and CSRM invoked a custom `aggStage` bean. See [`spike-results.md`](docs/reference/spike-results.md). Phase 0 Task 0.8 still ships as a permanent CI regression test. |
 | Accidental Enterprise contamination                | **Critical**               | G1, enforced mechanically in Phase 0 Task 0.5 with a proven fixture                                                                                                                                                                                                                            |
 | `@internal` seams change in a Community minor      | High                       | On-demand conformance matrix; peer `>=36.1.0 <37`; compat release per Community minor                                                                                                                                                                                                            |
-| Scope collapse across 26 packages                 | High                       | Hard phase gates; no phase begins before the prior one's criteria are met                                                                                                                                                                                                                      |
+| Scope collapse across 36 packages                 | High                       | Hard phase gates; no phase begins before the prior one's criteria are met                                                                                                                                                                                                                      |
 | AG Grid Ltd relicenses Community                   | Medium                     | Not retroactive — released MIT code stays MIT. Archive the last MIT commit; soft fork is the fallback                                                                                                                                                                                          |
 | Grouping/agg/pivot perf below Enterprise           | Medium                     | Benchmarks from Phase 0; perf is an acceptance criterion, not a follow-up                                                                                                                                                                                                                      |
 | Excel writer underestimated                        | Medium                     | §Phase 5 sub-PR sequence; images/tables/notes explicitly optional                                                                                                                                                                                                                              |

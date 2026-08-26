@@ -17,8 +17,15 @@ apps/bench/bench/results/
 tools/bundle-budgets/.fixtures/
 apps/*/test-results/
 packages/excel-export/src/testing/__fixtures__/verification/
+.secrets
 
 # Local debugging probes
 .probe-*.mjs
 .ag-*-ref.png
 .claude/settings.local.json
+
+# Local product specifications
+specs/
+
+# Subagent-driven development scratch workspace
+.superpowers/

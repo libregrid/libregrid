@@ -51,7 +51,8 @@
           "options": {
             "prebundle": {
               "exclude": ["@libregrid/calculated-columns"]
-            }
+            },
+            "proxyConfig": "apps/docs/proxy.conf.json"
           },
           "configurations": {
             "production": { "buildTarget": "docs:build:production" },

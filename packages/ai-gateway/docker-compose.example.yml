@@ -1,0 +1,16 @@
+services:
+  libregrid-ai-gateway:
+    build:
+      context: ../..
+      dockerfile: packages/ai-gateway/Dockerfile
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?set OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.6}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_ORGANIZATION: ${OPENAI_ORGANIZATION:-}
+      OPENAI_PROJECT: ${OPENAI_PROJECT:-}
+      HOST: 0.0.0.0
+      PORT: 8787
+    ports:
+      - "127.0.0.1:8787:8787"
+    restart: unless-stopped

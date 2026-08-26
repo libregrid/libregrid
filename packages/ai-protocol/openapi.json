@@ -1,0 +1,33 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LibreGrid AI Gateway",
+    "version": "1.0.0",
+    "description": "Language-neutral BYOM gateway contract. Authentication is deployment-defined; provider credentials never appear in this API."
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getAiGatewayHealth",
+        "responses": { "200": { "description": "Gateway is ready", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "const": "ok" }, "protocol": { "const": "libregrid.ai/v1" } }, "required": ["status", "protocol"], "additionalProperties": false } } } } }
+      }
+    },
+    "/v1/grid-command": {
+      "post": {
+        "operationId": "createGridCommand",
+        "summary": "Convert a natural-language command into validated AG Grid state",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "./schemas/grid-command-request.schema.json" } } }
+        },
+        "responses": {
+          "200": { "description": "Validated model result", "content": { "application/json": { "schema": { "$ref": "./schemas/grid-command-response.schema.json" } } } },
+          "400": { "description": "Invalid request", "content": { "application/json": { "schema": { "$ref": "./schemas/grid-command-response.schema.json" } } } },
+          "429": { "description": "Provider rate limit", "content": { "application/json": { "schema": { "$ref": "./schemas/grid-command-response.schema.json" } } } },
+          "502": { "description": "Provider or provider-output failure", "content": { "application/json": { "schema": { "$ref": "./schemas/grid-command-response.schema.json" } } } },
+          "504": { "description": "Provider timeout", "content": { "application/json": { "schema": { "$ref": "./schemas/grid-command-response.schema.json" } } } }
+        }
+      }
+    }
+  }
+}

@@ -227,17 +227,7 @@ export type {
 
 export { SparklineCellRenderer, SparklinesModule } from '@libregrid/sparklines';
 
-export {
-  AiToolkitModule,
-  NeedleWasmProvider,
-  OpenAiCompatibleProvider,
-  buildGridTools,
-  getStructuredSchema,
-  runToolkit,
-  toolCallToStatePatch,
-  validateToolCall,
-} from '@libregrid/ai-toolkit';
-export type { AiProvider, AiRequest, RawToolCall, ValidatedCall } from '@libregrid/ai-toolkit';
+export { AiToolkitModule } from '@libregrid/ai-toolkit';
 
 export {
   createColumnDefs,

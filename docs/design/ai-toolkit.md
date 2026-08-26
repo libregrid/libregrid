@@ -1,176 +1,131 @@
-# Design — AI Toolkit (gap-plan A6)
+# Design — AI Toolkit and BYOM gateway
 
-**Status:** Planned — Phase 19, docs-only research landed 2026-08-23; implementation not started.
-**Package:** new `@libregrid/ai-toolkit` (feature tier) · **Module:** `AiToolkit`
-**ADR:** [0006 — local-first AI inference](../adr/0006-local-first-ai-inference.md)
-**Phase:** [`phases/phase-19-ai-toolkit.md`](../phases/phase-19-ai-toolkit.md) · **Parity:** [`parity/ai-toolkit.md`](../parity/ai-toolkit.md)
+**Status:** implemented and validated locally; the live OpenAI contract battery
+passed on 2026-08-25 after approved egress
 
----
+**Decision:** [ADR 0007](../adr/0007-pure-ai-schema-and-byom-gateway.md)
+supersedes the runtime architecture in ADR 0006
 
-## 1. What Ag-Grid's AI Toolkit is (verified against public docs + Community dist)
+**Plan:** [AI Toolkit BYOM delivery](../plans/ai-toolkit-byom.md)
 
-Ag-Grid v36.1.0 ships an Enterprise **AI Toolkit**: natural-language control of
-grid state via LLM tool calls with structured outputs. The module's entire
-public surface is one API function; the chat UI is consumer-built.
+## Product boundary
 
-Verified facts (guardrails G1/G2 — Community dist types + ag-grid.com only):
+LibreGrid owns the grid-specific schema, transport contract, validation,
+stale-state protection, diff, and safe state application. The deploying
+application owns user authentication, provider/model choice, data-residency
+policy, and server-side credentials.
 
-- `EnterpriseModuleName` includes `'AiToolkit'`; `AgModuleName` includes
-  `'AiToolkitModule'` (`iModule.d.ts:77,79`). The Community dist registers a
-  stub — `mod("AiToolkit", { getStructuredSchema: 0 })`
-  (`main.esm.mjs:13182`) — so the name and API slot are reserved in Community;
-  the implementation is Enterprise-only.
-- `_AiToolkitGridApi` (`gridApi.d.ts:1715`):
-  `getStructuredSchema(params?: StructuredSchemaParams): any`; `GridApi`
-  extends it (`gridApi.d.ts:1723`).
-- `StructuredSchemaParams` (`structuredSchemaParams.d.ts`):
+The browser never receives a provider key or selects a model.
 
-  ```ts
-  type StructuredSchemaFeature =
-    | 'aggregation' | 'filter' | 'sort' | 'pivot'
-    | 'columnVisibility' | 'columnSizing' | 'rowGroup';
-
-  interface StructuredSchemaColumnParams {
-    description?: string;          // per-column hint for the LLM
-    includeSetValues?: boolean;    // expose current filter/sort values
-  }
-
-  interface StructuredSchemaParams {
-    exclude?: StructuredSchemaFeature[];
-    columns?: Record<string, StructuredSchemaColumnParams>;
-  }
-  ```
-
-- Usage pattern from the public docs (Angular example): the consumer calls
-  `gridApi.getStructuredSchema()`, wraps the result as `properties.gridState`
-  in a top-level response schema, sends it to an LLM (the docs' example uses
-  `gpt-5-mini`), and applies the returned state via `setState`. The module has
-  **no conversation state** and no built-in chat widget — each request is
-  stateless. Suggested prompts from the docs: *"Show me all the gold medals
-  won by the USA"*, *"Sort the competitors with the youngest first"*, *"Group
-  by country and show the total number of medals won"*.
-- `GridState` round-trips through Community's `GridStateModule`
-  (`main.d.ts:171`); `_StateGridApi` exposes `getState(): GridState` and
-  `setState(state, propertiesToIgnore?)` (`gridApi.d.ts:1033–1041`).
-
-**Implication for LibreGrid:** the implementation layer is (a) a real
-`getStructuredSchema` that builds the schema from the live column model and
-current state, (b) an execution path from LLM tool calls to
-`setState(state, propertiesToIgnore)`, and (c) a provider abstraction — the
-docs assume a hosted LLM; our differentiator is a browser-local default
-(§3).
-
-## 2. Cactus Needle feasibility
-
-Cactus Needle ([github.com/cactus-compute/needle](https://github.com/cactus-compute/needle),
-[Cactus-Compute/needle2](https://huggingface.co/Cactus-Compute/needle2)) is a
-~45M-parameter agentic LLM built for constrained, tool-calling workloads on
-tiny devices. Needle 2 facts (per the model card):
-
-- **Runs in the browser:** WebAssembly build (`needle.js` + `needle.wasm`);
-  ~14 MB binary, ~28 MB RAM footprint; CQ2-bit quantization.
-- **Tool calling / function calling / structured extraction** are first-class;
-  tool retrieval surfaces a top-5 tool set per request — the tool list must
-  stay small.
-- **Small context** (~256 tokens) — the prompt budget only fits schema +
-  current state, never row data.
-- ~500 tok/s decode on a Raspberry Pi 5; the model card recommends
-  fine-tuning on domain data for task-specific quality.
-
-Assessment:
-
-| Requirement | Needle fit |
-|---|---|
-| Constrained schema-aware tool calls (sort/filter/visibility) | ✅ exactly its design target |
-| Browser-local, no network by default | ✅ WASM build |
-| General conversational quality | ❌ not a general LLM — complex multi-step requests will fail |
-| Large grids / many columns | ⚠️ 256-token context caps the schema size; `exclude` + per-column `description` are the mitigation |
-| Distribution | ✅ resolved by the 2026-08-23 spike: runtime fetch of `wasm/needle.js` + `wasm/needle.wasm` + `needle2.cact` from a pinned HF commit, self-hostable base URL; Apache-2.0 engine **and** weights |
-
-Conclusion: plausible for the v1 scope (filters, sort, column visibility,
-reset) on moderate grids, with an explicit quality ceiling. The architecture
-must therefore carry an optional hosted fallback for the cases the local
-model cannot handle.
-
-## 3. Architecture — local-first, remote fallback (ADR 0006)
-
-```
-consumer chat UI (consumer-built, as in the Ag-Grid docs)
-        │  user prompt + gridApi.getStructuredSchema(params)
-        ▼
-┌────────────────────────── @libregrid/ai-toolkit ──────────────────────────┐
-│ AiProvider (interface: complete(context, tools) → { toolCalls, confidence })│
-│                                                                            │
-│  NeedleWasmProvider   default · browser-local WASM · no network            │
-│  OpenAiCompatibleProvider  optional · consumer endpoint · OFF by default   │
-│                                                                            │
-│  escalation: confidence < threshold → remote (if enabled) else clarify     │
-└────────────────────────────────────────────────────────────────────────────┘
-        │  validated tool call(s)
-        ▼
-applyToolCall() → GridState patch → Community GridStateModule.setState(state, propertiesToIgnore)
+```text
+AG Grid
+  │ getStructuredSchema() + getState()
+  ▼
+@libregrid/ai-client
+  │ POST /v1/grid-command (libregrid.ai/v1)
+  ▼
+the application's authenticated API boundary
+  │
+  ├─ @libregrid/ai-gateway + OpenAI Responses adapter
+  ├─ @libregrid/ai-gateway + another GridModelProvider
+  └─ any-language implementation generated from OpenAPI
+  │
+  ▼
+provider structured output
+  │ server validation → browser validation → revision check → review diff
+  ▼
+proposal.apply() → GridApi.setState(state, protectedIgnoreList)
 ```
 
-Decisions:
+## Deep modules
 
-1. **Default provider is local** (`NeedleWasmProvider`). Assets (~14 MB) are
-   lazy-loaded, never bundled into the package; consumers can self-host the
-   artifacts. No network traffic by default.
-2. **Remote fallback is opt-in.** `OpenAiCompatibleProvider` takes a
-   consumer-supplied endpoint/key; disabled unless explicitly configured.
-3. **Context policy: schema + state only.** Column schema, small
-   allowed-value sets (via `includeSetValues`), and current grid state. Row
-   values are never included by default — the 256-token budget cannot hold
-   them anyway, and sending them to a remote endpoint would require an
-   explicit consumer opt-in we do not design for in v1.
-4. **Confidence gating.** Each provider returns a confidence score; below
-   threshold the toolkit escalates (remote if enabled) or returns a
-   clarification result instead of guessing.
-5. **No conversation state in v1.** Each request is stateless, matching the
-   Ag-Grid module's contract.
+### `@libregrid/ai-toolkit`
 
-## 4. Module and API design
+One public capability: register `AiToolkitModule`, then call the
+Community-reserved `GridApi.getStructuredSchema(params?)` function. Internally
+the module snapshots live column capabilities and emits a strict schema for the
+applicable portions of `GridState`:
 
-- Package `@libregrid/ai-toolkit` (feature tier; re-exported by
-  `@libregrid/all`). Scaffold per [`reference/standards.md`](../reference/standards.md).
-- `AiToolkitModule`:
+1. aggregation;
+2. filter (simple, set, or recursive advanced filter);
+3. sort;
+4. pivot;
+5. column visibility;
+6. column sizing;
+7. row grouping.
 
-  ```ts
-  export const AiToolkitModule: _ModuleWithApi<_AiToolkitGridApi> = {
-    moduleName: 'AiToolkit',      // Community's closed-union literal (iModule.d.ts:77)
-    version: VERSION,
-    enterprise: true,
-    dependsOn: [EnterpriseCoreModule],  // + Community GridStateModule for getState/setState
-    apiFunctions: { getStructuredSchema },
-  };
-  ```
+Every included object is closed and requires all of its properties. Feature
+sections are nullable for “preserve this feature.” Column IDs, aggregation
+functions, filter operators, operand arity, and optional set values are scoped
+to the live column. Unsupported custom filter components and positional multi
+filters are omitted rather than approximated. Shared/recursive definitions are
+hoisted to the root.
 
-- `getStructuredSchema(params?)` builds a JSON schema of the grid state from
-  the live column model + current state, narrowed by `exclude` features and
-  per-column `description` / `includeSetValues`. v1 features: **filter, sort,
-  columnVisibility** (plus reset via `propertiesToIgnore` semantics).
-  `aggregation`, `pivot`, `rowGroup`, `columnSizing` are excluded from v1
-  (parity ❌ with rationale).
-- **Tool set (≤5 — Needle retrieves top-5):** `setSort`, `setFilters`,
-  `setColumnVisibility`, `resetGrid`. Each tool call validates against a
-  hand-rolled validator (no `ajv` — dependency policy) and maps to a
-  `GridState` patch applied through Community's state service.
-- **Flat tool arguments** (spike finding B, 2026-08-23): the model reliably
-  emits flat shapes but not nested per-column objects, so `setFilters` takes
-  `{ column, values }` for a single column (multiple calls per turn allowed)
-  and the validator maps to `GridState.filterModel`. No tool takes a nested
-  object-of-objects.
-- No new runtime dependencies; no CSS; no beans beyond the provider registry.
+The package contains no prompt, provider, network, model, credential, response
+validator, or state-application implementation.
 
-## 5. Risks and open questions
+### `@libregrid/ai-protocol`
 
-| Risk | Mitigation |
-|---|---|
-| Needle browser artifacts have no official npm package; load strategy unproven | ✅ **Resolved by the 2026-08-23 spike** (`reference/spike-results.md`): three runtime-fetched files (glue + engine wasm + `.cact` weights), Apache-2.0 throughout, sub-second per-query in Chromium, +14 MB JS heap; pinned commit `98fbd95…`, self-hostable base URL |
-| ~256-token context caps schema size on wide grids | Schema+state-only policy; `exclude` + per-column `description`; document the grid-size ceiling in parity |
-| Local model quality ceiling (complex multi-step requests) | Confidence gating → optional remote fallback; fine-tuning on domain data documented as a recommendation, not a v1 requirement |
-| ~14 MB asset download | Lazy load on first use, cacheable; consumers can self-host; never bundled |
-| Remote fallback privacy surface | Off by default; explicit consumer configuration required; documented in the package README |
+The dependency-free `libregrid.ai/v1` contract contains request, success,
+failure, provider metadata, and state-ignore types; a restricted JSON Schema
+validator; strict provider-envelope composition; deterministic revisions;
+JSON conformance fixtures; JSON Schemas; and OpenAPI 3.1.
 
-Guardrails: G1 (no Enterprise code — all contracts from Community dist types +
-public docs) and G2 (public documentation only for behavior specs) apply.
+The provider envelope hoists the dynamic grid schema's `$defs` to its own root
+so local references remain valid. Provider output is always validated locally,
+even when constrained decoding was used.
+
+### `@libregrid/ai-client`
+
+`createGridAssistant({ api, endpoint | transport })` owns the browser workflow:
+
+1. capture the live schema, complete current `GridState`, and view context;
+2. calculate a deterministic revision and send a versioned request;
+3. verify protocol version, request ID, revision, dynamic output, provider
+   metadata, and ignore-list invariants;
+4. expose a dry-run proposal and before/after feature diff;
+5. regenerate the schema/state revision immediately before apply;
+6. add every unsupported or omitted AG Grid state key to a protected baseline;
+7. call `setState` once only after `proposal.apply()`.
+
+Any state/schema change while the model is running makes the proposal stale.
+Ignored included features must be null; non-null ignored state is rejected.
+
+### `@libregrid/ai-gateway`
+
+The gateway's deep interface is the `GridModelProvider.complete()` port. The
+package owns portable `Request → Response` handling, body and command limits,
+timeouts that work even when an adapter ignores abort, optional authorization,
+normalized errors, metadata-only logging, output revalidation, health, Node
+server/CLI, Docker deployment, deterministic mock, and conformance CLI.
+
+The OpenAI adapter uses the Responses API strict JSON Schema field
+`text.format`. The configured model is server-only, making provider
+configuration the model allowlist. Other provider adapters do not alter the
+browser or HTTP contract.
+
+## Data and security contract
+
+Each request may disclose the user's command, live column identifiers and
+descriptions, supported values explicitly included by the developer, complete
+current grid state, record/page counts, density, and developer-provided facts.
+Row records are not sent. Deployers must treat the remaining metadata as
+potentially sensitive and apply their normal authentication, authorization,
+TLS, retention, residency, audit, and provider policies.
+
+LibreGrid deliberately does not define application identity. The bundled
+server can be placed behind an existing reverse proxy/session boundary, or its
+authorization hook can call application policy. Logs never need raw commands,
+schemas, state, authorization values, or provider keys.
+
+## Compatibility and omissions
+
+- The active contract targets `ag-grid-community >=36.1.0 <37`.
+- Multi-filter output is omitted because positional child models cannot be
+  represented in the approved portable dialect.
+- Custom filter components are omitted; custom simple-filter options are only
+  safe if a future contract can communicate their semantics, not merely names.
+- The protocol is stateless. A host may retain conversation UI state, but each
+  request carries a fresh authoritative grid snapshot.
+- Local-model training and browser model execution remain paused historical
+  experiments, not dependencies or fallbacks in this architecture.

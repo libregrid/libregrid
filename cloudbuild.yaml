@@ -1,0 +1,15 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - packages/ai-gateway/Dockerfile
+      - -t
+      - $_IMAGE
+      - .
+images:
+  - $_IMAGE
+options:
+  logging: CLOUD_LOGGING_ONLY
+substitutions:
+  _IMAGE: us-central1-docker.pkg.dev/libregrid/libregrid/ai-gateway:v1

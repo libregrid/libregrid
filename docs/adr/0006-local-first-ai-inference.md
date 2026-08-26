@@ -1,11 +1,14 @@
 # ADR 0006 — Local-first AI inference for the AI Toolkit
 
-**Status:** Accepted
+**Status:** Superseded by [ADR 0007](./0007-pure-ai-schema-and-byom-gateway.md) on 2026-08-25
 **Date:** 2026-08-23
 
 ---
 
 ## Context
+
+> Historical record only. No local model, provider, or fallback described by
+> this ADR is present in the active AI Toolkit architecture.
 
 Gap-plan A6 (AI Toolkit) needs an LLM to turn natural language into grid-state
 changes. Ag-Grid's own toolkit assumes a consumer-configured **hosted** LLM —

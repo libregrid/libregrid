@@ -1,9 +1,8 @@
 # @libregrid/ai-toolkit
 
-Adds natural-language control of grid state to AG Grid Community — describe what
-you want ("hide the age column", "sort youngest first") and the grid applies it.
-
-Replaces AG Grid Enterprise's `AiToolkit` module.
+Generates a strict, capability-scoped JSON Schema for the **live** AG Grid.
+It replaces AG Grid Enterprise's `AiToolkitModule` API surface without bundling
+a model, provider SDK, network client, credentials, or state-application code.
 
 ## Install
 
@@ -11,39 +10,42 @@ Replaces AG Grid Enterprise's `AiToolkit` module.
 npm install ag-grid-community @libregrid/ai-toolkit
 ```
 
-Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.
-
-## Usage
+## Use
 
 ```ts
-import { ModuleRegistry, AllCommunityModule, createGrid } from 'ag-grid-community';
+import { AllCommunityModule, ModuleRegistry, createGrid } from 'ag-grid-community';
 import { AiToolkitModule } from '@libregrid/ai-toolkit';
 
 ModuleRegistry.registerModules([AllCommunityModule, AiToolkitModule]);
 
-const api = createGrid(document.querySelector('#grid')!, {
-  columnDefs: [{ field: 'country' }, { field: 'age' }],
-  rowData,
+const api = createGrid(document.querySelector('#grid')!, { columnDefs, rowData });
+const schema = api.getStructuredSchema({
+  columns: {
+    region: {
+      description: 'Sales territory, such as North America or EMEA',
+      includeSetValues: true,
+    },
+  },
 });
-
-// Build the structured schema for the LLM.
-const schema = api.getStructuredSchema({ exclude: ['aggregation', 'pivot'] });
-
-// Or drive a tool call directly (the provider layer is pluggable).
 ```
 
-## Local-first inference
+The schema describes applicable AG Grid `GridState` sections for all seven AI
+Toolkit features: aggregation, filter, sort, pivot, column visibility, column
+sizing, and row grouping. It includes live column identifiers, data types,
+filter operators, opt-in set values, and per-column capabilities. Objects are
+strict and every property is required. Nullable feature sections let a strict
+output provider represent “do not change this.”
 
-The default provider runs **Cactus Needle 2** ([Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0),
-45M parameters) entirely in the browser via WebAssembly — no network calls, no
-row data leaves the page. A remote OpenAI-compatible provider is available as an
-opt-in fallback for requests the local model declines (see ADR 0006).
+For a full bring-your-own-model workflow, add `@libregrid/ai-client` in the
+browser and deploy `@libregrid/ai-gateway` behind your own authentication. The
+language-neutral wire contract and OpenAPI document are in
+`@libregrid/ai-protocol`. Provider secrets always remain on the server.
 
-Artifacts are fetched at runtime from a pinned, self-hostable base URL; nothing
-is bundled into this package.
+See [ADR 0007](../../docs/adr/0007-pure-ai-schema-and-byom-gateway.md) and the
+[BYOM delivery plan](../../docs/plans/ai-toolkit-byom.md).
 
-## Parity
+## License
 
-See [`docs/parity/ai-toolkit.md`](../../docs/parity/ai-toolkit.md) for the
-feature checklist and [ADR 0006](../../docs/adr/0006-local-first-ai-inference.md)
-for the local-first decision.
+MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
+See [NOTICE](./NOTICE) for third-party attribution.

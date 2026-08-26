@@ -17,6 +17,37 @@ npm -w apps/docs run build
 firebase deploy --only hosting
 ```
 
+## Local AI gateway for the docs demo
+
+The `/ai-toolkit` demo can call a real model. Run the gateway on your own
+machine. Let the dev server proxy to it. The browser stays on one origin,
+so the demo needs no CORS.
+
+Put your provider key in a git-ignored `.secrets` file in the repository root.
+See [`packages/ai-gateway/.env.example`](../packages/ai-gateway/.env.example)
+for the OpenRouter recipe.
+
+```sh
+NX_DAEMON=false NX_ISOLATE_PLUGINS=false npx nx build ai-gateway
+node --env-file=.secrets packages/ai-gateway/dist/server.js
+npx nx serve docs
+```
+
+On the `/ai-toolkit` page, set the mode to **External HTTP gateway**. Keep
+the default `/v1/grid-command` endpoint. The dev server sends that path to the
+gateway on port 8787.
+
+The Vite dev server behind `npx nx serve docs` bundles the `cors` package as
+global middleware, and it reflects an `Access-Control-Allow-Origin` header on
+every proxied request. That header comes from the local dev server, not from
+the gateway. The LibreGrid gateway itself ships zero CORS code and never adds
+a CORS header. A direct cross-origin call to the deployed gateway fails by
+design; only the same-origin Firebase Hosting rewrite (or your own reverse
+proxy) is a supported path.
+
+To deploy this gateway for the live site, read
+[AI gateway hosting](ai-gateway-hosting.md).
+
 ## Custom domain
 
 In Firebase Console, open **Hosting → Add custom domain** and enter `libregrid.dev`, then add the DNS records Firebase provides. Complete certificate provisioning before redirecting any existing domain traffic. Add `www.libregrid.dev` only if it should redirect to the canonical root domain.
