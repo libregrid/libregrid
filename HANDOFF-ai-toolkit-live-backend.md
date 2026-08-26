@@ -42,9 +42,60 @@ went through implement → independent review → fix loop → scoped re-review.
 
 Plus `f5eca8b` (plan correction) and `a119fe4` (gitignore).
 
-**Not done: the final whole-branch review.** The SDD process calls for one after
-the last task. It was not run — the session ended on quota. That is the first
-thing to do.
+**Final whole-branch review: partially done.** The dispatched reviewer died on a
+Claude spend limit. A targeted inline review was done instead, covering the
+integration seams, the security surfaces, and release correctness. It found one
+substantive issue (§3.3). **A full adversarial review has still not been run**
+and remains worth doing — the inline pass deliberately did not read all 612 KB
+of the branch diff.
+
+What the inline review *did* verify:
+
+- **Seams compose.** Tasks 2 and 6 both edited `server.ts`; Tasks 1 and 6 both
+  edited `index.ts`. Both files carry all edits, nothing clobbered.
+- **Prompt injection is contained.** `buildProviderPrompt`
+  (`packages/ai-protocol/src/providerSchema.ts:64`) embeds the user command via
+  `JSON.stringify` as a JSON string value, not concatenated prose. More
+  importantly the output is schema-validated, so a successful injection can still
+  only produce a schema-valid grid state built from real column ids.
+- **The protected-state baseline genuinely holds.**
+  `packages/ai-client/src/assistant.ts:190` force-adds every `GRID_STATE_KEY` not
+  present in the locally generated schema to the ignore set, *after* reading the
+  model's `propertiesToIgnore`. A hostile or broken model cannot widen the blast
+  radius; `propertiesToIgnore` can only ever shrink what is applied. The safety
+  property the docs claim is real and enforced client-side.
+- **Staleness is checked at apply time**, not just at response time
+  (`assistant.ts:187`).
+
+### 3.3 `@libregrid/all` loses public exports under a minor bump
+
+**This is the one substantive finding, and it is a release-correctness problem.**
+
+`@libregrid/all` is published, public, and currently at 1.2.3. On `main` it
+re-exports fourteen symbols from `@libregrid/ai-toolkit`
+(`packages/all/src/index.ts:230-240`):
+
+```
+AiToolkitModule, NeedleWasmProvider, OpenAiCompatibleProvider, buildGridTools,
+getStructuredSchema, runToolkit, toolCallToStatePatch, validateToolCall
++ types AiProvider, AiRequest, RawToolCall, ValidatedCall
+```
+
+On this branch it re-exports **only `AiToolkitModule`**. Seven named exports and
+four exported types disappear from a published package's public surface.
+
+Both changesets release `@libregrid/all` as **`minor`**.
+
+The recorded rationale for choosing minor over major was that
+`@libregrid/ai-toolkit` was never published to npm, so removing its APIs breaks
+nobody. That reasoning is sound **for `@libregrid/ai-toolkit` itself**. It does
+not transfer to `@libregrid/all`, which *was* published and *did* re-export those
+APIs. Anyone who wrote `import { runToolkit } from '@libregrid/all'` against
+1.x has their build broken by a minor upgrade.
+
+**Decide before publishing.** Either bump `@libregrid/all` major, or confirm
+deliberately that the 1.x `all` surface had no real consumers and accept it.
+This is a judgement call for the owner — it was not made in this session.
 
 ## 3. Blocking decisions for whoever picks this up
 
@@ -135,6 +186,11 @@ Verify the guard is live: `curl -X POST .../v1/grid-command -d '{}'` → **401**
 APIs enabled during this work: `cloudbilling`, `run`, `secretmanager`,
 `cloudbuild`, `artifactregistry`.
 
+**Full gate, last run 2026-08-26 23:05, all green:** `npm run test:all` →
+152 files passed / 1 skipped, 1152 tests passed / 12 skipped, 0 failed.
+`npm run lint` clean. `check:contamination`, `check:versions`, `check:budgets`
+all pass.
+
 Verified working: `/health` → 200; conformance CLI → `{"ok": true}`; the
 Firebase preview routes `/v1/grid-command` to the gateway (a real gateway JSON
 error, not Angular's `index.html`) with no CORS headers.
@@ -205,8 +261,10 @@ Each of these was a judgement call. Reverse any that are wrong.
 
 ## 7. What to do next, in order
 
-1. **Run the final whole-branch review** (`git merge-base main HEAD`..`HEAD`).
-   It was never run. Point it at the deferred-minor list in the ledger.
+1. **Resolve the `@libregrid/all` semver question (§3.3)** before any publish.
+   Then run a full adversarial whole-branch review
+   (`git merge-base main HEAD`..`HEAD`) — only a targeted inline pass was done.
+   Point it at the deferred-minor list in the ledger.
 2. **Add `GATEWAY_TIMEOUT_MS` to `server.ts`** and re-measure the free models.
    This is the highest-value small change available.
 3. **Run the real 11-command battery** — it has never been executed. It needs
