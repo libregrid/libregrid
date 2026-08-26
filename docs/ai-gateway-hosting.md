@@ -48,7 +48,7 @@ build artifacts. Worse, it could ship a secret file that Git ignores but
 ```sh
 gcloud run deploy libregrid-ai-gateway \
   --project=libregrid \
-  --image=us-central1-docker.pkg.dev/libregrid/libregrid/ai-gateway:v1 \
+  --image=us-central1-docker.pkg.dev/libregrid/libregrid/ai-gateway:turnstile-20260826 \
   --region=us-central1 \
   --service-account=libregrid-ai-gateway@libregrid.iam.gserviceaccount.com \
   --allow-unauthenticated \
@@ -56,8 +56,8 @@ gcloud run deploy libregrid-ai-gateway \
   --max-instances=3 \
   --concurrency=20 \
   --timeout=60s \
-  --set-env-vars=AI_PROVIDER=openai-chat,OPENAI_BASE_URL=https://openrouter.ai/api/v1,OPENAI_MODEL=nvidia/nemotron-3-super-120b-a12b:free,OPENROUTER_REQUIRE_PARAMETERS=true,HOST=0.0.0.0,OPENROUTER_REFERER=https://libregrid.dev,OPENROUTER_TITLE=LibreGrid\ Docs \
-  --set-secrets=OPENAI_API_KEY=libregrid-openrouter-key:latest
+  --set-env-vars='^@^AI_PROVIDER=openai-chat@OPENAI_BASE_URL=https://openrouter.ai/api/v1@OPENAI_MODEL=nvidia/nemotron-3-super-120b-a12b:free@OPENROUTER_REQUIRE_PARAMETERS=true@HOST=0.0.0.0@OPENROUTER_REFERER=https://libregrid.dev@OPENROUTER_TITLE=LibreGrid Docs@TURNSTILE_HOSTNAMES=libregrid.dev,libregrid.web.app,libregrid.firebaseapp.com,libregrid--preview-g04ztv7z.web.app' \
+  --set-secrets=OPENAI_API_KEY=libregrid-openrouter-key:latest,TURNSTILE_SECRET_KEY=libregrid-turnstile-secret:latest
 ```
 
 `--service-account` is required. Without it Cloud Run uses the default compute
@@ -65,8 +65,9 @@ service account. That account holds `roles/editor` on the whole project. A
 public endpoint must not run with project-wide Editor.
 
 `--allow-unauthenticated` is required. Firebase Hosting calls the service
-without a Google identity. Task 6 adds the Turnstile guard for real access
-control. Keep `--max-instances` low until that guard carries a real secret.
+without a Google identity. Turnstile screens each model request by checking its
+one-use token, exact `grid_command` action, and deployment hostname; it is bot
+mitigation, not user authentication.
 
 `--min-instances 0` lets the service scale to zero. An idle demo costs
 nothing.
@@ -78,6 +79,8 @@ Never write a key into `firebase.json`, the Dockerfile, or any committed file.
 ```sh
 gcloud secrets create libregrid-openrouter-key --project=libregrid --replication-policy=automatic
 printf '%s' 'sk-or-v1-your-key' | gcloud secrets versions add libregrid-openrouter-key --project=libregrid --data-file=-
+gcloud secrets create libregrid-turnstile-secret --project=libregrid --replication-policy=automatic
+printf '%s' 'YOUR-TURNSTILE-SECRET' | gcloud secrets versions add libregrid-turnstile-secret --project=libregrid --data-file=-
 ```
 
 The `printf` form avoids a trailing newline in the secret value and keeps the
@@ -101,20 +104,24 @@ gcloud secrets add-iam-policy-binding libregrid-openrouter-key \
   --project=libregrid \
   --member="serviceAccount:libregrid-ai-gateway@libregrid.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
+gcloud secrets add-iam-policy-binding libregrid-turnstile-secret \
+  --project=libregrid \
+  --member="serviceAccount:libregrid-ai-gateway@libregrid.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
 ```
 
 ### Current deployment state
 
-The service runs today with a **placeholder** secret value, not a real
-OpenRouter key. `/health` works and proves the whole Firebase → Cloud Run
-path. Any real model call returns a provider authentication error until the
-project owner replaces the secret value with a real OpenRouter key.
+Revision `libregrid-ai-gateway-00008-5gv` serves the real OpenRouter key and the
+Turnstile secret from Secret Manager through the dedicated runtime identity.
+The guard is enabled. Tokenless requests return 401 both on the Cloud Run URL
+and through the Firebase same-origin rewrite; `/health` remains public and
+returns 200.
 
-This is deliberate. It proves the infrastructure without letting the
-unguarded endpoint spend money. There is no Turnstile secret either.
-`TURNSTILE_SECRET_KEY` stays unset, so the gateway logs `turnstile disabled`
-and the guard stays off. The owner must add both secrets before the demo is
-safe to leave open to the public internet.
+The docs bundle containing public site key `0x4AAAAAAEcZNv1LedOXTzSk` is on the
+`preview` Hosting channel only. Production Hosting remains untouched. The
+Cloud Run allowlist intentionally contains public docs hostnames only, while
+the widget itself also permits localhost for local browser development.
 
 ## Roll back
 

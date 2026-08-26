@@ -2,6 +2,10 @@ const SITEVERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
 export interface TurnstileAuthorizerOptions {
   secretKey: string;
+  /** Exact widget action expected in the Siteverify response. */
+  expectedAction: string;
+  /** Exact hostnames allowed in the Siteverify response. */
+  expectedHostnames: readonly string[];
   fetch?: typeof globalThis.fetch;
   /** Request header that carries the widget token. Defaults to `x-turnstile-token`. */
   header?: string;
@@ -20,11 +24,16 @@ export function createTurnstileAuthorizer(
   const fetchImplementation = options.fetch ?? globalThis.fetch;
   if (!fetchImplementation) throw new Error('ai-gateway: fetch is unavailable');
   if (!options.secretKey) throw new Error('ai-gateway: Turnstile secret key is required');
+  if (!options.expectedAction) throw new Error('ai-gateway: Turnstile action is required');
+  if (options.expectedHostnames.length === 0) {
+    throw new Error('ai-gateway: at least one Turnstile hostname is required');
+  }
+  const expectedHostnames = new Set(options.expectedHostnames);
   const header = options.header ?? 'x-turnstile-token';
 
   return async (request: Request): Promise<boolean> => {
     const token = request.headers.get(header);
-    if (!token) return false;
+    if (!token || token.length > 2_048) return false;
 
     const body = new URLSearchParams({ secret: options.secretKey, response: token });
     const remoteIp = request.headers.get('cf-connecting-ip') ?? request.headers.get('x-forwarded-for');
@@ -36,6 +45,7 @@ export function createTurnstileAuthorizer(
         method: 'POST',
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         body: body.toString(),
+        signal: AbortSignal.timeout(10_000),
       });
     } catch {
       return false;
@@ -48,6 +58,11 @@ export function createTurnstileAuthorizer(
     } catch {
       return false;
     }
-    return Boolean(payload && typeof payload === 'object' && (payload as { success?: unknown }).success === true);
+    if (!payload || typeof payload !== 'object') return false;
+    const verdict = payload as { success?: unknown; action?: unknown; hostname?: unknown };
+    return verdict.success === true
+      && verdict.action === options.expectedAction
+      && typeof verdict.hostname === 'string'
+      && expectedHostnames.has(verdict.hostname);
   };
 }

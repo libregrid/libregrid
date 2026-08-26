@@ -96,9 +96,10 @@ If the endpoint needs a bearer or application token, put the complete value in
 
 ## Guard the public endpoint with Turnstile
 
-Set `TURNSTILE_SECRET_KEY` to require a valid Cloudflare Turnstile token on
-every request. Without this variable, the gateway accepts every request with
-no check.
+Set `TURNSTILE_SECRET_KEY` and `TURNSTILE_HOSTNAMES` to require a valid
+Cloudflare Turnstile token on every request. Without the secret variable, the
+gateway accepts every request with no check. If the secret is set without an
+approved hostname, the process refuses to start.
 
 Get the secret key from the Turnstile widget settings in the Cloudflare
 dashboard. Keep the secret key private. Never put it in browser code or in
@@ -108,11 +109,15 @@ The Turnstile site key is a different value. The site key is public. You may
 put it in browser code. You may commit it to source control.
 
 ```bash
-TURNSTILE_SECRET_KEY=0x0000000000000000000000000000000AA npx libregrid-ai-gateway
+TURNSTILE_SECRET_KEY=0x0000000000000000000000000000000AA \
+TURNSTILE_HOSTNAMES=localhost,127.0.0.1 \
+npx libregrid-ai-gateway
 ```
 
-The browser client sends the token in the `x-turnstile-token` header. Mint a
-fresh token for every request. Each Turnstile token works only once.
+The browser client sends the token in the `x-turnstile-token` header. The
+gateway requires Siteverify to return the exact action `grid_command` and a
+hostname in `TURNSTILE_HOSTNAMES`. Mint a fresh token for every request. Each
+Turnstile token works only once.
 
 The startup log line reports `turnstile enabled` or `turnstile disabled`.
 Check this line before you expose the endpoint publicly.
@@ -121,8 +126,9 @@ Check this line before you expose the endpoint publicly.
 
 - Authenticate the caller before invoking the handler. The gateway deliberately
   does not invent an identity system for your application.
-- Set `TURNSTILE_SECRET_KEY` before you expose the endpoint publicly. An unset
-  value means the endpoint accepts every request with no bot check.
+- Set `TURNSTILE_SECRET_KEY` and the public deployment's exact
+  `TURNSTILE_HOSTNAMES` before you expose the endpoint publicly. An unset
+  secret means the endpoint accepts every request with no bot check.
 - Store `OPENAI_API_KEY` (or another provider credential) only in server-side
   secret storage. The protocol has no credential or model-name request field.
 - Treat the live grid schema, current GridState, command, and context metadata

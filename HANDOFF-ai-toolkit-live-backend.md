@@ -1,12 +1,12 @@
 # Handoff — AI Toolkit live backend (local dev + hosted demo)
 
 **Date:** 2026-08-26
-**Branch:** `feature/ai-toolkit-apply-command` (34 commits ahead of `main`, nothing pushed, no PR)
+**Branch:** `feature/ai-toolkit-apply-command` (39 commits ahead of `main` after the Turnstile completion commit; nothing pushed, no PR)
 **Plan:** [`docs/plans/ai-toolkit-live-backend.md`](docs/plans/ai-toolkit-live-backend.md)
 **Execution ledger (git-ignored, may be deleted):** `.superpowers/sdd/ai-toolkit-live-backend/progress.md`
 
 This document is written for an agent orchestrator picking the work up cold.
-Read the "Blocking decisions" section first — two of them change what you build.
+Read the "Decisions and outstanding validation" section first.
 
 ---
 
@@ -67,7 +67,7 @@ What the inline review *did* verify:
 - **Staleness is checked at apply time**, not just at response time
   (`assistant.ts:187`).
 
-### 3.3 `@libregrid/all` loses public exports under a minor bump
+### Release-correctness finding: `@libregrid/all` loses public exports under a minor bump
 
 **This is the one substantive finding, and it is a release-correctness problem.**
 
@@ -93,11 +93,11 @@ not transfer to `@libregrid/all`, which *was* published and *did* re-export thos
 APIs. Anyone who wrote `import { runToolkit } from '@libregrid/all'` against
 1.x has their build broken by a minor upgrade.
 
-**Decide before publishing.** Either bump `@libregrid/all` major, or confirm
-deliberately that the 1.x `all` surface had no real consumers and accept it.
-This is a judgement call for the owner — it was not made in this session.
+**Owner decision recorded 2026-08-25:** release this work as **1.3.0**, not
+2.0.0. Both changesets therefore remain `minor`. This knowingly accepts the
+compatibility risk above; do not silently change the release to 2.0.0.
 
-## 3. Blocking decisions for whoever picks this up
+## 3. Decisions and outstanding validation
 
 ### 3.1 The free tier does not clear the plan's own bar
 
@@ -144,31 +144,21 @@ still fails the bar, use a cheap paid model for the hosted demo and document
 free models as local-development-only. That fallback is already written into
 the plan.
 
-### 3.2 The deployed endpoint is currently unguarded and holds a real key
+### 3.2 Turnstile is installed and the public endpoint is closed
 
-Right now: real OpenRouter key installed, `--allow-unauthenticated`, and
-**`TURNSTILE_SECRET_KEY` is not set, so the guard is OFF**. Spend exposure is
-limited because the model is `:free`, but the endpoint is an open LLM proxy that
-consumes the owner's OpenRouter rate limits.
+Widget `LibreGrid AI Gateway` is managed mode with public site key
+`0x4AAAAAAEcZNv1LedOXTzSk`. Its secret exists only in Secret Manager as
+`libregrid-turnstile-secret`; the dedicated Cloud Run service account has
+`secretAccessor` on that secret. The client mints tokens with action
+`grid_command`. The gateway requires Siteverify success, that exact action, and
+one of the configured public docs hostnames.
 
-Closing it needs two Cloudflare Turnstile values that **cannot be self-issued**:
-
-```sh
-gcloud secrets create libregrid-turnstile-secret --replication-policy=automatic --project=libregrid
-printf '%s' 'YOUR-TURNSTILE-SECRET' | gcloud secrets versions add libregrid-turnstile-secret --project=libregrid --data-file=-
-gcloud secrets add-iam-policy-binding libregrid-turnstile-secret --project=libregrid \
-  --member="serviceAccount:libregrid-ai-gateway@libregrid.iam.gserviceaccount.com" \
-  --role="roles/secretmanager.secretAccessor"
-gcloud run services update libregrid-ai-gateway --project=libregrid --region=us-central1 \
-  --update-secrets TURNSTILE_SECRET_KEY=libregrid-turnstile-secret:latest
-```
-
-The **site** key (public, safe to commit) goes into `TURNSTILE_SITE_KEY` in
-`apps/docs/src/app/routes/ai-toolkit.ts`. It is deliberately `''` today — that
-empty value is what keeps the local dev loop working without a Turnstile
-account, and it is a designed behaviour, not an oversight (ruling C1 below).
-
-Verify the guard is live: `curl -X POST .../v1/grid-command -d '{}'` → **401**.
+Live checks completed: `/health` returns 200; a tokenless POST returns 401 both
+directly and through Firebase preview. A fresh token from a human browser passed
+Turnstile and reached the provider; the configured free model then returned the
+known 30-second timeout (504). The widget also rejected a headless solve through
+the app's safe failure path. Replaying the consumed human token and confirming
+401 is the only remaining Turnstile validation.
 
 ## 4. Deployment state (real, live)
 
@@ -176,24 +166,25 @@ Verify the guard is live: `curl -X POST .../v1/grid-command -d '{}'` → **401**
 |---|---|
 | Cloud Run service | `libregrid-ai-gateway`, region `us-central1` |
 | URL | `https://libregrid-ai-gateway-930129144043.us-central1.run.app` |
-| Serving revision | `libregrid-ai-gateway-00007-q49` |
-| Runtime identity | `libregrid-ai-gateway@libregrid.iam.gserviceaccount.com` — **zero project roles**, `secretAccessor` on one secret only |
-| Secret | `libregrid-openrouter-key`, version 2 = real key, version 1 = placeholder (disabled) |
-| Image | `us-central1-docker.pkg.dev/libregrid/libregrid/ai-gateway:v1` |
-| Firebase | **preview channel only** — `https://libregrid--preview-g04ztv7z.web.app`. Production Hosting untouched. |
+| Serving revision | `libregrid-ai-gateway-00008-5gv`, 100% traffic |
+| Runtime identity | `libregrid-ai-gateway@libregrid.iam.gserviceaccount.com` — **zero project roles**, `secretAccessor` on the two runtime secrets only |
+| Secrets | `libregrid-openrouter-key` (real key) and `libregrid-turnstile-secret`, both bound from Secret Manager |
+| Image | `us-central1-docker.pkg.dev/libregrid/libregrid/ai-gateway:turnstile-20260826` |
+| Firebase | **preview channel only** — `https://libregrid--preview-g04ztv7z.web.app`, expires 2026-09-02. Production Hosting untouched. |
 | GCP project | `libregrid` / `930129144043`, billing active |
 
 APIs enabled during this work: `cloudbilling`, `run`, `secretmanager`,
 `cloudbuild`, `artifactregistry`.
 
-**Full gate, last run 2026-08-26 23:05, all green:** `npm run test:all` →
-152 files passed / 1 skipped, 1152 tests passed / 12 skipped, 0 failed.
-`npm run lint` clean. `check:contamination`, `check:versions`, `check:budgets`
-all pass.
+**Full gate, last run 2026-08-26 00:00 EDT, all green:** `npm run verify` passed
+all 38 project test targets, all 37 builds, lint, contamination, versions,
+bundle budgets, and consumer fixtures. Existing size-budget warnings remain
+advisory only. Aggregate `npm run test:all`: 152 files and 1158 tests passed,
+1 file and 12 live tests skipped, 0 failed.
 
 Verified working: `/health` → 200; conformance CLI → `{"ok": true}`; the
-Firebase preview routes `/v1/grid-command` to the gateway (a real gateway JSON
-error, not Angular's `index.html`) with no CORS headers.
+Firebase preview routes `/v1/grid-command` to the gateway with no CORS headers;
+tokenless direct and same-origin requests both return 401.
 
 **Security note left deliberately unresolved:** the default compute SA
 (`930129144043-compute@developer.gserviceaccount.com`) still holds
@@ -238,11 +229,10 @@ Re-discovering these is expensive. They are why several things look the way they
 
 Each of these was a judgement call. Reverse any that are wrong.
 
-- **C1 — Turnstile site key is config, not a constant, and its absence disables
-  the widget.** The plan hardcoded a placeholder site key and always requested a
-  token, which would have broken the Task 3 local dev loop for anyone without a
-  Turnstile account — while protecting nothing, since the local gateway leaves
-  the secret unset and never checks the token.
+- **C1 — the real public Turnstile site key is committed.** Mock mode stays
+  entirely local. External HTTP mode always mints a token. The widget permits
+  localhost for local browser development; the deployed gateway hostname
+  allowlist deliberately excludes localhost and `127.0.0.1`.
 - **C2 — render the Turnstile widget once.** The plan's `turnstileToken()` called
   `api.render()` twice, leaking a widget per invocation.
 - **Task 4 response discriminator.** The plan's snippet used `body.ok`; the real
@@ -261,13 +251,15 @@ Each of these was a judgement call. Reverse any that are wrong.
 
 ## 7. What to do next, in order
 
-1. **Resolve the `@libregrid/all` semver question (§3.3)** before any publish.
-   Then run a full adversarial whole-branch review
+1. **Run a full adversarial whole-branch review**
    (`git merge-base main HEAD`..`HEAD`) — only a targeted inline pass was done.
-   Point it at the deferred-minor list in the ledger.
-2. **Add `GATEWAY_TIMEOUT_MS` to `server.ts`** and re-measure the free models.
+   Point it at the deferred-minor list in the ledger. The owner has already
+   resolved the semver question: release 1.3.0, not 2.0.0.
+2. **Complete the Turnstile replay check:** replay the accepted request in
+   DevTools. Its fresh token passed; the consumed-token replay must be 401.
+3. **Add `GATEWAY_TIMEOUT_MS` to `server.ts`** and re-measure the free models.
    This is the highest-value small change available.
-3. **Run the real 11-command battery** — it has never been executed. It needs
+4. **Run the real 11-command battery** — it has never been executed. It needs
    `OPENROUTER_API_KEY` in the environment and owner egress approval (the B4
    precedent). Note this session was *blocked by a permission classifier* from
    writing the key to `.secrets`; a human should run it:
@@ -276,8 +268,6 @@ Each of these was a judgement call. Reverse any that are wrong.
      packages/ai-gateway/src/openrouter.live.spec.ts
    ```
    Then fill in the plan's Verification record and make the §3.1 model decision.
-4. **Install the Turnstile secrets** (§3.2) before anything else points at this
-   endpoint.
 5. **Decide on the ESM packaging defect** (§5.2). It affects published packages
    beyond this work.
 6. **Open the PR.** Nothing has been pushed. `main` requires PRs, 0 approvals,
@@ -286,6 +276,7 @@ Each of these was a judgement call. Reverse any that are wrong.
 ## 8. Things deliberately NOT done
 
 - No push, no PR, no production Firebase deploy, no npm publish.
+- No bypass of Turnstile's rejection of the headless validation browser.
 - No `roles/editor` change on the default compute SA.
 - No fix for the repo-wide ESM packaging defect.
 - No invented credentials of any kind.

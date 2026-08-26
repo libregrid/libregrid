@@ -260,12 +260,9 @@ declare global {
   }
 }
 
-// Set a real Cloudflare Turnstile site key to turn on the widget guard for the
-// External HTTP gateway mode. The docs app has no build-time configuration
-// pattern yet, so this stays a literal; the site key is public and safe to
-// commit. Leaving it empty keeps the local developer loop from Task 3 working
-// with no Turnstile account: the HTTP transport sends no token header at all.
-const TURNSTILE_SITE_KEY = '';
+// The site key is public and intentionally committed. Only External HTTP mode
+// invokes Turnstile; the deterministic mock remains fully local.
+const TURNSTILE_SITE_KEY = '0x4AAAAAAEcZNv1LedOXTzSk';
 const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
 let turnstileScript: Promise<void> | undefined;
@@ -575,6 +572,7 @@ export class AiToolkitDemo {
         // or rejects whichever promise is outstanding at the time.
         this.turnstileWidget = api.render(host, {
           sitekey: TURNSTILE_SITE_KEY,
+          action: 'grid_command',
           execution: 'execute',
           appearance: 'interaction-only',
           callback: (token: string) => {
@@ -623,12 +621,9 @@ export class AiToolkitDemo {
   private assistant() {
     const api = this.api;
     if (!api) throw new Error('Grid is not ready');
-    // Never send the Turnstile header in mock mode: the mock transport never
-    // reaches a server. Omit it in HTTP mode too when no site key is
-    // configured, so the local developer loop keeps working with no
-    // Turnstile account — the server never checks the header either, since
-    // TURNSTILE_SECRET_KEY is also unset locally.
-    const useTurnstile = this.mode() === 'http' && TURNSTILE_SITE_KEY !== '';
+    // Never invoke Turnstile in mock mode: the deterministic transport stays
+    // entirely local. Every external HTTP request receives a fresh token.
+    const useTurnstile = this.mode() === 'http';
     return createGridAssistant({
       api,
       ...(this.mode() === 'mock'

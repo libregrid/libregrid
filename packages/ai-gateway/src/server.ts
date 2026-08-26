@@ -35,9 +35,22 @@ const provider: GridModelProvider = kind === 'openai-chat'
     });
 
 const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+const turnstileHostnames = (process.env.TURNSTILE_HOSTNAMES ?? '')
+  .split(',')
+  .map((hostname) => hostname.trim())
+  .filter((hostname) => hostname.length > 0);
+if (turnstileSecret && turnstileHostnames.length === 0) {
+  throw new Error('TURNSTILE_HOSTNAMES must list at least one hostname when TURNSTILE_SECRET_KEY is set');
+}
 const handler = createGridCommandHandler({
   provider,
-  ...(turnstileSecret ? { authorize: createTurnstileAuthorizer({ secretKey: turnstileSecret }) } : {}),
+  ...(turnstileSecret ? {
+    authorize: createTurnstileAuthorizer({
+      secretKey: turnstileSecret,
+      expectedAction: 'grid_command',
+      expectedHostnames: turnstileHostnames,
+    }),
+  } : {}),
   log: (event) => process.stdout.write(`${JSON.stringify(event)}\n`),
 });
 const host = process.env.HOST ?? '127.0.0.1';
