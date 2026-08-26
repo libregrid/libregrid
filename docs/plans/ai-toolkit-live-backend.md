@@ -817,14 +817,18 @@ for (const command of COMMANDS) {
     const body = (await response.json()) as GridCommandResponse;
 
     // A refusal for the unsupported intent is a pass. A schema violation is not.
+    // `GridCommandResponse` discriminates on `status: 'ok' | 'error'`
+    // (`packages/ai-protocol/src/types.ts:81,99`) — not on an `ok` boolean.
     if (command === 'Order me a pizza') {
-      expect(body.ok === false || body.ok === true).toBe(true);
+      expect(
+        body.status === 'ok' || body.error.code === 'MODEL_REFUSAL' || body.error.code === 'INVALID_PROVIDER_OUTPUT',
+      ).toBe(true);
       return;
     }
-    if (!body.ok) {
+    if (body.status === 'error') {
       throw new Error(`${command} -> ${body.error.code}: ${body.error.message}`);
     }
-    expect(body.ok).toBe(true);
+    expect(body.status).toBe('ok');
   });
 }
 ```
