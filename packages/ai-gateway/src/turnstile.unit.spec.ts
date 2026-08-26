@@ -48,6 +48,14 @@ describe('Turnstile authorizer', () => {
     await expect(server(post({ 'x-turnstile-token': 't' }))).resolves.toBe(false);
   });
 
+  it('fails closed when siteverify returns 200 with an unparseable body', async () => {
+    const authorize = createTurnstileAuthorizer({
+      secretKey: 'secret',
+      fetch: async () => new Response('not json', { status: 200 }),
+    });
+    await expect(authorize(post({ 'x-turnstile-token': 't' }))).resolves.toBe(false);
+  });
+
   it('reads a custom header name', async () => {
     const authorize = createTurnstileAuthorizer({
       secretKey: 'secret',
