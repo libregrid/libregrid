@@ -119,8 +119,11 @@ gateway requires Siteverify to return the exact action `grid_command` and a
 hostname in `TURNSTILE_HOSTNAMES`. Mint a fresh token for every request. Each
 Turnstile token works only once.
 
-The startup log line reports `turnstile enabled` or `turnstile disabled`.
-Check this line before you expose the endpoint publicly.
+Set `GATEWAY_TIMEOUT_MS` to change the provider response deadline from its
+30-second default. Keep it below your hosting platform's request timeout so the
+gateway can still return a conformant `TIMEOUT` response. The startup log line
+reports both the provider timeout and whether Turnstile is enabled. Check this
+line before you expose the endpoint publicly.
 
 ## Production checklist
 
@@ -136,9 +139,10 @@ Check this line before you expose the endpoint publicly.
   policy and disclose it to users.
 - Keep the configured model server-side. Because requests cannot select a
   model, the configured provider is also the effective model allowlist.
-- Retain the default 512 KiB request limit and 30-second timeout unless a
-  measured workload requires a deliberate change. Apply rate limits at the
-  reverse proxy or application boundary.
+- Retain the default 512 KiB request limit. Change the 30-second provider
+  timeout only from measured workload data, and keep it below the platform
+  request timeout. Apply rate limits at the reverse proxy or application
+  boundary.
 - Log request IDs, status, latency, and normalized error codes—not commands,
   schemas, state payloads, authorization headers, or provider keys. The built-in
   log callback follows that metadata-only shape.

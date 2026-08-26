@@ -3,6 +3,7 @@ import { listenNodeGateway } from './nodeServer';
 import { createOpenAiChatCompletionsProvider } from './openAiChatCompletionsProvider';
 import { createOpenAiResponsesProvider } from './openAiResponsesProvider';
 import type { GridModelProvider } from './provider';
+import { parseGatewayTimeoutMs } from './serverConfig';
 import { createTurnstileAuthorizer } from './turnstile';
 
 const apiKey = process.env.OPENAI_API_KEY;
@@ -16,6 +17,7 @@ if (kind !== 'openai-responses' && kind !== 'openai-chat') {
 const model = process.env.OPENAI_MODEL ?? (kind === 'openai-chat' ? 'openrouter/free' : 'gpt-5.6');
 const port = Number(process.env.PORT ?? 8787);
 if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error('PORT must be a valid TCP port');
+const timeoutMs = parseGatewayTimeoutMs(process.env.GATEWAY_TIMEOUT_MS);
 
 const provider: GridModelProvider = kind === 'openai-chat'
   ? createOpenAiChatCompletionsProvider({
@@ -44,6 +46,7 @@ if (turnstileSecret && turnstileHostnames.length === 0) {
 }
 const handler = createGridCommandHandler({
   provider,
+  timeoutMs,
   ...(turnstileSecret ? {
     authorize: createTurnstileAuthorizer({
       secretKey: turnstileSecret,
@@ -57,5 +60,5 @@ const host = process.env.HOST ?? '127.0.0.1';
 await listenNodeGateway({ handler, host, port });
 process.stdout.write(
   `LibreGrid AI gateway listening on ${host}:${port} using ${provider.service} (${provider.model});`
-  + ` turnstile ${turnstileSecret ? 'enabled' : 'disabled'}\n`,
+  + ` provider timeout ${timeoutMs} ms; turnstile ${turnstileSecret ? 'enabled' : 'disabled'}\n`,
 );

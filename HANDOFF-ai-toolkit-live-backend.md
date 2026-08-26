@@ -1,7 +1,7 @@
 # Handoff — AI Toolkit live backend (local dev + hosted demo)
 
 **Date:** 2026-08-26
-**Branch:** `feature/ai-toolkit-apply-command` (39 commits ahead of `main` after the Turnstile completion commit; nothing pushed, no PR)
+**Branch:** `feature/ai-toolkit-apply-command` (40 commits ahead of `main` after the timeout completion commit; nothing pushed, no PR)
 **Plan:** [`docs/plans/ai-toolkit-live-backend.md`](docs/plans/ai-toolkit-live-backend.md)
 **Execution ledger (git-ignored, may be deleted):** `.superpowers/sdd/ai-toolkit-live-backend/progress.md`
 
@@ -125,10 +125,10 @@ curl -s https://openrouter.ai/api/v1/models \
 
 Two distinct failure modes, and they need different fixes:
 
-- **Timeouts dominate.** `createGridCommandHandler` defaults to `timeoutMs: 30_000`
-  and `packages/ai-gateway/src/server.ts` **does not expose it as an env var**.
-  Free models routinely exceed 30 s. Adding e.g. `GATEWAY_TIMEOUT_MS` is a small,
-  high-value change and is the single most likely way to move these numbers.
+- **Timeouts dominate.** `createGridCommandHandler` still defaults to
+  `timeoutMs: 30_000`, but the bundled server now exposes
+  `GATEWAY_TIMEOUT_MS`. The hosted demo uses 50,000 ms beneath Cloud Run's
+  60-second request limit. Re-measure before judging the free model.
 - **Semantic errors that are schema-valid.** "Hide internal notes" returned
   `{"columnVisibility": null}` — valid against the schema, but it did nothing.
   Raising the timeout will not fix this.
@@ -139,10 +139,10 @@ schema" — *not* "the model did the right thing". The sibling
 `openai.live.spec.ts` additionally asserts semantics (sort direction, filter
 values). Do not report an OpenRouter pass rate as "correctly executes commands".
 
-**Recommendation:** add the timeout env var, re-measure, and if the free tier
-still fails the bar, use a cheap paid model for the hosted demo and document
-free models as local-development-only. That fallback is already written into
-the plan.
+**Recommendation:** re-measure with the deployed 50-second budget. If the free
+tier still fails the bar, use a cheap paid model for the hosted demo and
+document free models as local-development-only. That fallback is already
+written into the plan.
 
 ### 3.2 Turnstile is installed and the public endpoint is closed
 
@@ -155,10 +155,11 @@ one of the configured public docs hostnames.
 
 Live checks completed: `/health` returns 200; a tokenless POST returns 401 both
 directly and through Firebase preview. A fresh token from a human browser passed
-Turnstile and reached the provider; the configured free model then returned the
-known 30-second timeout (504). The widget also rejected a headless solve through
-the app's safe failure path. Replaying the consumed human token and confirming
-401 is the only remaining Turnstile validation.
+Turnstile and produced a valid 200 model proposal in 10.9 seconds. Other free
+model calls hit the former 30-second provider timeout, leading to the 50-second
+deployment described below. The widget also rejected a headless solve through
+the app's safe failure path. Replaying a consumed human token returned 401 in
+0.47 ms, before any provider call. Turnstile validation is complete.
 
 ## 4. Deployment state (real, live)
 
@@ -166,10 +167,11 @@ the app's safe failure path. Replaying the consumed human token and confirming
 |---|---|
 | Cloud Run service | `libregrid-ai-gateway`, region `us-central1` |
 | URL | `https://libregrid-ai-gateway-930129144043.us-central1.run.app` |
-| Serving revision | `libregrid-ai-gateway-00008-5gv`, 100% traffic |
+| Serving revision | `libregrid-ai-gateway-00009-glb`, 100% traffic |
 | Runtime identity | `libregrid-ai-gateway@libregrid.iam.gserviceaccount.com` — **zero project roles**, `secretAccessor` on the two runtime secrets only |
 | Secrets | `libregrid-openrouter-key` (real key) and `libregrid-turnstile-secret`, both bound from Secret Manager |
-| Image | `us-central1-docker.pkg.dev/libregrid/libregrid/ai-gateway:turnstile-20260826` |
+| Image | `us-central1-docker.pkg.dev/libregrid/libregrid/ai-gateway:timeout-20260826` |
+| Provider timeout | `GATEWAY_TIMEOUT_MS=50000`; Cloud Run request timeout remains 60 seconds |
 | Firebase | **preview channel only** — `https://libregrid--preview-g04ztv7z.web.app`, expires 2026-09-02. Production Hosting untouched. |
 | GCP project | `libregrid` / `930129144043`, billing active |
 
@@ -179,7 +181,7 @@ APIs enabled during this work: `cloudbilling`, `run`, `secretmanager`,
 **Full gate, last run 2026-08-26 00:00 EDT, all green:** `npm run verify` passed
 all 38 project test targets, all 37 builds, lint, contamination, versions,
 bundle budgets, and consumer fixtures. Existing size-budget warnings remain
-advisory only. Aggregate `npm run test:all`: 152 files and 1158 tests passed,
+advisory only. Aggregate `npm run test:all`: 153 files and 1164 tests passed,
 1 file and 12 live tests skipped, 0 failed.
 
 Verified working: `/health` → 200; conformance CLI → `{"ok": true}`; the
@@ -255,11 +257,9 @@ Each of these was a judgement call. Reverse any that are wrong.
    (`git merge-base main HEAD`..`HEAD`) — only a targeted inline pass was done.
    Point it at the deferred-minor list in the ledger. The owner has already
    resolved the semver question: release 1.3.0, not 2.0.0.
-2. **Complete the Turnstile replay check:** replay the accepted request in
-   DevTools. Its fresh token passed; the consumed-token replay must be 401.
-3. **Add `GATEWAY_TIMEOUT_MS` to `server.ts`** and re-measure the free models.
-   This is the highest-value small change available.
-4. **Run the real 11-command battery** — it has never been executed. It needs
+2. **Re-measure the free models with `GATEWAY_TIMEOUT_MS=50000`.** The hosted
+   timeout configuration is now implemented and live.
+3. **Run the real 11-command battery** — it has never been executed. It needs
    `OPENROUTER_API_KEY` in the environment and owner egress approval (the B4
    precedent). Note this session was *blocked by a permission classifier* from
    writing the key to `.secrets`; a human should run it:
@@ -268,9 +268,9 @@ Each of these was a judgement call. Reverse any that are wrong.
      packages/ai-gateway/src/openrouter.live.spec.ts
    ```
    Then fill in the plan's Verification record and make the §3.1 model decision.
-5. **Decide on the ESM packaging defect** (§5.2). It affects published packages
+4. **Decide on the ESM packaging defect** (§5.2). It affects published packages
    beyond this work.
-6. **Open the PR.** Nothing has been pushed. `main` requires PRs, 0 approvals,
+5. **Open the PR.** Nothing has been pushed. `main` requires PRs, 0 approvals,
    4 checks, no admin bypass.
 
 ## 8. Things deliberately NOT done

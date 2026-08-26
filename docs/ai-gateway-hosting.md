@@ -48,7 +48,7 @@ build artifacts. Worse, it could ship a secret file that Git ignores but
 ```sh
 gcloud run deploy libregrid-ai-gateway \
   --project=libregrid \
-  --image=us-central1-docker.pkg.dev/libregrid/libregrid/ai-gateway:turnstile-20260826 \
+  --image=us-central1-docker.pkg.dev/libregrid/libregrid/ai-gateway:timeout-20260826 \
   --region=us-central1 \
   --service-account=libregrid-ai-gateway@libregrid.iam.gserviceaccount.com \
   --allow-unauthenticated \
@@ -56,7 +56,7 @@ gcloud run deploy libregrid-ai-gateway \
   --max-instances=3 \
   --concurrency=20 \
   --timeout=60s \
-  --set-env-vars='^@^AI_PROVIDER=openai-chat@OPENAI_BASE_URL=https://openrouter.ai/api/v1@OPENAI_MODEL=nvidia/nemotron-3-super-120b-a12b:free@OPENROUTER_REQUIRE_PARAMETERS=true@HOST=0.0.0.0@OPENROUTER_REFERER=https://libregrid.dev@OPENROUTER_TITLE=LibreGrid Docs@TURNSTILE_HOSTNAMES=libregrid.dev,libregrid.web.app,libregrid.firebaseapp.com,libregrid--preview-g04ztv7z.web.app' \
+  --set-env-vars='^@^AI_PROVIDER=openai-chat@OPENAI_BASE_URL=https://openrouter.ai/api/v1@OPENAI_MODEL=nvidia/nemotron-3-super-120b-a12b:free@OPENROUTER_REQUIRE_PARAMETERS=true@HOST=0.0.0.0@GATEWAY_TIMEOUT_MS=50000@OPENROUTER_REFERER=https://libregrid.dev@OPENROUTER_TITLE=LibreGrid Docs@TURNSTILE_HOSTNAMES=libregrid.dev,libregrid.web.app,libregrid.firebaseapp.com,libregrid--preview-g04ztv7z.web.app' \
   --set-secrets=OPENAI_API_KEY=libregrid-openrouter-key:latest,TURNSTILE_SECRET_KEY=libregrid-turnstile-secret:latest
 ```
 
@@ -112,11 +112,12 @@ gcloud secrets add-iam-policy-binding libregrid-turnstile-secret \
 
 ### Current deployment state
 
-Revision `libregrid-ai-gateway-00008-5gv` serves the real OpenRouter key and the
+Revision `libregrid-ai-gateway-00009-glb` serves the real OpenRouter key and the
 Turnstile secret from Secret Manager through the dedicated runtime identity.
-The guard is enabled. Tokenless requests return 401 both on the Cloud Run URL
-and through the Firebase same-origin rewrite; `/health` remains public and
-returns 200.
+The guard is enabled, and `GATEWAY_TIMEOUT_MS=50000` leaves ten seconds beneath
+Cloud Run's 60-second request timeout. Tokenless requests return 401 both on the
+Cloud Run URL and through the Firebase same-origin rewrite; `/health` remains
+public and returns 200.
 
 The docs bundle containing public site key `0x4AAAAAAEcZNv1LedOXTzSk` is on the
 `preview` Hosting channel only. Production Hosting remains untouched. The
