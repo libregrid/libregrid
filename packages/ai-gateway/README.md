@@ -63,6 +63,28 @@ local development, and contract tests. A production-oriented Dockerfile is
 included. Teams implementing the endpoint in another language can generate
 server stubs from `@libregrid/ai-protocol/openapi.json`.
 
+## OpenAI-compatible chat completions
+
+Set `AI_PROVIDER=openai-chat` to use a service that speaks the OpenAI Chat
+Completions API. OpenRouter is one such service.
+
+```sh
+AI_PROVIDER=openai-chat
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_API_KEY=sk-or-v1-...
+OPENAI_MODEL=openrouter/free
+OPENROUTER_REQUIRE_PARAMETERS=true
+```
+
+Keep `OPENROUTER_REQUIRE_PARAMETERS` on. OpenRouter serves one model through
+more than one provider. Only some of those providers apply a JSON Schema as a
+constraint. The others apply it as a hint. This flag tells OpenRouter to use
+only the providers that apply the constraint.
+
+The gateway validates every provider response, and the browser validates it a
+second time. A weak provider therefore causes a clean `INVALID_PROVIDER_OUTPUT`
+failure, not a bad grid change.
+
 Verify any implementation—Node or otherwise—with the shipped executable:
 
 ```bash
