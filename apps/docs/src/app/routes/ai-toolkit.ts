@@ -1,12 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, signal, viewChild, type ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild, type ElementRef, type Signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule, type MatCheckboxChange } from '@angular/material/checkbox';
 import type { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
 import {
   createGridAssistant,
   type GridCommandProposal,
   type GridCommandTransport,
+  type GridStateChange,
 } from '@libregrid/ai-client';
 import {
   AI_PROTOCOL,
@@ -17,6 +20,7 @@ import {
   type GridFeature,
   type GridStateKey,
   type JsonObject,
+  type JsonValue,
 } from '@libregrid/ai-protocol';
 import {
   DocsBackendBoundaryComponent,
@@ -37,8 +41,6 @@ interface SaleRow {
   salesRep: string;
   closedDate: string;
 }
-
-type GatewayMode = 'mock' | 'http';
 
 const SUGGESTIONS = [
   'Show sales over $5,000 from North America, hardware only',
@@ -137,10 +139,10 @@ npx libregrid-ai-conformance https://your-api.example/v1/grid-command`,
 ];
 
 const DEMO_STEPS: readonly DocsDemoStep[] = [
-  { icon: 'auto_awesome', title: 'Generate a proposal', instruction: 'Pick a suggestion chip or type a request such as “Group by region and total the sales amount”.', expected: 'A validated diff appears; the grid keeps every row until you act.' },
-  { icon: 'rule', title: 'Apply or discard', instruction: 'Read each proposed feature change, then choose Apply or Discard.', expected: 'Only Apply touches the grid; Discard leaves the state exactly as it was.' },
-  { icon: 'manage_search', title: 'Inspect the contract', instruction: 'Select “Inspect current contract” and expand each boundary section.', expected: 'You see the exact system prompt, live request, output envelope, response, and validation report.' },
-  { icon: 'dns', title: 'Point at your gateway', instruction: 'Switch to External HTTP gateway and set your endpoint.', expected: 'The same validation runs against your server; the page never asks for a provider key.' },
+  { icon: 'auto_awesome', title: 'Apply a query', instruction: 'Pick a demo query or type a request such as “Group by region and total the sales amount”, then press Apply Query.', expected: 'Validated changes are applied straight to the grid.' },
+  { icon: 'rule', title: 'Review before applying', instruction: 'Turn on “Show request and validate”, run a query, read each suggested change, then choose Apply or Discard.', expected: 'Only Apply touches the grid; Discard leaves the state exactly as it was.' },
+  { icon: 'manage_search', title: 'Inspect the request', instruction: 'With “Show request and validate” on, expand each section under the suggested changes.', expected: 'You see the exact system prompt, the request, the output schema, the response, and the validation report.' },
+  { icon: 'restart_alt', title: 'Reset the grid', instruction: 'After applying changes, press Reset Grid to return to the original state.', expected: 'Columns, filters, and rows return to their starting values; nothing from the session persists.' },
 ];
 
 const CLIENT_RESPONSIBILITIES: readonly DocsBoundaryResponsibility[] = [
@@ -166,7 +168,7 @@ const CHECKLIST: readonly DocsChecklistItem[] = [
   { priority: 'required', title: 'Authenticate the endpoint', description: 'Put POST /v1/grid-command behind your session, token check, or the authorize hook.' },
   { priority: 'required', title: 'Disclose outbound metadata', description: 'Requests carry column IDs and descriptions, values you opted in, the complete current grid state, and counts. Row records are never sent.' },
   { priority: 'recommended', title: 'Pin the model allowlist', description: 'The configured model is server-side configuration; review changes like any other deployment.' },
-  { priority: 'recommended', title: 'Keep default limits', description: 'Retain the 512 KiB body limit and 30-second timeout unless measured load requires a deliberate change.' },
+  { priority: 'recommended', title: 'Size the provider timeout to measured latency', description: 'Retain the 512 KiB body limit; the hosted demo uses a 50-second provider timeout beneath the 60-second platform limit, and the browser imposes no timeout of its own.' },
   { priority: 'recommended', title: 'Log metadata only', description: 'Record request ID, status, latency, and normalized error codes — not commands, state, authorization, or keys.' },
   { priority: 'recommended', title: 'Prove custom servers', description: 'Run libregrid-ai-conformance against your endpoint before rollout, including failure paths.' },
   { priority: 'optional', title: 'Hold chat history in your application', description: 'The protocol is stateless; every request carries a fresh authoritative snapshot.' },
@@ -191,6 +193,67 @@ function filterColumnIds(request: GridCommandRequest): string[] {
   const filterFeature = schemaProperties(request.gridSchema).filter;
   const filterModel = schemaProperties(filterFeature).filterModel;
   return Object.keys(schemaProperties(filterModel));
+}
+
+const FEATURE_LABELS: Partial<Record<GridStateKey, string>> = {
+  aggregation: 'Aggregation',
+  columnSizing: 'Column sizing',
+  columnVisibility: 'Column visibility',
+  filter: 'Filters',
+  pivot: 'Pivot',
+  rowGroup: 'Row grouping',
+  sort: 'Sort',
+};
+
+function featureLabel(feature: GridStateKey): string {
+  return FEATURE_LABELS[feature] ?? feature;
+}
+
+/** Render a feature's grid-state value as a short human-readable phrase. */
+function describeFeatureValue(feature: GridStateKey, value: JsonValue | undefined): string {
+  if (value === undefined || value === null) return 'unchanged';
+  const record = isRecord(value) ? value : {};
+  switch (feature) {
+    case 'filter': {
+      const model = isRecord(record.filterModel) ? record.filterModel : {};
+      const conditions = Object.entries(model)
+        .filter(([, cond]) => cond !== null)
+        .map(([col, cond]) => {
+          const c = isRecord(cond) ? cond : {};
+          if (c.filterType === 'set') return `${col} in [${(Array.isArray(c.values) ? c.values : []).join(', ')}]`;
+          if (c.type === 'greaterThan') return `${col} > ${String(c.filter)}`;
+          if (c.type === 'lessThan') return `${col} < ${String(c.filter)}`;
+          return `${col}: ${JSON.stringify(cond)}`;
+        });
+      return conditions.length > 0 ? conditions.join('; ') : 'no filters';
+    }
+    case 'sort': {
+      const model = Array.isArray(record.sortModel) ? record.sortModel : [];
+      const parts = model.map((entry) => {
+        const item = isRecord(entry) ? entry : {};
+        return `${String(item.colId)} ${item.sort === 'desc' ? 'descending' : 'ascending'}`;
+      });
+      return parts.length > 0 ? parts.join(', ') : 'no sort';
+    }
+    case 'columnVisibility': {
+      const hidden = Array.isArray(record.hiddenColIds) ? record.hiddenColIds : [];
+      return hidden.length > 0 ? `hidden: ${hidden.join(', ')}` : 'all columns visible';
+    }
+    case 'rowGroup': {
+      const groups = Array.isArray(record.groupColIds) ? record.groupColIds : [];
+      return groups.length > 0 ? `group by ${groups.join(', ')}` : 'no grouping';
+    }
+    case 'aggregation': {
+      const model = Array.isArray(record.aggregationModel) ? record.aggregationModel : [];
+      const parts = model.map((entry) => {
+        const item = isRecord(entry) ? entry : {};
+        return `${String(item.aggFunc)} of ${String(item.colId)}`;
+      });
+      return parts.length > 0 ? parts.join(', ') : 'no aggregation';
+    }
+    default:
+      return JSON.stringify(value);
+  }
 }
 
 function deterministicOutput(request: GridCommandRequest): GridCommandSuccess {
@@ -245,7 +308,10 @@ function deterministicOutput(request: GridCommandRequest): GridCommandSuccess {
 
 const DEMO_TRANSPORT: GridCommandTransport = {
   async send(request) {
-    await Promise.resolve();
+    // Keep the request in flight long enough for the busy spinner to be
+    // visible; this transport is only reachable through the hidden ?mock=1
+    // e2e hook, so the delay never affects real users.
+    await new Promise((resolve) => setTimeout(resolve, 300));
     return deterministicOutput(request);
   },
 };
@@ -260,8 +326,8 @@ declare global {
   }
 }
 
-// The site key is public and intentionally committed. Only External HTTP mode
-// invokes Turnstile; the deterministic mock remains fully local.
+// The site key is public and intentionally committed. Every real request
+// invokes Turnstile; only the hidden ?mock=1 e2e hook bypasses it.
 const TURNSTILE_SITE_KEY = '0x4AAAAAAEcZNv1LedOXTzSk';
 const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
@@ -285,7 +351,9 @@ function loadTurnstile(): Promise<void> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     AgGridAngular,
+    MatButtonModule,
     MatCardModule,
+    MatCheckboxModule,
     DocsBackendBoundaryComponent,
     DocsCodeExampleComponent,
     DocsDemoGuideComponent,
@@ -303,8 +371,17 @@ function loadTurnstile(): Promise<void> {
     .lgr-ai-architecture mat-card { padding: 16px; }
     .lgr-ai-architecture h3 { margin: 0 0 6px; }
     .lgr-ai-flow { color: light-dark(#55505a, #cbc4cf); font-size: 0.9rem; }
-    .lgr-ai-controls { display: grid; gap: 10px; margin: 18px 0; }
-    .lgr-ai-input, .lgr-ai-select {
+    .lgr-ai-workbench {
+      display: grid;
+      gap: 12px;
+      margin: 18px 0;
+      padding: 14px;
+      border: 1px solid var(--mat-sys-outline-variant);
+      border-radius: 8px;
+      background: var(--mat-sys-surface-container-low);
+    }
+    .lgr-ai-controls { display: grid; gap: 10px; margin: 0; }
+    .lgr-ai-input {
       box-sizing: border-box;
       width: 100%;
       padding: 9px 12px;
@@ -314,8 +391,16 @@ function loadTurnstile(): Promise<void> {
       color: inherit;
       font: inherit;
     }
-    .lgr-ai-mode { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 10px; }
+    .lgr-ai-turnstile-host {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+    .lgr-ai-label { margin: 0 0 6px; font-size: 0.9rem; font-weight: 600; }
     .lgr-ai-chips, .lgr-ai-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .lgr-ai-query-actions { align-items: center; margin: 0; }
+    .lgr-ai-query-actions mat-checkbox { margin-inline-start: 4px; }
     .lgr-ai-button {
       padding: 7px 13px;
       border: 1px solid light-dark(#77727a, #918a94);
@@ -332,7 +417,25 @@ function loadTurnstile(): Promise<void> {
       color: light-dark(#fff, #102f54);
     }
     .lgr-ai-button:disabled { cursor: default; opacity: 0.55; }
-    .lgr-ai-status { min-height: 1.5rem; margin: 10px 0; }
+    .lgr-ai-status { display: flex; align-items: center; gap: 8px; min-height: 1.5rem; margin: 10px 0; }
+    .lgr-ai-error {
+      margin: 0 0 10px;
+      padding: 10px 12px;
+      border: 1px solid light-dark(#c96a5f, #b5564c);
+      border-radius: 5px;
+      background: light-dark(#fdf1ef, #3a2320);
+      color: inherit;
+    }
+    .lgr-ai-spinner {
+      flex: none;
+      width: 14px;
+      height: 14px;
+      border: 2px solid light-dark(#c9c6ca, #5a5759);
+      border-top-color: light-dark(#2f5e9e, #aac7ff);
+      border-radius: 50%;
+      animation: lgr-ai-spin 0.8s linear infinite;
+    }
+    @keyframes lgr-ai-spin { to { transform: rotate(360deg); } }
     .lgr-ai-proposal {
       padding: 14px;
       margin: 16px 0;
@@ -356,13 +459,12 @@ function loadTurnstile(): Promise<void> {
       white-space: pre-wrap;
       word-break: break-word;
     }
-    @media (max-width: 650px) { .lgr-ai-mode { grid-template-columns: 1fr; } }
   `,
   template: `
     <lgr-docs-feature-page-shell
       eyebrow="Bring your own model"
       title="Turn plain language into validated grid changes"
-      summary="Register AiToolkitModule, point the browser client at one authenticated route on your server, and review every proposal before it reaches the grid. LibreGrid owns the schema, contract, double validation, diff, and apply path; you own the provider, key, cost, and policy. Provider keys never enter the browser."
+      summary="Register AiToolkitModule, point the browser client at one authenticated route on your server, and let users turn plain language into validated grid changes. LibreGrid owns the schema, the request/response format, double validation, diff, and apply path; you own the provider, key, cost, and policy. Provider keys never enter the browser."
       [packages]="['@libregrid/ai-toolkit', '@libregrid/ai-client', '@libregrid/ai-protocol', '@libregrid/ai-gateway']"
       [audiences]="['Product teams', 'Application developers', 'Platform teams']"
       [values]="values"
@@ -386,103 +488,110 @@ function loadTurnstile(): Promise<void> {
           </mat-card>
         </div>
 
-        <ag-grid-angular
-          [theme]="theme.gridTheme()"
-          [gridOptions]="gridOptions"
-          class="ag-theme-quartz"
-          style="height: 340px; width: 100%"
-          data-testid="ai-toolkit-grid"
-        />
-
-        <h2>Contract workbench</h2>
+        <h2>Try it out</h2>
         <p>
-          The deterministic mock exercises the exact production protocol without a network call.
-          Switch to HTTP to test your own compatible gateway—this page never asks for a provider key.
+          Every query is sent to <code>POST /v1/grid-command</code> on this origin and validated
+          against the same protocol your server uses. This page never asks for a provider key.
         </p>
-        <div class="lgr-ai-controls">
-          <div class="lgr-ai-mode">
-            <select class="lgr-ai-select" aria-label="Gateway mode" data-testid="ai-mode" [value]="mode()" (change)="onMode($event)">
-              <option value="mock">Deterministic contract mock</option>
-              <option value="http">External HTTP gateway</option>
-            </select>
+        <p class="lgr-ai-flow">
+          Each request: validated against the live grid → sent to your server → revalidated →
+          applied to the grid, or shown as a diff when review is on.
+        </p>
+        <div class="lgr-ai-workbench">
+          <div class="lgr-ai-controls">
+            <div #turnstileHost class="lgr-ai-turnstile-host" data-testid="ai-turnstile"></div>
             <input
               class="lgr-ai-input"
-              aria-label="Gateway endpoint"
-              data-testid="ai-endpoint"
-              [disabled]="mode() === 'mock'"
-              [value]="endpoint()"
-              (input)="onEndpoint($event)"
+              data-testid="ai-prompt"
+              aria-label="Ask the grid"
+              [value]="prompt()"
+              (input)="onPrompt($event)"
+              placeholder="Describe a filter, sort, grouping, pivot, visibility, sizing, or aggregation"
             />
-            <div #turnstileHost data-testid="ai-turnstile"></div>
           </div>
-          <input
-            class="lgr-ai-input"
-            data-testid="ai-prompt"
-            aria-label="Ask the grid"
-            [value]="prompt()"
-            (input)="onPrompt($event)"
-            placeholder="Describe a filter, sort, grouping, pivot, visibility, sizing, or aggregation"
+
+          <ag-grid-angular
+            [theme]="theme.gridTheme()"
+            [gridOptions]="gridOptions"
+            class="ag-theme-quartz"
+            style="height: 340px; width: 100%"
+            aria-label="Demo sales grid with six orders"
+            data-testid="ai-toolkit-grid"
           />
-          <div class="lgr-ai-chips">
-            @for (suggestion of SUGGESTIONS; track suggestion) {
-              <button class="lgr-ai-button" type="button" [disabled]="busy()" (click)="ask(suggestion)">{{ suggestion }}</button>
-            }
-          </div>
-          <div class="lgr-ai-actions">
-            <button class="lgr-ai-button primary" type="button" data-testid="ai-ask" [disabled]="busy()" (click)="ask(prompt())">
-              Generate proposal
+
+          <div class="lgr-ai-actions lgr-ai-query-actions">
+            <button mat-flat-button color="primary" type="button" data-testid="ai-apply-query" [disabled]="busy() || !prompt().trim()" (click)="applyQuery(prompt())">
+              Apply Query
             </button>
-            <button class="lgr-ai-button" type="button" data-testid="ai-show-env" (click)="inspect()">
-              Inspect current contract
+            <button mat-stroked-button type="button" data-testid="ai-reset" [disabled]="busy()" (click)="resetGrid()">
+              Reset Grid
             </button>
+            <mat-checkbox data-testid="ai-show-review" [checked]="showReview()" (change)="onShowReview($event)">
+              Show request and validate
+            </mat-checkbox>
           </div>
         </div>
 
-        <p class="lgr-ai-status" role="status" aria-live="polite" data-testid="ai-status">{{ status() }}</p>
+        <p class="lgr-ai-status" role="status" aria-live="polite" data-testid="ai-status">
+          @if (busy()) {
+            <span class="lgr-ai-spinner" data-testid="ai-spinner" aria-hidden="true"></span>
+          }
+          {{ status() }}
+        </p>
 
-        @if (proposal(); as pending) {
-          <section class="lgr-ai-proposal" data-testid="ai-proposal">
-            <h3>Review before applying</h3>
+        @if (error(); as message) {
+          <p class="lgr-ai-error" role="alert" data-testid="ai-error">{{ message }}</p>
+        }
+
+        @if (showReview() && proposal(); as pending) {
+          <section class="lgr-ai-proposal" #proposalHost data-testid="ai-proposal">
+            <h3>Suggested changes — review before applying</h3>
             <p>{{ pending.response.output.explanation }}</p>
             <ul class="lgr-ai-diff" data-testid="ai-diff">
               @for (change of pending.changes; track change.feature) {
-                <li><strong>{{ change.feature }}</strong>: {{ json(change.before) }} → {{ json(change.after) }}</li>
+                <li><strong>{{ featureLabel(change.feature) }}</strong>: {{ describeChange(change) }}</li>
               } @empty {
                 <li>No grid-state changes proposed.</li>
               }
             </ul>
             <div class="lgr-ai-actions">
-              <button class="lgr-ai-button primary" type="button" data-testid="ai-apply" (click)="applyProposal()">Apply to grid</button>
-              <button class="lgr-ai-button" type="button" data-testid="ai-discard" (click)="discardProposal()">Discard</button>
+              <button mat-flat-button color="primary" type="button" data-testid="ai-apply" (click)="applyProposal()">Apply to grid</button>
+              <button mat-stroked-button type="button" data-testid="ai-discard" (click)="discardProposal()">Discard</button>
             </div>
+            @if (artifacts(); as view) {
+              <section class="lgr-ai-inspector" #inspectorHost data-testid="ai-inspector">
+                <h3>What's sent to the server and back</h3>
+                <details open>
+                  <summary>System prompt</summary>
+                  <pre class="lgr-ai-code" data-testid="ai-system-prompt" tabindex="0">{{ view.systemPrompt }}</pre>
+                </details>
+                <details>
+                  <summary>Request sent to your server</summary>
+                  <pre class="lgr-ai-code" data-testid="ai-request" tabindex="0">{{ view.request }}</pre>
+                </details>
+                <details>
+                  <summary>Output schema the model must follow</summary>
+                  <pre class="lgr-ai-code" data-testid="ai-envelope" tabindex="0">{{ view.envelope }}</pre>
+                </details>
+                <details>
+                  <summary>Response from your server</summary>
+                  <pre class="lgr-ai-code" data-testid="ai-response" tabindex="0">{{ view.response }}</pre>
+                </details>
+                <details>
+                  <summary>Validation report</summary>
+                  <pre class="lgr-ai-code" data-testid="ai-validation" tabindex="0">{{ view.validation }}</pre>
+                </details>
+              </section>
+            }
           </section>
         }
 
-        @if (artifacts(); as view) {
-          <section class="lgr-ai-inspector" data-testid="ai-inspector">
-            <h2>What crosses each boundary</h2>
-            <details open>
-              <summary>System prompt</summary>
-              <pre class="lgr-ai-code" data-testid="ai-system-prompt" tabindex="0">{{ view.systemPrompt }}</pre>
-            </details>
-            <details>
-              <summary>Live grid schema and current state request</summary>
-              <pre class="lgr-ai-code" data-testid="ai-request" tabindex="0">{{ view.request }}</pre>
-            </details>
-            <details>
-              <summary>Strict provider output envelope</summary>
-              <pre class="lgr-ai-code" data-testid="ai-envelope" tabindex="0">{{ view.envelope }}</pre>
-            </details>
-            <details>
-              <summary>Validated gateway response</summary>
-              <pre class="lgr-ai-code" data-testid="ai-response" tabindex="0">{{ view.response }}</pre>
-            </details>
-            <details>
-              <summary>Validation report</summary>
-              <pre class="lgr-ai-code" data-testid="ai-validation" tabindex="0">{{ view.validation }}</pre>
-            </details>
-          </section>
-        }
+        <p class="lgr-ai-label" id="lgr-ai-demo-queries">Demo queries</p>
+        <div class="lgr-ai-chips" role="group" aria-labelledby="lgr-ai-demo-queries">
+          @for (suggestion of SUGGESTIONS; track suggestion) {
+            <button class="lgr-ai-button" type="button" [disabled]="busy()" (click)="applyQuery(suggestion)">{{ suggestion }}</button>
+          }
+        </div>
       </div>
 
       <lgr-docs-demo-guide featureGuide intro="Every step runs against the real protocol on this page's live grid." [steps]="demoSteps" />
@@ -510,10 +619,10 @@ export class AiToolkitDemo {
   protected readonly theme = inject(LibreGridThemeService);
   protected readonly SUGGESTIONS = SUGGESTIONS;
   protected readonly prompt = signal<string>(SUGGESTIONS[0]);
-  protected readonly mode = signal<GatewayMode>('mock');
-  protected readonly endpoint = signal('/v1/grid-command');
   protected readonly busy = signal(false);
-  protected readonly status = signal('Ready. Generate a proposal or inspect the current contract.');
+  protected readonly status = signal('Ready. Type a request or pick a demo query, then press Apply Query.');
+  protected readonly error = signal<string | null>(null);
+  protected readonly showReview = signal(false);
   protected readonly proposal = signal<GridCommandProposal | null>(null);
   protected readonly integrationExamples = INTEGRATION_EXAMPLES;
   protected readonly demoSteps = DEMO_STEPS;
@@ -524,8 +633,8 @@ export class AiToolkitDemo {
   protected readonly values = [
     { icon: 'auto_awesome', title: 'Plain-language control', description: 'Users ask for filters, sorts, grouping, pivot, sizing, visibility, and aggregation across seven supported features.' },
     { icon: 'key', title: 'Keys stay server-side', description: 'The browser calls only your endpoint; provider credentials and model choice never leave your infrastructure.' },
-    { icon: 'fact_check', title: 'Nothing applies silently', description: 'Every response is revalidated against the live grid, shown as a diff, and applied only by an explicit user action.' },
-    { icon: 'sync_alt', title: 'One contract, any provider', description: 'The versioned libregrid.ai/v1 envelope works with the Node gateway, another provider port, or an OpenAPI-generated server.' },
+    { icon: 'fact_check', title: 'Validate before you apply', description: 'Every response is revalidated against the live grid; turn on “Show request and validate” to review changes as a diff before applying.' },
+    { icon: 'sync_alt', title: 'One request format, any provider', description: 'The versioned libregrid.ai/v1 request/response format works with the Node gateway, another provider port, or an OpenAPI-generated server.' },
   ];
   protected readonly artifacts = signal<{
     systemPrompt: string;
@@ -545,6 +654,7 @@ export class AiToolkitDemo {
   protected api: GridApi<SaleRow> | undefined;
 
   private readonly turnstileHost = viewChild<ElementRef<HTMLElement>>('turnstileHost');
+  private readonly proposalHost = viewChild<ElementRef<HTMLElement>>('proposalHost');
   private turnstileWidget: string | undefined;
   private turnstilePending: { resolve: (token: string) => void; reject: (error: Error) => void } | undefined;
 
@@ -610,27 +720,21 @@ export class AiToolkitDemo {
     this.prompt.set((event.target as HTMLInputElement).value);
   }
 
-  protected onEndpoint(event: Event): void {
-    this.endpoint.set((event.target as HTMLInputElement).value);
-  }
-
-  protected onMode(event: Event): void {
-    this.mode.set((event.target as HTMLSelectElement).value === 'http' ? 'http' : 'mock');
-  }
-
   private assistant() {
     const api = this.api;
     if (!api) throw new Error('Grid is not ready');
-    // Never invoke Turnstile in mock mode: the deterministic transport stays
-    // entirely local. Every external HTTP request receives a fresh token.
-    const useTurnstile = this.mode() === 'http';
+    // The page always talks to the same-origin HTTP gateway. The deterministic
+    // transport is kept only as a hidden e2e hook (?mock=1) so tests never
+    // need a live gateway or a Turnstile token; real users always get the
+    // HTTP path with a fresh Turnstile token per request.
+    const useMock = new URLSearchParams(window.location.search).get('mock') === '1';
     return createGridAssistant({
       api,
-      ...(this.mode() === 'mock'
+      ...(useMock
         ? { transport: DEMO_TRANSPORT }
         : {
-            endpoint: this.endpoint().trim() || '/v1/grid-command',
-            ...(useTurnstile ? { headers: async () => ({ 'x-turnstile-token': await this.turnstileToken() }) } : {}),
+            endpoint: '/v1/grid-command',
+            headers: async () => ({ 'x-turnstile-token': await this.turnstileToken() }),
           }),
       schema: {
         columns: {
@@ -643,32 +747,42 @@ export class AiToolkitDemo {
     });
   }
 
-  protected inspect(): void {
-    try {
-      const request = this.assistant().prepare(this.prompt().trim() || SUGGESTIONS[0]);
-      this.showArtifacts(request, null);
-      this.status.set('Contract captured from the live grid. Expand the inspector sections below.');
-    } catch (error) {
-      this.status.set(`Could not inspect contract: ${String(error)}`);
+  protected onShowReview(event: MatCheckboxChange): void {
+    this.showReview.set(event.checked);
+    if (!event.checked) {
+      // Leaving review mode hides the review and traffic boxes.
+      this.proposal.set(null);
     }
   }
 
-  protected async ask(rawCommand: string): Promise<void> {
+  protected async applyQuery(rawCommand: string): Promise<void> {
     const command = rawCommand.trim();
     if (!command || this.busy()) return;
     this.prompt.set(command);
     this.busy.set(true);
     this.proposal.set(null);
-    this.status.set(this.mode() === 'mock' ? 'Validating through the deterministic contract mock…' : 'Calling your HTTP gateway…');
+    this.error.set(null);
+    this.status.set('Running your query…');
     try {
-      const proposal = await this.assistant().run(command);
-      this.proposal.set(proposal);
-      this.showArtifacts(proposal.request, proposal.response);
-      this.status.set(proposal.changes.length > 0
-        ? `Validated ${proposal.changes.length} proposed feature change(s). Review before applying.`
-        : 'The validated proposal preserves the current grid state.');
+      if (this.showReview()) {
+        // Review mode: run the query and stop at the diff for Apply or Discard.
+        const proposal = await this.assistant().run(command);
+        this.proposal.set(proposal);
+        this.showArtifacts(proposal.request, proposal.response);
+        this.status.set(proposal.changes.length > 0
+          ? `${proposal.changes.length} suggested change(s) ready to review.`
+          : 'No changes suggested — the grid stays as it is.');
+        this.scrollIntoView(this.proposalHost);
+      } else {
+        // Direct mode: run the query and apply the validated changes immediately.
+        const result = await this.assistant().execute(command);
+        this.status.set(result.changes.length > 0
+          ? `Applied ${result.changes.length} change(s) to the grid.`
+          : 'No changes suggested — the grid stays as it is.');
+      }
     } catch (error) {
-      this.status.set(`Request failed safely: ${String(error)}`);
+      this.error.set(`Request failed safely: ${String(error)}`);
+      this.status.set('The request did not complete — see the message above.');
     } finally {
       this.busy.set(false);
     }
@@ -679,16 +793,48 @@ export class AiToolkitDemo {
     if (!proposal) return;
     try {
       const result = proposal.apply();
-      this.status.set(`Applied ${result.changes.length} validated feature change(s).`);
+      this.error.set(null);
+      this.status.set(`Applied ${result.changes.length} change(s) to the grid.`);
       this.proposal.set(null);
     } catch (error) {
-      this.status.set(`Proposal was not applied: ${String(error)}`);
+      this.error.set(`Changes were not applied: ${String(error)}`);
     }
   }
 
   protected discardProposal(): void {
     this.proposal.set(null);
-    this.status.set('Proposal discarded. The grid was not changed.');
+    this.error.set(null);
+    this.status.set('Changes discarded. The grid was not changed.');
+  }
+
+  protected resetGrid(): void {
+    const api = this.api;
+    if (!api) return;
+    // Column state covers sort, row groups, pivot, visibility, sizing, and
+    // aggregation; filters and the advanced filter are separate.
+    api.resetColumnState();
+    api.setFilterModel(null);
+    api.setAdvancedFilterModel(null);
+    this.proposal.set(null);
+    this.artifacts.set(null);
+    this.error.set(null);
+    this.status.set('Grid reset to its original columns, filters, and rows.');
+  }
+
+  protected featureLabel(feature: GridStateKey): string {
+    return featureLabel(feature);
+  }
+
+  protected describeChange(change: GridStateChange): string {
+    return `${describeFeatureValue(change.feature, change.before)} → ${describeFeatureValue(change.feature, change.after)}`;
+  }
+
+  private scrollIntoView(host: Signal<ElementRef<HTMLElement> | undefined>): void {
+    // The section renders on the next change-detection cycle; scroll after it
+    // exists. 'nearest' keeps the page still when the section is already visible.
+    setTimeout(() => {
+      host()?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 0);
   }
 
   protected json(value: unknown): string {
