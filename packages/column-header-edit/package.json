@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/column-header-edit",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "description": "Editable column and group header names for AG Grid Community — part of LibreGrid",
   "keywords": ["libregrid", "ag-grid", "column-header-edit", "editable-headers"],
   "homepage": "https://github.com/libregrid/libregrid#readme",
@@ -14,7 +14,7 @@
   "type": "module",
   "sideEffects": false,
   "peerDependencies": { "ag-grid-community": ">=36.1.0 <37" },
-  "dependencies": { "@libregrid/core": "^1.2.3", "@libregrid/menu": "^1.2.3" },
+  "dependencies": { "@libregrid/core": "^1.3.0", "@libregrid/menu": "^1.3.0" },
   "files": ["dist", "LICENSE", "NOTICE", "README.md"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
 }

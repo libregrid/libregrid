@@ -1,5 +1,80 @@
 # @libregrid/all
 
+## 1.3.0
+
+### Minor Changes
+
+- 4438d5c: Add an OpenAI-compatible Chat Completions provider adapter and a Cloudflare
+  Turnstile authorizer.
+
+  - `createOpenAiChatCompletionsProvider` speaks the `/chat/completions` API with
+    strict `response_format.json_schema`, so OpenRouter and similar services work
+    behind the existing provider port.
+  - The adapter sends `provider.require_parameters` so OpenRouter routes only to
+    endpoints that apply the schema as a constraint.
+  - `AI_PROVIDER` selects the adapter in the bundled server. The default stays
+    `openai-responses`.
+  - `createTurnstileAuthorizer` builds a fail-closed `authorize` hook that reads a
+    header token and checks it with Cloudflare siteverify.
+  - The release also adds a Cloud Run / Firebase Hosting deployment path:
+    `cloudbuild.yaml`, `.gcloudignore`, a `firebase.json` rewrite, and
+    [`docs/ai-gateway-hosting.md`](../docs/ai-gateway-hosting.md) document it.
+
+- 4839d34: Rebuild the AI Toolkit around a pure live-grid schema and a provider-neutral
+  BYOM boundary.
+
+  - `@libregrid/ai-toolkit` now exposes only `AiToolkitModule` and the registered
+    `GridApi.getStructuredSchema()` capability. The experimental command,
+    provider, model, prompt, action-plan, and `advanced` APIs are removed.
+  - `@libregrid/all` no longer re-exports those removed AI Toolkit values and
+    types. Consumers of that convenience barrel must migrate to the new
+    `@libregrid/ai-client` and `@libregrid/ai-protocol` boundaries.
+  - Generate strict schemas for aggregation, simple/set/advanced filtering,
+    sorting, pivoting, column visibility, exclusive width/flex sizing, and row
+    grouping from the current grid's real capabilities.
+  - Add `@libregrid/ai-protocol` with versioned envelopes, runtime validation,
+    conformance fixtures, JSON Schemas, and OpenAPI 3.1.
+  - Add `@libregrid/ai-client` with same-origin HTTP transport, browser-side
+    revalidation, stale-state rejection, dry-run diffs, protected ignore lists,
+    and explicit application.
+  - Add `@libregrid/ai-gateway` with a provider port, OpenAI Responses strict
+    output adapter, deterministic mock, portable HTTP handler, Node CLI/server,
+    conformance CLI, and container deployment files.
+
+### Patch Changes
+
+- Updated dependencies [4839d34]
+  - @libregrid/ai-toolkit@1.3.0
+  - @libregrid/advanced-filter@1.3.0
+  - @libregrid/angular@1.3.0
+  - @libregrid/batch-edit@1.3.0
+  - @libregrid/cell-selection@1.3.0
+  - @libregrid/clipboard@1.3.0
+  - @libregrid/column-header-edit@1.3.0
+  - @libregrid/columns-tool-panel@1.3.0
+  - @libregrid/core@1.3.0
+  - @libregrid/excel-export@1.3.0
+  - @libregrid/filters-tool-panel@1.3.0
+  - @libregrid/find@1.3.0
+  - @libregrid/integrated-charts@1.3.0
+  - @libregrid/master-detail@1.3.0
+  - @libregrid/material@1.3.0
+  - @libregrid/menu@1.3.0
+  - @libregrid/multi-filter@1.3.0
+  - @libregrid/notes@1.3.0
+  - @libregrid/pivot@1.3.0
+  - @libregrid/rich-select@1.3.0
+  - @libregrid/row-grouping@1.3.0
+  - @libregrid/row-numbers@1.3.0
+  - @libregrid/server-side-row-model@1.3.0
+  - @libregrid/server-side-selection@1.3.0
+  - @libregrid/set-filter@1.3.0
+  - @libregrid/side-bar@1.3.0
+  - @libregrid/sparklines@1.3.0
+  - @libregrid/status-bar@1.3.0
+  - @libregrid/tree-data@1.3.0
+  - @libregrid/viewport-row-model@1.3.0
+
 ## 1.2.3
 
 ### Patch Changes

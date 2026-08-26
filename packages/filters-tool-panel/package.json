@@ -1,6 +1,6 @@
 {
   "name": "@libregrid/filters-tool-panel",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "description": "Filters Tool Panel for AG Grid Community \u2014 part of LibreGrid",
   "keywords": [
     "libregrid",
@@ -25,9 +25,9 @@
     "ag-grid-community": ">=36.1.0 <37"
   },
   "dependencies": {
-    "@libregrid/core": "^1.2.3",
-    "@libregrid/set-filter": "^1.2.3",
-    "@libregrid/side-bar": "^1.2.3"
+    "@libregrid/core": "^1.3.0",
+    "@libregrid/set-filter": "^1.3.0",
+    "@libregrid/side-bar": "^1.3.0"
   },
   "files": [
     "dist",
