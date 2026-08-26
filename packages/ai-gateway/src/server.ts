@@ -3,6 +3,7 @@ import { listenNodeGateway } from './nodeServer';
 import { createOpenAiChatCompletionsProvider } from './openAiChatCompletionsProvider';
 import { createOpenAiResponsesProvider } from './openAiResponsesProvider';
 import type { GridModelProvider } from './provider';
+import { createTurnstileAuthorizer } from './turnstile';
 
 const apiKey = process.env.OPENAI_API_KEY;
 if (!apiKey) throw new Error('OPENAI_API_KEY is required');
@@ -33,10 +34,15 @@ const provider: GridModelProvider = kind === 'openai-chat'
       ...(process.env.OPENAI_PROJECT ? { project: process.env.OPENAI_PROJECT } : {}),
     });
 
+const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
 const handler = createGridCommandHandler({
   provider,
+  ...(turnstileSecret ? { authorize: createTurnstileAuthorizer({ secretKey: turnstileSecret }) } : {}),
   log: (event) => process.stdout.write(`${JSON.stringify(event)}\n`),
 });
 const host = process.env.HOST ?? '127.0.0.1';
 await listenNodeGateway({ handler, host, port });
-process.stdout.write(`LibreGrid AI gateway listening on ${host}:${port} using ${provider.service} (${provider.model})\n`);
+process.stdout.write(
+  `LibreGrid AI gateway listening on ${host}:${port} using ${provider.service} (${provider.model});`
+  + ` turnstile ${turnstileSecret ? 'enabled' : 'disabled'}\n`,
+);

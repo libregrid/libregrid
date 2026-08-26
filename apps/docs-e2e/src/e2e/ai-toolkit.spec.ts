@@ -72,6 +72,12 @@ test.describe('AI Toolkit BYOM workbench', () => {
     await expect(endpoint).toBeEnabled();
     await expect(endpoint).toHaveValue('/v1/grid-command');
   });
+
+  test('turnstile host does not break the accessibility tree', async ({ page }) => {
+    await expect(page.getByTestId('ai-turnstile')).toBeAttached();
+    const results = await new AxeBuilder({ page }).include('[data-testid="ai-turnstile"]').analyze();
+    expect(results.violations).toEqual([]);
+  });
 });
 
 const SUGGESTION = 'Show sales over $5,000 from North America, hardware only';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild, type ElementRef } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridApi, GridOptions } from 'ag-grid-community';
@@ -250,6 +250,38 @@ const DEMO_TRANSPORT: GridCommandTransport = {
   },
 };
 
+declare global {
+  interface Window {
+    turnstile?: {
+      render(container: HTMLElement, options: Record<string, unknown>): string;
+      execute(widgetId: string): void;
+      reset(widgetId: string): void;
+    };
+  }
+}
+
+// Set a real Cloudflare Turnstile site key to turn on the widget guard for the
+// External HTTP gateway mode. The docs app has no build-time configuration
+// pattern yet, so this stays a literal; the site key is public and safe to
+// commit. Leaving it empty keeps the local developer loop from Task 3 working
+// with no Turnstile account: the HTTP transport sends no token header at all.
+const TURNSTILE_SITE_KEY = '';
+const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+
+let turnstileScript: Promise<void> | undefined;
+
+function loadTurnstile(): Promise<void> {
+  turnstileScript ??= new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = TURNSTILE_SCRIPT;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Turnstile did not load'));
+    document.head.append(script);
+  });
+  return turnstileScript;
+}
+
 /** Flagship guide: try the validated BYOM flow, then integrate browser, gateway, and policy. */
 @Component({
   selector: 'lgr-ai-toolkit-demo',
@@ -384,6 +416,7 @@ const DEMO_TRANSPORT: GridCommandTransport = {
               [value]="endpoint()"
               (input)="onEndpoint($event)"
             />
+            <div #turnstileHost data-testid="ai-turnstile"></div>
           </div>
           <input
             class="lgr-ai-input"
@@ -514,6 +547,55 @@ export class AiToolkitDemo {
 
   protected api: GridApi<SaleRow> | undefined;
 
+  private readonly turnstileHost = viewChild<ElementRef<HTMLElement>>('turnstileHost');
+  private turnstileWidget: string | undefined;
+  private turnstilePending: { resolve: (token: string) => void; reject: (error: Error) => void } | undefined;
+
+  private async turnstileToken(): Promise<string> {
+    await loadTurnstile();
+    const api = window.turnstile;
+    const host = this.turnstileHost()?.nativeElement;
+    if (!api || !host) throw new Error('Turnstile is not available');
+
+    // Turnstile tokens are single-use: a call arriving while another is still
+    // outstanding must not wait behind it forever, so it displaces the older
+    // request instead.
+    if (this.turnstilePending) {
+      const displaced = this.turnstilePending;
+      this.turnstilePending = undefined;
+      displaced.reject(new Error('Turnstile verification was superseded by a new request'));
+    }
+
+    return new Promise<string>((resolve, reject) => {
+      this.turnstilePending = { resolve, reject };
+
+      if (this.turnstileWidget === undefined) {
+        // Render exactly once. The callbacks read the mutable pending-deferred
+        // above so every later call — which reuses this same widget — resolves
+        // or rejects whichever promise is outstanding at the time.
+        this.turnstileWidget = api.render(host, {
+          sitekey: TURNSTILE_SITE_KEY,
+          execution: 'execute',
+          appearance: 'interaction-only',
+          callback: (token: string) => {
+            const pending = this.turnstilePending;
+            this.turnstilePending = undefined;
+            pending?.resolve(token);
+          },
+          'error-callback': () => {
+            const pending = this.turnstilePending;
+            this.turnstilePending = undefined;
+            pending?.reject(new Error('Turnstile verification failed'));
+          },
+        });
+        api.execute(this.turnstileWidget);
+      } else {
+        api.reset(this.turnstileWidget);
+        api.execute(this.turnstileWidget);
+      }
+    });
+  }
+
   private columnDefs(): ColDef<SaleRow>[] {
     return [
       { field: 'order', headerName: 'Sales order', filter: 'agTextColumnFilter' },
@@ -541,9 +623,20 @@ export class AiToolkitDemo {
   private assistant() {
     const api = this.api;
     if (!api) throw new Error('Grid is not ready');
+    // Never send the Turnstile header in mock mode: the mock transport never
+    // reaches a server. Omit it in HTTP mode too when no site key is
+    // configured, so the local developer loop keeps working with no
+    // Turnstile account — the server never checks the header either, since
+    // TURNSTILE_SECRET_KEY is also unset locally.
+    const useTurnstile = this.mode() === 'http' && TURNSTILE_SITE_KEY !== '';
     return createGridAssistant({
       api,
-      ...(this.mode() === 'mock' ? { transport: DEMO_TRANSPORT } : { endpoint: this.endpoint().trim() || '/v1/grid-command' }),
+      ...(this.mode() === 'mock'
+        ? { transport: DEMO_TRANSPORT }
+        : {
+            endpoint: this.endpoint().trim() || '/v1/grid-command',
+            ...(useTurnstile ? { headers: async () => ({ 'x-turnstile-token': await this.turnstileToken() }) } : {}),
+          }),
       schema: {
         columns: {
           amountUsd: { description: 'The order sales total in US dollars' },
