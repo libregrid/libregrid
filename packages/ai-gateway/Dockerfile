@@ -1,6 +1,7 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json nx.json tsconfig.base.json ./
+COPY tools ./tools
 COPY packages ./packages
 RUN npm ci
 RUN npx nx build ai-protocol && npx nx build ai-gateway
