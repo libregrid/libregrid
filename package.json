@@ -52,6 +52,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "ag-charts-community": "^14.1.0",
     "ag-grid-community": "36.1.0",
+    "esbuild": "^0.28.2",
     "eslint": "^9.39.5",
     "jsdom": "^25.0.0",
     "nx": "^21.0.0",
