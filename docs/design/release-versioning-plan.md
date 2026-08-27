@@ -114,13 +114,21 @@ Two facts drive the credential design:
 - **A trusted publisher cannot be configured for a package that does not exist
   yet**, so the very first publish of a new package always needs a token.
 
-The intended end state is tokenless: every package trusts this workflow via an
-npm trusted publisher, and npm >= 11.5.1 exchanges the Actions OIDC token for a
-short-lived credential per package. Until `npm run trust:setup` has been run for
-every package, `release.yml` keeps `registry-url` and `NODE_AUTH_TOKEN` as a
-bootstrap. Those two come out together — with the input present and no token
-set, `NODE_AUTH_TOKEN` expands to setup-node's placeholder and every publish
-returns E404.
+Publishing is tokenless as of 2026-08-27. All 36 packages trust this workflow
+via an npm trusted publisher, and npm >= 11.5.1 exchanges the Actions OIDC token
+for a short-lived credential per package. `release.yml` carries no `NPM_TOKEN`
+and deliberately no `registry-url` — that input makes setup-node write an
+`.npmrc` holding `_authToken=${NODE_AUTH_TOKEN}`, and npm then sends that value
+rather than exchanging the OIDC token, so leaving it in with no token set
+publishes with a placeholder and returns E404 on every package.
+
+Adding a package is the one case that still needs a human. npm will not
+configure a trusted publisher for a package that does not exist, so the first
+version has to be published by hand from a 2FA session; then `npm run
+trust:setup` brings it into the tokenless path like the rest. The preflight
+refuses to start a release containing an unrecognised name unless
+`allow_new_packages` says so, which is what turns that into a decision rather
+than a half-finished release.
 
 Before a release that adds a package, run the workflow with `dry_run: true`
 first. It exercises install, preflight, lint, test, build and every budget gate

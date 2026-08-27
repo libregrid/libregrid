@@ -33,19 +33,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      # registry-url makes setup-node write an .npmrc holding
-      # `_authToken=${NODE_AUTH_TOKEN}`. Keep the two together: with the input
-      # present and no token set, NODE_AUTH_TOKEN expands to setup-node's XXXXX
-      # placeholder, npm sends that junk credential instead of exchanging the
-      # OIDC token, and every publish returns E404 (run 33020093899).
-      #
-      # This pair comes out once every package has a trusted publisher — see
-      # `npm run trust:setup`, and the preflight's trusted-publisher count for
-      # how far along that migration is.
+      # Deliberately no registry-url. That input makes setup-node write an
+      # .npmrc holding `_authToken=${NODE_AUTH_TOKEN}`, and npm then sends that
+      # value instead of exchanging the OIDC token — which with no token set
+      # means publishing with setup-node's XXXXX placeholder and getting E404 on
+      # every package (run 33020093899). Publishing here is tokenless: all 36
+      # packages trust this workflow, verified by run 33035340700.
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: https://registry.npmjs.org
           cache: npm
 
       # Trusted publishing needs npm >= 11.5.1; Node 22 bundles 10.9.x, which
@@ -63,7 +59,6 @@ jobs:
         if: ${{ inputs.dry_run }}
         run: npm run release:dry
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           ALLOW_NEW_PACKAGES: ${{ inputs.allow_new_packages }}
 
       # v2.1.1+: detects published packages via the CLI's CHANGESETS_OUTPUT
@@ -93,13 +88,11 @@ jobs:
           create-github-releases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # npm >= 11.5.1 exchanges the OIDC token per package and falls back to
-          # this token only where no trusted publisher exists. BOOTSTRAP ONLY —
-          # remove with registry-url above once the migration is complete.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
-          # Creating a package name needs permission that publishing a new
-          # version of an existing name does not, so it is opt-in per run.
+          # A package that is not on the registry yet cannot have a trusted
+          # publisher, so its first publish needs a token that this workflow no
+          # longer carries. Publish it once by hand, run `npm run trust:setup`,
+          # and every release after that is tokenless again.
           ALLOW_NEW_PACKAGES: ${{ inputs.allow_new_packages }}
 
       # Self-sufficient: creates the tag + GitHub Release whenever the lockstep

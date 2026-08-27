@@ -9,16 +9,17 @@
  * surprise into a pre-release refusal.
  *
  * Checks (any failure exits non-zero, before a single package is published):
- *   1. An npm credential resolves. A missing or dead credential is invisible
- *      until the first PUT, which returns 404 rather than 401.
+ *   1. Every package that has to publish can actually be published — it has a
+ *      trusted publisher, or a working token stands behind it. A dead token is
+ *      invisible otherwise: the first PUT returns 404, not 401.
  *   2. The lockstep group is on exactly one version.
  *   3. No package name is new to the registry unless the run explicitly opts in
  *      via ALLOW_NEW_PACKAGES=true. Creating a name needs permissions that
  *      publishing a new version of an existing name does not, and a token that
  *      does the second may still fail the first.
  *
- * Also reports, without ever failing the build: which packages have a trusted
- * publisher configured, when an Actions OIDC token is available to ask with.
+ * Publishing tokenlessly is the intended end state, so an absent token is only
+ * a problem for packages no trusted publisher covers.
  *
  * Usage:
  *   node tools/release/preflight.mjs            # full check
@@ -122,7 +123,8 @@ if (packages.length === 0) {
   process.exit(1);
 }
 
-// 1. Credential.
+// 1. Is a token credential available? Not a failure on its own — a fully
+// tokenless setup publishes over OIDC and has no `npm whoami` identity.
 let identity = null;
 if (skipAuth) {
   console.log('ℹ️  Skipping the credential check (--no-auth).');
@@ -130,10 +132,7 @@ if (skipAuth) {
   try {
     identity = execFileSync('npm', ['whoami'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
   } catch {
-    problems.push(
-      'No npm credential resolves. `npm whoami` failed, so every publish would ' +
-        'return E404 on PUT rather than a clear auth error.',
-    );
+    identity = null;
   }
 }
 
@@ -160,8 +159,7 @@ for (const s of states) {
 }
 console.log('');
 console.log(
-  `   ${willPublish.length} to publish · ${done.length} already published · ${news.length} new names` +
-    (identity ? ` · authenticated as ${identity}` : ''),
+  `   ${willPublish.length} to publish · ${done.length} already published · ${news.length} new names`,
 );
 
 if (unknown.length) {
@@ -170,27 +168,49 @@ if (unknown.length) {
   );
 }
 
-if (news.length && !allowNew) {
-  problems.push(
-    `${news.length} package name(s) are new to the registry: ${news.map((s) => s.name).join(', ')}.\n` +
-      '     Creating a name needs permission that publishing an existing one does not, and npm\n' +
-      '     cannot pre-configure a trusted publisher for a package that does not exist yet.\n' +
-      '     Re-run with ALLOW_NEW_PACKAGES=true once the credential is known to allow creation.',
-  );
-}
-
-// Report-only trusted-publisher readiness.
+// Trusted-publisher coverage, asked over the same OIDC exchange the npm CLI
+// uses. Only answerable inside Actions with id-token: write.
 const trust = await trustedPublisherReport(packages);
+const trusted = new Set((trust ?? []).filter((t) => t.trusted).map((t) => t.name));
 if (trust) {
-  const configured = trust.filter((t) => t.trusted);
   console.log(
-    `   trusted publishers: ${configured.length}/${trust.length} configured` +
-      (configured.length === trust.length ? ' — tokenless publishing is ready' : ''),
+    `   trusted publishers: ${trusted.size}/${trust.length} configured` +
+      (trusted.size === trust.length ? ' — tokenless publishing is ready' : ''),
   );
   const missing = trust.filter((t) => !t.trusted).map((t) => t.name);
   if (missing.length && missing.length <= 8) {
     console.log(`   without a trusted publisher: ${missing.join(', ')}`);
   }
+} else if (!identity) {
+  console.log('   trusted publishers: not probed (no Actions OIDC token available)');
+}
+console.log(`   token credential: ${identity ? `authenticated as ${identity}` : 'none'}`);
+
+// Authorization: every package that still has to publish needs either a
+// trusted publisher or a working token. A tokenless setup is not a failure —
+// publishing over OIDC is the intended end state — and a dead token is not a
+// failure either, so long as nothing depends on it.
+const unauthorized = willPublish.filter((s) => !trusted.has(s.name));
+if (willPublish.length && !identity && unauthorized.length) {
+  problems.push(
+    `${unauthorized.length} package(s) have neither a trusted publisher nor a working token: ` +
+      `${unauthorized.map((s) => s.name).join(', ')}.\n` +
+      '     `npm whoami` failed, so those publishes would return E404 on PUT rather than a\n' +
+      '     clear auth error. Run `npm run trust:setup`, or restore NPM_TOKEN.',
+  );
+}
+
+// A name that is not on the registry cannot have a trusted publisher, because
+// npm will not configure one for a package that does not exist. Creating it
+// needs a token, and needs saying out loud before the release starts.
+if (news.length && !allowNew) {
+  problems.push(
+    `${news.length} package name(s) are new to the registry: ${news.map((s) => s.name).join(', ')}.\n` +
+      '     Creating a name needs permission that publishing an existing one does not, and npm\n' +
+      '     cannot pre-configure a trusted publisher for a package that does not exist yet, so\n' +
+      `     this needs a token${identity ? '' : ' — and none resolves right now'}.\n` +
+      '     Re-run with ALLOW_NEW_PACKAGES=true once the credential is known to allow creation.',
+  );
 }
 
 if (problems.length) {
