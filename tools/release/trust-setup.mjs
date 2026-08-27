@@ -54,12 +54,54 @@ function publishablePackages() {
   return found.sort();
 }
 
-const npmMajor = Number(execFileSync('npm', ['--version'], { encoding: 'utf8' }).split('.')[0]);
-if (npmMajor < 11) {
+/**
+ * Find an npm that has `npm trust`, which means npm >= 11.
+ *
+ * The npm first on PATH is not necessarily the one `npm install -g npm@11`
+ * upgraded: a version manager or a tool-managed node (nvm, Hermes, asdf) can
+ * leave an older npm shadowing a newer one, and `npm run` hands scripts the
+ * npm that invoked them. So check PATH first, then the global prefix, and only
+ * give up once both are too old.
+ */
+function npmVersion(bin) {
+  try {
+    return execFileSync(bin, ['--version'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  } catch {
+    return null;
+  }
+}
+
+function resolveNpm() {
+  const candidates = [{ bin: 'npm', label: 'npm on PATH' }];
+  try {
+    const prefix = execFileSync('npm', ['prefix', '-g'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (prefix) candidates.push({ bin: join(prefix, 'bin', 'npm'), label: `${prefix}/bin/npm` });
+  } catch {
+    /* no global prefix is not fatal — PATH may still be new enough */
+  }
+
+  const seen = [];
+  for (const candidate of candidates) {
+    const version = npmVersion(candidate.bin);
+    if (!version) continue;
+    seen.push(`${candidate.label} is ${version}`);
+    if (Number(version.split('.')[0]) >= 11) return { ...candidate, version };
+  }
   console.error(
-    `❌ npm ${npmMajor}.x has no \`npm trust\` command. Run \`npm install -g npm@11\` first.`,
+    '❌ No npm with a `trust` command was found — it needs npm >= 11.\n\n' +
+      seen.map((line) => `   ${line}`).join('\n') +
+      '\n\n   Run `npm install -g npm@11`. If that reports success and this still fails,\n' +
+      '   an older npm is shadowing it on PATH — `which -a npm` will show which.\n',
   );
   process.exit(1);
+}
+
+const npmBin = resolveNpm();
+if (npmBin.bin !== 'npm') {
+  console.log(`\nUsing ${npmBin.label} (${npmBin.version}) — the npm on PATH is older.`);
 }
 
 const repo = repository();
@@ -77,7 +119,7 @@ console.log(
  */
 function alreadyConfigured(name) {
   try {
-    const out = execFileSync('npm', ['trust', 'list', name, '--json'], {
+    const out = execFileSync(npmBin.bin, ['trust', 'list', name, '--json'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
     });
@@ -111,7 +153,7 @@ for (const name of packages) {
   try {
     // Inherit stdio so npm's browser-based OTP prompt stays usable. The first
     // package authenticates; the rest reuse that session.
-    execFileSync('npm', args, { stdio: 'inherit' });
+    execFileSync(npmBin.bin, args, { stdio: 'inherit' });
     done += 1;
     console.log(`   ✅ ${name}`);
   } catch {
