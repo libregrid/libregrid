@@ -69,9 +69,33 @@ console.log(
     `\n   repository: ${repo}\n   workflow:   ${WORKFLOW_FILE}\n`,
 );
 
+/**
+ * npm allows one trusted publisher per package, so re-running should not try to
+ * reconfigure what is already correct. Matched on the raw listing rather than a
+ * parsed shape: the exact JSON is not worth depending on, and a crude match
+ * that degrades to "configure it again" is safer than a parse that throws.
+ */
+function alreadyConfigured(name) {
+  try {
+    const out = execFileSync('npm', ['trust', 'list', name, '--json'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    return out.includes(repo) && out.includes(WORKFLOW_FILE);
+  } catch {
+    return false;
+  }
+}
+
 const failed = [];
+const skipped = [];
 let done = 0;
 for (const name of packages) {
+  if (alreadyConfigured(name)) {
+    skipped.push(name);
+    console.log(`   ⏭️  ${name} — already trusts ${repo}/${WORKFLOW_FILE}`);
+    continue;
+  }
   const args = [
     'trust',
     'github',
@@ -96,13 +120,16 @@ for (const name of packages) {
   }
 }
 
-console.log(`\n${done}/${packages.length} configured.`);
+console.log(
+  `\n${done} configured, ${skipped.length} already set, ${failed.length} failed ` +
+    `(${packages.length} total).`,
+);
 if (failed.length) {
   console.error(`\n❌ Failed: ${failed.join(', ')}`);
   console.error(
     '\n   A 403 here usually means the session is a publish-only token rather than\n' +
-      '   an interactive 2FA login. Run `npm login`, then re-run this script — it is\n' +
-      '   safe to repeat for packages that already succeeded.\n',
+      '   an interactive 2FA login. Run `npm login`, then re-run this script —\n' +
+      '   packages that are already configured are detected and skipped.\n',
   );
   process.exit(1);
 }
