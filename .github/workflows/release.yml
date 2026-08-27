@@ -5,6 +5,15 @@ on:
   # changesets accumulate until a maintainer runs this workflow. See
   # docs/design/release-versioning-plan.md (Option A).
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Validate the whole release path without publishing anything'
+        type: boolean
+        default: false
+      allow_new_packages:
+        description: 'Permit creating package names that are not yet on the registry'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -25,34 +34,37 @@ jobs:
           fetch-depth: 0
 
       # registry-url makes setup-node write an .npmrc holding
-      # `_authToken=${NODE_AUTH_TOKEN}`. It is here only for the 1.3.0
-      # bootstrap: the four new @libregrid/ai-* packages are not on the
-      # registry yet, and npm only accepts a trusted-publisher config for a
-      # package that already exists, so their first version needs NPM_TOKEN.
-      # BOOTSTRAP ONLY — delete this input, and NODE_AUTH_TOKEN below, once the
-      # ai-* packages are published and have trusted-publisher configs.
-      # Leaving it with no token set is worse than useless: NODE_AUTH_TOKEN
-      # expands to setup-node's XXXXX placeholder, npm sends that junk
-      # credential instead of exchanging the OIDC token, and every publish
-      # comes back E404 (run 33020093899).
+      # `_authToken=${NODE_AUTH_TOKEN}`. Keep the two together: with the input
+      # present and no token set, NODE_AUTH_TOKEN expands to setup-node's XXXXX
+      # placeholder, npm sends that junk credential instead of exchanging the
+      # OIDC token, and every publish returns E404 (run 33020093899).
+      #
+      # This pair comes out once every package has a trusted publisher — see
+      # `npm run trust:setup`, and the preflight's trusted-publisher count for
+      # how far along that migration is.
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           registry-url: https://registry.npmjs.org
           cache: npm
 
-      # Trusted publishing needs npm >= 11.5.1; Node 22 still bundles 10.9.x,
-      # which has no OIDC support at all and publishes unauthenticated.
-      #
-      # Pinned to the 11 line, not @latest. npm 12 blocks package lifecycle
-      # scripts unless they are listed in allowScripts, which leaves esbuild's
-      # postinstall unrun and vitest.config.ts unable to resolve `esbuild` —
-      # every test project then fails to start (run 33023063903). Moving to
-      # npm 12 is a deliberate migration, not something a release should pick
-      # up on its own.
+      # Trusted publishing needs npm >= 11.5.1; Node 22 bundles 10.9.x, which
+      # has no OIDC support at all and publishes unauthenticated. Pinned to the
+      # 11 line rather than @latest: npm 12 blocks package lifecycle scripts
+      # unless allowScripts covers them, which breaks the build (run
+      # 33023063903). Moving to npm 12 is a deliberate migration.
       - run: npm install -g npm@11
 
       - run: npm ci
+
+      # Dry run stops here, having exercised install, preflight, lint, test,
+      # build and every budget gate — everything except the publish itself.
+      - name: Validate release (dry run)
+        if: ${{ inputs.dry_run }}
+        run: npm run release:dry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          ALLOW_NEW_PACKAGES: ${{ inputs.allow_new_packages }}
 
       # v2.1.1+: detects published packages via the CLI's CHANGESETS_OUTPUT
       # file — action v1 parsed stdout for "New tag:" lines, which the
@@ -60,6 +72,7 @@ jobs:
       # output and its own release creation.
       - name: Create version PR or publish packages
         id: changesets
+        if: ${{ !inputs.dry_run }}
         uses: changesets/action@v2.1.1
         with:
           # Must be a single command — the action does not run this through a
@@ -68,6 +81,11 @@ jobs:
           # (root + docs) and regenerates the docs version badge, so the
           # Version Packages PR carries every version field in one commit.
           version-script: npm run version:packages
+          # `release` runs the preflight before the verify gate, so a dead
+          # credential or an uncreatable package name fails in seconds and
+          # before a single package is published. changesets has no rollback:
+          # on 2026-08-26 it published 1 of 36 and then stopped, leaving the
+          # lockstep group split across two versions on the registry.
           publish-script: npm run release
           commit-message: 'chore: version packages'
           pr-title: 'chore: version packages'
@@ -75,20 +93,21 @@ jobs:
           create-github-releases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Every already-published @libregrid/* package trusts this workflow
-          # via an npm trusted-publisher config (id-token: write above). npm
-          # >= 11.5.1 detects the OIDC environment and exchanges it for a
-          # short-lived publish credential, falling back to this token only
-          # where no trusted publisher exists — which for 1.3.0 means just the
-          # four new ai-* packages. BOOTSTRAP ONLY: remove with registry-url.
+          # npm >= 11.5.1 exchanges the OIDC token per package and falls back to
+          # this token only where no trusted publisher exists. BOOTSTRAP ONLY —
+          # remove with registry-url above once the migration is complete.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
+          # Creating a package name needs permission that publishing a new
+          # version of an existing name does not, so it is opt-in per run.
+          ALLOW_NEW_PACKAGES: ${{ inputs.allow_new_packages }}
 
       # Self-sufficient: creates the tag + GitHub Release whenever the lockstep
       # version is on npm but has no tag yet — on a normal publish, on a
       # re-run after a partial failure, and not at all during the version-PR
       # stage (the bumped version is not on npm yet).
       - name: Tag and publish GitHub Release
+        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
