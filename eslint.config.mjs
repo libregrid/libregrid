@@ -130,6 +130,7 @@ export default tseslint.config(
         KeyboardEvent: 'readonly',
         ResizeObserver: 'readonly',
         TextEncoder: 'readonly',
+        fetch: 'readonly',
       },
     },
   },

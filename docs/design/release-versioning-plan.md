@@ -75,9 +75,18 @@
   drift.
 - `tools/version/release-notes.mjs` — aggregates the `## X.Y.Z` sections from
   every fixed package's CHANGELOG into one release-notes file.
+- `tools/release/preflight.mjs` — runs before the verify gate on every release.
+  Refuses to start a release that cannot finish: no npm credential, a lockstep
+  group split across versions, or a package name that is not yet on the
+  registry. Also reports how many packages have a trusted publisher.
+- `tools/release/trust-setup.mjs` (`npm run trust:setup`) — configures an npm
+  trusted publisher for every publishable package, so the workflow can drop
+  `NPM_TOKEN`. Needs npm >= 11 and an interactive 2FA login.
 - `.github/workflows/release.yml` — manual trigger only; version command syncs
   manifests and regenerates the docs version; publish step tags and creates
-  the GitHub Release.
+  the GitHub Release. Takes two inputs: `dry_run` validates the entire path
+  without publishing, and `allow_new_packages` opts in to creating package
+  names that are not yet on the registry.
 
 ## Changeset policy
 
@@ -88,3 +97,31 @@
 | Refactor with no observable change | `patch` or empty |
 | Docs-only, test-only, CI-only | empty or omitted |
 | Dependency update with no user impact | empty or `patch` |
+
+## Publishing credentials
+
+`changeset publish` publishes one package at a time and cannot roll back. On
+2026-08-26 it published 1 of 36 and then hit a package the credential could not
+create, leaving the lockstep group split across two versions on the registry.
+The preflight exists to make that a pre-release refusal rather than a
+mid-release surprise.
+
+Two facts drive the credential design:
+
+- **Creating a package name and publishing a new version of an existing one are
+  different npm authorizations.** A token that does the second can still fail
+  the first, which is why new names are opt-in per run.
+- **A trusted publisher cannot be configured for a package that does not exist
+  yet**, so the very first publish of a new package always needs a token.
+
+The intended end state is tokenless: every package trusts this workflow via an
+npm trusted publisher, and npm >= 11.5.1 exchanges the Actions OIDC token for a
+short-lived credential per package. Until `npm run trust:setup` has been run for
+every package, `release.yml` keeps `registry-url` and `NODE_AUTH_TOKEN` as a
+bootstrap. Those two come out together — with the input present and no token
+set, `NODE_AUTH_TOKEN` expands to setup-node's placeholder and every publish
+returns E404.
+
+Before a release that adds a package, run the workflow with `dry_run: true`
+first. It exercises install, preflight, lint, test, build and every budget gate
+without publishing.

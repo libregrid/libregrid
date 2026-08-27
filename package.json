@@ -26,18 +26,21 @@
     "format": "prettier --write .",
     "verify": "npm run lint && npm run test && npm run build && npm run check:contamination && npm run check:versions && npm run check:budgets",
     "check:budgets": "node tools/bundle-budgets/check.mjs && node tools/bundle-budgets/consumer-fixtures.mjs",
+    "release:preflight": "node tools/release/preflight.mjs",
+    "trust:setup": "node tools/release/trust-setup.mjs",
     "check:contamination": "node tools/check-contamination/bin.mjs",
     "check:versions": "node tools/version/check.mjs",
     "gen:version": "node tools/version/generate.mjs && node tools/version/workspace.mjs generate",
     "sync:version": "node tools/version/workspace.mjs sync",
     "version:packages": "changeset version && npm run sync:version && node tools/version/workspace.mjs generate",
-    "release": "npm run gen:version && npm run verify && npx changeset publish",
+    "release": "npm run gen:version && npm run release:preflight && npm run verify && npx changeset publish",
     "docs": "npm -w apps/docs run dev",
     "webapp:build": "npm -w apps/docs run build",
     "hosting:serve": "npm -w apps/docs run hosting:serve",
     "hosting:preview": "npm -w apps/docs run hosting:preview",
     "hosting:deploy": "npm -w apps/docs run hosting:deploy",
-    "manual:validate": "npm -w apps/docs run dev"
+    "manual:validate": "npm -w apps/docs run dev",
+    "release:dry": "npm run gen:version && npm run release:preflight && npm run verify"
   },
   "devDependencies": {
     "@angular/build": "^22.1.3",
