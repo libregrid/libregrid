@@ -11,6 +11,7 @@ import {
 } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   country: string;
@@ -36,7 +37,7 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-batch-edit-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule],
+  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   styles: `
     .lgr-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .lgr-batch-status {
@@ -64,11 +65,9 @@ function makeRows(n: number): Row[] {
     }
   `,
   template: `
-    <div class="lgr-page">
-      <h1>Batch Edit</h1>
+    <lgr-docs-feature-page path="batch-edit">
       <p>
-        Batch editing stages cell edits and writes them in one pass — or discards
-        them all. Register <code>BatchEditModule</code> and drive the grid from the
+        Register <code>BatchEditModule</code> and drive the grid from the
         host UI: <code>startBatchEdit()</code>, then <code>commitBatchEdit()</code>
         or <code>cancelBatchEdit()</code> on the grid API.
       </p>
@@ -123,7 +122,7 @@ function makeRows(n: number): Row[] {
         With <code>invalidEditValueMode: 'block'</code>, an invalid staged edit
         keeps the batch open on commit until it is corrected.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class BatchEditDemo {

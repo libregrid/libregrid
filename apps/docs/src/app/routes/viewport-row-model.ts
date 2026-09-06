@@ -3,6 +3,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridOptions, IViewportDatasource, IViewportDatasourceParams } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Quote { id: string; symbol: string; price: number; updatedAt: string; }
 
@@ -10,12 +11,12 @@ interface Quote { id: string; symbol: string; price: number; updatedAt: string; 
 @Component({
   selector: 'lgr-viewport-row-model-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule],
+  imports: [AgGridAngular, MatCardModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page"><h1>Viewport Row Model</h1>
-      <p>This model is for live feeds: the grid reports its buffered visible range and the datasource pushes updates for those absolute row indices. It does not issue SSRM requests or retain an unbounded client cache.</p>
+    <lgr-docs-feature-page path="viewport">
+      <p>The grid only holds the rows on screen; everything else arrives as live updates from your system. Scroll and watch — the feed stays fresh without loading the full dataset.</p>
       <mat-card appearance="outlined"><mat-card-content><ag-grid-angular style="width:100%;height:520px" [theme]="theme.gridTheme()" [columnDefs]="columnDefs" [gridOptions]="gridOptions" data-testid="viewport-grid" /></mat-card-content></mat-card>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class ViewportRowModelDemo {

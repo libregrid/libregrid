@@ -1,4 +1,4 @@
-import type { Routes } from '@angular/router';
+import type { Route, Routes } from '@angular/router';
 
 /**
  * One route per feature.
@@ -21,7 +21,7 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'selection', label: 'Selection & Clipboard' },
   { path: 'excel-export', label: 'Excel Export' },
   { path: 'server-side', label: 'Server-side rows' },
-  { path: 'server-side-advanced', label: 'SSRM Advanced' },
+  { path: 'server-side-advanced', label: 'Server-Side Analytics' },
   { path: 'server-side-selection', label: 'Server-side Selection' },
   { path: 'viewport', label: 'Viewport rows' },
   { path: 'tree-data', label: 'Tree Data' },
@@ -39,6 +39,16 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'material', label: 'Material theme bridge' },
   { path: 'api', label: 'API Reference' },
 ];
+
+const benchmarkRoute: Route = {
+  path: 'benchmark',
+  loadComponent: () => import('./routes/benchmark').then((m) => m.BenchmarkRoute),
+  title: 'LibreGrid — Benchmark',
+};
+
+const isLocalhost =
+  typeof location !== 'undefined' &&
+  (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
 
 export const routes: Routes = [
   {
@@ -116,7 +126,7 @@ export const routes: Routes = [
     path: 'server-side-advanced',
     loadComponent: () =>
       import('./routes/server-side-advanced').then((m) => m.ServerSideAdvancedDemo),
-    title: 'LibreGrid — SSRM Advanced',
+    title: 'LibreGrid — Server-Side Analytics',
   },
   {
     path: 'server-side-selection',
@@ -186,11 +196,9 @@ export const routes: Routes = [
     loadComponent: () => import('./routes/ai-toolkit').then((m) => m.AiToolkitDemo),
     title: 'LibreGrid — AI Toolkit',
   },
-  {
-    path: 'benchmark',
-    loadComponent: () => import('./routes/benchmark').then((m) => m.BenchmarkRoute),
-    title: 'LibreGrid — Benchmark',
-  },
+  // Perf-harness route for apps/bench; only registered on a local dev server so
+  // it is not publicly reachable in production.
+  ...(isLocalhost ? [benchmarkRoute] : []),
   {
     path: 'angular',
     loadComponent: () => import('./routes/angular').then((m) => m.AngularDemo),

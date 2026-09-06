@@ -26,7 +26,7 @@ let nextDemoGuideId = 0;
     .guide {
       padding: 1rem;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 16px;
+      border-radius: var(--lgr-radius-lg);
       background: var(--mat-sys-surface-container-low);
     }
 
@@ -55,7 +55,7 @@ let nextDemoGuideId = 0;
       min-width: 0;
       padding: 1rem;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 14px;
+      border-radius: var(--lgr-radius-md);
       background: var(--mat-sys-surface);
       counter-increment: demo-step;
     }

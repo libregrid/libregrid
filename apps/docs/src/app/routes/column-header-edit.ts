@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { type ColDef, type ColGroupDef, type GridOptions, type GridApi } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   name: string;
@@ -30,10 +31,9 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-column-header-edit-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule],
+  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Column Header Edit</h1>
+    <lgr-docs-feature-page path="column-header-edit">
       <p>
         Mark a column or column group <code>headerNameEditable: true</code> and its
         column menu gains an <strong>Edit Column Name</strong> item. The editor
@@ -74,7 +74,7 @@ function makeRows(n: number): Row[] {
         are never editable; the header being edited is highlighted unless
         <code>columnHeaderEdit.suppressColumnHighlighting</code> is set.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class ColumnHeaderEditDemo {

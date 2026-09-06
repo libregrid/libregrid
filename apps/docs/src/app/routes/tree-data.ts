@@ -3,6 +3,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridOptions } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface FileNode { id: string; path: string[]; size: number; }
 const files: FileNode[] = [
@@ -12,10 +13,10 @@ const files: FileNode[] = [
   { id: 'filler-child', path: ['Workspace', 'packages', 'generated', 'schema.ts'], size: 7 },
 ];
 
-@Component({ selector: 'lgr-tree-data-demo', changeDetection: ChangeDetectionStrategy.OnPush, imports: [AgGridAngular, MatCardModule], template: `
-  <div class="lgr-page"><h1>Tree Data</h1><p>Rows carry their own paths. Missing intermediates become filler groups; aggregation and filtering use the same grouping pipeline as row groups.</p>
+@Component({ selector: 'lgr-tree-data-demo', changeDetection: ChangeDetectionStrategy.OnPush, imports: [AgGridAngular, MatCardModule, DocsFeaturePageComponent], template: `
+  <lgr-docs-feature-page path="tree-data"><p>Rows carry their own paths. Missing intermediates become filler groups; aggregation and filtering use the same grouping pipeline as row groups.</p>
   <mat-card appearance="outlined"><mat-card-content><ag-grid-angular style="width:100%;height:520px" [theme]="theme.gridTheme()" [rowData]="rows" [columnDefs]="columnDefs" [gridOptions]="gridOptions" data-testid="tree-data-grid" /></mat-card-content></mat-card>
-  <p>Enable managed drag on the auto-group column to reparent rows. Drops onto a leaf make that leaf a group while preserving its own data.</p></div>
+  <p>Enable managed drag on the auto-group column to reparent rows. Drops onto a leaf make that leaf a group while preserving its own data.</p></lgr-docs-feature-page>
 ` })
 export class TreeDataDemo {
   protected readonly theme = inject(LibreGridThemeService);

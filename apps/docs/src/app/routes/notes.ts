@@ -15,6 +15,7 @@ import {
 } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   name: string;
@@ -98,10 +99,9 @@ function keyOf(params: NotesDataSourceNoteParams | NotesDataSourceFullWidthRowNo
 @Component({
   selector: 'lgr-notes-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule],
+  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Cell Notes</h1>
+    <lgr-docs-feature-page path="notes">
       <p>
         Hover (or click, when the trigger is set to click) a cell that carries a note to
         open the note popup. Notes can be created and edited from the popup, from the
@@ -146,7 +146,7 @@ function keyOf(params: NotesDataSourceNoteParams | NotesDataSourceFullWidthRowNo
         <code>lgr-cell-has-note</code> markers, the note popup, and the
         <code>note</code> context-menu item.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class NotesDemo {

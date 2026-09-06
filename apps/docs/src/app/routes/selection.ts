@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   name: string;
@@ -21,36 +22,36 @@ const rows: Row[] = [
 @Component({
   selector: 'lgr-selection-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule],
-  template: ` <div class="lgr-page">
-    <h1>Cell Selection & Clipboard</h1>
-    <p>
-      Drag across cells to create a range. Copy uses an Excel-compatible TSV shape, including quoted
-      line breaks and delimiters.
-    </p>
-    <mat-card appearance="outlined"
-      ><mat-card-content
-        ><ag-grid-angular
-          style="width:100%;height:360px"
-          [theme]="theme.gridTheme()"
-          [columnDefs]="columnDefs"
-          [rowData]="rowData"
-          [gridOptions]="gridOptions"
-          (gridReady)="ready($event.api)"
-          data-testid="selection-grid" /></mat-card-content
-    ></mat-card>
-    <p>
-      <button matButton="tonal" (click)="copy()">Copy selected range</button>
-      <button matButton="tonal" (click)="clear()">Clear range</button>
-    </p>
-    <p aria-live="polite">{{ copied() }}</p>
-    <h2>Status</h2>
-    <p>
-      The grid status bar below the table is provided by
-      <code>&#64;libregrid/status-bar</code>. Select a range to see the
-      aggregation panel appear next to the row count.
-    </p>
-  </div>`,
+  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
+  template: `
+    <lgr-docs-feature-page path="selection">
+      <p>
+        Drag across cells to create a range. Copy uses an Excel-compatible TSV shape, including
+        quoted line breaks and delimiters.
+      </p>
+      <mat-card appearance="outlined"
+        ><mat-card-content
+          ><ag-grid-angular
+            style="width:100%;height:360px"
+            [theme]="theme.gridTheme()"
+            [columnDefs]="columnDefs"
+            [rowData]="rowData"
+            [gridOptions]="gridOptions"
+            (gridReady)="ready($event.api)"
+            data-testid="selection-grid" /></mat-card-content
+      ></mat-card>
+      <p>
+        <button matButton="tonal" (click)="copy()">Copy selected range</button>
+        <button matButton="tonal" (click)="clear()">Clear range</button>
+      </p>
+      <p aria-live="polite">{{ copied() }}</p>
+      <h2>Status</h2>
+      <p>
+        The grid status bar below the table is provided by
+        <code>&#64;libregrid/status-bar</code>. Select a range to see the
+        aggregation panel appear next to the row count.
+      </p>
+    </lgr-docs-feature-page>`,
 })
 export class SelectionDemo {
   protected readonly theme = inject(LibreGridThemeService);

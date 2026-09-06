@@ -11,6 +11,8 @@ import {
   type ThemeMode,
 } from '@libregrid/material';
 
+import { snapThemeChange } from './theme';
+
 interface AccentTheme {
   id: string;
   label: string;
@@ -19,12 +21,10 @@ interface AccentTheme {
 
 /** Accent themes. `id` matches the `data-lgr-accent` SCSS selector. */
 const ACCENT_THEMES: readonly AccentTheme[] = [
-  { id: 'violet', label: 'Violet', color: '#7d00fa' },
-  { id: 'azure', label: 'Azure', color: '#005cbb' },
-  { id: 'emerald', label: 'Emerald', color: '#026e00' },
-  { id: 'rose', label: 'Rose', color: '#ba005c' },
-  { id: 'amber', label: 'Amber', color: '#964900' },
-  { id: 'magenta', label: 'Magenta', color: '#a900a9' },
+  { id: 'indigo', label: 'Indigo', color: '#1b365d' },
+  { id: 'persimmon', label: 'Persimmon', color: '#9e3d12' },
+  { id: 'moss', label: 'Moss', color: '#4a5d23' },
+  { id: 'wood', label: 'Aged Wood', color: '#6b4f2e' },
 ];
 
 const MODES: readonly { id: ThemeMode; label: string; icon: string }[] = [
@@ -73,7 +73,7 @@ const MODES: readonly { id: ThemeMode; label: string; icon: string }[] = [
       font-weight: 500;
       color: var(--mat-sys-on-surface);
       text-align: left;
-      transition: background 120ms ease, border-color 120ms ease;
+      transition: background var(--lgr-duration) var(--lgr-ease), border-color var(--lgr-duration) var(--lgr-ease);
     }
 
     .lgr-swatch:hover {
@@ -125,7 +125,7 @@ const MODES: readonly { id: ThemeMode; label: string; icon: string }[] = [
       font-size: 0.82rem;
       font-weight: 500;
       color: var(--mat-sys-on-surface-variant);
-      transition: background 120ms ease, color 120ms ease;
+      transition: background var(--lgr-duration) var(--lgr-ease), color var(--lgr-duration) var(--lgr-ease);
     }
 
     .lgr-segment button mat-icon {
@@ -160,7 +160,7 @@ const MODES: readonly { id: ThemeMode; label: string; icon: string }[] = [
               role="radio"
               [attr.aria-checked]="themeService.accent() === theme.id"
               [class.active]="themeService.accent() === theme.id"
-              (click)="themeService.setAccent(theme.id)"
+              (click)="setAccent(theme.id)"
             >
               <span class="lgr-swatch-dot" [style.background]="theme.color"></span>
               {{ theme.label }}
@@ -182,7 +182,7 @@ const MODES: readonly { id: ThemeMode; label: string; icon: string }[] = [
               role="radio"
               [attr.aria-checked]="themeService.mode() === mode.id"
               [class.active]="themeService.mode() === mode.id"
-              (click)="themeService.setMode(mode.id)"
+              (click)="setMode(mode.id)"
             >
               <mat-icon>{{ mode.icon }}</mat-icon>
               {{ mode.label }}
@@ -214,4 +214,12 @@ export class ThemePicker {
   protected readonly themes = ACCENT_THEMES;
   protected readonly modes = MODES;
   protected readonly densities = GRID_DENSITIES;
+
+  protected setAccent(accent: string): void {
+    snapThemeChange(() => this.themeService.setAccent(accent));
+  }
+
+  protected setMode(mode: ThemeMode): void {
+    snapThemeChange(() => this.themeService.setMode(mode));
+  }
 }

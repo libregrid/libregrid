@@ -25,14 +25,8 @@ export interface DocsFeatureValue {
       padding: clamp(1.35rem, 4vw, 2.4rem);
       border: 1px solid
         color-mix(in srgb, var(--mat-sys-primary) 18%, var(--mat-sys-outline-variant));
-      border-radius: 20px;
-      background:
-        radial-gradient(
-          circle at 92% 0%,
-          color-mix(in srgb, var(--mat-sys-primary) 13%, transparent),
-          transparent 35%
-        ),
-        var(--mat-sys-surface-container-low);
+      border-radius: var(--lgr-radius-lg);
+      background: var(--mat-sys-surface-container-low);
     }
 
     .eyebrow {
@@ -47,8 +41,7 @@ export interface DocsFeatureValue {
     h1 {
       max-width: 54rem;
       margin: 0;
-      font-size: clamp(2rem, 5vw, 3.2rem);
-      letter-spacing: -0.04em;
+      font-size: clamp(1.5rem, 3vw, 2rem);
     }
 
     .summary {
@@ -102,7 +95,7 @@ export interface DocsFeatureValue {
       gap: 0.7rem;
       padding: 0.9rem;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 14px;
+      border-radius: var(--lgr-radius-md);
       background: color-mix(in srgb, var(--mat-sys-surface) 86%, transparent);
     }
 
@@ -124,7 +117,9 @@ export interface DocsFeatureValue {
   `,
   template: `
     <header class="header">
-      <p class="eyebrow">{{ eyebrow() }}</p>
+      @if (eyebrow()) {
+        <p class="eyebrow">{{ eyebrow() }}</p>
+      }
       <h1>{{ title() }}</h1>
       <p class="summary">{{ summary() }}</p>
 
@@ -161,10 +156,10 @@ export interface DocsFeatureValue {
   `,
 })
 export class DocsFeatureHeaderComponent {
-  readonly eyebrow = input('Feature guide');
+  readonly eyebrow = input('');
   readonly title = input.required<string>();
   readonly summary = input.required<string>();
   readonly packages = input<readonly string[]>([]);
-  readonly audiences = input<readonly string[]>(['Product teams', 'Application developers']);
+  readonly audiences = input<readonly string[]>([]);
   readonly values = input<readonly DocsFeatureValue[]>([]);
 }

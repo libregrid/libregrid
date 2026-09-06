@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { type ColDef, type GridOptions, type GridApi } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   country: string;
@@ -67,10 +68,9 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-menus-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule],
+  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Menus</h1>
+    <lgr-docs-feature-page path="menus">
       <p>
         Right-click a cell to open the <strong>context menu</strong>.
         Click the menu icon in a column header for the <strong>column menu</strong>.
@@ -112,7 +112,7 @@ function makeRows(n: number): Row[] {
         app) contribute items without forking the menu. This demo adds an <em>Inspect Cell</em>
         action and a live row-count item on top of the defaults.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
   styles: `
     .lgr-actions { display: flex; gap: 8px; margin: 8px 0; }

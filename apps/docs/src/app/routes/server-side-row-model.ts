@@ -4,6 +4,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridOptions, IServerSideDatasource } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Trade {
   id: string;
@@ -32,15 +33,13 @@ function tradeAt(index: number): Trade {
 @Component({
   selector: 'lgr-server-side-row-model-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, RouterLink],
+  imports: [AgGridAngular, MatCardModule, RouterLink, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Server-Side Row Model</h1>
+    <lgr-docs-feature-page path="server-side">
       <p>
-        This grid uses <code>rowModelType: 'serverSide'</code> and a datasource instead of
-        <code>rowData</code>. It serves one million deterministic rows in 100-row blocks with a
-        small configurable mock-server delay. Use the pager to jump between server-backed pages, or
-        sort a column to see fresh range requests.
+        This demo pages through one million rows held on a simulated server. The grid loads one
+        screen of data at a time, so jumping to any page — or sorting any column — stays quick no
+        matter how large the dataset grows.
       </p>
 
       <mat-card appearance="outlined">
@@ -63,9 +62,9 @@ function tradeAt(index: number): Trade {
         retryable failures, transactions, and identity-backed selection persistence. A stable
         <code>getRowId</code> is required for correct transaction and selection behavior.
         Grouping, filtering, and pivot request semantics are covered in the
-        <a routerLink="/server-side-advanced">advanced SSRM demo</a>.
+        <a routerLink="/server-side-advanced">Server-Side Analytics demo</a>.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class ServerSideRowModelDemo {

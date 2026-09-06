@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Trade {
   country: string;
@@ -27,12 +28,11 @@ const scores = [
 @Component({
   selector: 'lgr-excel-export-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule],
-  template: ` <div class="lgr-page">
-    <h1>Excel Export</h1>
+  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
+  template: ` <lgr-docs-feature-page path="excel-export">
     <p>
-      Export the grid to an <code>.xlsx</code> workbook. Grouped rows keep their outline levels and
-      collapse state. Right-click a cell to use the Export menu item.
+      Grouped rows keep their outline levels and collapse state. Right-click a cell to use the
+      Export menu item.
     </p>
     <mat-card appearance="outlined"
       ><mat-card-content
@@ -65,7 +65,7 @@ const scores = [
           (gridReady)="readyScores($event.api)"
           data-testid="scores-grid" /></mat-card-content
     ></mat-card>
-  </div>`,})
+  </lgr-docs-feature-page>`,})
 export class ExcelExportDemo {
   protected readonly theme = inject(LibreGridThemeService);
   protected readonly trades = trades;

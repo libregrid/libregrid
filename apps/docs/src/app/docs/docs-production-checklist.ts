@@ -25,7 +25,7 @@ let nextProductionChecklistId = 0;
     .checklist {
       padding: 1rem;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 16px;
+      border-radius: var(--lgr-radius-lg);
       background: var(--mat-sys-surface-container-low);
     }
 
@@ -54,7 +54,7 @@ let nextProductionChecklistId = 0;
       gap: 0.7rem;
       padding: 0.85rem;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 12px;
+      border-radius: var(--lgr-radius-md);
       background: var(--mat-sys-surface);
     }
 

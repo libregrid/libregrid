@@ -30,7 +30,7 @@ let nextBackendBoundaryId = 0;
       padding: clamp(1rem, 3vw, 1.5rem);
       border: 1px solid
         color-mix(in srgb, var(--mat-sys-tertiary) 28%, var(--mat-sys-outline-variant));
-      border-radius: 18px;
+      border-radius: var(--lgr-radius-lg);
       background: color-mix(in srgb, var(--mat-sys-tertiary-container) 24%, var(--mat-sys-surface));
     }
 
@@ -56,7 +56,7 @@ let nextBackendBoundaryId = 0;
     .side {
       padding: 1rem;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 14px;
+      border-radius: var(--lgr-radius-md);
       background: var(--mat-sys-surface);
     }
 
@@ -116,7 +116,7 @@ let nextBackendBoundaryId = 0;
 
     .contract {
       padding: 0.85rem;
-      border-radius: 12px;
+      border-radius: var(--lgr-radius-md);
       background: var(--mat-sys-surface-container);
     }
 

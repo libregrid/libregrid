@@ -56,7 +56,7 @@ bootstrapApplication(App, {
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
     provideAppInitializer(() => inject(ConsentService).initialize()),
-    provideLibreGridMaterialTheme({ accent: 'azure' }),
+    provideLibreGridMaterialTheme({ accent: 'indigo' }),
     provideLibreGrid(
       AllCommunityModule,
       EnterpriseCoreModule,

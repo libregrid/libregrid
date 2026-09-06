@@ -12,7 +12,7 @@ import type {
   SelectionOp,
   SelectionSpec,
 } from '@libregrid/server-side-selection';
-import { DocsCodeExampleComponent, type DocsCodeExample } from '../docs';
+import { DocsCodeExampleComponent, DocsFeaturePageComponent, type DocsCodeExample } from '../docs';
 
 interface Trade {
   id: string;
@@ -144,17 +144,14 @@ function createDemoProvider() {
 @Component({
   selector: 'lgr-server-side-selection-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, RouterLink, DocsCodeExampleComponent],
+  imports: [AgGridAngular, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, RouterLink, DocsCodeExampleComponent, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Server-Side Selection</h1>
+    <lgr-docs-feature-page path="server-side-selection">
       <p>
-        This grid uses <code>rowModelType: 'serverSide'</code> with
-        <code>@libregrid/server-side-selection</code>. The durable selection lives in a
-        (here, in-memory) provider; the grid only keeps per-row flags for the rows in its
-        datasource cache. Select rows with the checkboxes, use the footer's
-        <strong>Select All</strong> / <strong>Deselect All</strong> for the whole spec, and
-        <strong>Show All Selected</strong> to make the selection the dataset (R6).
+        Selections on this page live in your system rather than the grid's memory, so they survive
+        filtering, paging, and reloads. Select rows with the checkboxes, use the footer's
+        <strong>Select All</strong> / <strong>Deselect All</strong> for the whole filtered set, and
+        <strong>Show All Selected</strong> to view the selection as its own dataset.
       </p>
 
       <mat-card appearance="outlined">
@@ -187,11 +184,11 @@ function createDemoProvider() {
         provider whenever a block is evicted and requested again.
       </p>
       <p>
-        Grouping, sorting, filtering, and pivot request semantics are covered in the
-        <a routerLink="/server-side-advanced">advanced SSRM demo</a>.
+        For grouping, sorting, filtering, and pivot request semantics, see the
+        <a routerLink="/server-side-advanced">Server-Side Analytics demo</a>.
       </p>
       <lgr-docs-code-example heading="Keep durable selection in your systems" [examples]="selectionExamples" />
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class ServerSideSelectionDemo {

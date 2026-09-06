@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { type ColDef, type GridOptions, type GridApi } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   country: string;
@@ -33,10 +34,9 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-toolbar-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule],
+  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Toolbar</h1>
+    <lgr-docs-feature-page path="toolbar">
       <p>
         The Quick Access Toolbar sits above the grid. Register
         <code>ToolbarModule</code> and list items in the <code>toolbar</code>
@@ -75,7 +75,7 @@ function makeRows(n: number): Row[] {
         Drag a column header, or a row from the Columns panel, into a zone to group
         or pivot.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class ToolbarDemo {

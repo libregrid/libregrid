@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   country: string;
@@ -52,14 +53,13 @@ const ROWS = makeRows();
 @Component({
   selector: 'lgr-filters-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule],
+  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Filters</h1>
+    <lgr-docs-feature-page path="filters">
       <p>
         Every filter card offers a <strong>Simple Filter</strong> and a
-        <strong>Selection Filter</strong> mode, and the panel shares serialisable models with the
-        grid so a filter you build here can be passed straight to a server-side datasource.
+        <strong>Selection Filter</strong> mode, and any filter built here works unchanged when the
+        data comes from your server.
       </p>
 
       <mat-card appearance="outlined">
@@ -90,7 +90,7 @@ const ROWS = makeRows();
         <strong>Selection Filter</strong> via its filter-type dropdown. Commit or discard with the
         pinned <strong>Apply</strong>/<strong>Cancel</strong> row.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class FiltersDemo {
