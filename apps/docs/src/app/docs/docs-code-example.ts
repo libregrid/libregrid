@@ -50,7 +50,7 @@ let nextCodeExampleId = 0;
     .code-example {
       overflow: hidden;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 16px;
+      border-radius: var(--lgr-radius-lg);
       background: var(--mat-sys-surface-container-low);
     }
 

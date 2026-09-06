@@ -33,24 +33,11 @@ import { DocsFeatureHeaderComponent, type DocsFeatureValue } from './docs-featur
       scroll-margin-block-start: 5rem;
     }
 
-    .demo-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 1rem;
-      align-items: start;
-    }
-
     .implementation,
     .integration,
     .production {
       padding-block-start: 0.25rem;
       border-block-start: 1px solid var(--mat-sys-outline-variant);
-    }
-
-    @media (min-width: 1080px) {
-      .demo-layout:has(.guide:not(:empty)) {
-        grid-template-columns: minmax(0, 2fr) minmax(17rem, 0.8fr);
-      }
     }
   `,
   template: `
@@ -64,10 +51,9 @@ import { DocsFeatureHeaderComponent, type DocsFeatureValue } from './docs-featur
         [values]="values()"
       />
 
-      <div class="section demo-layout">
-        <div class="demo"><ng-content select="[featureDemo]" /></div>
-        <aside class="guide"><ng-content select="[featureGuide]" /></aside>
-      </div>
+      <aside class="section guide"><ng-content select="[featureGuide]" /></aside>
+
+      <div class="section demo"><ng-content select="[featureDemo]" /></div>
 
       <section class="section implementation">
         <ng-content select="[featureImplementation]" />
@@ -86,10 +72,10 @@ import { DocsFeatureHeaderComponent, type DocsFeatureValue } from './docs-featur
   `,
 })
 export class DocsFeaturePageShellComponent {
-  readonly eyebrow = input('Feature guide');
+  readonly eyebrow = input('');
   readonly title = input.required<string>();
   readonly summary = input.required<string>();
   readonly packages = input<readonly string[]>([]);
-  readonly audiences = input<readonly string[]>(['Product teams', 'Application developers']);
+  readonly audiences = input<readonly string[]>([]);
   readonly values = input<readonly DocsFeatureValue[]>([]);
 }

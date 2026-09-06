@@ -22,50 +22,23 @@ import { LibreGridThemeService } from '@libregrid/material';
 import { ConsentService } from './consent.service';
 import { NAV } from './routes';
 import { ThemePicker } from './theme-picker';
+import { snapThemeChange } from './theme';
 import { DOCS_SECTIONS, featureForPath, type DocsSectionId } from './docs/feature-catalog';
-import { DocsDemoGuideComponent, DocsFeatureHeaderComponent, DocsRouteCompanionComponent, ROUTE_GUIDES } from './docs';
 
 interface NavItem {
   path: string;
   label: string;
-  icon: string;
   section: DocsSectionId;
   searchText: string;
 }
-
-const NAV_ICONS: Record<string, string> = {
-  '': 'grid_view',
-  'grid': 'table_chart',
-  'menus': 'menu',
-  'side-bar': 'vertical_split',
-  'toolbar': 'build',
-  'row-grouping': 'folder',
-  'pivot': 'pivot_table_chart',
-  'columns': 'view_column',
-  'filters': 'filter_alt',
-  'selection': 'select_all',
-  'excel-export': 'file_download',
-  'server-side': 'cloud',
-  'server-side-advanced': 'analytics',
-  'server-side-selection': 'playlist_add_check',
-  'viewport': 'visibility',
-  'tree-data': 'account_tree',
-  'master-detail': 'stacked_bar_chart',
-  'advanced-filter-find': 'manage_search',
-  'batch-edit': 'edit_note',
-  'charts': 'insert_chart',
-  'row-numbers': 'format_list_numbered',
-  'column-header-edit': 'title',
-  'notes': 'sticky_note_2',
-  'angular': 'code',
-  'api': 'api',
-};
 
 const ITEMS: NavItem[] = NAV.map((item) => {
   const feature = featureForPath(item.path);
   return {
     ...item,
-    icon: feature?.icon ?? NAV_ICONS[item.path] ?? 'circle',
+    // The feature catalog is the single source of truth for labels, so the
+    // sidenav, pager, and page headers can never disagree.
+    label: feature?.label ?? item.label,
     section: feature?.section ?? 'reference',
     searchText: [item.label, ...(feature?.packages ?? []), ...(feature?.keywords ?? [])]
       .join(' ')
@@ -73,7 +46,13 @@ const ITEMS: NavItem[] = NAV.map((item) => {
   };
 });
 
+/** Sidebar reading order: sections in catalog order, items within each section. */
+const SECTIONED_ITEMS: readonly NavItem[] = DOCS_SECTIONS.flatMap((section) =>
+  ITEMS.filter((item) => item.section === section.id),
+);
+
 interface NavSection {
+  id: DocsSectionId;
   label: string;
   items: readonly NavItem[];
 }
@@ -93,9 +72,6 @@ interface NavSection {
     MatFormFieldModule,
     MatInputModule,
     ThemePicker,
-    DocsDemoGuideComponent,
-    DocsFeatureHeaderComponent,
-    DocsRouteCompanionComponent,
   ],
   styles: `
     :host {
@@ -110,9 +86,7 @@ interface NavSection {
       flex: 0 0 auto;
       z-index: 100;
       border-bottom: 1px solid var(--mat-sys-outline-variant);
-      background: color-mix(in srgb, var(--mat-sys-surface) 94%, transparent);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      background: var(--mat-sys-surface);
     }
 
     .lgr-toolbar mat-toolbar {
@@ -124,10 +98,10 @@ interface NavSection {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      font-family: 'Inter', 'Roboto', system-ui, sans-serif;
+      font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', Georgia, serif;
       font-weight: 700;
       font-size: 1.12rem;
-      letter-spacing: -0.02em;
+      letter-spacing: 0.01em;
       color: var(--mat-sys-on-surface);
       text-decoration: none;
       user-select: none;
@@ -140,12 +114,8 @@ interface NavSection {
       justify-content: center;
       width: 34px;
       height: 34px;
-      border-radius: 10px;
-      background: linear-gradient(
-        135deg,
-        var(--mat-sys-primary),
-        color-mix(in srgb, var(--mat-sys-tertiary) 70%, var(--mat-sys-primary))
-      );
+      border-radius: var(--lgr-radius-md);
+      background: var(--mat-sys-primary);
       color: var(--mat-sys-on-primary);
     }
 
@@ -203,13 +173,40 @@ interface NavSection {
     }
 
     .lgr-nav-section-title {
-      font-family: 'Inter', 'Roboto', system-ui, sans-serif;
-      font-size: 0.65rem;
-      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.55rem 0.75rem;
+      border: none;
+      border-radius: var(--lgr-radius-md);
+      background: transparent;
+      cursor: pointer;
+      font-family: 'Roboto', system-ui, sans-serif;
+      font-size: 0.74rem;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      color: var(--mat-sys-on-surface);
+      transition: background var(--lgr-duration) var(--lgr-ease);
+    }
+
+    .lgr-nav-section-title:hover {
+      background: var(--mat-sys-surface-container-hover);
+    }
+
+    .lgr-nav-section-title mat-icon {
+      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
       color: var(--mat-sys-on-surface-variant);
-      padding: 0.75rem 0.75rem 0.4rem;
+      transition: transform var(--lgr-duration) var(--lgr-ease);
+    }
+
+    .lgr-nav-section-title[aria-expanded='false'] mat-icon {
+      transform: rotate(-90deg);
     }
 
     .lgr-nav-list {
@@ -221,9 +218,8 @@ interface NavSection {
     .lgr-nav-item {
       display: flex;
       align-items: center;
-      gap: 0.7rem;
       padding: 0.5rem 0.75rem;
-      border-radius: 10px;
+      border-radius: var(--lgr-radius-md);
       font-size: 0.88rem;
       font-weight: 500;
       color: var(--mat-sys-on-surface-variant);
@@ -231,7 +227,7 @@ interface NavSection {
       background: transparent;
       cursor: pointer;
       width: 100%;
-      transition: background 120ms ease, color 120ms ease;
+      transition: background var(--lgr-duration) var(--lgr-ease), color var(--lgr-duration) var(--lgr-ease);
       font-family: inherit;
       text-decoration: none;
       user-select: none;
@@ -247,12 +243,6 @@ interface NavSection {
       color: var(--mat-sys-primary);
     }
 
-    .lgr-nav-item mat-icon {
-      font-size: 1.15rem;
-      width: 1.15rem;
-      height: 1.15rem;
-    }
-
     .lgr-nav-empty {
       padding: 0.75rem;
       font-size: 0.85rem;
@@ -263,13 +253,6 @@ interface NavSection {
     mat-sidenav-content,
     main {
       min-width: 0;
-    }
-
-    .lgr-route-frame {
-      width: 100%;
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: clamp(1rem, 3vw, 2.5rem) clamp(1.5rem, 3vw, 2.5rem) 0;
     }
 
     /* ── Prev / next pager ──────────────────────── */
@@ -288,20 +271,19 @@ interface NavSection {
       gap: 0.5rem;
       max-width: 48%;
       padding: 0.7rem 1rem;
-      border-radius: 12px;
+      border-radius: var(--lgr-radius-md);
       border: 1px solid var(--mat-sys-outline-variant);
       background: var(--mat-sys-surface-container-low);
       color: var(--mat-sys-on-surface);
       text-decoration: none;
       font-size: 0.88rem;
       font-weight: 500;
-      transition: border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+      transition: border-color var(--lgr-duration) var(--lgr-ease);
     }
 
+    /* Quiet affordance: a border-colour shift, no lift or shadow. */
     .lgr-pager-link:hover {
       border-color: var(--mat-sys-primary);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
     }
 
     .lgr-pager-link.next { text-align: right; margin-left: auto; }
@@ -380,7 +362,7 @@ interface NavSection {
 
           <button
             mat-icon-button
-            (click)="theme.toggle()"
+            (click)="toggleTheme()"
             [attr.aria-label]="'Switch to ' + (theme.mode() === 'light' ? 'dark' : 'light') + ' theme'"
           >
             <mat-icon>{{ theme.mode() === 'light' ? 'dark_mode' : 'light_mode' }}</mat-icon>
@@ -418,24 +400,33 @@ interface NavSection {
             }
           </mat-form-field>
 
-          @for (section of filteredSections(); track section.label) {
-            <div class="lgr-nav-section-title">{{ section.label }}</div>
-            <div class="lgr-nav-list">
-              @for (item of section.items; track item.path) {
-                <a
-                  class="lgr-nav-item"
-                  [routerLink]="item.path"
-                  routerLinkActive
-                  #rla="routerLinkActive"
-                  [class.active]="rla.isActive"
-                  [routerLinkActiveOptions]="{ exact: item.path === '' }"
-                  (click)="closeNavigationOnHandset()"
-                >
-                  <mat-icon>{{ item.icon }}</mat-icon>
-                  {{ item.label }}
-                </a>
-              }
-            </div>
+          @for (section of filteredSections(); track section.id) {
+            <button
+              type="button"
+              class="lgr-nav-section-title"
+              [attr.aria-expanded]="!isSectionCollapsed(section.id)"
+              (click)="toggleSection(section.id)"
+            >
+              {{ section.label }}
+              <mat-icon>expand_more</mat-icon>
+            </button>
+            @if (!isSectionCollapsed(section.id) || filterQuery()) {
+              <div class="lgr-nav-list">
+                @for (item of section.items; track item.path) {
+                  <a
+                    class="lgr-nav-item"
+                    [routerLink]="item.path"
+                    routerLinkActive
+                    #rla="routerLinkActive"
+                    [class.active]="rla.isActive"
+                    [routerLinkActiveOptions]="{ exact: item.path === '' }"
+                    (click)="closeNavigationOnHandset()"
+                  >
+                    {{ item.label }}
+                  </a>
+                }
+              </div>
+            }
           }
           @if (filteredNav().length === 0) {
             <div class="lgr-nav-empty">No features match "{{ filterQuery() }}".</div>
@@ -444,26 +435,8 @@ interface NavSection {
       </mat-sidenav>
 
       <mat-sidenav-content>
-        <main id="main-content" [class.lgr-guided-route]="currentGuide() !== undefined">
-          @if (currentFeature(); as feature) {
-            @if (currentGuide(); as guide) {
-              <div class="lgr-route-frame">
-                <lgr-docs-feature-header
-                  [title]="feature.label"
-                  [summary]="feature.outcome"
-                  [packages]="feature.packages"
-                  [values]="featureValues()"
-                />
-                <lgr-docs-demo-guide [intro]="guide.intro" [steps]="guide.steps" />
-              </div>
-            }
-          }
+        <main id="main-content">
           <router-outlet />
-          @if (currentFeature(); as feature) {
-            @if (currentGuide(); as guide) {
-              <lgr-docs-route-companion [feature]="feature" [guide]="guide" />
-            }
-          }
         </main>
 
         <!-- Prev / next feature navigation -->
@@ -522,10 +495,30 @@ export class App {
   protected readonly filteredSections = computed<readonly NavSection[]>(() => {
     const visible = this.filteredNav();
     return DOCS_SECTIONS.map((section) => ({
+      id: section.id,
       label: section.label,
       items: visible.filter((item) => item.section === section.id),
     })).filter((section) => section.items.length > 0);
   });
+
+  /** Collapsed sidenav groups. Empty by default, so every group starts open. */
+  private readonly collapsedSections = signal<ReadonlySet<DocsSectionId>>(new Set());
+
+  protected isSectionCollapsed(id: DocsSectionId): boolean {
+    return this.collapsedSections().has(id);
+  }
+
+  protected toggleSection(id: DocsSectionId): void {
+    this.collapsedSections.update((collapsed) => {
+      const next = new Set(collapsed);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
 
   protected readonly isHandset = toSignal(
     this.breakpoints.observe('(max-width: 700px)').pipe(map((state) => state.matches)),
@@ -544,47 +537,17 @@ export class App {
 
   protected readonly currentIndex = computed(() => {
     const path = stripQuery(this.currentPath()).replace(/^\//, '');
-    return ITEMS.findIndex((item) => item.path === path);
-  });
-
-  protected readonly currentFeature = computed(() => {
-    const path = stripQuery(this.currentPath()).replace(/^\//, '');
-    return featureForPath(path);
-  });
-
-  protected readonly currentGuide = computed(() => {
-    const feature = this.currentFeature();
-    return feature ? ROUTE_GUIDES[feature.path] : undefined;
-  });
-
-  protected readonly featureValues = computed(() => {
-    const feature = this.currentFeature();
-    if (!feature) return [];
-    const dataBoundary = feature.boundary !== 'Browser';
-    return [
-      {
-        icon: 'workspace_premium',
-        title: 'Customer outcome',
-        description: feature.outcome,
-      },
-      {
-        icon: dataBoundary ? 'sync_alt' : 'extension',
-        title: dataBoundary ? 'Application data boundary' : 'Composable browser capability',
-        description: dataBoundary
-          ? 'The guide identifies the request, response, and ownership that belong in your systems.'
-          : 'Install and register only this capability without adding unrelated product surface.',
-      },
-    ];
+    return SECTIONED_ITEMS.findIndex((item) => item.path === path);
   });
 
   protected readonly prevItem = computed(() => {
     const index = this.currentIndex();
-    return index > 0 ? ITEMS[index - 1] : null;
+    return index > 0 ? SECTIONED_ITEMS[index - 1] : null;
   });
 
   protected readonly nextItem = computed(() => {
     const index = this.currentIndex();
-    return index >= 0 && index < ITEMS.length - 1 ? ITEMS[index + 1] : null;
+    return index >= 0 && index < SECTIONED_ITEMS.length - 1 ? SECTIONED_ITEMS[index + 1] : null;
   });
 
   constructor() {
@@ -593,6 +556,10 @@ export class App {
 
   protected toggleNavigation(): void {
     this.navOpen.update((open) => !open);
+  }
+
+  protected toggleTheme(): void {
+    snapThemeChange(() => this.theme.toggle());
   }
 
   protected closeNavigationOnHandset(): void {

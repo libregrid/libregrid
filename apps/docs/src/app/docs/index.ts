@@ -1,5 +1,6 @@
 export { DocsCodeExampleComponent, type DocsCodeExample } from './docs-code-example';
 export { DocsFeatureHeaderComponent, type DocsFeatureValue } from './docs-feature-header';
+export { DocsFeaturePageComponent } from './docs-feature-page';
 export { DocsFeaturePageShellComponent } from './docs-feature-page-shell';
 export { DocsDemoGuideComponent, type DocsDemoStep } from './docs-demo-guide';
 export {
