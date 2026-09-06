@@ -83,3 +83,22 @@ export function buildGridTheme(): Theme {
     fontFamily: 'Roboto, system-ui, sans-serif',
   });
 }
+
+/**
+ * Apply a theme switch (mode or accent) with transitions suppressed.
+ *
+ * A mode/accent change flips nearly every colour on the page at once; letting
+ * the chrome micro-transitions animate that sweeps text through mid-fade
+ * values that are briefly unreadable (and fail contrast checks). The slow,
+ * deliberate transitions stay reserved for interaction states (hover, focus).
+ */
+export function snapThemeChange(mutate: () => void): void {
+  const root = document.documentElement;
+  root.classList.add('lgr-no-motion');
+  mutate();
+  // Two frames: the first lets the attribute + token flush land, the second
+  // guarantees style recalc ran while transitions were disabled.
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => root.classList.remove('lgr-no-motion')),
+  );
+}

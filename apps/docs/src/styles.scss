@@ -4,7 +4,7 @@
    LibreGrid Design System — Global Styles
    ════════════════════════════════════════════════════════════════ */
 
-// ── Base theme (Azure brand) ───────────────────────────────────
+// ── Base theme ─────────────────────────────────────────────────
 // Material 3 system tokens. The theme bridge reads these
 // (--mat-sys-primary, --mat-sys-surface, …) and maps them onto the grid's
 // Theming API params.
@@ -33,76 +33,181 @@ html {
   ));
 }
 
-// ── Accent themes ───────────────────────────────────────────────
-// Each accent theme re-emits only the color system tokens. Because every
-// Material component token falls back to `--mat-sys-*` (and the grid bridge
-// reads the same tokens), switching `data-lgr-accent` restyles the whole
-// app and every grid without a reload.
-html[data-lgr-accent='violet'] {
-  @include mat.theme((
-    color: (
-      primary: mat.$violet-palette,
-      tertiary: mat.$cyan-palette,
-    ),
-  ));
+// ── Washi palette (light mode) ──────────────────────────────────
+// Unbleached washi-paper surfaces, soft charcoal ink, aizome indigo accent.
+// These overrides land AFTER `mat.theme` so the full M3 token architecture
+// stays intact — components, the grid bridge, and density keep reading the
+// same `--mat-sys-*` tokens; only the values change.
+html {
+  --mat-sys-background: #f7f5f0;
+  --mat-sys-surface: #f7f5f0;
+  --mat-sys-surface-bright: #fcfaf4;
+  --mat-sys-surface-dim: #e8e4d8;
+  --mat-sys-surface-container-lowest: #fcfaf4;
+  --mat-sys-surface-container-low: #f1eee5;
+  --mat-sys-surface-container: #ece8dd;
+  --mat-sys-surface-container-high: #e5e1d3;
+  --mat-sys-surface-container-highest: #dfdacb;
+  // Not a stock M3 token — the docs chrome reads it for hover washes.
+  --mat-sys-surface-container-hover: #eae6da;
+  --mat-sys-on-surface: #2e2c26;
+  --mat-sys-on-surface-variant: #5b574c;
+  --mat-sys-outline: #7b766a;
+  --mat-sys-outline-variant: #d5cfc0;
+  --mat-sys-primary: #1b365d;
+  --mat-sys-on-primary: #f7f5f0;
+  --mat-sys-primary-container: #d9e2f2;
+  --mat-sys-on-primary-container: #0f2038;
+  --mat-sys-surface-tint: #1b365d;
+  --mat-sys-secondary: #565b50;
+  --mat-sys-on-secondary: #f7f5f0;
+  --mat-sys-secondary-container: #e2e0d2;
+  --mat-sys-on-secondary-container: #3b3a32;
+  // Muted persimmon, used sparingly.
+  --mat-sys-tertiary: #8c4a1f;
+  --mat-sys-on-tertiary: #f7f5f0;
+  --mat-sys-tertiary-container: #f2d8c4;
+  --mat-sys-on-tertiary-container: #472411;
+  --mat-sys-inverse-surface: #33302a;
+  --mat-sys-inverse-on-surface: #f0ede3;
+  --mat-sys-inverse-primary: #a9c3e6;
 }
 
-html[data-lgr-accent='azure'] {
-  @include mat.theme((
-    color: (
-      primary: mat.$azure-palette,
-      tertiary: mat.$rose-palette,
-    ),
-  ));
+// ── Accent themes — natural dye palette ─────────────────────────
+// indigo (default), persimmon, moss, aged wood. Each accent re-emits only the
+// primary colour tokens. Because every Material component token falls back to
+// `--mat-sys-*` (and the grid bridge reads the same tokens), switching
+// `data-lgr-accent` restyles the whole app and every grid without a reload.
+// Every pairing below holds WCAG AA contrast against the washi/sumi surfaces.
+html[data-lgr-accent='indigo'] {
+  --mat-sys-primary: #1b365d;
+  --mat-sys-on-primary: #f7f5f0;
+  --mat-sys-primary-container: #d9e2f2;
+  --mat-sys-on-primary-container: #0f2038;
+  --mat-sys-surface-tint: #1b365d;
 }
 
-html[data-lgr-accent='emerald'] {
-  @include mat.theme((
-    color: (
-      primary: mat.$green-palette,
-      tertiary: mat.$blue-palette,
-    ),
-  ));
+html[data-lgr-accent='persimmon'] {
+  --mat-sys-primary: #9e3d12;
+  --mat-sys-on-primary: #f7f5f0;
+  --mat-sys-primary-container: #f5d9c6;
+  --mat-sys-on-primary-container: #431c05;
+  --mat-sys-surface-tint: #9e3d12;
 }
 
-html[data-lgr-accent='rose'] {
-  @include mat.theme((
-    color: (
-      primary: mat.$rose-palette,
-      tertiary: mat.$blue-palette,
-    ),
-  ));
+html[data-lgr-accent='moss'] {
+  --mat-sys-primary: #4a5d23;
+  --mat-sys-on-primary: #f7f5f0;
+  --mat-sys-primary-container: #dee5c8;
+  --mat-sys-on-primary-container: #232d0c;
+  --mat-sys-surface-tint: #4a5d23;
 }
 
-html[data-lgr-accent='amber'] {
-  @include mat.theme((
-    color: (
-      primary: mat.$orange-palette,
-      tertiary: mat.$cyan-palette,
-    ),
-  ));
-}
-
-html[data-lgr-accent='magenta'] {
-  @include mat.theme((
-    color: (
-      primary: mat.$magenta-palette,
-      tertiary: mat.$yellow-palette,
-    ),
-  ));
+html[data-lgr-accent='wood'] {
+  --mat-sys-primary: #6b4f2e;
+  --mat-sys-on-primary: #f7f5f0;
+  --mat-sys-primary-container: #e7dac4;
+  --mat-sys-on-primary-container: #332413;
+  --mat-sys-surface-tint: #6b4f2e;
 }
 
 // Explicit dark override so the toggle wins over the OS preference.
+// Sumi-ink surfaces: warm charcoal, never pure black. Plain values instead of
+// light-dark(): WebKit does not reliably re-resolve Material's light-dark()
+// tokens after changing color-scheme at runtime.
 html[data-lgr-theme='dark'] {
   color-scheme: dark;
-  // WebKit does not reliably re-resolve Material's light-dark() primary token
-  // after changing color-scheme at runtime. Keep the default Azure accent
-  // legible against the dark surface until the browser does so natively.
-  --mat-sys-primary: #9ecaff;
+  --mat-sys-background: #211f1b;
+  --mat-sys-surface: #211f1b;
+  --mat-sys-surface-bright: #3b3830;
+  --mat-sys-surface-dim: #1a1815;
+  --mat-sys-surface-container-lowest: #191714;
+  --mat-sys-surface-container-low: #2a2822;
+  --mat-sys-surface-container: #2f2d26;
+  --mat-sys-surface-container-high: #3a382f;
+  --mat-sys-surface-container-highest: #454236;
+  --mat-sys-surface-container-hover: #35332b;
+  --mat-sys-on-surface: #e9e5d9;
+  --mat-sys-on-surface-variant: #c0baa9;
+  --mat-sys-outline: #8f8a7a;
+  --mat-sys-outline-variant: #4a473c;
+  --mat-sys-primary: #a9c3e6;
+  --mat-sys-on-primary: #14263f;
+  --mat-sys-primary-container: #2e4a77;
+  --mat-sys-on-primary-container: #d9e2f2;
+  --mat-sys-surface-tint: #a9c3e6;
+  --mat-sys-secondary: #c3c3b2;
+  --mat-sys-on-secondary: #2b2b24;
+  --mat-sys-secondary-container: #3e3d33;
+  --mat-sys-on-secondary-container: #dfdecd;
+  --mat-sys-tertiary: #e0a171;
+  --mat-sys-on-tertiary: #3e2208;
+  --mat-sys-tertiary-container: #5f3413;
+  --mat-sys-on-tertiary-container: #f2d8c4;
+  --mat-sys-inverse-surface: #e9e5d9;
+  --mat-sys-inverse-on-surface: #33302a;
+  --mat-sys-inverse-primary: #1b365d;
 }
+
+// Dark accent primaries: lighter dye tints that keep AA contrast on sumi ink.
+html[data-lgr-accent='indigo'][data-lgr-theme='dark'] {
+  --mat-sys-primary: #a9c3e6;
+  --mat-sys-on-primary: #14263f;
+  --mat-sys-primary-container: #2e4a77;
+  --mat-sys-on-primary-container: #d9e2f2;
+  --mat-sys-surface-tint: #a9c3e6;
+}
+
+html[data-lgr-accent='persimmon'][data-lgr-theme='dark'] {
+  --mat-sys-primary: #e8a368;
+  --mat-sys-on-primary: #3d1e08;
+  --mat-sys-primary-container: #6e3411;
+  --mat-sys-on-primary-container: #f5d9c6;
+  --mat-sys-surface-tint: #e8a368;
+}
+
+html[data-lgr-accent='moss'][data-lgr-theme='dark'] {
+  --mat-sys-primary: #a8bc7a;
+  --mat-sys-on-primary: #26300f;
+  --mat-sys-primary-container: #3e4c20;
+  --mat-sys-on-primary-container: #dee5c8;
+  --mat-sys-surface-tint: #a8bc7a;
+}
+
+html[data-lgr-accent='wood'][data-lgr-theme='dark'] {
+  --mat-sys-primary: #c9a87b;
+  --mat-sys-on-primary: #3a2a14;
+  --mat-sys-primary-container: #5a4326;
+  --mat-sys-on-primary-container: #e7dac4;
+  --mat-sys-surface-tint: #c9a87b;
+}
+
 html[data-lgr-theme='light'] { color-scheme: light; }
 
 /* ── Reset & base ─────────────────────────────────────────────── */
+
+/* Shared radius scale. New and touched components should consume these
+ * instead of inventing ad-hoc values. */
+:root {
+  --lgr-radius-sm: 8px;
+  --lgr-radius-md: 12px;
+  --lgr-radius-lg: 16px;
+  /* Shōji-door motion: slow, deliberate, one calm easing curve. */
+  --lgr-duration: 280ms;
+  --lgr-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ultra-subtle washi grain: tiled fractal noise at ~3.5% alpha. Invisible at
+ * a glance; a static tiled image, so no repaint-heavy layering. */
+:root {
+  --lgr-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* On sumi ink the grain flips to light fibres so it stays equally quiet. */
+html[data-lgr-theme='dark'] {
+  --lgr-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
 *,
 *::before,
 *::after {
@@ -118,27 +223,38 @@ html {
 
 body {
   margin: 0;
-  font-family: 'Inter', 'Roboto', system-ui, -apple-system, BlinkMacSystemFont,
+  font-family: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont,
     'Segoe UI', sans-serif;
   font-size: 1rem;
   line-height: 1.6;
-  background: var(--mat-sys-surface);
+  background-color: var(--mat-sys-surface);
+  background-image: var(--lgr-grain);
   color: var(--mat-sys-on-surface);
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ── Typography ───────────────────────────────────────────────── */
+/* ── Typography ─────────────────────────────────────────────────
+ * Body/UI stays on Roboto; headings use Shippori Mincho — a mincho-style
+ * serif with full Latin support — for a quiet, editorial voice. Position and
+ * whitespace, not size, carry the hierarchy. */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Inter', 'Roboto', system-ui, sans-serif;
   font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.02em;
+  line-height: 1.4;
+  letter-spacing: 0;
   color: var(--mat-sys-on-surface);
 }
 
-h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); letter-spacing: -0.03em; }
-h2 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); margin-top: 2rem; }
-h3 { font-size: 1.1rem; font-weight: 500; }
+h1, h2 {
+  font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', Georgia, serif;
+}
+
+h3, h4, h5, h6 {
+  font-family: 'Roboto', system-ui, sans-serif;
+}
+
+h1 { font-size: clamp(1.5rem, 3vw, 2rem); }
+h2 { font-size: clamp(1.2rem, 2vw, 1.4rem); margin-top: 2rem; }
+h3 { font-size: 1.05rem; font-weight: 500; }
 
 p { margin: 0 0 0.75rem; }
 
@@ -147,7 +263,7 @@ small { font-size: 0.85em; opacity: 0.8; }
 a {
   color: var(--mat-sys-primary);
   text-decoration: none;
-  transition: opacity 180ms ease;
+  transition: opacity var(--lgr-duration) var(--lgr-ease);
 }
 a:hover { opacity: 0.85; }
 
@@ -204,6 +320,16 @@ kbd {
   border-radius: 4px;
 }
 
+/* Theme switches snap instantly (see snapThemeChange in app/theme.ts):
+ * cross-fading every colour at once would leave text at unreadable
+ * mid-transition values. */
+.lgr-no-motion,
+.lgr-no-motion *,
+.lgr-no-motion *::before,
+.lgr-no-motion *::after {
+  transition: none !important;
+}
+
 /* ── Page layout ─────────────────────────────────────────────── */
 .lgr-page {
   width: 100%;
@@ -240,13 +366,6 @@ kbd {
   border-bottom: 1px solid var(--mat-sys-outline-variant);
 }
 
-/* Legacy demo routes are framed by DocsFeatureHeaderComponent in the app
- * shell. Keep their original content and live behavior, but avoid showing a
- * second generic page title directly below the new value-oriented header. */
-.lgr-guided-route .lgr-page > h1:first-child {
-  display: none;
-}
-
 .lgr-page > p:first-of-type {
   color: var(--mat-sys-on-surface-variant);
   font-size: 1.05rem;
@@ -270,7 +389,7 @@ kbd {
 }
 
 .lgr-page mat-card {
-  border-radius: 16px;
+  border-radius: var(--lgr-radius-lg);
   border: 1px solid var(--mat-sys-outline-variant);
   background: var(--mat-sys-surface-container-low);
 }
@@ -281,7 +400,7 @@ kbd {
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  border-radius: 12px;
+  border-radius: var(--lgr-radius-md);
   border: 1px solid var(--mat-sys-outline-variant);
   background: var(--mat-sys-surface);
 }
@@ -399,10 +518,10 @@ kbd {
   font-weight: 600;
 }
 
-/* ── Klaro consent manager — Azure Material bridge ─────────────── */
+/* ── Klaro consent manager — Material token bridge ─────────────── */
 .klaro {
   --font-family: 'Roboto', system-ui, sans-serif;
-  --title-font-family: 'Inter', 'Roboto', system-ui, sans-serif;
+  --title-font-family: 'Roboto', system-ui, sans-serif;
   --font-size: 0.9375rem;
   --light1: var(--mat-sys-on-primary-container);
   --light2: var(--mat-sys-outline-variant);
@@ -415,7 +534,7 @@ kbd {
   --blue1: var(--mat-sys-secondary);
   --blue2: var(--mat-sys-primary);
   --button-text-color: var(--mat-sys-on-primary);
-  --border-radius: 14px;
+  --border-radius: var(--lgr-radius-md);
   --border-width: 1px;
   --box-shadow-color: color-mix(in srgb, var(--mat-sys-primary) 45%, transparent);
 }

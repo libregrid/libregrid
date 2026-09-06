@@ -93,7 +93,7 @@ test.describe('Theme toggle', () => {
     await expect(page.locator('html')).toHaveAttribute('data-lgr-theme', 'light');
   });
 
-  test('Azure and Violet apply distinct primary colors', async ({ page }) => {
+  test('Indigo and Persimmon apply distinct primary colors', async ({ page }) => {
     const primaryColor = () => page.evaluate(() => {
       const probe = document.createElement('span');
       probe.style.cssText = 'position:absolute;visibility:hidden;color:var(--mat-sys-primary)';
@@ -103,13 +103,13 @@ test.describe('Theme toggle', () => {
       return color;
     });
 
-    await expect(page.locator('html')).toHaveAttribute('data-lgr-accent', 'azure');
-    const azure = await primaryColor();
+    await expect(page.locator('html')).toHaveAttribute('data-lgr-accent', 'indigo');
+    const indigo = await primaryColor();
 
     await page.getByRole('button', { name: 'Open theme picker' }).click();
-    await page.locator('.lgr-swatch').filter({ hasText: 'Violet' }).click();
-    await expect(page.locator('html')).toHaveAttribute('data-lgr-accent', 'violet');
+    await page.locator('.lgr-swatch').filter({ hasText: 'Persimmon' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-lgr-accent', 'persimmon');
 
-    expect(await primaryColor()).not.toBe(azure);
+    expect(await primaryColor()).not.toBe(indigo);
   });
 });
