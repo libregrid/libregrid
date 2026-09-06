@@ -12,6 +12,7 @@
 | `ux-2-menus.md`              | Deep-dive: column menu + context menu |
 | `ux-3-menu-items-status-bar.md` | Deep-dive: custom menu item components + status bar |
 | `ux-4-current-state-audit.md` | Current-state visual audit of LibreGrid's own surfaces |
+| `ux-5-api-reference-accordion.md` | Docs app `/api` package accordion: interaction, a11y, and test contract |
 
 Each deep-dive derives behavior from the public docs at ag-grid.com (per guardrail G2)
 and visual tokens from the MIT Quartz theme CSS shipped in `ag-grid-community`
