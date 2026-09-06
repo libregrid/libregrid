@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { type ColDef, type GridOptions, type GridApi, type SideBarDef } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   country: string;
@@ -41,10 +42,9 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-side-bar-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule],
+  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Side Bar</h1>
+    <lgr-docs-feature-page path="side-bar">
       <p>
         The side bar hosts tool panels. Register the
         <code>ColumnsToolPanelModule</code> and
@@ -92,7 +92,7 @@ function makeRows(n: number): Row[] {
         <em>Columns</em> and <em>Filters</em> appear here automatically once their modules
         are installed.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
   styles: `
     .lgr-actions { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; }

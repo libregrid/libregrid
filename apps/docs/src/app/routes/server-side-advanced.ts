@@ -82,7 +82,7 @@ function sortRows(rows: Trade[], request: IServerSideGetRowsRequest): Trade[] {
     <lgr-docs-feature-page-shell
       eyebrow="Server-side analytics"
       title="Let users ask complex questions without loading the warehouse"
-      summary="Advanced Filter creates one serializable expression; SSRM forwards it with group, sort, pivot, and range data so your backend performs the work close to the data."
+      summary="Ask complex questions of a large dataset — filter, group, and summarize — while your servers do the heavy work, so answers stay fast at any size."
       [packages]="['@libregrid/server-side-row-model', '@libregrid/advanced-filter']"
       [values]="values"
     >

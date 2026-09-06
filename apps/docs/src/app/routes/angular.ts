@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import type { GridApi } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
 import { createColumnDefs, createGridApiSignals, defineGridOptions } from '@libregrid/angular';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   name: string;
@@ -27,10 +28,9 @@ const ROW_DATA: Row[] = [
 @Component({
   selector: 'lgr-angular-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatFormFieldModule, MatInputModule],
+  imports: [AgGridAngular, MatCardModule, MatFormFieldModule, MatInputModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Angular integration</h1>
+    <lgr-docs-feature-page path="angular">
       <p>
         <code>@libregrid/angular</code> adds signal ergonomics on top of the module set. This
         application registers every LibreGrid module through
@@ -61,7 +61,7 @@ const ROW_DATA: Row[] = [
           />
         </mat-card-content>
       </mat-card>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class AngularDemo {

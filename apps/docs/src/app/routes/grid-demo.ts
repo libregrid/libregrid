@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridOptions } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   country: string;
@@ -35,10 +36,9 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-grid-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, RouterLink],
+  imports: [AgGridAngular, MatCardModule, RouterLink, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Grid (Community)</h1>
+    <lgr-docs-feature-page path="grid">
       <p>
         A stock <code>ag-grid-community</code> grid — no fork, no wrapper. Change the
         color theme or density from the palette button in the toolbar and watch this grid
@@ -71,7 +71,7 @@ function makeRows(n: number): Row[] {
         Try <a routerLink="/row-grouping">row grouping</a> or the
         <a routerLink="/menus">context and column menus</a> next.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class GridDemo {

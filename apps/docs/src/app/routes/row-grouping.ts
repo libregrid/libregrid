@@ -4,6 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridOptions } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   country: string;
@@ -40,10 +41,9 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-row-grouping',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule],
+  imports: [AgGridAngular, MatCardModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Row Grouping</h1>
+    <lgr-docs-feature-page path="row-grouping">
       <p>
         Data is grouped by <strong>country</strong>
         (and <strong>city</strong> when expanded) via
@@ -86,7 +86,7 @@ function makeRows(n: number): Row[] {
         <code>showValuesAs: 'percentOfGrandTotal'</code>, turning each cell into a
         share of the grid-wide total independently of the column next to it.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class RowGroupingDemo {

@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Sale { country: string; year: number; quarter: string; product: string; sales: number; }
 const rowData: Sale[] = [
@@ -17,10 +18,9 @@ const rowData: Sale[] = [
 @Component({
   selector: 'lgr-pivot-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule],
+  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Pivot</h1>
+    <lgr-docs-feature-page path="pivot">
       <p>Country remains a row group while year and quarter become nested result-column headers. Sales is aggregated into each intersection.</p>
       <mat-card appearance="outlined"><mat-card-content>
         <ag-grid-angular style="width:100%;height:500px" [theme]="theme.gridTheme()" [columnDefs]="columnDefs" [rowData]="rowData" [gridOptions]="gridOptions" (gridReady)="ready($event.api)" data-testid="pivot-grid" />
@@ -36,7 +36,7 @@ const rowData: Sale[] = [
         The Columns panel has the Pivot Mode switch and Column Labels drop zone. Cap generated
         columns with <code>pivotMaxGeneratedColumns</code> when pivot values have high cardinality.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class PivotDemo {

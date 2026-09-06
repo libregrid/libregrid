@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { type ColDef, type GridOptions, type GridApi } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   name: string;
@@ -30,10 +31,9 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-row-numbers-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule],
+  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
-    <div class="lgr-page">
-      <h1>Row Numbers</h1>
+    <lgr-docs-feature-page path="row-numbers">
       <p>
         <code>rowNumbers</code> adds a row-number column at the start of the grid.
         Each cell is the 1-based visible row index. With <code>cellSelection</code>
@@ -79,7 +79,7 @@ function makeRows(n: number): Row[] {
         or movable, 60px wide by default, and excluded from charts and exports
         unless <code>exportRowNumbers: true</code>.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class RowNumbersDemo {

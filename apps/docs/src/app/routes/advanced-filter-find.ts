@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row { country: string; sales: number; status: string; }
 const rows: Row[] = [
@@ -13,9 +14,9 @@ const rows: Row[] = [
 ];
 @Component({
   selector: 'lgr-advanced-filter-find-demo', changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule],
+  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
   template: `
-  <div class="lgr-page lgr-advanced-filter-find-page"><h1>Advanced Filter, Find & Rich Select</h1>
+  <lgr-docs-feature-page path="advanced-filter-find">
     <p>Expressions and the visual builder use one serialisable Advanced Filter model. Find highlights each rendered match and wraps through the results.</p>
     <mat-card appearance="outlined"><mat-card-content>
       <div class="lgr-actions lgr-advanced-filter-toolbar">
@@ -30,7 +31,7 @@ const rows: Row[] = [
     </mat-card-content></mat-card>
     <h2>Rich Select editor</h2><p>Double-click Status, search, and press Enter. The option viewport stays small even with thousands of values.</p>
     <mat-card appearance="outlined"><mat-card-content><div class="lgr-grid-host"><ag-grid-angular style="width:100%;height:220px" [theme]="theme.gridTheme()" [columnDefs]="richColumns" [rowData]="rowData" data-testid="phase-eleven-rich-select" /></div></mat-card-content></mat-card>
-  </div>`,
+  </lgr-docs-feature-page>`,
 })
 export class AdvancedFilterFindDemo {
   protected readonly theme = inject(LibreGridThemeService); protected readonly rowData = rows;

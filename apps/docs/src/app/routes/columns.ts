@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import type { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   country: string;
@@ -33,13 +34,12 @@ function makeRows(count: number): Row[] {
 @Component({
   selector: 'lgr-columns-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule],
+  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
   styles: `
     .lgr-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
   `,
   template: `
-    <div class="lgr-page">
-      <h1>Columns</h1>
+    <lgr-docs-feature-page path="columns">
       <p>
         The Columns tool panel synchronizes visibility, row groups, and value
         columns through the grid's public column APIs, including functional
@@ -81,7 +81,7 @@ function makeRows(count: number): Row[] {
         drop. The <strong>Column Labels (Pivot)</strong> and
         <strong>Pivot Mode</strong> sections change the live pivot model.
       </p>
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class ColumnsDemo {

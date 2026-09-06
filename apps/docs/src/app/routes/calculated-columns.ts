@@ -7,6 +7,7 @@ import {
   type GridOptions,
 } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
+import { DocsFeaturePageComponent } from '../docs';
 
 interface Row {
   product: string;
@@ -33,7 +34,7 @@ function makeRows(): Row[] {
 @Component({
   selector: 'lgr-calculated-columns-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule],
+  imports: [AgGridAngular, MatCardModule, DocsFeaturePageComponent],
   styles: `
     .lgr-calc-log {
       margin: 8px 0 24px;
@@ -51,8 +52,7 @@ function makeRows(): Row[] {
     }
   `,
   template: `
-    <div class="lgr-page">
-      <h1>Calculated Columns</h1>
+    <lgr-docs-feature-page path="calculated-columns">
       <p>
         Calculated columns are read-only, derived values that are not stored in
         row data. <strong>Profit</strong> and <strong>Unit Price</strong> below
@@ -78,7 +78,7 @@ function makeRows(): Row[] {
           }
         </ul>
       }
-    </div>
+    </lgr-docs-feature-page>
   `,
 })
 export class CalculatedColumnsDemo {

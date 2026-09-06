@@ -142,7 +142,6 @@ const DEMO_STEPS: readonly DocsDemoStep[] = [
   { icon: 'auto_awesome', title: 'Apply a query', instruction: 'Pick a demo query or type a request such as “Group by region and total the sales amount”, then press Apply Query.', expected: 'Validated changes are applied straight to the grid.' },
   { icon: 'rule', title: 'Review before applying', instruction: 'Turn on “Show request and validate”, run a query, read each suggested change, then choose Apply or Discard.', expected: 'Only Apply touches the grid; Discard leaves the state exactly as it was.' },
   { icon: 'manage_search', title: 'Inspect the request', instruction: 'With “Show request and validate” on, expand each section under the suggested changes.', expected: 'You see the exact system prompt, the request, the output schema, the response, and the validation report.' },
-  { icon: 'restart_alt', title: 'Reset the grid', instruction: 'After applying changes, press Reset Grid to return to the original state.', expected: 'Columns, filters, and rows return to their starting values; nothing from the session persists.' },
 ];
 
 const CLIENT_RESPONSIBILITIES: readonly DocsBoundaryResponsibility[] = [
@@ -366,7 +365,7 @@ function loadTurnstile(): Promise<void> {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 12px;
-      margin: 0 0 20px;
+      margin: 20px 0;
     }
     .lgr-ai-architecture mat-card { padding: 16px; }
     .lgr-ai-architecture h3 { margin: 0 0 6px; }
@@ -464,34 +463,15 @@ function loadTurnstile(): Promise<void> {
     <lgr-docs-feature-page-shell
       eyebrow="Bring your own model"
       title="Turn plain language into validated grid changes"
-      summary="Register AiToolkitModule, point the browser client at one authenticated route on your server, and let users turn plain language into validated grid changes. LibreGrid owns the schema, the request/response format, double validation, diff, and apply path; you own the provider, key, cost, and policy. Provider keys never enter the browser."
+      summary="Let users describe the view they want in plain language, with every request checked twice before anything changes. Provider keys never enter the browser."
       [packages]="['@libregrid/ai-toolkit', '@libregrid/ai-client', '@libregrid/ai-protocol', '@libregrid/ai-gateway']"
-      [audiences]="['Product teams', 'Application developers', 'Platform teams']"
       [values]="values"
     >
       <div featureDemo>
-        <div class="lgr-ai-architecture" aria-label="AI Toolkit package architecture">
-          <mat-card>
-            <h3>1. Schema</h3>
-            <code>&#64;libregrid/ai-toolkit</code>
-            <p>Reads the live columns and emits a strict seven-feature GridState schema.</p>
-          </mat-card>
-          <mat-card>
-            <h3>2. Browser safety</h3>
-            <code>&#64;libregrid/ai-client</code>
-            <p>Captures state, validates twice, shows a diff, detects stale grids, and applies.</p>
-          </mat-card>
-          <mat-card>
-            <h3>3. Your server</h3>
-            <code>POST /v1/grid-command</code>
-            <p>Use our Node gateway or generate any-language server stubs from OpenAPI.</p>
-          </mat-card>
-        </div>
-
         <h2>Try it out</h2>
         <p>
-          Every query is sent to <code>POST /v1/grid-command</code> on this origin and validated
-          against the same protocol your server uses. This page never asks for a provider key.
+          Requests run against the real protocol on this live grid — nothing is simulated, and no
+          provider key is ever asked for.
         </p>
         <p class="lgr-ai-flow">
           Each request: validated against the live grid → sent to your server → revalidated →
@@ -597,6 +577,24 @@ function loadTurnstile(): Promise<void> {
       <lgr-docs-demo-guide featureGuide intro="Every step runs against the real protocol on this page's live grid." [steps]="demoSteps" />
 
       <div featureImplementation>
+        <div class="lgr-ai-architecture" aria-label="AI Toolkit package architecture">
+          <mat-card>
+            <h3>1. Schema</h3>
+            <code>&#64;libregrid/ai-toolkit</code>
+            <p>Describes the grid's current layout in a strict, versioned format.</p>
+          </mat-card>
+          <mat-card>
+            <h3>2. Browser safety</h3>
+            <code>&#64;libregrid/ai-client</code>
+            <p>Checks every answer twice and can show changes for review before applying.</p>
+          </mat-card>
+          <mat-card>
+            <h3>3. Your server</h3>
+            <code>POST /v1/grid-command</code>
+            <p>Use our ready-made gateway, or connect your own server in any language.</p>
+          </mat-card>
+        </div>
+
         <lgr-docs-code-example heading="Add the AI Toolkit to your application" [examples]="integrationExamples" />
       </div>
 
@@ -634,7 +632,6 @@ export class AiToolkitDemo {
     { icon: 'auto_awesome', title: 'Plain-language control', description: 'Users ask for filters, sorts, grouping, pivot, sizing, visibility, and aggregation across seven supported features.' },
     { icon: 'key', title: 'Keys stay server-side', description: 'The browser calls only your endpoint; provider credentials and model choice never leave your infrastructure.' },
     { icon: 'fact_check', title: 'Validate before you apply', description: 'Every response is revalidated against the live grid; turn on “Show request and validate” to review changes as a diff before applying.' },
-    { icon: 'sync_alt', title: 'One request format, any provider', description: 'The versioned libregrid.ai/v1 request/response format works with the Node gateway, another provider port, or an OpenAPI-generated server.' },
   ];
   protected readonly artifacts = signal<{
     systemPrompt: string;

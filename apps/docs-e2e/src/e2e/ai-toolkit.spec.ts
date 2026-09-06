@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test.describe('AI Toolkit BYOM workbench', () => {
-  // The flagship layout splits demo and guide into two columns; a wide viewport
-  // keeps every demo column rendered so visibility assertions see all cells.
+  // A wide viewport keeps every demo column rendered so visibility assertions
+  // see all cells.
   test.use({ viewport: { width: 1720, height: 900 } });
 
   test.beforeEach(async ({ page }) => {

@@ -1,33 +1,8 @@
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { LIBREGRID_VERSION } from '../../version';
-
-interface Phase {
-  num: string;
-  label: string;
-}
-
-const PHASES: Phase[] = [
-  { num: '00', label: 'Foundation & guardrails' },
-  { num: '01', label: 'Menus & side bar' },
-  { num: '02', label: 'Row grouping & aggregation' },
-  { num: '03', label: 'Columns tool panel' },
-  { num: '04', label: 'Selection, clipboard & status bar' },
-  { num: '05', label: 'Excel export' },
-  { num: '06', label: 'Set/Multi filter & filters tool panel' },
-  { num: '07', label: 'Server-Side Row Model' },
-  { num: '08', label: 'Pivot' },
-  { num: '09', label: 'SSRM grouping/pivot & viewport model' },
-  { num: '10', label: 'Tree data & master/detail' },
-  { num: '11', label: 'Advanced filter, find & rich select' },
-  { num: '12', label: 'Integrated charts & sparklines' },
-  { num: '13', label: 'Long tail & 1.0 hardening' },
-];
 
 interface FeatureCard {
   icon: string;
@@ -63,40 +38,17 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
 @Component({
   selector: 'lgr-overview',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatCardModule, MatButtonModule, MatChipsModule, MatIconModule, MatTooltipModule],
+  imports: [RouterLink, MatButtonModule, MatIconModule, MatTooltipModule],
   styles: `
     /* ── Hero ───────────────────────────────────── */
     .hero {
-      position: relative;
-      overflow: hidden;
       padding: clamp(2.5rem, 6vw, 5rem) clamp(1.5rem, 4vw, 3rem);
-      border-radius: 24px;
-      background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--mat-sys-primary) 12%, var(--mat-sys-surface)),
-        color-mix(in srgb, var(--mat-sys-tertiary) 8%, var(--mat-sys-surface))
-      );
-      border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 12%, var(--mat-sys-outline-variant));
-    }
-
-    .hero-glow {
-      position: absolute;
-      top: -30%;
-      right: -15%;
-      width: 50%;
-      height: 160%;
-      border-radius: 50%;
-      background: radial-gradient(
-        circle,
-        color-mix(in srgb, var(--mat-sys-primary) 12%, transparent) 0%,
-        transparent 70%
-      );
-      pointer-events: none;
+      border-radius: var(--lgr-radius-lg);
+      background: var(--mat-sys-surface-container);
+      border: 1px solid var(--mat-sys-outline-variant);
     }
 
     .hero-content {
-      position: relative;
-      z-index: 1;
       max-width: 780px;
     }
 
@@ -106,17 +58,6 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
       letter-spacing: -0.03em;
       margin: 0 0 0.75rem;
       line-height: 1.12;
-    }
-
-    .hero h1 .highlight {
-      background: linear-gradient(
-        135deg,
-        var(--mat-sys-primary),
-        color-mix(in srgb, var(--mat-sys-tertiary) 60%, var(--mat-sys-primary))
-      );
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
     }
 
     .hero-sub {
@@ -135,37 +76,8 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
     }
 
     .hero-actions a {
-      font-family: 'Inter', 'Roboto', system-ui, sans-serif;
+      font-family: 'Roboto', system-ui, sans-serif;
       font-weight: 600;
-    }
-
-    /* ── Badge bar ──────────────────────────────── */
-    .badge-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.25rem;
-      justify-content: center;
-      margin: 1.5rem 0 2.25rem;
-    }
-
-    .badge-item {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--mat-sys-on-surface-variant);
-      background: var(--mat-sys-surface-container);
-      padding: 0.45rem 1rem;
-      border-radius: 99px;
-      border: 1px solid var(--mat-sys-outline-variant);
-    }
-
-    .badge-item mat-icon {
-      font-size: 1.1rem;
-      width: 1.1rem;
-      height: 1.1rem;
-      color: var(--mat-sys-primary);
     }
 
     /* ── Install ────────────────────────────────── */
@@ -175,7 +87,7 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
       gap: 0.75rem;
       margin: 1.5rem 0 2.25rem;
       padding: 0.85rem 1.1rem;
-      border-radius: 14px;
+      border-radius: var(--lgr-radius-md);
       background: var(--mat-sys-surface-container-low);
       border: 1px solid var(--mat-sys-outline-variant);
       overflow-x: auto;
@@ -203,7 +115,7 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
       padding: 0.75rem 0 0.75rem 1.25rem;
       margin: 1.5rem 0;
       background: var(--mat-sys-surface-container-low);
-      border-radius: 0 12px 12px 0;
+      border-radius: 0 var(--lgr-radius-md) var(--lgr-radius-md) 0;
     }
     .note p { margin: 0.3rem 0; }
 
@@ -217,16 +129,9 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
 
     .feature-card {
       padding: 1.5rem;
-      border-radius: 16px;
+      border-radius: var(--lgr-radius-md);
       background: var(--mat-sys-surface-container-low);
       border: 1px solid var(--mat-sys-outline-variant);
-      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
-      border-color: color-mix(in srgb, var(--mat-sys-primary) 30%, var(--mat-sys-outline-variant));
     }
 
     .feature-icon {
@@ -235,7 +140,7 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
       justify-content: center;
       width: 42px;
       height: 42px;
-      border-radius: 12px;
+      border-radius: var(--lgr-radius-sm);
       background: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
       color: var(--mat-sys-primary);
       margin-bottom: 0.75rem;
@@ -261,78 +166,14 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
       line-height: 1.55;
     }
 
-    /* ── Roadmap ────────────────────────────────── */
-    .roadmap-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 2rem 0 1.25rem;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-
-    .roadmap-header h2 { margin: 0; }
-
-    .roadmap-progress {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.9rem;
-    }
-
-    .roadmap-progress progress {
-      width: 140px;
-      height: 6px;
-      border-radius: 99px;
-      border: none;
-      background: var(--mat-sys-surface-container-high);
-      accent-color: var(--mat-sys-primary);
-    }
-    .roadmap-progress progress::-webkit-progress-bar {
-      background: var(--mat-sys-surface-container-high);
-      border-radius: 99px;
-    }
-    .roadmap-progress progress::-webkit-progress-value {
-      background: linear-gradient(90deg, var(--mat-sys-primary), color-mix(in srgb, var(--mat-sys-tertiary) 50%, var(--mat-sys-primary)));
-      border-radius: 99px;
-    }
-
-    .roadmap {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
-      gap: 0.5rem;
-      margin: 0 0 2rem;
-    }
-
-    .phase-card {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      padding: 0.6rem 0.85rem;
-      border-radius: 12px;
-      background: var(--mat-sys-surface-container-low);
-      border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 20%, var(--mat-sys-outline-variant));
-      font-size: 0.85rem;
-      font-weight: 500;
-      transition: border-color 120ms ease, background 120ms ease;
-    }
-
-    .phase-check {
-      color: var(--mat-sys-primary);
-      font-size: 1rem;
-      width: 1rem;
-      height: 1rem;
-      flex-shrink: 0;
-    }
-
     /* ── CTA section ────────────────────────────── */
     .cta-section {
       text-align: center;
       padding: 2rem;
       margin: 2rem 0 1rem;
-      border-radius: 20px;
-      background: color-mix(in srgb, var(--mat-sys-primary) 6%, var(--mat-sys-surface));
-      border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 12%, var(--mat-sys-outline-variant));
+      border-radius: var(--lgr-radius-lg);
+      background: var(--mat-sys-surface-container);
+      border: 1px solid var(--mat-sys-outline-variant);
     }
 
     .cta-section h2 { margin-top: 0; }
@@ -358,11 +199,10 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
     <div class="lgr-page">
       <!-- Hero -->
       <div class="hero">
-        <div class="hero-glow"></div>
         <div class="hero-content">
           <h1>
             Enterprise grid features.<br />
-            <span class="highlight">Free and open source.</span>
+            Free and open source.
           </h1>
           <p class="hero-sub">
             LibreGrid adds an enterprise feature set to the AG Grid Community
@@ -370,22 +210,14 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
             charts, Excel export and more. No licence key. No fork. MIT licensed.
           </p>
           <div class="hero-actions">
-            <a matButton="filled" routerLink="/getting-started">Start an integration</a>
-            <a matButton="tonal" routerLink="/packages">Explore customer outcomes</a>
+            <a matButton="filled" routerLink="/getting-started">Get started</a>
+            <a matButton="tonal" routerLink="/packages">Browse features</a>
             <a matButton="tonal" href="https://github.com/libregrid/libregrid" target="_blank">
               <mat-icon>open_in_new</mat-icon>
               GitHub
             </a>
           </div>
         </div>
-      </div>
-
-      <!-- Badge bar -->
-      <div class="badge-bar">
-        <span class="badge-item"><mat-icon>check_circle</mat-icon> 27 enterprise features</span>
-        <span class="badge-item"><mat-icon>verified</mat-icon> v{{ libregridVersion }} on npm</span>
-        <span class="badge-item"><mat-icon>tag</mat-icon> ag-grid-community 36.1</span>
-        <span class="badge-item"><mat-icon>lock_open</mat-icon> MIT licensed</span>
       </div>
 
       <!-- Install -->
@@ -436,34 +268,16 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
         </p>
       </div>
 
-      <!-- Roadmap -->
-      <div class="roadmap-header">
-        <h2>Roadmap — complete</h2>
-        <div class="roadmap-progress">
-          <progress [value]="PHASES.length" [max]="PHASES.length"></progress>
-          <span>{{ PHASES.length }} / {{ PHASES.length }}</span>
-        </div>
-      </div>
-      <div class="roadmap">
-        @for (phase of PHASES; track phase.num) {
-          <div class="phase-card">
-            <mat-icon class="phase-check">check_circle</mat-icon>
-            <span>{{ phase.label }}</span>
-          </div>
-        }
-      </div>
-
       <!-- CTA -->
       <div class="cta-section">
         <h2>Ready to see it in action?</h2>
         <p>
-          Every feature has a live demo on this site. Start with grouping, or
-          jump straight to whichever feature matters most to you.
+          Every feature has a live demo on this site. Start with the quick start,
+          or jump straight to whichever feature matters most to you.
         </p>
         <div class="hero-actions">
-          <a matButton="filled" routerLink="/row-grouping">Row grouping</a>
-          <a matButton="tonal" routerLink="/charts">Charts</a>
-          <a matButton="tonal" routerLink="/grid">Grid</a>
+          <a matButton="filled" routerLink="/getting-started">Get started</a>
+          <a matButton="tonal" routerLink="/packages">Browse features</a>
         </div>
       </div>
 
@@ -479,10 +293,8 @@ const INSTALL_COMMAND = 'npm install ag-grid-community @libregrid/angular @libre
   `,
 })
 export class Overview {
-  protected readonly PHASES = PHASES;
   protected readonly FEATURES = FEATURES;
   protected readonly installCommand = INSTALL_COMMAND;
-  protected readonly libregridVersion = LIBREGRID_VERSION;
   protected readonly copied = signal(false);
 
   protected copyInstall(): void {
