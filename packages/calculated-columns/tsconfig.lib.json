@@ -5,6 +5,7 @@
     "rootDir": "./src",
     "paths": {
       "@libregrid/core": ["../core/dist/index.d.ts"],
+      "@libregrid/formulas": ["../formulas/dist/index.d.ts"],
       "@libregrid/menu": ["../menu/dist/index.d.ts"]
     }
   },

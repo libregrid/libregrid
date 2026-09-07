@@ -62,6 +62,70 @@ describe('RangeService', () => {
       expect.objectContaining({ type: 'cellSelectionDeleteEnd' }),
     );
   });
+
+  it('shifts relative formula references when filling allowFormula columns with a formula bean', () => {
+    const columns = ['total'].map((id) => ({
+      getColId: () => id,
+      getColDef: () => ({ field: id, allowFormula: true }),
+    }));
+    const rows = [
+      { total: '=[b:r1] + [a:r1]' },
+      { total: '=[b:r2] + [a:r2]' },
+      { total: '' },
+      { total: '' },
+    ];
+    const shifted: string[] = [];
+    const { bean } = makeBeanHarness(RangeService, {
+      beans: {
+        gridApi: {
+          getAllGridColumns: () => columns,
+          getDisplayedRowAtIndex: (index: number) => ({
+            data: rows[index],
+            setDataValue: (_column: unknown, value: string) => {
+              rows[index].total = value;
+              if (index >= 2) shifted.push(value);
+            },
+          }),
+        },
+        formula: {
+          isFormula: (value: unknown) => typeof value === 'string' && value.startsWith('='),
+          updateFormulaByOffset: ({ value, rowDelta }: { value: string; rowDelta?: number }) => {
+            // Stand-in for the real engine: tag the applied delta on every ref.
+            return value.replace(/\]/g, `+${rowDelta}]`);
+          },
+        },
+      },
+    });
+    const range = bean.addCellRange({ rowStartIndex: 0, rowEndIndex: 1, columnStart: 'total', columnEnd: 'total' });
+    bean.fillRangeToCell(range!, { rowIndex: 3, rowPinned: null, column: columns[0] });
+    // Target row 2 extends source row 0 (+2), row 3 extends source row 1 (+2).
+    expect(shifted).toEqual(['=[b:r1+2] + [a:r1+2]', '=[b:r2+2] + [a:r2+2]']);
+  });
+
+  it('leaves values verbatim when no formula bean is registered', () => {
+    const columns = ['total'].map((id) => ({
+      getColId: () => id,
+      getColDef: () => ({ field: id, allowFormula: true }),
+    }));
+    const rows = [{ total: '=A1' }, { total: '' }, { total: '' }];
+    const { bean } = makeBeanHarness(RangeService, {
+      beans: {
+        gridApi: {
+          getAllGridColumns: () => columns,
+          getDisplayedRowAtIndex: (index: number) => ({
+            data: rows[index],
+            setDataValue: (_column: unknown, value: string) => {
+              rows[index].total = value;
+            },
+          }),
+        },
+      },
+    });
+    const range = bean.addCellRange({ rowStartIndex: 0, rowEndIndex: 0, columnStart: 'total', columnEnd: 'total' });
+    bean.fillRangeToCell(range!, { rowIndex: 2, rowPinned: null, column: columns[0] });
+    expect(rows[1]!.total).toBe('=A1');
+    expect(rows[2]!.total).toBe('=A1');
+  });
   it('supports range predicates, keyboard extension, and column selection options', () => {
     const columns = ['a', 'b', 'c'].map((id) => ({
       getColId: () => id,

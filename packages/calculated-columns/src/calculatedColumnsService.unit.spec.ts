@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AgColumn, type ColDef } from 'ag-grid-community';
 import { makeBeanHarness, type BeanHarness } from '@libregrid/core/testing';
 import { CalculatedColumnsService } from './calculatedColumnsService';
-import { FormulaError } from './expression';
+import { FormulaError } from '@libregrid/formulas';
 
 interface UserEntry {
   properties?: ColDef;

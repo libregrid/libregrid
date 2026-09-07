@@ -310,6 +310,25 @@ export class RangeService extends BeanStub implements NamedBean {
           : undefined;
       });
       const values = fillSeries(source, targetEnd - start + 1);
+      // Formula interplay (gap-plan A1): when the `formula` bean is registered
+      // and the filled column allows formulas, relative references shift by the
+      // distance each target row extends its source row. Optional runtime
+      // detection — without @libregrid/formulas the fill copies values verbatim.
+      const formulaSvc = (this.beans as unknown as {
+        formula?: {
+          isFormula?(value: unknown): value is `=${string}`;
+          updateFormulaByOffset?(params: { value: string; rowDelta?: number }): string;
+        };
+      }).formula;
+      if (formulaSvc?.isFormula && formulaSvc.updateFormulaByOffset && column.getColDef().allowFormula === true) {
+        const pattern = end - start + 1;
+        for (let i = pattern; i < values.length; i++) {
+          const value = values[i];
+          if (formulaSvc.isFormula(value)) {
+            values[i] = formulaSvc.updateFormulaByOffset({ value, rowDelta: i - (i % pattern) });
+          }
+        }
+      }
       values
         .slice(end - start + 1)
         .forEach((value, offset) =>

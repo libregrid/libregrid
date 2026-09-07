@@ -5,6 +5,7 @@ import { ColumnMenuModule, ContextMenuModule } from '@libregrid/menu';
 import { ClipboardModule } from '@libregrid/clipboard';
 import { RowGroupingModule } from '@libregrid/row-grouping';
 import { CalculatedColumnsModule } from './calculatedColumnsModule';
+import { FormulasModule } from '@libregrid/formulas';
 
 const DATA = [
   { a: 10, b: 4, c: 2 },
@@ -373,5 +374,37 @@ describe('CalculatedColumnsModule (integration)', () => {
     const cells = Array.from(host!.querySelectorAll('.ag-row .ag-cell[col-id="double"]')).map((el) => el.textContent?.trim());
     expect(cells).toContain('8'); // group x: (1*2)+(3*2)
     expect(cells).toContain('10'); // group y
+  });
+
+  it('coexists with per-cell formulas regardless of registration order', async () => {
+    for (const reverse of [false, true]) {
+      ModuleRegistry.registerModules(
+        reverse ? [CalculatedColumnsModule, FormulasModule] : [FormulasModule, CalculatedColumnsModule],
+      );
+      host = document.createElement('div');
+      document.body.appendChild(host);
+      const grid = createGrid(host, {
+        columnDefs: [
+          { field: 'a' },
+          { field: 'b' },
+          { colId: 'calc', calculatedExpression: '[a] * 10' },
+          { colId: 'formula', field: 'formula', allowFormula: true },
+        ],
+        rowData: [
+          { id: 'r1', a: 3, b: 4, formula: '=A1 + B1' },
+          { id: 'r2', a: 5, b: 6, formula: '=A2 + B2' },
+        ],
+        calculatedColumns: true,
+        getRowId: (params) => String((params.data as { id: string }).id),
+      } as never);
+      await vi.waitFor(() => expect(host!.querySelectorAll('.ag-row').length).toBeGreaterThanOrEqual(2));
+      await vi.waitFor(() => expect(cellText(0, 'calc')).toBe('30'));
+      expect(cellText(0, 'formula')).toBe('7');
+      expect(cellText(1, 'formula')).toBe('11');
+      grid.destroy();
+      host!.remove();
+      host = undefined;
+      api = undefined;
+    }
   });
 });
