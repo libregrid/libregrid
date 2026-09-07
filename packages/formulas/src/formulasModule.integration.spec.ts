@@ -12,6 +12,9 @@ const DATA = [
 
 let api: GridApi | undefined;
 let host: HTMLDivElement | undefined;
+// Set by the grid's `onBodyScroll` callback — a body scroll happened in the
+// current test, so Community has a pending 150ms `bodyScrollEnd` timer.
+let bodyScrolled = false;
 
 async function makeGrid(options: {
   columnDefs?: unknown[];
@@ -33,6 +36,9 @@ async function makeGrid(options: {
     getRowId: (params) => String((params.data as { id: string }).id),
     formulaDataSource: options.formulaDataSource,
     formulaFuncs: options.formulaFuncs,
+    onBodyScroll: () => {
+      bodyScrolled = true;
+    },
     ...{},
   } as never);
   api = grid;
@@ -61,12 +67,21 @@ async function editCell(row: number, colId: string, value: string): Promise<void
   await vi.waitFor(() => expect(cell(row, colId).querySelector('input')).toBeNull());
 }
 
-afterEach(() => {
+afterEach(async () => {
+  const hadScroll = bodyScrolled;
   api?.destroy();
   api = undefined;
   host?.remove();
   host = undefined;
   document.body.replaceChildren();
+  // Community schedules a 150ms `bodyScrollEnd` timer on every body scroll.
+  // If it outlives this file, vitest has already torn the jsdom environment
+  // down and the timer's callback hits a removed `window` global — recorded
+  // as an unhandled error that fails the run. Drain it while `window` lives.
+  if (hadScroll || bodyScrolled) {
+    bodyScrolled = false;
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
 });
 
 describe('FormulasModule (integration)', () => {
