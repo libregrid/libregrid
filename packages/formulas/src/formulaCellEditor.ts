@@ -62,7 +62,19 @@ export class FormulaCellEditor<TData = unknown, TValue = unknown> implements ICe
     this.params = params;
     this.editorId = nextEditorId++;
     const value = params.value;
-    const text = this.formulaSvc?.isFormula(value) ? (this.formulaSvc.normaliseFormula(value, true) ?? value) : value == null ? '' : String(value);
+    // With a formulaDataSource, Community routes committed formulas into the
+    // store and leaves the computed value in the field — params.value is then
+    // the evaluated number, so the editor must read the stored formula itself.
+    const stored = this.formulaSvc?.getEditableFormula(
+      params.column as never,
+      params.node as never,
+    );
+    const source = stored ?? value;
+    const text = this.formulaSvc?.isFormula(source)
+      ? (this.formulaSvc.normaliseFormula(source, true) ?? source)
+      : source == null
+        ? ''
+        : String(source);
     this.gui.className = 'lgr-formula-editor';
     this.tokens.className = 'lgr-formula-tokens';
     this.tokens.setAttribute('aria-hidden', 'true');

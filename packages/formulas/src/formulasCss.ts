@@ -28,6 +28,10 @@ export const formulasCss = `
 .lgr-formula-editor .lgr-formula-tokens {
   pointer-events: none;
   color: var(--ag-header-cell-text-color, #181d1f);
+  /* Centre the tokenised formula vertically so it sits on the same line as
+     the input's caret (inputs always centre their text). */
+  display: flex;
+  align-items: center;
 }
 .lgr-formula-editor .lgr-formula-input {
   background: transparent;

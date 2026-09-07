@@ -42,8 +42,8 @@
 |---|---|---|
 | Formulas in row data (default) | ✅ | `=…` string lives in the field; committed through the normal setters |
 | `gridOptions.formulaDataSource` | ✅ | `init({api, context})` / `getFormula` / `setFormula` / `destroy` lifecycle via the `formulaDataSvc` bean |
-| Formula columns without `field`/`valueSetter` | ✅ | Community's `isSetValueSupported` permits formula writes when an external store exists |
-| Lazy `getFormula` cache, invalidated on edits / row refresh / column changes | ✅ | Text cache keyed `rowId:colId`; invalidated by `cellValueChanged`-driven hooks, `onRowsChanged`, `setFormulasActive`, `refreshFormulas` |
+| Formula columns without `field`/`valueSetter` | ✅ | Community's `isSetValueSupported` permits formula writes when an external store exists. With a data source configured, Community routes committed formulas into the store and writes the computed value into the row-data field — even for field columns; the formula editor reads the stored formula on re-entry (`getEditableFormula`) so re-editing never shows the evaluated value |
+| Lazy `getFormula` cache, invalidated on edits / row refresh / column changes | ✅ | Text cache keyed `rowId:colId`; invalidated by `cellValueChanged`-driven hooks, `onRowsChanged`, `setFormulasActive`, `refreshFormulas`, and every `setFormula` call through the data service (so Community's immediate re-evaluation inside the commit path reads the new store entry) |
 | `api.refreshFormulas()` / `(rowNode)` / `(rowId)` | ✅ | Reserved `_FormulaGridApi` slot; returns `false` for no-op cases; `true` triggers the repaint (the Community edit service relies on the same behaviour after batch commits) |
 | Excel export exports the formulas themselves | 🟡 | CSV export evaluates (verified); Excel export of the raw formula string relies on Community's export paths and is not separately verified — see `excel-export.md` |
 

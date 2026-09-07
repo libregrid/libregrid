@@ -129,6 +129,20 @@ describe('FormulasModule (integration)', () => {
     expect(grid.getRowNode('r1')!.data!.total).toBe('=[b:r1] * [a:r1]');
   });
 
+  it('keeps the formula across a re-edit: the editor shows the stored formula, not the rendered value', async () => {
+    const grid = await makeGrid();
+    await editCell(0, 'total', '=B1 * A1');
+    await vi.waitFor(() => expect(cellText(0, 'total')).toBe('40'));
+    // Re-enter edit mode without typing: the editor must show the formula.
+    await api!.startEditingCell({ rowIndex: 0, colKey: 'total' });
+    await vi.waitFor(() => expect(cell(0, 'total').querySelector('input')).not.toBeNull());
+    const input = cell(0, 'total').querySelector<HTMLInputElement>('input')!;
+    const shown = input.value;
+    await api!.stopEditing();
+    expect(shown).toMatch(/^=[A-Z]+\d+ \* [A-Z]+\d+$/);
+    expect(grid.getRowNode('r1')!.data!.total).toBe('=[b:r1] * [a:r1]');
+  });
+
   it('shows the formula-error class and tooltip for invalid formulas', async () => {
     const _grid = await makeGrid();
     await editCell(0, 'total', '=A1 +');
@@ -169,6 +183,48 @@ describe('FormulasModule (integration)', () => {
     expect(api!.refreshFormulas('r1')).toBe(true);
     await vi.waitFor(() => expect(cellText(0, 'external')).toBe('40'));
     expect(api!.refreshFormulas('unknown-row')).toBe(false);
+  });
+
+  it('keeps the formula across a re-edit even when a formulaDataSource routes commits into the store', async () => {
+    // With a data source present, Community routes committed formulas into the
+    // store and writes the computed value into the row-data field — the editor
+    // must read the stored formula on re-entry, not the evaluated field value.
+    const store = new Map<string, string>();
+    const dataSource: FormulaDataSource = {
+      getFormula: ({ column, rowNode }) => store.get(`${rowNode.id}-${column.colId}`),
+      setFormula: ({ column, rowNode, formula }) => {
+        const key = `${rowNode.id}-${column.colId}`;
+        if (formula === undefined) store.delete(key);
+        else store.set(key, formula);
+      },
+    };
+    const grid = await makeGrid({
+      columnDefs: [
+        { field: 'a' },
+        { field: 'b' },
+        { colId: 'total', field: 'total', allowFormula: true, editable: true },
+      ],
+      rowData: [
+        { id: 'r1', a: 10, b: 4, total: '=A1 + B1' },
+        { id: 'r2', a: 20, b: 5, total: '=A2 + B2' },
+      ],
+      formulaDataSource: dataSource,
+    });
+    await vi.waitFor(() => expect(cellText(0, 'total')).toBe('14'));
+
+    await editCell(0, 'total', '=B1 * A1');
+    await vi.waitFor(() => expect(cellText(0, 'total')).toBe('40'));
+    // The formula was routed into the store; the field holds the computed value.
+    expect(store.get('r1-total')).toBe('=[b:r1] * [a:r1]');
+
+    // Re-enter edit mode without typing: the editor must show the stored formula.
+    await api!.startEditingCell({ rowIndex: 0, colKey: 'total' });
+    await vi.waitFor(() => expect(cell(0, 'total').querySelector('input')).not.toBeNull());
+    const input = cell(0, 'total').querySelector<HTMLInputElement>('input')!;
+    const shown = input.value;
+    await api!.stopEditing();
+    expect(shown).toMatch(/^=[A-Z]+\d+ \* [A-Z]+\d+$/);
+    expect(grid.getRowNode('r1')!.data!.total).toBe(40);
   });
 
   it('calls custom functions with value and range params', async () => {

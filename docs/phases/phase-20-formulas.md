@@ -10,6 +10,17 @@ same init regression, and the benchmark grid registers no formula beans and sets
 drift accumulated across Phases 14–19 without a recorded bench note. Baseline
 promotion (per `compare.mjs`'s verify-then-promote flow) vs an init-performance
 investigation is a deliberate follow-up decision — this phase does not paper over it.
+
+**User review fixes (2026-08-24, post-branch):** two defects found testing the
+`/formulas` route: (1) the tokenised formula rendered at the cell's block start
+while the input caret centred — the token overlay now centres vertically
+(`align-items: center`), matching the input; (2) with a `formulaDataSource`
+configured, re-entering edit mode showed the evaluated field value because
+Community routes committed formulas into the store and leaves the computed
+value in the field — the editor now reads the stored formula
+(`FormulaService.getEditableFormula`) and the service's per-cell store-read
+cache is invalidated on every `setFormula` through the data service. Covered
+by one jsdom integration spec and one Playwright e2e per fix.
 **Depends on:** Phase 18 (`@libregrid/calculated-columns` — expression engine being relocated here, shared `formula` bean), Phase 4 (`@libregrid/cell-selection` — optional range-highlight interplay, runtime-detected)
 **Blocks:** calculated-columns parity row `SUMIF`/`COUNTIF` cell ranges (completes here)
 

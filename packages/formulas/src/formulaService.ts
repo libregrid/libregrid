@@ -206,6 +206,16 @@ export class FormulaService extends BeanStub implements IFormulaService, NamedBe
     this.formatGen++;
   }
 
+  /**
+   * Drop the cached external-store text for one cell. The data service calls
+   * this whenever a formula is written (or cleared) through
+   * `formulaDataSource`, so the next read — including Community's immediate
+   * re-evaluation inside the commit path — sees the new store entry.
+   */
+  public invalidateCellFormula(row: FormulaRow, column: FormulaColumn): void {
+    this.textCache.delete(this.key(row, column as AgColumn));
+  }
+
   public getDataSourceFormula(row: FormulaRow, column: FormulaColumn): string | undefined {
     const col = column as AgColumn;
     if (!col.allowFormula) return undefined;
@@ -233,6 +243,17 @@ export class FormulaService extends BeanStub implements IFormulaService, NamedBe
     } catch {
       return null;
     }
+  }
+
+  /**
+   * The formula text an editor should display for this cell: the external
+   * store's entry when a `formulaDataSource` holds it (Community routes
+   * formula commits into the store even for field columns), else the raw
+   * cell value.
+   */
+  public getEditableFormula(column: FormulaColumn, row: FormulaRow): string | undefined {
+    const raw = this.rawValue(column as AgColumn, row);
+    return raw == null ? undefined : String(raw);
   }
 
   public getColByRef(ref: string): AgColumn | null {

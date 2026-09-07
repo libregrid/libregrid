@@ -43,6 +43,13 @@ export class FormulaDataService extends BeanStub implements IFormulaDataService,
 
   public setFormula(params: SetFormulaParams): void {
     this.dataSource?.setFormula(params);
+    // The formula service caches store reads per cell — a write (or clear)
+    // through the data source must drop the cached entry, or the next read
+    // (including Community's immediate re-evaluation inside the commit path)
+    // returns the pre-write text.
+    (this.beans as unknown as {
+      formula?: { invalidateCellFormula?(row: unknown, column: unknown): void };
+    }).formula?.invalidateCellFormula?.(params.rowNode, params.column);
   }
 
   /** Re-read `formulaDataSource` after a runtime grid-option swap. */

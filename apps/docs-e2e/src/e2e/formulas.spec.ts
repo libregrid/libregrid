@@ -45,6 +45,28 @@ test.describe('Formulas', () => {
     await expect(cell(page, 0, 'subtotal')).toHaveText(String(quantity * 2));
   });
 
+  test('keeps the formula across a re-edit (store-routed commits)', async ({ page }) => {
+    // With a formulaDataSource configured, Community routes committed formulas
+    // into the store and writes the computed value into the row-data field —
+    // re-entering edit mode must show the stored formula, not the field value.
+    await cell(page, 0, 'subtotal').dblclick();
+    const editor = page.locator('.lgr-formula-editor');
+    const input = editor.locator('.lgr-formula-input');
+    await input.fill('=C1*2');
+    await input.press('Enter');
+    await expect(editor).toHaveCount(0);
+    const quantity = Number((await cell(page, 0, 'quantity').innerText()).replace(/[^0-9]/g, ''));
+    await expect(cell(page, 0, 'subtotal')).toHaveText(String(quantity * 2));
+
+    await cell(page, 0, 'subtotal').dblclick();
+    await expect(page.locator('.lgr-formula-editor')).toBeVisible();
+    const shown = await page.locator('.lgr-formula-editor .lgr-formula-input').inputValue();
+    expect(shown).toMatch(/^=[A-Z]+\d+ \* 2$/);
+    await page.keyboard.press('Escape');
+    // The committed formula still evaluates.
+    await expect(cell(page, 0, 'subtotal')).toHaveText(String(quantity * 2));
+  });
+
   test('blocks invalid commits with live validation', async ({ page }) => {
     await cell(page, 0, 'subtotal').dblclick();
     const editor = page.locator('.lgr-formula-editor');
