@@ -13,6 +13,7 @@
       "@libregrid/ai-toolkit",
       "@libregrid/batch-edit",
       "@libregrid/calculated-columns",
+      "@libregrid/formulas",
       "@libregrid/cell-selection",
       "@libregrid/clipboard",
       "@libregrid/column-header-edit",
