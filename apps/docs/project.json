@@ -43,7 +43,8 @@
         "prebundle": {
           "exclude": [
             "@libregrid/calculated-columns",
-            "@libregrid/formulas"
+            "@libregrid/formulas",
+            "@libregrid/cell-selection"
           ]
         },
         "proxyConfig": "apps/docs/proxy.conf.json"

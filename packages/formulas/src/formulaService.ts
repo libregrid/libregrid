@@ -22,6 +22,7 @@ import {
   getFormulaFunction,
   parseCellFormula,
   parseExpression,
+  referencedCells,
   shiftFormula,
   validateExpression,
 } from './expression';
@@ -273,10 +274,28 @@ export class FormulaService extends BeanStub implements IFormulaService, NamedBe
   }): string {
     try {
       const format = this.formatOrNull();
-      return shiftFormula(format ? { ...params, format } : { ...params });
+      if (!format) return shiftFormula(params);
+      // Long-hand references are ID-pinned and `shiftFormula` deliberately
+      // leaves them in place — but a fill/offset must move the reference to
+      // the neighbouring row. Translate to display positions, shift, and
+      // convert back to the input's reference form (the external store holds
+      // long-hand; row-data formulas may be shorthand).
+      const display = convertFormula(params.value, format, false);
+      const shifted = shiftFormula({ ...params, value: display });
+      return this.hasLongHandRef(params.value)
+        ? convertFormula(shifted, format, true)
+        : shifted;
     } catch (e) {
       if (e instanceof FormulaError && e.code === '#REF!') return params.value;
       throw e;
+    }
+  }
+
+  private hasLongHandRef(formula: string): boolean {
+    try {
+      return referencedCells(parseCellFormula(formula)).some((ref) => !ref.shorthand);
+    } catch {
+      return false;
     }
   }
 

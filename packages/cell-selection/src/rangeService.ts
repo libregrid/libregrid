@@ -300,27 +300,40 @@ export class RangeService extends BeanStub implements NamedBean {
         | undefined;
     };
     this.dispatch('fillStart', { initialRange: range });
+    // With a formulaDataSource the committed formula lives in the external
+    // store and the row-data field holds the computed value — read the
+    // editable formula so fills shift references instead of copying
+    // evaluated numbers. Optional runtime detection, per §4 of the
+    // package-architecture standard.
+    const formulaSvc = (this.beans as unknown as {
+      formula?: {
+        isFormula?(value: unknown): value is `=${string}`;
+        updateFormulaByOffset?(params: { value: string; rowDelta?: number }): string;
+        getEditableFormula?(column: unknown, row: unknown): string | undefined;
+      };
+    }).formula;
     for (const column of range.columns) {
       const field = column.getColDef().field;
+      const allowFormula = column.getColDef().allowFormula === true;
       const source = Array.from({ length: end - start + 1 }, (_, offset) => {
         const node = api.getDisplayedRowAtIndex?.(start + offset) as { data?: unknown } | undefined;
         const data = node?.data;
-        return field && data && typeof data === 'object'
-          ? (data as Record<string, unknown>)[field]
-          : undefined;
+        const dataValue =
+          field && data && typeof data === 'object'
+            ? (data as Record<string, unknown>)[field]
+            : undefined;
+        if (allowFormula && formulaSvc?.getEditableFormula) {
+          const editable = formulaSvc.getEditableFormula(column, node);
+          if (editable !== undefined) return editable;
+        }
+        return dataValue;
       });
       const values = fillSeries(source, targetEnd - start + 1);
       // Formula interplay (gap-plan A1): when the `formula` bean is registered
       // and the filled column allows formulas, relative references shift by the
       // distance each target row extends its source row. Optional runtime
       // detection — without @libregrid/formulas the fill copies values verbatim.
-      const formulaSvc = (this.beans as unknown as {
-        formula?: {
-          isFormula?(value: unknown): value is `=${string}`;
-          updateFormulaByOffset?(params: { value: string; rowDelta?: number }): string;
-        };
-      }).formula;
-      if (formulaSvc?.isFormula && formulaSvc.updateFormulaByOffset && column.getColDef().allowFormula === true) {
+      if (formulaSvc?.isFormula && formulaSvc.updateFormulaByOffset && allowFormula) {
         const pattern = end - start + 1;
         for (let i = pattern; i < values.length; i++) {
           const value = values[i];
@@ -552,7 +565,11 @@ class CellRangeFeature extends BeanStub {
   private paint(): void {
     const comp = this.comp;
     const rowIndex = this.ctrl.rowNode.rowIndex;
-    if (!comp || rowIndex == null) return;
+    // `comp` is unset while a cell editor is attached (Community calls
+    // unsetComp() and never re-attaches it after the editor closes), but the
+    // fill/range handle must keep working across edits — only the CSS class
+    // toggling needs the comp, so everything else continues without it.
+    if (rowIndex == null) return;
     const cell = {
       rowIndex,
       rowPinned: (this.ctrl.rowNode.rowPinned ?? null) as RowPinnedType,
@@ -560,16 +577,17 @@ class CellRangeFeature extends BeanStub {
     };
     const ranges = this.rangeService.getCellRanges();
     const count = this.rangeService.getCellRangeCount(cell);
-    comp.toggleCss('ag-cell-range-selected', count > 0);
-    comp.toggleCss('ag-cell-range-selected-1', count > 0);
-    comp.toggleCss('ag-cell-range-selected-2', count > 1);
     const range = ranges.find((item) => this.rangeService.isCellInSpecificRange(cell, item));
-    comp.toggleCss(
-      'ag-cell-range-single-cell',
-      Boolean(
-        range && this.rangeService.getRangeRowCount(range) === 1 && range.columns.length === 1,
-      ),
-    );
+    if (comp) {
+      comp.toggleCss('ag-cell-range-selected', count > 0);
+      comp.toggleCss('ag-cell-range-selected-1', count > 0);
+      comp.toggleCss('ag-cell-range-selected-2', count > 1);
+      comp.toggleCss(
+        'ag-cell-range-single-cell',
+        Boolean(
+          range && this.rangeService.getRangeRowCount(range) === 1 && range.columns.length === 1,
+        ),
+      );
     comp.toggleCss(
       'ag-cell-range-top',
       Boolean(
@@ -586,8 +604,9 @@ class CellRangeFeature extends BeanStub {
           Math.max(range.startRow?.rowIndex ?? rowIndex, range.endRow?.rowIndex ?? rowIndex),
       ),
     );
-    comp.toggleCss('ag-cell-range-left', Boolean(range && cell.column === range.columns[0]));
-    comp.toggleCss('ag-cell-range-right', Boolean(range && cell.column === range.columns.at(-1)));
+      comp.toggleCss('ag-cell-range-left', Boolean(range && cell.column === range.columns[0]));
+      comp.toggleCss('ag-cell-range-right', Boolean(range && cell.column === range.columns.at(-1)));
+    }
     this.toggleFillHandle(Boolean(range && this.rangeService.isBottomRightCell(range, cell)));
   }
   private toggleFillHandle(show: boolean): void {
@@ -597,7 +616,14 @@ class CellRangeFeature extends BeanStub {
       this.fillHandle = undefined;
       return;
     }
-    if (this.fillHandle || !this.ctrl.eGui) return;
+    if (!this.ctrl.eGui) return;
+    // The handle can survive a cell refresh detached from the live DOM (an
+    // edit rebuilds the cell content and takes the handle element with it).
+    // Treat a detached handle as absent and re-create it, or the cell would
+    // never regain its handle after a commit.
+    if (this.fillHandle?.isConnected && this.fillHandle.parentElement === this.ctrl.eGui) return;
+    this.fillHandle?.remove();
+    this.fillHandle = undefined;
     const handle = document.createElement('span');
     handle.className = mode === 'fill' ? 'lgr-fill-handle' : 'lgr-range-handle';
     handle.tabIndex = 0;
@@ -605,10 +631,12 @@ class CellRangeFeature extends BeanStub {
     handle.setAttribute('role', 'button');
     Object.assign(handle.style, {
       position: 'absolute',
-      width: '7px',
-      height: '7px',
-      right: '-4px',
-      bottom: '-4px',
+      width: '8px',
+      height: '8px',
+      // Fully inside the cell: `.ag-cell` clips overflow, so an overhanging
+      // handle is invisible and unclickable (elementFromPoint hits the cell).
+      right: '0',
+      bottom: '0',
       zIndex: '2',
       background: 'var(--ag-range-selection-border-color, #1976d2)',
       cursor: 'crosshair',

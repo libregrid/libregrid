@@ -307,6 +307,36 @@ describe('FormulaService — normalise and offsets', () => {
     h.destroy();
   });
 
+  it('shifts long-hand references for the fill handle and preserves their form', () => {
+    const h = makeService();
+    seedColumns(h);
+    // Long-hand refs are ID-pinned in shiftFormula, but a fill offset must
+    // still move them — convert to display positions, shift, convert back.
+    expect(h.bean.updateFormulaByOffset({ value: '=[a:r1] + [b:r2]', rowDelta: 1 })).toBe(
+      '=[a:r2] + [b:r3]',
+    );
+    expect(h.bean.updateFormulaByOffset({ value: '=[a:r2] + [b:r3]', rowDelta: -1 })).toBe(
+      '=[a:r1] + [b:r2]',
+    );
+    h.destroy();
+  });
+
+  it('keeps mixed-form formulas in long-hand when filling', () => {
+    const h = makeService();
+    seedColumns(h);
+    expect(h.bean.updateFormulaByOffset({ value: '=A1 + [b:r2]', rowDelta: 1 })).toBe(
+      '=[a:r2] + [b:r3]',
+    );
+    h.destroy();
+  });
+
+  it('returns the original formula when an offset shift goes out of bounds', () => {
+    const h = makeService();
+    seedColumns(h);
+    expect(h.bean.updateFormulaByOffset({ value: '=[a:r3]', rowDelta: 1 })).toBe('=[a:r3]');
+    h.destroy();
+  });
+
   it('maps formula references to grid range descriptors', () => {
     const h = makeService();
     seedColumns(h);

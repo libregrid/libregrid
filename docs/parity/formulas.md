@@ -72,7 +72,7 @@
 
 | Feature | Status | Notes |
 |---|---|---|
-| Fill Handle offsets relative refs | ✅ | `@libregrid/cell-selection`'s fill consults the `formula` bean (`updateFormulaByOffset`) when registered; absolute `$` anchors stay fixed; verbatim copy without the module |
+| Fill Handle offsets relative refs | ✅ | `@libregrid/cell-selection`'s fill consults the `formula` bean (`updateFormulaByOffset`) when registered; absolute `$` anchors stay fixed; long-hand store formulas are converted to display positions, shifted, and converted back so fills move with the row; verbatim copy without the module. The handle is re-created after an editor commit detaches it (Community's `unsetComp` on editor attach) |
 | Cell Selection | ✅ | Optional module; range highlights + handles when registered |
 | Row Numbers | ✅ | Independent module; click-to-insert row range is 🟡 (above) |
 | Cell Expressions | ❌ | Docs: not supported; Community's `enableCellExpressions` path is untouched |

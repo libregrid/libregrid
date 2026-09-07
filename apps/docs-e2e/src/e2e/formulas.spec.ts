@@ -91,23 +91,50 @@ test.describe('Formulas', () => {
   });
 
   test('fills formulas with relative reference offsets', async ({ page }) => {
-    // Fill the row-0 subtotal down one row: relative refs shift by one.
-    const subtotal0 = cell(page, 0, 'subtotal');
-    await subtotal0.hover();
-    const handle = page.locator('.ag-selection-fill-handle, .ag-fill-handle').first();
-    if (await handle.count()) {
-      const box = await handle.boundingBox();
-      const target = await cell(page, 1, 'subtotal').boundingBox();
-      if (box && target) {
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-        await page.mouse.down();
-        await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 8 });
-        await page.mouse.up();
-        const price1 = Number((await cell(page, 1, 'price').innerText()).replace(/[^0-9.]/g, ''));
-        const quantity1 = Number((await cell(page, 1, 'quantity').innerText()).replace(/[^0-9]/g, ''));
-        await expect(cell(page, 1, 'subtotal')).toHaveText(String(price1 * quantity1));
-      }
-    }
+    // Select the row-0 subtotal, then fill down one row: relative refs shift.
+    await cell(page, 0, 'subtotal').click();
+    const handle = page.locator('.lgr-fill-handle');
+    await expect(handle).toHaveCount(1);
+    const box = await handle.boundingBox();
+    const target = await cell(page, 1, 'subtotal').boundingBox();
+    expect(box).toBeTruthy();
+    expect(target).toBeTruthy();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(target!.x + target!.width / 2, target!.y + target!.height / 2, { steps: 8 });
+    await page.mouse.up();
+    const price1 = Number((await cell(page, 1, 'price').innerText()).replace(/[^0-9.]/g, ''));
+    const quantity1 = Number((await cell(page, 1, 'quantity').innerText()).replace(/[^0-9]/g, ''));
+    await expect(cell(page, 1, 'subtotal')).toHaveText(String(price1 * quantity1));
+  });
+
+  test('keeps the fill handle after an edit and fills the shifted formula', async ({ page }) => {
+    // Regression: committing an editor formula used to detach the fill handle
+    // and fills then copied the evaluated value instead of shifting refs.
+    await cell(page, 0, 'subtotal').dblclick();
+    const input = page.locator('.lgr-formula-editor .lgr-formula-input');
+    await input.fill('=C1*2');
+    await input.press('Enter');
+    await expect(page.locator('.lgr-formula-editor')).toHaveCount(0);
+    const quantity0 = Number((await cell(page, 0, 'quantity').innerText()).replace(/[^0-9]/g, ''));
+    await expect(cell(page, 0, 'subtotal')).toHaveText(String(quantity0 * 2));
+
+    // The handle survives the edit-commit refresh…
+    await cell(page, 0, 'subtotal').click();
+    const handle = page.locator('.lgr-fill-handle');
+    await expect(handle).toHaveCount(1);
+
+    // …and dragging it down lands the shifted formula (=C2*2), not the value.
+    const box = await handle.boundingBox();
+    const target = await cell(page, 1, 'subtotal').boundingBox();
+    expect(box).toBeTruthy();
+    expect(target).toBeTruthy();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(target!.x + target!.width / 2, target!.y + target!.height / 2, { steps: 8 });
+    await page.mouse.up();
+    const quantity1 = Number((await cell(page, 1, 'quantity').innerText()).replace(/[^0-9]/g, ''));
+    await expect(cell(page, 1, 'subtotal')).toHaveText(String(quantity1 * 2));
   });
 
   test('passes axe light and dark', async ({ page }) => {
