@@ -1,5 +1,67 @@
 # @libregrid/all
 
+## 1.3.1
+
+### Patch Changes
+
+- c1c53ea: Add `@libregrid/formulas` — per-cell spreadsheet formulas (gap-plan A1, Phase 20) —
+  and move the shared expression engine out of `@libregrid/calculated-columns`.
+
+  - New `@libregrid/formulas` package: `=…` cell formulas with A1 notation (`B2`,
+    `$A$1`), ranges (`A1:B10`), and the LibreGrid long-hand col/row-ID storage form
+    (`[colId:rowId]`, `[colIdStart:rowIdStart..colIdEnd:rowIdEnd]`); the canonical
+    `formula` bean (`FormulaService`), `formulaDataSource` external store
+    (`FormulaDataService`), `formulaInputManager` editor coordination, the
+    tokenising `agFormulaCellEditor` (autocomplete, live validation, range
+    highlights), and the reserved `refreshFormulas` grid API.
+  - `@libregrid/calculated-columns` now declares the same `FormulaService` class, so
+    both modules share one bean instance per grid in either registration order.
+    Its engine re-exports (`parseExpression`, `FormulaError`, …) resolve to
+    `@libregrid/formulas`; `CalculatedColumnFormulaService` is an alias of
+    `FormulaService`.
+  - `SUMIF`/`COUNTIF` accept cell ranges in both features (previously array-only).
+  - `@libregrid/cell-selection` fill shifts relative references through the
+    `formula` bean when it is registered (`updateFormulaByOffset`); without the
+    module the fill copies values verbatim.
+  - Restriction guards: tree data, pivot mode, active row grouping, and non-CSR row
+    models keep formulas inactive and render formula cells blank, per the docs
+    compatibility table.
+  - Docs app: Formulas route (`/formulas`), feature-catalog entry, and a Playwright
+    e2e battery (axe light/dark included).
+
+- Updated dependencies [c1c53ea]
+  - @libregrid/formulas@1.3.1
+  - @libregrid/cell-selection@1.3.1
+  - @libregrid/advanced-filter@1.3.1
+  - @libregrid/ai-toolkit@1.3.1
+  - @libregrid/angular@1.3.1
+  - @libregrid/batch-edit@1.3.1
+  - @libregrid/clipboard@1.3.1
+  - @libregrid/column-header-edit@1.3.1
+  - @libregrid/columns-tool-panel@1.3.1
+  - @libregrid/core@1.3.1
+  - @libregrid/excel-export@1.3.1
+  - @libregrid/filters-tool-panel@1.3.1
+  - @libregrid/find@1.3.1
+  - @libregrid/integrated-charts@1.3.1
+  - @libregrid/master-detail@1.3.1
+  - @libregrid/material@1.3.1
+  - @libregrid/menu@1.3.1
+  - @libregrid/multi-filter@1.3.1
+  - @libregrid/notes@1.3.1
+  - @libregrid/pivot@1.3.1
+  - @libregrid/rich-select@1.3.1
+  - @libregrid/row-grouping@1.3.1
+  - @libregrid/row-numbers@1.3.1
+  - @libregrid/server-side-row-model@1.3.1
+  - @libregrid/server-side-selection@1.3.1
+  - @libregrid/set-filter@1.3.1
+  - @libregrid/side-bar@1.3.1
+  - @libregrid/sparklines@1.3.1
+  - @libregrid/status-bar@1.3.1
+  - @libregrid/tree-data@1.3.1
+  - @libregrid/viewport-row-model@1.3.1
+
 ## 1.3.0
 
 ### Minor Changes
