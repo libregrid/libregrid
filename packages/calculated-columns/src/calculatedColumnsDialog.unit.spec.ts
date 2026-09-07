@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { afterEach, describe, expect, it } from 'vitest';
-import { evaluate, parseExpression, type FormulaError, validateExpression } from './expression';
+import { evaluate, parseExpression, type FormulaError, validateExpression } from '@libregrid/formulas';
 import { CalculatedColumnDialog, type CalcDialogHost, type CalcDialogProps, type ColumnReference } from './calculatedColumnsDialog';
 
 const REFERENCES: ColumnReference[] = [

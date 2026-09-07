@@ -14,9 +14,9 @@ import {
   isProvidedColumnGroup,
 } from 'ag-grid-community';
 import type { MenuActionParams, MenuItemContribution } from '@libregrid/menu';
-import type { CalculatedColumnFormulaService } from './calculatedColumnFormulaService';
+import type { FormulaService } from '@libregrid/formulas';
 import { CalculatedColumnDialog, type CalcDialogHost, type CalcDialogProps, type ColumnReference } from './calculatedColumnsDialog';
-import type { FormulaError, FormulaErrorCode } from './expression';
+import type { FormulaError, FormulaErrorCode } from '@libregrid/formulas';
 
 type ColumnTreeBuild = Parameters<ICalculatedColumnsService['contributeTo']>[0];
 type HeaderPosition = NonNullable<Parameters<ICalculatedColumnsService['openCalculatedColumnDialog']>[3]>['headerPosition'];
@@ -77,7 +77,7 @@ const DEFAULT_PICKERS: ReadonlyArray<'columns' | 'functions' | 'operators'> = ['
  * Community v36.1.0 owns the rest: `AgColumn.isCalculatedCol` (set from
  * `calculatedExpression` + `isEnabled()`), the value pipeline
  * (`ValueService.getValueFromData` → the `formula` bean, see
- * `CalculatedColumnFormulaService`), read-only enforcement (edit / paste /
+ * `FormulaService`), read-only enforcement (edit / paste /
  * setValue all refuse calculated columns), the formula-error CSS + tooltip,
  * the header icon, the `calculatedColumns` option validation, the
  * `anchoredToColId` order-restoration, and the Grid State `userColumns`
@@ -616,8 +616,8 @@ export class CalculatedColumnsService extends BeanStub implements ICalculatedCol
     return parts.join(' › ');
   }
 
-  private formulaSvc(): CalculatedColumnFormulaService {
-    const svc = (this.beans as unknown as { formula?: CalculatedColumnFormulaService }).formula;
+  private formulaSvc(): FormulaService {
+    const svc = (this.beans as unknown as { formula?: FormulaService }).formula;
     if (!svc) throw new Error('calculated-columns: formula bean missing');
     return svc;
   }

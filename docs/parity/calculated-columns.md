@@ -65,5 +65,11 @@
 |---|---|---|
 | Operators `+ - * / ^ & = <> > < >= <= %` | ✅ | Spreadsheet precedence (exponentiation binds tighter than unary minus); unit-tested |
 | Provided functions | ✅ | `SUM`, `PRODUCT`, `MIN`, `MAX`, `AVERAGE`, `MEDIAN`, `POWER`, `RAND`, `NOW`, `TODAY`, `CONCAT`, `IF` (lazy), `COUNT`, `COUNTA`, `COUNTBLANK`, `AND`, `OR`, `NOT` |
-| `SUMIF` / `COUNTIF` | 🟡 | Implemented for array arguments (criteria strings supported); cell ranges are a Formulas feature (gap-plan A1), so same-row usage errors `#VALUE!` |
+| `SUMIF` / `COUNTIF` | ✅ | Array arguments (criteria strings supported) and cell ranges (arrived with gap-plan A1 — the shared `FormulaService` resolves A1 ranges in both features) |
 | Error codes | ✅ | `#REF!`, `#NAME?`, `#CIRCREF!`, `#PARSE!`, `#VALUE!`, `#DIV/0!`, `#ERROR!` render in the cell; Community applies `formula-error` CSS and the error tooltip |
+
+## Shared `formula` bean
+
+| Requirement | Status | Notes |
+|---|---|---|
+| One `FormulaService` instance per grid | ✅ | Since Phase 20 the `formula` bean lives in `@libregrid/formulas` and both `CalculatedColumnsModule` and `FormulasModule` declare the same class — the context dedupes module beans by class identity, in either registration order |

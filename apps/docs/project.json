@@ -1,7 +1,9 @@
 {
   "name": "docs",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "tags": ["type:angular"],
+  "tags": [
+    "type:angular"
+  ],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
@@ -21,7 +23,9 @@
             "output": "assets"
           }
         ],
-        "polyfills": ["zone.js"]
+        "polyfills": [
+          "zone.js"
+        ]
       },
       "configurations": {
         "production": {},
@@ -37,7 +41,11 @@
       "executor": "@angular/build:dev-server",
       "options": {
         "prebundle": {
-          "exclude": ["@libregrid/calculated-columns"]
+          "exclude": [
+            "@libregrid/calculated-columns",
+            "@libregrid/formulas",
+            "@libregrid/cell-selection"
+          ]
         },
         "proxyConfig": "apps/docs/proxy.conf.json"
       },

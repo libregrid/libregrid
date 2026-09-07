@@ -1,21 +1,23 @@
 import type { Module } from 'ag-grid-community';
 import { EnterpriseCoreModule } from '@libregrid/core';
-import { CalculatedColumnFormulaService } from './calculatedColumnFormulaService';
+import { FormulaService } from '@libregrid/formulas';
 import { CalculatedColumnsService } from './calculatedColumnsService';
 import { calculatedColumnsCss } from './calculatedColumnsCss';
 import { VERSION } from './version';
 
 /**
- * Registers the two beans Community's calculated-column seams expect:
+ * Registers the beans Community's calculated-column seams expect:
  *
+ * - `formula` (`FormulaService`, from `@libregrid/formulas`) — the canonical
+ *   expression evaluator Community routes calculated-column cell values
+ *   through (`ValueService.getValueFromData`), plus the formula-error hooks
+ *   driving the `formula-error` CSS class and cell tooltips. Declaring the
+ *   same class as `FormulasModule` means exactly one instance serves both
+ *   features (the context dedupes module beans by class identity).
  * - `calculatedColsSvc` (`CalculatedColumnsService`) — the dynamic-column
  *   lifecycle: dialog-created columns spliced into the column build
  *   (`contributeTo`), user-column-layer record, add/edit/remove dialog,
  *   menu items, edit highlighting, and the `calculatedColumn*` events.
- * - `formula` (`CalculatedColumnFormulaService`) — the expression evaluator
- *   Community routes calculated-column cell values through
- *   (`ValueService.getValueFromData`), plus the formula-error hooks driving
- *   the `formula-error` CSS class and cell tooltips.
  *
  * `calculatedColumns` on the grid options (boolean or
  * `{ dataTypes, expressionPickers, applyMode, suppressColumnHighlighting }`)
@@ -29,6 +31,6 @@ export const CalculatedColumnsModule: Module = {
   version: VERSION,
   enterprise: true,
   dependsOn: [EnterpriseCoreModule],
-  beans: [CalculatedColumnFormulaService, CalculatedColumnsService],
+  beans: [FormulaService, CalculatedColumnsService],
   css: [calculatedColumnsCss],
 };

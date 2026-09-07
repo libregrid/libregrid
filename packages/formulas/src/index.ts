@@ -1,0 +1,41 @@
+export { FormulasModule, type FormulasGridApi } from './formulasModule';
+export { FormulaCellEditor, type FormulaCellEditorParams } from './formulaCellEditor';
+export { FormulaDataService } from './formulaDataService';
+export { FormulaInputManager } from './formulaInputManager';
+export { FormulaService } from './formulaService';
+export {
+  FormulaError,
+  tokenize,
+  parseExpression,
+  parseCellFormula,
+  validateExpression,
+  evaluate,
+  referencedColumnIds,
+  referencedCells,
+  stringifyCellFormula,
+  stringifyCellFormulaLong,
+  convertFormula,
+  shiftFormula,
+  columnLetters,
+  columnPosition,
+  isCellRefText,
+  hasFormulaPrefix,
+  FORMULA_FUNCTIONS,
+  FORMULA_FUNCTION_NAMES,
+  FORMULA_FUNCTION_DESCRIPTIONS,
+  FORMULA_OPERATORS,
+  getFormulaFunction,
+  type CellFormulaFormat,
+  type ExpressionEvaluator,
+  type FormulaFunc,
+  type CellRangeBounds,
+  type CellRef,
+  type FormulaErrorCode,
+  type FormulaParamLike,
+  type ExprNode,
+  type FormulaToken,
+  type ParseMode,
+  type RangeParamLike,
+  type ValueParamLike,
+  type ValidateOptions,
+} from './expression';

@@ -1,14 +1,20 @@
 /**
- * Expression engine for calculated columns.
+ * Expression engine for calculated columns and per-cell formulas.
  *
- * Evaluates the `colDef.calculatedExpression` string: same-row bracket references
- * (`[colId]`), the public operator set, and the public provided-function set
- * (AG Grid docs 36.1, "Calculated Columns" + "Formula Reference": the same
- * operators and functions Formulas uses). Evaluation is same-row: a reference
- * resolves the referenced column's value in the *same* row. Cross-row / range
- * references are a Formulas feature (gap-plan A1) — range-taking functions
- * (`SUMIF`, `COUNTIF`) accept array arguments so they keep working once cell
- * ranges exist, and error with `#VALUE!` when given scalars.
+ * Two parse modes share one grammar core:
+ *
+ * - **`'expression'` mode** (default — calculated columns, gap-plan A2):
+ *   same-row bracket references (`[colId]`), the public operator set, and the
+ *   public provided-function set (AG Grid docs 36.1, "Calculated Columns" +
+ *   "Formula Reference": the same operators and functions Formulas uses).
+ *   Evaluation is same-row: a reference resolves the referenced column's value
+ *   in the *same* row.
+ * - **`'cell'` mode** (per-cell formulas, gap-plan A1): additionally accepts
+ *   A1-notation cell references (`B2`, `AA12`), `$`-absolute refs (`$A$1`,
+ *   `A$1`, `=$A1`), rectangular ranges (`A1:B2`) and the LibreGrid long-hand
+ *   reference format (`[colId:rowId]`, ranges `[colIdStart:rowIdStart..colIdEnd:rowIdEnd]`).
+ *   Range-taking functions (`SUMIF`, `COUNTIF`) receive ranges as iterable
+ *   `RangeParam`-shaped arguments; built-ins flatten them per argument.
  *
  * Errors are spreadsheet-style codes returned as `FormulaError`; the formula
  * service renders the code text in the cell (`#REF!`, `#NAME?`, `#CIRCREF!`,
@@ -25,6 +31,8 @@
  *   unary:   '-' unary | '+' unary | '!' unary | postfix
  *   postfix: primary ('%')*
  *   primary: number | string | '[ref]' | true | false | ident '(' args ')' | '(' or ')'
+ *   cell mode extends primary with: A1 cell refs, `$`-absolute cell refs,
+ *   cell ranges (`cell ':' cell`) and long-hand bracket refs.
  *   A bare identifier that is not a call is an unknown function (`#NAME?` at
  *   evaluation time, not parse time, so validation reports the right reason).
  */
@@ -69,11 +77,42 @@ type BinOp =
   | 'or'
   | 'and';
 
+/** A cell reference in either shorthand (A1) or long-hand (col/row ID) form. */
+export type CellRef =
+  | { shorthand: true; letters: string; row: number; absCol: boolean; absRow: boolean }
+  | { shorthand: false; colId: string; rowId: string };
+
+export interface CellRangeBounds {
+  rowStart: number;
+  rowEnd: number;
+  /** Grid column object bounding the range start — typed `unknown` to keep this module grid-agnostic. */
+  colStart: unknown;
+  /** Grid column object bounding the range end — typed `unknown` to keep this module grid-agnostic. */
+  colEnd: unknown;
+  /** Resolved values of every cell in the range, row-major. */
+  values: unknown[];
+}
+
+/** `FormulaParam`-shaped range: bounds plus iteration over the resolved values. */
+export interface RangeParamLike extends CellRangeBounds {
+  kind: 'range';
+}
+
+/** `FormulaParam`-shaped scalar. */
+export interface ValueParamLike {
+  kind: 'value';
+  value: unknown;
+}
+
+export type FormulaParamLike = ValueParamLike | RangeParamLike;
+
 export type ExprNode =
   | { kind: 'number'; value: number }
   | { kind: 'string'; value: string }
   | { kind: 'boolean'; value: boolean }
   | { kind: 'ref'; colId: string }
+  | { kind: 'cell'; ref: CellRef }
+  | { kind: 'range'; start: CellRef; end: CellRef }
   | { kind: 'binary'; op: BinOp; left: ExprNode; right: ExprNode }
   | { kind: 'unary'; op: '+' | '-' | '!'; operand: ExprNode }
   | { kind: 'percent'; operand: ExprNode }
@@ -83,8 +122,10 @@ export type ExprNode =
 // Tokenizer
 // ---------------------------------------------------------------------------
 
+export type ParseMode = 'expression' | 'cell';
+
 export interface FormulaToken {
-  type: 'num' | 'str' | 'ref' | 'ident' | 'op';
+  type: 'num' | 'str' | 'ref' | 'cell' | 'ident' | 'op';
   value: string;
 }
 
@@ -92,7 +133,15 @@ function fail(message: string): never {
   throw new FormulaError('#PARSE!', message);
 }
 
-export function tokenize(source: string): FormulaToken[] {
+/** A1 cell reference: 1–3 column letters then a 1-based row number. */
+const CELL_REF_RE = /^([A-Za-z]{1,3})([0-9]+)$/;
+
+/** True when `text` looks like a shorthand cell reference and not a function call or name. */
+export function isCellRefText(text: string): boolean {
+  return CELL_REF_RE.test(text);
+}
+
+export function tokenize(source: string, mode: ParseMode = 'expression'): FormulaToken[] {
   const tokens: FormulaToken[] = [];
   let i = 0;
   while (i < source.length) {
@@ -122,17 +171,35 @@ export function tokenize(source: string): FormulaToken[] {
     if (ch === '[') {
       let j = i + 1;
       while (j < source.length && source.charAt(j) !== ']') j++;
-      if (j >= source.length) fail('unterminated column reference');
-      const colId = source.slice(i + 1, j).trim();
-      if (colId.length === 0) fail('empty column reference');
-      tokens.push({ type: 'ref', value: colId });
+      if (j >= source.length) fail('unterminated bracket reference');
+      const content = source.slice(i + 1, j).trim();
+      if (content.length === 0) fail('empty bracket reference');
+      tokens.push({ type: 'ref', value: content });
       i = j + 1;
+      continue;
+    }
+    if (mode === 'cell' && (ch === '$' || /[A-Za-z]/.test(ch))) {
+      // Cell mode: scan names including `$` anchors so `B2`, `A$1`, `$A1` and
+      // `$A$1` each arrive as one token. `SUM(` stays an identifier (call).
+      let j = i;
+      while (j < source.length && /[A-Za-z0-9_$]/.test(source.charAt(j))) j++;
+      const text = source.slice(i, j);
+      const next = source.slice(j).match(/^\s*\(/);
+      if (!next && /^\$?[A-Za-z]{1,3}\$?[0-9]+$/.test(text)) {
+        tokens.push({ type: 'cell', value: text });
+        i = j;
+        continue;
+      }
+      if (text.includes('$')) fail(`invalid cell reference "${text}"`);
+      tokens.push({ type: 'ident', value: text });
+      i = j;
       continue;
     }
     if (/[A-Za-z_]/.test(ch)) {
       let j = i;
       while (j < source.length && /[A-Za-z0-9_]/.test(source.charAt(j))) j++;
-      tokens.push({ type: 'ident', value: source.slice(i, j) });
+      const text = source.slice(i, j);
+      tokens.push({ type: 'ident', value: text });
       i = j;
       continue;
     }
@@ -142,7 +209,7 @@ export function tokenize(source: string): FormulaToken[] {
       i += 2;
       continue;
     }
-    if ('+-*/^&=<>!%,()'.includes(ch)) {
+    if ((mode === 'cell' && ch === ':') || '+-*/^&=<>!%,()'.includes(ch)) {
       tokens.push({ type: 'op', value: ch });
       i++;
       continue;
@@ -161,6 +228,7 @@ class Parser {
 
   public constructor(
     private readonly tokens: FormulaToken[],
+    private readonly mode: ParseMode = 'expression',
   ) {}
 
   public parse(): ExprNode {
@@ -291,8 +359,38 @@ class Parser {
       this.pos++;
       return { kind: 'string', value: t.value };
     }
+    if (t.type === 'cell') {
+      this.pos++;
+      const start = parseCellRefText(t.value);
+      if (this.matchOp(':')) {
+        const endTok = this.peek();
+        if (!endTok || endTok.type !== 'cell') fail('range end must be a cell reference');
+        this.pos++;
+        return { kind: 'range', start, end: parseCellRefText(endTok.value) };
+      }
+      return { kind: 'cell', ref: start };
+    }
     if (t.type === 'ref') {
       this.pos++;
+      // Bracket content: `[colId]` (calculated columns), or in cell mode the
+      // long-hand forms `[colId:rowId]` and `[colIdStart:rowIdStart..colIdEnd:rowIdEnd]`.
+      if (this.mode === 'cell' && t.value.includes(':')) {
+        const rangeParts = t.value.split('..');
+        if (rangeParts.length === 2) {
+          const [a, b] = rangeParts.map((p) => p.split(':').map((s) => s.trim()));
+          if (!a || !b || a.length !== 2 || b.length !== 2 || !a[0] || !a[1] || !b[0] || !b[1]) {
+            fail(`invalid long-hand range "[${t.value}]"`);
+          }
+          return {
+            kind: 'range',
+            start: { shorthand: false, colId: a[0], rowId: a[1] },
+            end: { shorthand: false, colId: b[0], rowId: b[1] },
+          };
+        }
+        const parts = t.value.split(':').map((s) => s.trim());
+        if (parts.length !== 2 || !parts[0] || !parts[1]) fail(`invalid long-hand reference "[${t.value}]"`);
+        return { kind: 'cell', ref: { shorthand: false, colId: parts[0], rowId: parts[1] } };
+      }
       return { kind: 'ref', colId: t.value };
     }
     if (t.type === 'ident') {
@@ -327,8 +425,32 @@ class Parser {
   }
 }
 
-export function parseExpression(source: string): ExprNode {
-  return new Parser(tokenize(source)).parse();
+/** Parse a tokenised A1 reference (`B2`, `$A$1`, `A$1`) into a `CellRef`. */
+export function parseCellRefText(text: string): CellRef {
+  const m = /^(\$?)([A-Za-z]{1,3})(\$?)([0-9]+)$/.exec(text);
+  if (!m) fail(`invalid cell reference "${text}"`);
+  return {
+    shorthand: true,
+    letters: m[2]!.toUpperCase(),
+    row: Number(m[4]),
+    absCol: m[1] === '$',
+    absRow: m[3] === '$',
+  };
+}
+
+export function parseExpression(source: string, mode: ParseMode = 'expression'): ExprNode {
+  return new Parser(tokenize(source, mode), mode).parse();
+}
+
+/** Parse a per-cell formula body, stripping one leading `=` when present. */
+export function parseCellFormula(source: string): ExprNode {
+  const body = source.startsWith('=') ? source.slice(1) : source;
+  return parseExpression(body, 'cell');
+}
+
+/** Whether the formula text carries the `=` value-form prefix. */
+export function hasFormulaPrefix(value: string): boolean {
+  return value.startsWith('=');
 }
 
 // ---------------------------------------------------------------------------
@@ -478,8 +600,22 @@ function arity(name: string, args: unknown[], min: number, max: number): void {
   }
 }
 
+/**
+ * Spread one level of nested array/iterable arguments (a cell-mode range
+ * arrives as an array-valued argument). Range-taking functions (`SUMIF`,
+ * `COUNTIF`) deliberately do not use this — their first argument *is* the
+ * range array.
+ */
+function flat(args: unknown[]): unknown[] {
+  return args.flatMap((a) => {
+    if (Array.isArray(a)) return a;
+    if (a !== null && typeof a === 'object' && Symbol.iterator in (a as object)) return [...(a as Iterable<unknown>)];
+    return [a];
+  });
+}
+
 function numericArgs(args: unknown[]): number[] {
-  return args.filter((v) => v !== null && v !== undefined && v !== '').map(toNum);
+  return flat(args).filter((v) => v !== null && v !== undefined && v !== '').map(toNum);
 }
 
 function toRange(v: unknown, fn: string): unknown[] {
@@ -572,16 +708,16 @@ export const FORMULA_FUNCTIONS: Readonly<Record<string, FormulaFunc>> = {
     d.setHours(0, 0, 0, 0);
     return d;
   },
-  CONCAT: (a) => a.map(toStr).join(''),
+  CONCAT: (a) => flat(a).map(toStr).join(''),
   IF: (a) => {
     arity('IF', a, 2, 3);
     return toBool(a[0]!) ? a[1]! : (a[2] ?? null);
   },
-  COUNT: (a) => a.filter((v) => typeof v === 'number').length,
-  COUNTA: (a) => a.filter((v) => v !== null && v !== undefined && v !== '').length,
-  COUNTBLANK: (a) => a.filter((v) => v === null || v === undefined || v === '').length,
-  AND: (a) => a.every(toBool),
-  OR: (a) => a.some(toBool),
+  COUNT: (a) => flat(a).filter((v) => typeof v === 'number').length,
+  COUNTA: (a) => flat(a).filter((v) => v !== null && v !== undefined && v !== '').length,
+  COUNTBLANK: (a) => flat(a).filter((v) => v === null || v === undefined || v === '').length,
+  AND: (a) => flat(a).every(toBool),
+  OR: (a) => flat(a).some(toBool),
   NOT: (a) => {
     arity('NOT', a, 1, 1);
     return !toBool(a[0]!);
@@ -601,10 +737,55 @@ export function getFormulaFunction(name: string): FormulaFunc | undefined {
 // ---------------------------------------------------------------------------
 
 export interface ExpressionEvaluator {
+  /** Parse mode driving the node set (default `'expression'` — calculated columns). */
+  mode?: ParseMode;
   /** Same-row value of the referenced column. Throws `FormulaError('#REF!')` when the column does not exist. */
   resolveColumn(colId: string): unknown;
   /** Whether `colId` is already on the active resolution chain (circular-reference guard). */
   isResolving(colId: string): boolean;
+  /** Value of one referenced cell (cell mode). Throws `FormulaError('#REF!')` for unresolvable refs. */
+  resolveCell?(ref: CellRef): unknown;
+  /** Bounds + resolved values of a rectangular range (cell mode), row-major. */
+  resolveRange?(start: CellRef, end: CellRef): CellRangeBounds;
+  /** Custom function registry (cell mode) — consulted before the built-ins. */
+  resolveCustomFunction?(
+    name: string,
+  ):
+    | ((
+        params: { row: unknown; column: unknown; args: Iterable<FormulaParamLike>; values: Iterable<unknown> },
+      ) => unknown)
+    | undefined;
+  /** Row/column passed through to custom functions (cell mode). */
+  functionContext?: { row: unknown; column: unknown };
+}
+
+/** Build the iterable `RangeParam`-shaped object the docs' custom functions receive. */
+function toRangeParam(bounds: CellRangeBounds): RangeParamLike {
+  return {
+    kind: 'range',
+    rowStart: bounds.rowStart,
+    rowEnd: bounds.rowEnd,
+    colStart: bounds.colStart,
+    colEnd: bounds.colEnd,
+    values: bounds.values,
+  };
+}
+
+/** Flatten params into one lazy iterator of raw values (the docs' `params.values`). */
+function* flattenValues(params: FormulaParamLike[]): Iterable<unknown> {
+  for (const p of params) {
+    if (p.kind === 'value') yield p.value;
+    else yield* p.values;
+  }
+}
+
+/** A lazily-evaluated argument: ranges stay `RangeParam`-shaped for custom functions. */
+function evaluateParam(node: ExprNode, ev: ExpressionEvaluator): FormulaParamLike {
+  if (node.kind === 'range') {
+    if (!ev.resolveRange) throw new FormulaError('#ERROR!', 'ranges are not supported in this context');
+    return toRangeParam(ev.resolveRange(node.start, node.end));
+  }
+  return { kind: 'value', value: evaluate(node, ev) };
 }
 
 export function evaluate(node: ExprNode, ev: ExpressionEvaluator): unknown {
@@ -621,6 +802,13 @@ export function evaluate(node: ExprNode, ev: ExpressionEvaluator): unknown {
       }
       return ev.resolveColumn(node.colId);
     }
+    case 'cell': {
+      if (!ev.resolveCell) throw new FormulaError('#ERROR!', 'cell references are not supported in this context');
+      return ev.resolveCell(node.ref);
+    }
+    case 'range':
+      // A bare range outside a call cannot coerce to a scalar.
+      throw new FormulaError('#VALUE!', 'a cell range can only be used as a function argument');
     case 'binary':
       return addValues(node.op, evaluate(node.left, ev), evaluate(node.right, ev));
     case 'unary': {
@@ -639,11 +827,39 @@ export function evaluate(node: ExprNode, ev: ExpressionEvaluator): unknown {
           throw new FormulaError('#VALUE!', `IF takes 2–3 argument(s), got ${node.args.length}`);
         }
         const condition = evaluate(node.args[0]!, ev);
-        return toBool(condition)
-          ? evaluate(node.args[1]!, ev)
-          : node.args[2]
-            ? evaluate(node.args[2], ev)
-            : null;
+        const branch = (arg: ExprNode | undefined): unknown => {
+          if (!arg) return null;
+          if (ev.mode === 'cell') {
+            const p = evaluateParam(arg, ev);
+            return p.kind === 'value' ? p.value : (p.values[0] ?? null);
+          }
+          return evaluate(arg, ev);
+        };
+        return toBool(condition) ? branch(node.args[1]) : branch(node.args[2]);
+      }
+      if (ev.mode === 'cell') {
+        // Cell mode: range arguments stay `RangeParam`-shaped for custom
+        // functions; built-ins receive ranges flattened per argument.
+        const params = node.args.map((a) => evaluateParam(a, ev));
+        const custom = ev.resolveCustomFunction?.(node.name);
+        if (custom) {
+          const ctx = ev.functionContext ?? { row: undefined, column: undefined };
+          try {
+            return custom({ row: ctx.row, column: ctx.column, args: params, values: flattenValues(params) });
+          } catch (e) {
+            if (e instanceof FormulaError) throw e;
+            throw new FormulaError('#ERROR!', `${node.name} failed: ${e instanceof Error ? e.message : String(e)}`);
+          }
+        }
+        const fn = getFormulaFunction(node.name);
+        if (!fn) throw new FormulaError('#NAME?', `unknown function "${node.name}"`);
+        const args = params.map((p) => (p.kind === 'value' ? p.value : p.values));
+        try {
+          return fn(args);
+        } catch (e) {
+          if (e instanceof FormulaError) throw e;
+          throw new FormulaError('#ERROR!', `${node.name} failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
       }
       const fn = getFormulaFunction(name);
       if (!fn) throw new FormulaError('#NAME?', `unknown function "${node.name}"`);
@@ -665,13 +881,15 @@ export function evaluate(node: ExprNode, ev: ExpressionEvaluator): unknown {
 export interface ValidateOptions {
   /** When provided, each referenced colId must resolve or validation fails with `#REF!`. */
   resolveReference?: (colId: string) => boolean;
+  /** Parse mode — `'cell'` enables A1/range/long-hand references. */
+  mode?: ParseMode;
 }
 
 /** Parse (and optionally reference-check) without evaluating. `null` when valid. */
 export function validateExpression(source: string, options: ValidateOptions = {}): FormulaError | null {
   let ast: ExprNode;
   try {
-    ast = parseExpression(source);
+    ast = parseExpression(source, options.mode ?? 'expression');
   } catch (e) {
     return e instanceof FormulaError ? e : new FormulaError('#PARSE!', String(e));
   }
@@ -686,7 +904,7 @@ export function validateExpression(source: string, options: ValidateOptions = {}
   return null;
 }
 
-/** Unique referenced colIds in declaration order. */
+/** Unique referenced colIds (bracket refs) in declaration order. */
 export function referencedColumnIds(node: ExprNode): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -709,10 +927,300 @@ export function referencedColumnIds(node: ExprNode): string[] {
       case 'call':
         for (const a of n.args) visit(a);
         break;
+      case 'range':
+        visitCellRef(n.start);
+        visitCellRef(n.end);
+        break;
+      case 'cell':
+        visitCellRef(n.ref);
+        break;
+    }
+  };
+  const visitCellRef = (ref: CellRef): void => {
+    if (!ref.shorthand && !seen.has(ref.colId)) {
+      seen.add(ref.colId);
+      out.push(ref.colId);
     }
   };
   visit(node);
   return out;
+}
+
+/** Every cell reference in the expression, in declaration order (cell mode). */
+export function referencedCells(node: ExprNode): CellRef[] {
+  const out: CellRef[] = [];
+  const visit = (n: ExprNode): void => {
+    switch (n.kind) {
+      case 'cell':
+        out.push(n.ref);
+        break;
+      case 'range':
+        out.push(n.start, n.end);
+        break;
+      case 'binary':
+        visit(n.left);
+        visit(n.right);
+        break;
+      case 'unary':
+      case 'percent':
+        visit(n.operand);
+        break;
+      case 'call':
+        for (const a of n.args) visit(a);
+        break;
+    }
+  };
+  visit(node);
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Serialisation, long-hand conversion and offset shifting (gap-plan A1)
+// ---------------------------------------------------------------------------
+
+/** Column letters for a 0-based column position (0 → `A`, 25 → `Z`, 26 → `AA`). */
+export function columnLetters(position: number): string {
+  if (!Number.isInteger(position) || position < 0) throw new FormulaError('#REF!', 'invalid column position');
+  let out = '';
+  let n = position;
+  do {
+    out = String.fromCharCode(65 + (n % 26)) + out;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return out;
+}
+
+/** 0-based column position for column letters (`A` → 0, `AA` → 26). */
+export function columnPosition(letters: string): number {
+  if (!/^[A-Za-z]{1,3}$/.test(letters)) throw new FormulaError('#REF!', `invalid column letters "${letters}"`);
+  let n = 0;
+  for (const ch of letters.toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n - 1;
+}
+
+export interface CellFormulaFormat {
+  /** Column ID for a 0-based visible leaf column position. Throws `#REF!` when unmappable. */
+  colIdAt(position: number): string;
+  /** 0-based visible leaf column position for a column ID. Throws `#REF!` when unmappable. */
+  positionOf(colId: string): number;
+  /** Row ID for a 0-based row index. Throws `#REF!` when unmappable. */
+  rowIdAt(index: number): string;
+  /** 0-based row index for a row ID. Throws `#REF!` when unmappable. */
+  indexOf(rowId: string): number;
+}
+
+function cellRefToLong(ref: CellRef, format: CellFormulaFormat): string {
+  if (!ref.shorthand) return `[${ref.colId}:${ref.rowId}]`;
+  const colId = format.colIdAt(columnPosition(ref.letters));
+  const rowId = format.rowIdAt(ref.row - 1);
+  return `[${colId}:${rowId}]`;
+}
+
+/** Precedence ranking matching the parser grammar (higher binds tighter). */
+function precedenceOf(node: ExprNode): number {
+  switch (node.kind) {
+    case 'binary':
+      switch (node.op) {
+        case 'or':
+          return 1;
+        case 'and':
+          return 2;
+        case '=':
+        case '<>':
+        case '>':
+        case '<':
+        case '>=':
+        case '<=':
+          return 3;
+        case '+':
+        case '-':
+        case '&':
+          return 4;
+        case '*':
+        case '/':
+          return 5;
+        case '^':
+          return 6;
+      }
+      break;
+    case 'unary':
+      return 7;
+    case 'percent':
+      return 8;
+    default:
+      return 9;
+  }
+  return 9;
+}
+
+const LEFT_ASSOC = new Set(['or', 'and', '+', '-', '&', '*', '/', '=']);
+
+function serializeCellRef(ref: CellRef): string {
+  if (ref.shorthand) {
+    return `${ref.absCol ? '$' : ''}${ref.letters}${ref.absRow ? '$' : ''}${ref.row}`;
+  }
+  // Long-hand refs are ID-pinned and serialise without a conversion context.
+  return `[${ref.colId}:${ref.rowId}]`;
+}
+
+/** Serialise a ref to shorthand, converting long-hand through `format` when available. */
+function serializeShorthand(ref: CellRef, format?: CellFormulaFormat): string {
+  if (ref.shorthand || !format) return serializeCellRef(ref);
+  // Long-hand references carry no absolute anchors — they are ID-pinned.
+  return `${columnLetters(format.positionOf(ref.colId))}${format.indexOf(ref.rowId) + 1}`;
+}
+
+function serializeNode(node: ExprNode, parentPrec: number, parentOp: BinOp | null, isRightOperand: boolean, format?: CellFormulaFormat, longHand = false): string {
+  const prec = precedenceOf(node);
+  const parenthesise =
+    prec < parentPrec ||
+    // Same precedence: right operand of a left-assoc op, or either operand of
+    // the right-assoc `^`, needs its own parentheses to round-trip.
+    (prec === parentPrec && ((parentOp !== null && isRightOperand && LEFT_ASSOC.has(parentOp)) || parentOp === '^'));
+  const body = (): string => {
+    switch (node.kind) {
+      case 'number':
+        return String(node.value);
+      case 'string':
+        return `"${node.value}"`;
+      case 'boolean':
+        return node.value ? 'TRUE' : 'FALSE';
+      case 'ref':
+        return `[${node.colId}]`;
+      case 'cell':
+        return longHand ? cellRefToLong(node.ref, format!) : serializeShorthand(node.ref, format);
+      case 'range': {
+        const a = longHand ? cellRefToLong(node.start, format!) : serializeShorthand(node.start, format);
+        const b = longHand ? cellRefToLong(node.end, format!) : serializeShorthand(node.end, format);
+        return longHand || (!node.start.shorthand && !format) ? `${a}..${b}` : `${a}:${b}`;
+      }
+      case 'binary':
+        return `${serializeNode(node.left, prec, node.op, false, format, longHand)} ${node.op} ${serializeNode(node.right, prec, node.op, true, format, longHand)}`;
+      case 'unary':
+        return `${node.op}${serializeNode(node.operand, prec, null, false, format, longHand)}`;
+      case 'percent':
+        return `${serializeNode(node.operand, prec, null, false, format, longHand)}%`;
+      case 'call':
+        return `${node.name}(${node.args.map((a) => serializeNode(a, 0, null, false, format, longHand)).join(', ')})`;
+    }
+  };
+  return parenthesise ? `(${body()})` : body();
+}
+
+/** Serialise an AST back to shorthand (A1) text, parenthesising to preserve precedence. */
+export function stringifyCellFormula(node: ExprNode, format?: CellFormulaFormat): string {
+  return serializeNode(node, 0, null, false, format, false);
+}
+
+/** Serialise an AST to the long-hand storage format (col/row IDs). */
+export function stringifyCellFormulaLong(node: ExprNode, format: CellFormulaFormat): string {
+  return serializeNode(node, 0, null, false, format, true);
+}
+
+export interface OffsetShift {
+  value: string;
+  rowDelta?: number;
+  columnDelta?: number;
+  /**
+   * When `true`, each reference keeps its original format (long-hand stays
+   * long-hand). Default rewrites every reference to shorthand — which needs
+   * `format` when the formula contains long-hand references.
+   */
+  useRefFormat?: boolean;
+  /** Conversion context used when rewriting long-hand references to shorthand. */
+  format?: CellFormulaFormat;
+}
+
+/**
+ * Shift a formula's relative references by row/column deltas (fill handle).
+ * Absolute (`$`) anchors never move; long-hand references are already
+ * ID-pinned and never move.
+ */
+export function shiftFormula(params: OffsetShift): string {
+  const { value, rowDelta = 0, columnDelta = 0, useRefFormat, format } = params;
+  if (rowDelta === 0 && columnDelta === 0) return value;
+  const prefixed = value.startsWith('=');
+  let ast: ExprNode;
+  try {
+    ast = parseCellFormula(value);
+  } catch (e) {
+    if (e instanceof FormulaError && e.code === '#PARSE!') return value;
+    throw e;
+  }
+  const shift = (ref: CellRef): CellRef => {
+    if (!ref.shorthand) return ref;
+    if (ref.absCol && ref.absRow) return ref;
+    const position = columnPosition(ref.letters) + (ref.absCol ? 0 : columnDelta);
+    const row = ref.row + (ref.absRow ? 0 : rowDelta);
+    if (position < 0 || row < 1) throw new FormulaError('#REF!', 'shifted reference leaves the grid');
+    return { shorthand: true, letters: columnLetters(position), row, absCol: ref.absCol, absRow: ref.absRow };
+  };
+  const shiftNode = (n: ExprNode): ExprNode => {
+    switch (n.kind) {
+      case 'cell':
+        return { kind: 'cell', ref: shift(n.ref) };
+      case 'range':
+        return { kind: 'range', start: shift(n.start), end: shift(n.end) };
+      case 'binary':
+        return { kind: 'binary', op: n.op, left: shiftNode(n.left), right: shiftNode(n.right) };
+      case 'unary':
+        return { kind: 'unary', op: n.op, operand: shiftNode(n.operand) };
+      case 'percent':
+        return { kind: 'percent', operand: shiftNode(n.operand) };
+      case 'call':
+        return { kind: 'call', name: n.name, args: n.args.map(shiftNode) };
+      default:
+        return n;
+    }
+  };
+  const shifted = shiftNode(ast);
+  const render = (text: string): string => (prefixed ? `=${text}` : text);
+  if (useRefFormat) {
+    return render(serializeNode(shifted, 0, null, false));
+  }
+  // Default: rewrite everything to shorthand (long-hand needs a format context).
+  const shorthandRef = (ref: CellRef): CellRef => {
+    if (ref.shorthand) return ref;
+    return {
+      shorthand: true,
+      letters: columnLetters(format!.positionOf(ref.colId)),
+      row: format!.indexOf(ref.rowId) + 1,
+      absCol: false,
+      absRow: false,
+    };
+  };
+  const toShorthand = (n: ExprNode): ExprNode => {
+    switch (n.kind) {
+      case 'cell':
+        return { kind: 'cell', ref: shorthandRef(n.ref) };
+      case 'range':
+        return { kind: 'range', start: shorthandRef(n.start), end: shorthandRef(n.end) };
+      case 'binary':
+        return { kind: 'binary', op: n.op, left: toShorthand(n.left), right: toShorthand(n.right) };
+      case 'unary':
+        return { kind: 'unary', op: n.op, operand: toShorthand(n.operand) };
+      case 'percent':
+        return { kind: 'percent', operand: toShorthand(n.operand) };
+      case 'call':
+        return { kind: 'call', name: n.name, args: n.args.map(toShorthand) };
+      default:
+        return n;
+    }
+  };
+  if (format) return render(stringifyCellFormula(toShorthand(shifted)));
+  return render(serializeNode(shifted, 0, null, false));
+}
+
+/**
+ * Convert a formula between shorthand (A1) and long-hand (col/row ID) forms.
+ * `toLong: true` → long-hand storage form; `false` → shorthand display form.
+ * The `=` value-form prefix is preserved.
+ */
+export function convertFormula(value: string, format: CellFormulaFormat, toLong: boolean): string {
+  const prefixed = value.startsWith('=');
+  const ast = parseCellFormula(value);
+  const out = toLong ? stringifyCellFormulaLong(ast, format) : stringifyCellFormula(ast, format);
+  return prefixed ? `=${out}` : out;
 }
 
 // One-line human descriptions for the dialog's function picker.

@@ -45,19 +45,19 @@ into ~25 feature areas):
 | Bucket | Count | Meaning |
 | --- | --- | --- |
 | **Shipped with gaps** (Class B) | ~16 feature areas | `@libregrid/*` package exists; documented ❌/🟡 parity rows remain |
-| **No counterpart** (Class A) | 3 feature areas | Enterprise on the site, no LibreGrid package and no parity coverage |
+| **No counterpart** (Class A) | 3 feature areas | Enterprise on the site, no LibreGrid package and no parity coverage (A8 and A11 remain at the 2026-08-24 refresh) |
 | **Not gaps — Community on the site** (Class D) | 14 feature areas | Stock `ag-grid-community` provides them; some older docs assumed Enterprise |
 | **Out of scope / declined** (Class C) | 3 | PDF export, commercial chart types, licence key (N/A) |
 
 Headline: the large structural features (row grouping, aggregation, pivoting,
 SSRM, tree data, master/detail, tool panels, menus, clipboard, Excel export,
 charts, sparklines, filters, find, cell selection) are already shipped. The
-**Class A wave is nearly complete**: calculated columns, batch editing, cell
-notes, row numbers, column header editing, show-values-as and the SSRM API
-verification all shipped in Phases 14–18. The remaining missing surface is
-**Formulas** (the largest), the **AI toolkit**, **group-value editing**, and
-**group-row dragging**, plus a long tail of option-level gaps in shipped
-packages.
+**Class A wave is complete except two small items**: calculated columns, batch
+editing, cell notes, row numbers, column header editing, show-values-as, the
+SSRM API verification, **Formulas** (the largest — Phase 20) and the AI toolkit
+all shipped in Phases 14–20. The remaining Class A surface is **group-value
+editing (A8)** and **group-row dragging (A11)**, plus a long tail of
+option-level gaps in shipped packages.
 
 ---
 
@@ -65,18 +65,23 @@ packages.
 
 Each entry: site evidence (inventory §refs) → current state → proposed action.
 
-### A1. Formulas — `FormulaModule` ⬜ **remaining**
+### A1. Formulas — `FormulaModule` ✅ **shipped**
 - **Site:** 4 pages (`formulas`, `formula-editor-component`, `formula-reference`,
   `formula-custom-functions`) — spreadsheet-style cell expressions that update when
   referenced data changes; tokenising formula editor; operator/function reference;
   custom functions. Pricing row: Formulas = E. Inventory §8.
-- **State:** no package. Note: plain cell *expressions* are Community; Formulas is
-  the Enterprise add-on layer on top. **The expression engine shipped for
-  calculated columns (Phase 18) is written to be reused here** — `formula` is the
-  seam A1 extends with per-cell storage, and the function registry already exposes
-  `getFunction`/`getFunctionNames` (see `docs/phases/phase-18-calculated-columns.md` §Notes).
-- **Proposed:** new `@libregrid/formulas` package (formula engine + editor
-  component + custom-function registry). Largest remaining Class A item.
+- **State:** ✅ **Shipped in Phase 20** — `@libregrid/formulas` (`Formula`); parity
+  `docs/parity/formulas.md` (38 ✅ / 3 🟡 / 5 ❌-guarded). Per-cell `=…` formulas
+  (A1 notation, `$` anchors, ranges, LibreGrid long-hand col/row-ID storage),
+  external `formulaDataSource`, tokenising `agFormulaCellEditor`, `formulaFuncs`
+  custom functions, `refreshFormulas` API, fill-handle offsets in
+  `@libregrid/cell-selection`, and `SUMIF`/`COUNTIF` cell ranges (flips the
+  calculated-columns 🟡). The Phase 18 expression engine moved into this package
+  as the shared core; the `formula` bean is one deduped instance across both
+  modules.
+- **Remaining 🟡 (not gaps, noted in parity):** long-hand grammar is
+  LibreGrid-defined (the site documents the concept, not the syntax), Excel
+  formula export not separately verified, row-number click-to-insert row range.
 
 ### A2. Calculated Columns — `CalculatedColumnsModule` ✅ **shipped**
 - **Site:** `calculated-columns` page; pricing row: Calculated Columns = E.
@@ -192,10 +197,11 @@ the residual ❌/🟡 rows inside them — included so the plan covers the full
 
 ---
 
-## 4a. Class A items shipped since the original research (Phases 14–18)
+## 4a. Class A items shipped since the original research (Phases 14–20)
 
 | Item | Phase | Package | Parity |
 | --- | --- | --- | --- |
+| A1 Formulas | 20 | `@libregrid/formulas` | [`formulas.md`](docs/parity/formulas.md) |
 | A2 Calculated Columns | 18 | `@libregrid/calculated-columns` | [`calculated-columns.md`](docs/parity/calculated-columns.md) |
 | A3 Batch Editing | 17 | `@libregrid/batch-edit` | [`batch-edit.md`](docs/parity/batch-edit.md) |
 | A4 Cell Notes | 15 | `@libregrid/notes` | [`cell-notes.md`](docs/parity/cell-notes.md) |
@@ -261,7 +267,7 @@ describes our `showValuesAs` service, not the Enterprise baseline).
 **Refresh 2026-08-23 (this document):** the stale rows this refresh corrected are
 the Class A statuses above — A2/A3/A4/A5/A7/A9/A10 were still marked "no package"
 in the original 2026-08-18 plan despite shipping in Phases 14–18. The remaining
-Class A list is now exactly: A1 Formulas, A8 group-value editing, A11 group-row
+Class A list is now exactly: A8 group-value editing, A11 group-row
 dragging.
 
 ---
@@ -294,8 +300,9 @@ Ordered by (value ÷ effort) and by unblocking existing stubs first:
    the columns-panel drag long tail).
 
 **P1 — self-contained new packages:**
-3. A1 Formulas — the largest remaining Class A item; the Phase 18 expression
-   engine is the shared core (`formula` seam + function registry).
+3. ~~A1 Formulas~~ — ✅ shipped as Phase 20 (`@libregrid/formulas`); the Phase 18
+   expression engine moved there as the shared core (`formula` bean + function
+   registry), shared with calculated columns by class-identity dedupe.
 
 **P2 — strategic / larger (decide later):**
 4. Class B long tail: sticky rows, groupDisplayType modes, group row renderer,

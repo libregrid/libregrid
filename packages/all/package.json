@@ -1,15 +1,21 @@
 {
   "name": "@libregrid/all",
   "version": "1.3.0",
-  "description": "Convenience re-export of every LibreGrid module — part of LibreGrid",
-  "keywords": ["libregrid", "ag-grid", "data-grid"],
+  "description": "Convenience re-export of every LibreGrid module \u2014 part of LibreGrid",
+  "keywords": [
+    "libregrid",
+    "ag-grid",
+    "data-grid"
+  ],
   "homepage": "https://github.com/libregrid/libregrid#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/libregrid/libregrid.git",
     "directory": "packages/all"
   },
-  "bugs": { "url": "https://github.com/libregrid/libregrid/issues" },
+  "bugs": {
+    "url": "https://github.com/libregrid/libregrid/issues"
+  },
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -34,12 +40,13 @@
     "@libregrid/excel-export": "^1.3.0",
     "@libregrid/filters-tool-panel": "^1.3.0",
     "@libregrid/find": "^1.3.0",
+    "@libregrid/formulas": "^1.3.0",
     "@libregrid/integrated-charts": "^1.3.0",
     "@libregrid/master-detail": "^1.3.0",
     "@libregrid/material": "^1.3.0",
     "@libregrid/menu": "^1.3.0",
-    "@libregrid/notes": "^1.3.0",
     "@libregrid/multi-filter": "^1.3.0",
+    "@libregrid/notes": "^1.3.0",
     "@libregrid/pivot": "^1.3.0",
     "@libregrid/rich-select": "^1.3.0",
     "@libregrid/row-grouping": "^1.3.0",
@@ -53,6 +60,16 @@
     "@libregrid/tree-data": "^1.3.0",
     "@libregrid/viewport-row-model": "^1.3.0"
   },
-  "files": ["dist", "LICENSE", "NOTICE", "README.md"],
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  }
 }

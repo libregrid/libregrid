@@ -1,5 +1,5 @@
-import type { FormulaError, FormulaToken } from './expression';
-import { FORMULA_FUNCTION_DESCRIPTIONS, FORMULA_FUNCTION_NAMES, FORMULA_OPERATORS, tokenize } from './expression';
+import type { FormulaError, FormulaToken } from '@libregrid/formulas';
+import { FORMULA_FUNCTION_DESCRIPTIONS, FORMULA_FUNCTION_NAMES, FORMULA_OPERATORS, tokenize } from '@libregrid/formulas';
 
 /** One pickable column reference for the expression builder. */
 export interface ColumnReference {

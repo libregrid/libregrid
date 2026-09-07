@@ -6,14 +6,6 @@
       "maxSize": "40 KB",
       "note": "Serialisable expression AST + parser, reusable staged-model builder UI, and settings menu. Raised from 34 KB after the Phase 13 audit when the reusable builder landed; clean output measures 38.0 KB unminified."
     },
-    "@libregrid/ai-toolkit": {
-      "maxSize": "32 KB",
-      "note": "Pure live-grid capability adapter plus strict seven-feature JSON Schema builder. Reduced from the retired 70 KB local-model runtime budget under ADR 0007."
-    },
-    "@libregrid/ai-protocol": {
-      "maxSize": "28 KB",
-      "note": "Dependency-free versioned types, dynamic envelope composition, restricted JSON Schema validator, prompt contract, and deterministic revisions."
-    },
     "@libregrid/ai-client": {
       "maxSize": "20 KB",
       "note": "Browser snapshot/orchestration, HTTP transport, double validation, revision guard, diff, and protected GridState application."
@@ -21,6 +13,14 @@
     "@libregrid/ai-gateway": {
       "maxSize": "76 KB",
       "note": "Server-only HTTP gateway, provider port, OpenAI Responses and Chat Completions adapters, mock, Node server, and conformance runner; no provider SDK. The 76 KB package budget includes both self-contained CLI bundles and their shared library modules. server.js bundles both the Responses and Chat Completions provider adapters because the server selects between them at runtime via AI_PROVIDER, plus the Task 6 Turnstile authorizer (fetch-based siteverify check, no new dependency); measured clean output is 74.9 KB unminified, raised from 72 KB."
+    },
+    "@libregrid/ai-protocol": {
+      "maxSize": "28 KB",
+      "note": "Dependency-free versioned types, dynamic envelope composition, restricted JSON Schema validator, prompt contract, and deterministic revisions."
+    },
+    "@libregrid/ai-toolkit": {
+      "maxSize": "32 KB",
+      "note": "Pure live-grid capability adapter plus strict seven-feature JSON Schema builder. Reduced from the retired 70 KB local-model runtime budget under ADR 0007."
     },
     "@libregrid/all": {
       "maxSize": "5 KB",
@@ -33,6 +33,10 @@
     "@libregrid/batch-edit": {
       "maxSize": "8 KB",
       "note": "Batch-editing module: the four reserved GridApi functions delegating to the Community edit service plus the pending-edit CSS."
+    },
+    "@libregrid/calculated-columns": {
+      "maxSize": "88 KB",
+      "note": "Phase 18: calculated-columns service, expression-palette dialog, and CSS. The expression engine moved to @libregrid/formulas in Phase 20; clean output measures 80.9 KB unminified (dialog 46.9 KB + service 21.8 KB + CSS 11.4 KB). Entry added at the Phase 20 audit (pre-existing gap \u2014 the package had no budget since Phase 18)."
     },
     "@libregrid/cell-selection": {
       "maxSize": "33 KB",
@@ -64,6 +68,10 @@
     },
     "@libregrid/find": {
       "maxSize": "12 KB"
+    },
+    "@libregrid/formulas": {
+      "maxSize": "92 KB",
+      "note": "Phase 20: shared expression engine (moved from calculated-columns), canonical FormulaService bean, external formula data source, input manager, and the tokenising agFormulaCellEditor. Clean output measures 87.9 KB unminified; raised from the 72 KB Phase 20 placeholder when the implementation landed."
     },
     "@libregrid/integrated-charts": {
       "maxSize": "29 KB",

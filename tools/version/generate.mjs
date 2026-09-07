@@ -60,6 +60,7 @@ export const VERSIONED_PACKAGES = [
   'sparklines',
   'batch-edit',
   'calculated-columns',
+  'formulas',
   'ai-toolkit',
 ];
 

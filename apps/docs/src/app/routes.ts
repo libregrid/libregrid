@@ -27,6 +27,7 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'tree-data', label: 'Tree Data' },
   { path: 'master-detail', label: 'Master / Detail' },
   { path: 'calculated-columns', label: 'Calculated Columns' },
+  { path: 'formulas', label: 'Formulas' },
   { path: 'advanced-filter-find', label: 'Advanced Filter & Find' },
   { path: 'batch-edit', label: 'Batch Edit' },
   { path: 'charts', label: 'Integrated Charts' },
@@ -154,6 +155,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./routes/calculated-columns').then((m) => m.CalculatedColumnsDemo),
     title: 'LibreGrid — Calculated Columns',
+  },
+  {
+    path: 'formulas',
+    loadComponent: () => import('./routes/formulas').then((m) => m.FormulasDemo),
+    title: 'LibreGrid — Formulas',
   },
   {
     path: 'advanced-filter-find',

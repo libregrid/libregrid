@@ -79,7 +79,8 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 | Sparklines | 4 | 0 | 0 | [`integrated-charts.md`](integrated-charts.md) — Sparklines section |
 | Excel export | 61 | 8 | 5 | [`excel-export.md`](excel-export.md) — shipped; images, tables and notes descoped (5.9) |
 | Batch edit | 13 | 3 | 1 | [`batch-edit.md`](batch-edit.md) — SSRM batch editing ❌ (Enterprise is CSR only) |
-| Calculated columns | 26 | 6 | 0 | [`calculated-columns.md`](calculated-columns.md) |
+| Calculated columns | 26 | 5 | 0 | [`calculated-columns.md`](calculated-columns.md) |
+| Formulas | 46 | 3 | 5 | [`formulas.md`](formulas.md) — 🟡: long-hand grammar is LibreGrid-defined (site documents the concept only), Excel formula export unverified, row-number click-to-insert |
 | AI toolkit | 19 | 0 | 3 | [`ai-toolkit.md`](ai-toolkit.md) — pure seven-feature schema + protocol/client/BYOM gateway; live OpenAI battery passed 2026-08-25 (`gpt-5.6`) |
 
 The menu domains carry the most 🟡 rows: their checklists track per-item state, and each 🟡
