@@ -83,6 +83,7 @@ with the commercial package for the features listed here.
 | `ColumnHeaderEdit` | `@libregrid/column-header-edit` | Editable header names (`headerNameEditable`), live or deferred apply |
 | `BatchEdit` | `@libregrid/batch-edit` | `startBatchEdit`/`commitBatchEdit`/`cancelBatchEdit`/`isBatchEditing` over Community's edit service (Phase 17) |
 | `CalculatedColumns` | `@libregrid/calculated-columns` | `calculatedExpression` columns, dialog, Grid State round-trip (Phase 18) |
+| `Formula` | `@libregrid/formulas` | Per-cell `=…` formulas: A1/`$`/range references, long-hand storage, `formulaDataSource`, tokenising editor, `formulaFuncs` custom functions, `refreshFormulas` (Phase 20) |
 | `PdfExport` | — | **Not planned.** See the [gap list](../parity/gap-list.md) |
 | `Notes` | `@libregrid/notes` | Cell and full-width-row notes: `notesDataSource`, hover/click/`Shift+F2`, read-only notes, `suppressNoteActions`, context-menu items (Phase 15) |
 | AI toolkit | — | Post-1.0 candidate; see the [gap list](../parity/gap-list.md) |

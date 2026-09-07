@@ -28,6 +28,7 @@ import { RichSelectModule } from '@libregrid/rich-select';
 import { IntegratedChartsModule } from '@libregrid/integrated-charts';
 import { BatchEditModule } from '@libregrid/batch-edit';
 import { CalculatedColumnsModule } from '@libregrid/calculated-columns';
+import { FormulasModule } from '@libregrid/formulas';
 import { SparklinesModule } from '@libregrid/sparklines';
 import { RowNumbersModule } from '@libregrid/row-numbers';
 import { ColumnHeaderEditModule } from '@libregrid/column-header-edit';
@@ -110,6 +111,8 @@ bootstrapApplication(App, {
       // Calculated values are registered here with every other app capability;
       // route components never self-register modules.
       CalculatedColumnsModule,
+      // Phase 20 — per-cell spreadsheet formulas (gap-plan A1)
+      FormulasModule,
     ),
   ],
 }).catch((err) => console.error(err));

@@ -43,6 +43,7 @@ const packages = [
   'sparklines',
   'toolbar',
   'calculated-columns',
+  'formulas',
   'ai-toolkit',
   'ai-protocol',
   'ai-client',

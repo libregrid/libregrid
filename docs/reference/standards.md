@@ -151,6 +151,12 @@ their own `@angular/*` peer dependencies.
 
 Paths are listed **explicitly per package** in `tsconfig.base.json` — not as a
 wildcard — so the `@libregrid/core/testing` subpath resolves to its own entry.
+Every `@libregrid/*` package also needs a matching explicit entry in the
+`resolve.alias` map of `vitest.config.ts`: without one the package resolves
+through the workspace `node_modules` symlink to **dist**, so a spec that imports
+a not-yet-built package (or two packages that must share one bean class) can
+silently load a second copy of the module graph. Phase 20 lost an afternoon to
+exactly that — add the alias when you scaffold the package.
 
 `exactOptionalPropertyTypes` is deliberate: the CSRM stage-bean slots are optional properties, and this catches accidental `undefined` assignment that would silently disable a stage.
 

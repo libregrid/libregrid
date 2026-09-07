@@ -200,6 +200,16 @@ export const DOCS_FEATURES: readonly DocsFeature[] = [
     keywords: ['formula', 'derived'],
   },
   {
+    path: 'formulas',
+    label: 'Formulas',
+    icon: 'calculate',
+    section: 'organize',
+    packages: ['@libregrid/formulas'],
+    outcome: 'Let users type spreadsheet-style formulas into cells that recompute as data changes.',
+    boundary: 'Both',
+    keywords: ['formula', 'spreadsheet', 'a1', 'cell'],
+  },
+  {
     path: 'ai-toolkit',
     label: 'AI Toolkit',
     icon: 'auto_awesome',

@@ -230,6 +230,23 @@ export { SparklineCellRenderer, SparklinesModule } from '@libregrid/sparklines';
 export { AiToolkitModule } from '@libregrid/ai-toolkit';
 
 export {
+  convertFormula,
+  FormulaCellEditor,
+  FormulaDataService,
+  FormulaError,
+  FormulaInputManager,
+  FormulaService,
+  FormulasModule,
+  getFormulaFunction,
+  parseCellFormula,
+  referencedCells,
+  shiftFormula,
+  validateExpression,
+  FORMULA_FUNCTION_NAMES,
+  type FormulasGridApi,
+} from '@libregrid/formulas';
+
+export {
   createColumnDefs,
   createGridApiSignals,
   defineGridOptions,
