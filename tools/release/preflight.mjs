@@ -203,6 +203,10 @@ if (willPublish.length && !identity && unauthorized.length) {
 // A name that is not on the registry cannot have a trusted publisher, because
 // npm will not configure one for a package that does not exist. Creating it
 // needs a token, and needs saying out loud before the release starts.
+// ALLOW_NEW_PACKAGES=true is an opt-in for a run that holds a creating-capable
+// credential, not a bypass: a tokenless OIDC run still cannot create names
+// (run 34171509385 set the flag with no token, published 10 of 19, and
+// aborted the rest with ENEEDAUTH — leaving the lockstep group split).
 if (news.length && !allowNew) {
   problems.push(
     `${news.length} package name(s) are new to the registry: ${news.map((s) => s.name).join(', ')}.\n` +
@@ -210,6 +214,14 @@ if (news.length && !allowNew) {
       '     cannot pre-configure a trusted publisher for a package that does not exist yet, so\n' +
       `     this needs a token${identity ? '' : ' — and none resolves right now'}.\n` +
       '     Re-run with ALLOW_NEW_PACKAGES=true once the credential is known to allow creation.',
+  );
+} else if (news.length && allowNew && !identity) {
+  problems.push(
+    `${news.length} package name(s) are new to the registry: ${news.map((s) => s.name).join(', ')}.\n` +
+      '     ALLOW_NEW_PACKAGES=true opts in, but no token resolves in this run, and tokenless\n' +
+      '     OIDC publishing cannot create a package name. Publish the new name once from a\n' +
+      '     credential that can create it, configure its trusted publisher on the registry,\n' +
+      '     then re-run this release.',
   );
 }
 
