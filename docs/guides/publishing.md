@@ -3,41 +3,90 @@
 This guide is for LibreGrid maintainers. Consumer installation instructions are
 in the project [README](../../README.md).
 
-## Before the first release
+## How releases work
 
-1. Be an owner of the `@libregrid` npm organization. Enable npm two-factor
-   authentication for **authorization and writes**.
-2. Create an npm granular access token named `libregrid-first-release` with
-   **Bypass 2FA** enabled. Under **Packages and scopes**, grant **Read and
-   write** access to the `@libregrid` scope. Do not grant access to every
-   package in the account. Give it a short expiry that covers this release.
-   In GitHub, add the copied value as a repository Actions secret named
-   `NPM_TOKEN`. Never put this token in the repository or a workflow file.
-3. Confirm the GitHub repository is public. Confirm every publishable package
-   has a `repository.url` pointing at `https://github.com/libregrid/libregrid`.
-   npm provenance requires this.
-
-## Release flow
-
-Releases are manual and batched — see
+Releases are **manual and batched** — see
 [release-versioning-plan.md](../design/release-versioning-plan.md). Merging a
-PR never publishes; changesets accumulate until you release.
+PR never publishes; changesets accumulate until you release. All publishable
+packages version in lockstep: a changeset on any package bumps the whole group
+to one version.
 
-To release:
+Publishing is **tokenless**: every `@libregrid/*` package trusts the Release
+workflow as an npm trusted publisher (GitHub Actions: repo
+`libregrid/libregrid`, workflow `release.yml`, allowed action `npm publish`).
+The workflow has `id-token: write`, and the npm CLI (≥11.15.0) exchanges the
+Actions OIDC token for a short-lived credential automatically. No `NPM_TOKEN`
+secret is used, and none should be configured — see
+[npm/cli#8544](https://github.com/npm/cli/issues/8544) for the one thing
+trusted publishing cannot do (creating new package names), covered in
+[Adding a new package](#adding-a-new-package) below.
 
-1. Open **GitHub → Actions → Release → Run workflow** and select `main`.
+## Standard release flow (existing packages)
+
+1. Open **GitHub → Actions → Release → Run workflow** and select `main`
+   (defaults are correct; leave `allow_new_packages` off).
 2. Changesets opens (or updates) a **Version Packages** pull request with the
    lockstep bump, updated changelogs, synced root/docs manifests, and the
    regenerated docs version badge. Review it, then merge.
-3. Run the Release workflow again on `main`. It runs the release checks,
-   publishes every unpublished package with the `latest` dist-tag, creates the
-   `vX.Y.Z` tag, and creates a GitHub Release with notes aggregated from the
-   per-package CHANGELOG sections.
+3. Run the Release workflow again on `main`. It runs the release preflight and
+   the `npm run verify` gate, publishes every unpublished package with the
+   `latest` dist-tag, creates the `vX.Y.Z` tag, and creates a GitHub Release
+   with notes aggregated from the per-package CHANGELOG sections.
 
-The workflow runs `npm run verify` before publishing. It uses
-`NPM_CONFIG_PROVENANCE=true`. Changesets supplies `--access public` from the
-repository's Changesets configuration. This makes the initial scoped packages
-public. It also publishes npm provenance attestations.
+The workflow publishes with `NPM_CONFIG_PROVENANCE=true`, so every package
+gets an npm provenance attestation.
+
+## Adding a new package
+
+> **GitHub Actions cannot create a new package name.** npm's trusted
+> publishing only authorizes publishes for packages that already exist — the
+> trusted publisher is configured on the package's registry settings page, and
+> npm cannot configure one for a name that is not on the registry yet
+> ([npm/cli#8544](https://github.com/npm/cli/issues/8544)). The first publish
+> of every new package name is always a **manual step**.
+
+The release preflight enforces this: a release run that would publish new
+package names without a resolvable npm token refuses **before publishing
+anything** — even with `ALLOW_NEW_PACKAGES=true`. That flag opts in a run that
+holds a creating-capable credential; it is not a bypass. This guard exists
+because `changeset publish` is sequential with no rollback: run 34171509385
+hit a name it could not create, aborted mid-flight, and left the lockstep
+group split (some packages published, some stranded on the previous version,
+one absent). The preflight turns that class of surprise into a pre-release
+refusal.
+
+So when a PR adding a new package merges:
+
+1. **Changeset first.** Make sure the new package carries a changeset (patch
+   is fine) so the lockstep group bumps it along with everything else.
+2. **Version.** Run the Release workflow and merge the Version Packages PR as
+   usual — every manifest, including the new package, moves to the new
+   lockstep version. Do **not** run the publish dispatch yet.
+3. **First-publish manually**, from a machine logged in to an npm account that
+   can create names in the `@libregrid` org:
+
+   ```bash
+   npx nx build <package-name>            # produce packages/<name>/dist
+   cd packages/<package-name>
+   npm publish --access public            # this one publish has no provenance
+   ```
+
+4. **Configure the trusted publisher immediately**, so every later version is
+   tokenless again:
+
+   ```bash
+   npm trust github @libregrid/<package-name> --file release.yml \
+     --repo libregrid/libregrid --allow-publish --yes
+   ```
+
+   (Equivalent UI path: npmjs.com → the package → **Settings → Trusted
+   publisher**: repository `libregrid/libregrid`, workflow filename
+   `release.yml`.)
+5. **Re-run the Release workflow** on `main`. It publishes any packages left
+   behind, creates the `vX.Y.Z` tag, and completes the release.
+
+Steps 3–4 are per package and once. After the name exists, releases involving
+it need nothing special.
 
 ## Verify a release
 
@@ -52,13 +101,7 @@ npm audit signatures
 Also follow the root README quick start from a clean temporary project before
 announcing the release.
 
-## Tokenless publishing (done)
-
-Every `@libregrid/*` package trusts the Release workflow as an npm trusted
-publisher (GitHub Actions: repo `libregrid/libregrid`, workflow `release.yml`,
-allowed action `npm publish`). Publishing uses GitHub OIDC — the workflow has
-`id-token: write`, and the npm CLI exchanges it for a short-lived credential
-automatically. No `NPM_TOKEN` secret is used.
+## Trusted-publisher maintenance
 
 The configs were created in bulk with the npm CLI (≥11.15.0):
 
