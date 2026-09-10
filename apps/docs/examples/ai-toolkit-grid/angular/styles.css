@@ -1,0 +1,10 @@
+button,
+input {
+  font: inherit;
+  padding: 0.5rem;
+  margin: 0.25rem;
+}
+pre {
+  max-height: 30rem;
+  overflow: auto;
+}

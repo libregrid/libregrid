@@ -1,0 +1,13 @@
+<ag-grid-angular
+  style="height: 420px; width: 100%"
+  [theme]="theme"
+  [columnDefs]="columnDefs"
+  [rowData]="rowData"
+  [gridOptions]="gridOptions"
+  (gridReady)="ready($event.api)"
+/>
+<p>
+  <button (click)="copy()">Copy selected range</button>
+  <button (click)="clear()">Clear range</button>
+</p>
+<p aria-live="polite">{{ copied() }}</p>

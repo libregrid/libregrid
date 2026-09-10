@@ -1,0 +1,26 @@
+<p>
+  Browser mock: try “Sort by sales amount, highest first”, “Hide the sales rep column”, “Group by
+  region and total the sales amount”, or “Show sales over $5,000 from North America, hardware only”.
+  Other commands leave the grid unchanged.
+</p>
+<label>Request <input #command value="Sort by sales amount, highest first" /></label>
+<label
+  ><input type="checkbox" (change)="review.set($any($event.target).checked)" />Review before
+  applying</label
+>
+<button (click)="run(command.value)" [disabled]="busy()">Apply query</button>
+<button (click)="reset()" [disabled]="busy()">Reset grid</button>
+<ag-grid-angular
+  style="display: block; height: 420px"
+  [gridOptions]="gridOptions"
+  (gridReady)="api = $event.api"
+/>
+<p role="status">{{ status() }}</p>
+@if (proposal(); as pending) {
+  <pre>{{ pending.changes | json }}</pre>
+  <button (click)="apply()">Apply proposal</button><button (click)="discard()">Discard</button>
+}
+<details>
+  <summary>Request and response</summary>
+  <pre>{{ traffic() }}</pre>
+</details>

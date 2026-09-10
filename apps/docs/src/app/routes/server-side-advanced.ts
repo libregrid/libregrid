@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, inject, signal } from '@angular/core';
+import { DocsDemoComponent } from '../docs/docs-demo';
+import type { ElementRef} from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewChild, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -71,7 +73,7 @@ function sortRows(rows: Trade[], request: IServerSideGetRowsRequest): Trade[] {
 @Component({
   selector: 'lgr-server-side-advanced-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsBackendBoundaryComponent, DocsCodeExampleComponent, DocsDemoGuideComponent, DocsFeaturePageShellComponent, DocsProductionChecklistComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatButtonModule, MatCardModule, DocsBackendBoundaryComponent, DocsCodeExampleComponent, DocsDemoGuideComponent, DocsFeaturePageShellComponent, DocsProductionChecklistComponent],
   styles: `
     .actions { display:flex; flex-wrap:wrap; gap:.65rem; margin-bottom:1rem; }
     .demo-card { overflow:hidden; } .trace { margin:0; max-height:18rem; overflow:auto; padding:1rem; background:var(--mat-sys-surface-container); border-top:1px solid var(--mat-sys-outline-variant); font-size:.78rem; line-height:1.5; }
@@ -86,7 +88,8 @@ function sortRows(rows: Trade[], request: IServerSideGetRowsRequest): Trade[] {
       [packages]="['@libregrid/server-side-row-model', '@libregrid/advanced-filter']"
       [values]="values"
     >
-      <div featureDemo>
+      <div featureDemo><lgr-docs-demo demoId="server-side-advanced-grid">
+
         <mat-card appearance="outlined" class="demo-card"><mat-card-content>
           <div class="actions">
             <button matButton="filled" (click)="applyRiskFilter()">Apply risk review filter</button>
@@ -98,7 +101,8 @@ function sortRows(rows: Trade[], request: IServerSideGetRowsRequest): Trade[] {
           <div class="lgr-grid-host"><ag-grid-angular style="width:100%;height:100%" [theme]="theme.gridTheme()" [columnDefs]="columnDefs" [gridOptions]="gridOptions" (gridReady)="ready($event.api)" data-testid="server-side-advanced-grid" /></div>
         </mat-card-content>
         <pre class="trace" aria-live="polite"><code>{{ requestTrace() }}</code></pre></mat-card>
-      </div>
+
+</lgr-docs-demo></div>
       <lgr-docs-demo-guide featureGuide [steps]="demoSteps" intro="The request trace is proof of the frontend/backend hand-off—not a simulated client-side filter." />
       <div featureImplementation><lgr-docs-code-example heading="Connect SSRM to your service" [examples]="dataSourceExamples" /></div>
       <div featureIntegration><lgr-docs-backend-boundary summary="LibreGrid defines the request shape. Your API owns authorization, query planning, aggregation, and data retention." [clientResponsibilities]="clientResponsibilities" [backendResponsibilities]="backendResponsibilities" [contracts]="contracts" /></div>

@@ -86,6 +86,16 @@ export const DOCS_FEATURES: readonly DocsFeature[] = [
     keywords: ['aggregate', 'totals'],
   },
   {
+    path: 'group-editing',
+    label: 'Editing Groups',
+    icon: 'edit_note',
+    section: 'edit',
+    packages: ['@libregrid/row-grouping'],
+    outcome: 'Edit a group total once and distribute the change across the records behind it.',
+    boundary: 'Browser',
+    keywords: ['groupRowEditable', 'groupRowValueSetter', 'distribute', 'refreshAfterGroupEdit'],
+  },
+  {
     path: 'pivot',
     label: 'Pivot',
     icon: 'pivot_table_chart',

@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
@@ -34,7 +35,7 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-toolbar-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="toolbar">
       <p>
@@ -45,7 +46,8 @@ function makeRows(n: number): Row[] {
         <code>&#64;libregrid/columns-tool-panel</code>.
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="toolbar-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
@@ -66,7 +68,8 @@ function makeRows(n: number): Row[] {
         <button matButton="tonal" (click)="resetQuickFilter()">Clear quick filter</button>
       </div>
 
-      <h2>How it works</h2>
+
+</lgr-docs-demo><h2>How it works</h2>
       <p>
         Register <code>ToolbarModule</code> and list items in the <code>toolbar</code> grid
         option. The quick filter drives <code>quickFilterText</code>, Find uses

@@ -1,5 +1,9 @@
 # @libregrid/docs
 
+## 1.3.3
+
+Version synced with the lockstep release.
+
 ## 1.3.1
 
 Version synced with the lockstep release.

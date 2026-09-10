@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,7 +35,7 @@ function makeRows(count: number): Row[] {
 @Component({
   selector: 'lgr-columns-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
   styles: `
     .lgr-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
   `,
@@ -46,7 +47,8 @@ function makeRows(count: number): Row[] {
         pivot controls.
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="columns-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
@@ -68,7 +70,8 @@ function makeRows(count: number): Row[] {
         <button matButton="tonal" (click)="closeChooser()">Close column chooser</button>
       </div>
 
-      <h2>How it works</h2>
+
+</lgr-docs-demo><h2>How it works</h2>
       <p>
         <code>&#64;libregrid/columns-tool-panel</code> registers the standard
         <code>columns</code> tool panel with the side bar. The

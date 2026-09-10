@@ -1,0 +1,18 @@
+<div>
+  <button (click)="applyRiskFilter()">Apply risk review filter</button>
+  <button (click)="showBuilder()">Build a custom filter</button>
+  <button (click)="clearFilter()">Clear filter</button>
+  <button (click)="togglePivot()">{{ pivotEnabled() ? 'Leave' : 'Show' }} monthly pivot</button>
+</div>
+<div #advancedParent></div>
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [columnDefs]="columnDefs"
+    [gridOptions]="gridOptions"
+    (gridReady)="ready($event.api)"
+  />
+</div>
+
+<pre aria-live="polite"><code>{{ requestTrace() }}</code></pre>

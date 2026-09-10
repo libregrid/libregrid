@@ -1,0 +1,18 @@
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [columnDefs]="columnDefs"
+    [rowData]="rowData()"
+    [gridOptions]="gridOptions"
+    (gridReady)="onGridReady($event.api)"
+  />
+</div>
+
+<h2>Options</h2>
+<div>
+  <button [class.lgr-active]="deferred()" (click)="toggleApplyMode()">
+    {{ deferred() ? "applyMode: 'deferred'" : "applyMode: 'live'" }}
+  </button>
+  <button (click)="resetColumnState()">resetColumnState()</button>
+</div>

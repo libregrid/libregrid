@@ -8,17 +8,12 @@ import {
   _getGrandTotalRow,
 } from 'ag-grid-community';
 import type { AgColumn, ChangedPath, ColAggFunc, IAggFunc, RowNode } from 'ag-grid-community';
+import { pivotKey } from './pivotKeys';
 
 function isValueColumn(col: AgColumn): boolean {
   if (col.aggregationActive || col.getAggFunc() != null) return true;
   const colDef = col.getColDef() as Record<string, unknown>;
   return colDef['aggFunc'] != null || colDef['enableValue'] === true;
-}
-
-function pivotKey(value: unknown): string {
-  if (value === null) return '\u0000null';
-  if (value === undefined) return '\u0000undefined';
-  return String(value);
 }
 
 /**
@@ -65,12 +60,14 @@ export class AggregationStage extends BeanStub implements _IRowNodeAggregationSt
     // re-aggregation (`aggregateOnlyChangedColumns`) is a later optimisation.
     _forEachChangedGroupDepthFirst(rootNode, csrm.hierarchical ?? true, null, (node) => {
       const isRoot = node === rootNode;
-      const children = node.childrenAfterFilter ?? node.childrenAfterGroup;
+      const children = this.gos.get('suppressAggFilteredOnly')
+        ? node.childrenAfterGroup
+        : node.childrenAfterFilter ?? node.childrenAfterGroup;
       if (!children || children.length === 0) return;
       if (!node.group && !isRoot) return;
       if (isRoot && !alwaysRoot && !node.group) return;
 
-      node.childrenAfterAggFilter = children;
+      node.childrenAfterAggFilter = node.childrenAfterFilter ?? node.childrenAfterGroup;
       if (getGroupRowAgg) {
         const result = getGroupRowAgg({ rowNode: node });
         if (result) {

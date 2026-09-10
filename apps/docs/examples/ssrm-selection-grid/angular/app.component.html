@@ -1,0 +1,20 @@
+<div>
+  <mat-form-field subscriptSizing="dynamic"
+    ><mat-label>Filter by desk</mat-label
+    ><input
+      matInput
+      placeholder="e.g. Equities"
+      (input)="applyDeskFilter($any($event.target).value)"
+  /></mat-form-field>
+  <button (click)="applyDeskFilter('')">Clear filter</button>
+</div>
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [columnDefs]="columnDefs"
+    [gridOptions]="gridOptions"
+    (gridReady)="onGridReady($event)"
+  />
+</div>
+<div #footerHost></div>

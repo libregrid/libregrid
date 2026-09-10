@@ -1,0 +1,6 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": { "noEmit": true, "useDefineForClassFields": false },
+  "angularCompilerOptions": { "strictTemplates": true },
+  "include": ["../examples/*/angular/*.ts"]
+}

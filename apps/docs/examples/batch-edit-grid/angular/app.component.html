@@ -1,0 +1,26 @@
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [columnDefs]="columnDefs"
+    [rowData]="rowData()"
+    [gridOptions]="gridOptions"
+    (gridReady)="onGridReady($event.api)"
+  />
+</div>
+<div>
+  <span>{{ batchEditing() ? 'Batch editing' : 'Idle' }}</span>
+  <button (click)="startBatch()" [disabled]="batchEditing()">Start batch edit</button>
+  <button (click)="commitBatch()" [disabled]="!batchEditing()">Commit batch</button>
+  <button (click)="cancelBatch()" [disabled]="!batchEditing()">Cancel batch</button>
+</div>
+
+<h2>Event log</h2>
+<ul>
+  @for (entry of log(); track $index) {
+    <li>{{ entry }}</li>
+  }
+  @if (log().length === 0) {
+    <li>No events yet — start a batch and edit a cell.</li>
+  }
+</ul>

@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
@@ -53,7 +54,7 @@ const ROWS = makeRows();
 @Component({
   selector: 'lgr-filters-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="filters">
       <p>
@@ -62,7 +63,8 @@ const ROWS = makeRows();
         data comes from your server.
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="filters-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
@@ -82,7 +84,8 @@ const ROWS = makeRows();
         <button matButton="tonal" (click)="openFilters()">Open Filters panel</button>
       </div>
 
-      <h2>Try it</h2>
+
+</lgr-docs-demo><h2>Try it</h2>
       <p>
         Open the Filters panel and click <strong>Add Filter</strong> to pick a column from the
         type-ahead. Every card defaults to <strong>Simple Filter</strong> (operator + value, plus an

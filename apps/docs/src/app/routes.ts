@@ -15,6 +15,7 @@ export const NAV: ReadonlyArray<{ path: string; label: string }> = [
   { path: 'side-bar', label: 'Side bar' },
   { path: 'toolbar', label: 'Toolbar' },
   { path: 'row-grouping', label: 'Row Grouping' },
+  { path: 'group-editing', label: 'Editing Groups' },
   { path: 'pivot', label: 'Pivot' },
   { path: 'columns', label: 'Columns' },
   { path: 'filters', label: 'Filters' },
@@ -91,6 +92,11 @@ export const routes: Routes = [
     path: 'row-grouping',
     loadComponent: () => import('./routes/row-grouping').then((m) => m.RowGroupingDemo),
     title: 'LibreGrid — Row Grouping',
+  },
+  {
+    path: 'group-editing',
+    loadComponent: () => import('./routes/group-editing').then((m) => m.GroupEditingDemo),
+    title: 'LibreGrid — Editing Groups',
   },
   {
     path: 'pivot',

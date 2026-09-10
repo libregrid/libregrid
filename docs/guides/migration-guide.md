@@ -61,6 +61,7 @@ with the commercial package for the features listed here.
 | `ColumnsToolPanel` | `@libregrid/columns-tool-panel` | |
 | `RowGroupingPanel` | `@libregrid/columns-tool-panel` | Standalone row-group panel ships with the columns tool panel |
 | `RowGrouping` | `@libregrid/row-grouping` | Grouping, aggregation, totals, show-values-as |
+| `RowGroupingEdit` | `@libregrid/row-grouping` | Group row value editing: `colDef.groupRowEditable`, `colDef.groupRowValueSetter`, `distributeGroupValue`, `refreshAfterGroupEdit` (Phase 21) |
 | `CellSelection` | `@libregrid/cell-selection` | Ranges and the fill handle (Enterprise's range selection is folded into cell selection in v36) |
 | `Clipboard` | `@libregrid/clipboard` | Excel-compatible TSV copy/cut/paste |
 | `StatusBar` | `@libregrid/status-bar` | |
@@ -86,7 +87,7 @@ with the commercial package for the features listed here.
 | `Formula` | `@libregrid/formulas` | Per-cell `=…` formulas: A1/`$`/range references, long-hand storage, `formulaDataSource`, tokenising editor, `formulaFuncs` custom functions, `refreshFormulas` (Phase 20) |
 | `PdfExport` | — | **Not planned.** See the [gap list](../parity/gap-list.md) |
 | `Notes` | `@libregrid/notes` | Cell and full-width-row notes: `notesDataSource`, hover/click/`Shift+F2`, read-only notes, `suppressNoteActions`, context-menu items (Phase 15) |
-| AI toolkit | — | Post-1.0 candidate; see the [gap list](../parity/gap-list.md) |
+| AI toolkit | `@libregrid/ai-toolkit` | Strict schema for the seven state features plus the language-neutral BYOM protocol/client/gateway path (Phase 19). Note the docs' **MCP Server** and **AI Skills** are Community, not Enterprise |
 
 LibreGrid-only packages with no Enterprise equivalent:
 

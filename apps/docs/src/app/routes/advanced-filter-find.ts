@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, ViewChild, inject } from '@angular/core';
 import type { ElementRef } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -14,11 +15,12 @@ const rows: Row[] = [
 ];
 @Component({
   selector: 'lgr-advanced-filter-find-demo', changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
   template: `
   <lgr-docs-feature-page path="advanced-filter-find">
     <p>Expressions and the visual builder use one serialisable Advanced Filter model. Find highlights each rendered match and wraps through the results.</p>
-    <mat-card appearance="outlined"><mat-card-content>
+    <lgr-docs-demo demoId="phase-eleven-grid">
+<mat-card appearance="outlined"><mat-card-content>
       <div class="lgr-actions lgr-advanced-filter-toolbar">
         <button matButton="filled" (click)="showBuilder()">Open advanced builder</button>
         <button matButton="tonal" (click)="clearFilter()">Clear filter</button>
@@ -29,8 +31,11 @@ const rows: Row[] = [
       <div #advancedParent class="lgr-advanced-filter-builder-host" data-testid="phase-eleven-filter-parent"></div>
       <div class="lgr-grid-host"><ag-grid-angular style="width:100%;height: 100%;" [theme]="theme.gridTheme()" [columnDefs]="columnDefs" [rowData]="rowData" [gridOptions]="gridOptions" (gridReady)="ready($event.api)" data-testid="phase-eleven-grid" /></div>
     </mat-card-content></mat-card>
+</lgr-docs-demo>
     <h2>Rich Select editor</h2><p>Double-click Status, search, and press Enter. The option viewport stays small even with thousands of values.</p>
-    <mat-card appearance="outlined"><mat-card-content><div class="lgr-grid-host"><ag-grid-angular style="width:100%;height:220px" [theme]="theme.gridTheme()" [columnDefs]="richColumns" [rowData]="rowData" data-testid="phase-eleven-rich-select" /></div></mat-card-content></mat-card>
+    <lgr-docs-demo demoId="phase-eleven-rich-select">
+<mat-card appearance="outlined"><mat-card-content><div class="lgr-grid-host"><ag-grid-angular style="width:100%;height:220px" [theme]="theme.gridTheme()" [columnDefs]="richColumns" [rowData]="rowData" data-testid="phase-eleven-rich-select" /></div></mat-card-content></mat-card>
+</lgr-docs-demo>
   </lgr-docs-feature-page>`,
 })
 export class AdvancedFilterFindDemo {

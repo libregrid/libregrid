@@ -1,0 +1,13 @@
+<ag-grid-angular
+  style="height: 420px; width: 100%"
+  [theme]="theme"
+  [columnDefs]="columnDefs"
+  [rowData]="rowData"
+  [gridOptions]="gridOptions"
+  (gridReady)="ready($event.api)"
+/>
+
+<p>
+  <button (click)="toggle()">Toggle pivot mode</button>
+  <button (click)="openColumns()">Open Columns panel</button>
+</p>

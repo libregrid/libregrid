@@ -1,0 +1,16 @@
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [columnDefs]="columnDefs"
+    [rowData]="rowData"
+    [gridOptions]="gridOptions"
+    (gridReady)="onGridReady($event.api)"
+  />
+</div>
+
+<div>
+  <button (click)="openColumns()">Open Columns panel</button>
+  <button (click)="openChooser()">Open column chooser</button>
+  <button (click)="closeChooser()">Close column chooser</button>
+</div>

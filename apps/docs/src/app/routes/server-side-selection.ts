@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, ViewChild, ElementRef } from '@angular/core';
+import { DocsDemoComponent } from '../docs/docs-demo';
+import type { ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
@@ -144,7 +146,7 @@ function createDemoProvider() {
 @Component({
   selector: 'lgr-server-side-selection-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, RouterLink, DocsCodeExampleComponent, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, RouterLink, DocsCodeExampleComponent, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="server-side-selection">
       <p>
@@ -154,7 +156,8 @@ function createDemoProvider() {
         <strong>Show All Selected</strong> to view the selection as its own dataset.
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="ssrm-selection-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-actions">
             <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Filter by desk</mat-label><input matInput placeholder="e.g. Equities" (input)="applyDeskFilter($any($event.target).value)" /></mat-form-field>
@@ -173,6 +176,7 @@ function createDemoProvider() {
           <div #footerHost class="lgr-ssrm-selection-footer-host" data-testid="ssrm-selection-footer-host"></div>
         </mat-card-content>
       </mat-card>
+</lgr-docs-demo>
 
       <h2>What's supported</h2>
       <p>

@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
@@ -99,7 +100,7 @@ function keyOf(params: NotesDataSourceNoteParams | NotesDataSourceFullWidthRowNo
 @Component({
   selector: 'lgr-notes-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="notes">
       <p>
@@ -112,7 +113,8 @@ function keyOf(params: NotesDataSourceNoteParams | NotesDataSourceFullWidthRowNo
         with its own note.
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="notes-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
@@ -137,7 +139,8 @@ function keyOf(params: NotesDataSourceNoteParams | NotesDataSourceFullWidthRowNo
         <button matButton="tonal" (click)="clearAllNotes()">Clear all notes</button>
       </div>
 
-      <h2>How it works</h2>
+
+</lgr-docs-demo><h2>How it works</h2>
       <p>
         Register <code>NotesModule</code> and set a <code>notesDataSource</code> on the
         grid. The grid stores nothing itself: every read and write goes through your

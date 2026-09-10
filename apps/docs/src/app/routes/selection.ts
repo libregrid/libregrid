@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,14 +23,15 @@ const rows: Row[] = [
 @Component({
   selector: 'lgr-selection-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="selection">
       <p>
         Drag across cells to create a range. Copy uses an Excel-compatible TSV shape, including
         quoted line breaks and delimiters.
       </p>
-      <mat-card appearance="outlined"
+      <lgr-docs-demo demoId="selection-grid">
+<mat-card appearance="outlined"
         ><mat-card-content
           ><ag-grid-angular
             style="width:100%;height:360px"
@@ -45,7 +47,8 @@ const rows: Row[] = [
         <button matButton="tonal" (click)="clear()">Clear range</button>
       </p>
       <p aria-live="polite">{{ copied() }}</p>
-      <h2>Status</h2>
+
+</lgr-docs-demo><h2>Status</h2>
       <p>
         The grid status bar below the table is provided by
         <code>&#64;libregrid/status-bar</code>. Select a range to see the

@@ -139,6 +139,8 @@ export function createGeneratedPivotDefs(
             headerName: valueColumns.length === 1 ? key : valueColumn.getColDef().headerName ?? valueColumn.getColId(),
             pivotKeys: keys,
             pivotValueColumn: valueColumn,
+            aggFunc: valueColumn.getAggFunc() ?? null,
+            ...groupEditingDef(valueColumn.getColDef()),
             sortable: true,
           } satisfies ColDef)))
         : make(child, depth + 1);
@@ -151,3 +153,14 @@ export function createGeneratedPivotDefs(
 }
 
 export function generatedPivotColumnId(keys: readonly string[], valueId: string): string { return keyId(keys, valueId); }
+
+/** Preserve editing configuration without copying grouping/visibility flags. */
+function groupEditingDef(source: ColDef): ColDef {
+  const def: ColDef = {};
+  if (source.groupRowEditable !== undefined) def.groupRowEditable = source.groupRowEditable;
+  if (source.groupRowValueSetter !== undefined) def.groupRowValueSetter = source.groupRowValueSetter;
+  if (source.cellEditor !== undefined) def.cellEditor = source.cellEditor;
+  if (source.cellEditorParams !== undefined) def.cellEditorParams = source.cellEditorParams;
+  if (source.valueParser !== undefined) def.valueParser = source.valueParser;
+  return def;
+}

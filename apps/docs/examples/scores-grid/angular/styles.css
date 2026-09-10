@@ -1,0 +1,15 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+  padding: 0.5rem;
+  margin: 0.25rem;
+}
+ag-grid-angular {
+  display: block;
+  margin-block: 1rem;
+}

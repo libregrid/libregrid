@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
@@ -34,7 +35,7 @@ function makeRows(): Row[] {
 @Component({
   selector: 'lgr-calculated-columns-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, DocsFeaturePageComponent],
   styles: `
     .lgr-calc-log {
       margin: 8px 0 24px;
@@ -62,7 +63,8 @@ function makeRows(): Row[] {
         Calculated columns are always read-only: Community's edit and paste
         paths refuse them.
       </p>
-      <ag-grid-angular
+      <lgr-docs-demo demoId="calculated-columns-grid">
+<ag-grid-angular
         [theme]="theme.gridTheme()"
         [gridOptions]="gridOptions"
         class="ag-theme-quartz"
@@ -78,7 +80,8 @@ function makeRows(): Row[] {
           }
         </ul>
       }
-    </lgr-docs-feature-page>
+
+</lgr-docs-demo></lgr-docs-feature-page>
   `,
 })
 export class CalculatedColumnsDemo {

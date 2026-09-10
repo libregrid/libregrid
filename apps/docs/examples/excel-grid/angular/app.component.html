@@ -1,0 +1,21 @@
+<ag-grid-angular
+  style="height: 420px; width: 100%"
+  [theme]="theme"
+  [columnDefs]="columnDefs"
+  [rowData]="trades"
+  [gridOptions]="gridOptions"
+  (gridReady)="ready($event.api)"
+/>
+<p>
+  <button (click)="exportSingle()">Export as .xlsx</button>
+  <button (click)="exportMultiple()">Export multiple sheets</button>
+</p>
+<p aria-live="polite">{{ status() }}</p>
+
+<h2>Scores sheet</h2>
+<ag-grid-angular
+  style="display: block; height: 220px"
+  [rowData]="scores"
+  [columnDefs]="scoreColumnDefs"
+  (gridReady)="readyScores($event.api)"
+/>

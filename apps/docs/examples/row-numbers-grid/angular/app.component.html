@@ -1,0 +1,23 @@
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [columnDefs]="columnDefs"
+    [rowData]="rowData()"
+    [gridOptions]="gridOptions"
+    (gridReady)="onGridReady($event.api)"
+  />
+</div>
+
+<h2>Options</h2>
+<div>
+  <button [class.lgr-active]="rowNumbers()" (click)="toggleRowNumbers()">
+    {{ rowNumbers() ? 'rowNumbers: on' : 'rowNumbers: off' }}
+  </button>
+  <button [class.lgr-active]="enableRowResizer()" (click)="toggleRowResizer()">
+    {{ enableRowResizer() ? 'Row resizer: on' : 'Row resizer: off' }}
+  </button>
+  <button [class.lgr-active]="cellSelection()" (click)="toggleCellSelection()">
+    {{ cellSelection() ? 'Cell selection: on' : 'Cell selection: off' }}
+  </button>
+</div>

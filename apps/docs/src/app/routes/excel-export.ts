@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,13 +29,14 @@ const scores = [
 @Component({
   selector: 'lgr-excel-export-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
   template: ` <lgr-docs-feature-page path="excel-export">
     <p>
       Grouped rows keep their outline levels and collapse state. Right-click a cell to use the
       Export menu item.
     </p>
-    <mat-card appearance="outlined"
+    <lgr-docs-demo demoId="excel-grid">
+<mat-card appearance="outlined"
       ><mat-card-content
         ><ag-grid-angular
           style="width:100%;height:320px"
@@ -54,8 +56,10 @@ const scores = [
       </button>
     </p>
     <p aria-live="polite">{{ status() }}</p>
-    <h2>Second sheet</h2>
-    <mat-card appearance="outlined"
+
+</lgr-docs-demo><h2>Second sheet</h2>
+    <lgr-docs-demo demoId="scores-grid">
+<mat-card appearance="outlined"
       ><mat-card-content
         ><ag-grid-angular
           style="width:100%;height:220px"
@@ -65,6 +69,7 @@ const scores = [
           (gridReady)="readyScores($event.api)"
           data-testid="scores-grid" /></mat-card-content
     ></mat-card>
+</lgr-docs-demo>
   </lgr-docs-feature-page>`,})
 export class ExcelExportDemo {
   protected readonly theme = inject(LibreGridThemeService);

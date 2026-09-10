@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
@@ -31,7 +32,7 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-column-header-edit-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="column-header-edit">
       <p>
@@ -41,7 +42,8 @@ function makeRows(n: number): Row[] {
         state (so <code>resetColumnState()</code> reverts them).
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="column-header-edit-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
@@ -65,7 +67,8 @@ function makeRows(n: number): Row[] {
         <button matButton="tonal" (click)="resetColumnState()">resetColumnState()</button>
       </div>
 
-      <h2>How it works</h2>
+
+</lgr-docs-demo><h2>How it works</h2>
       <p>
         Register <code>ColumnHeaderEditModule</code> (and <code>ColumnMenuModule</code>
         for the menu entry). <code>applyMode: 'live'</code> (default) applies every

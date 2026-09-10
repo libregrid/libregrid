@@ -6,7 +6,7 @@ import { provideLibreGrid } from '@libregrid/angular';
 import { EnterpriseCoreModule } from '@libregrid/core';
 import { ContextMenuModule, ColumnMenuModule } from '@libregrid/menu';
 import { SideBarModule } from '@libregrid/side-bar';
-import { RowGroupingModule } from '@libregrid/row-grouping';
+import { RowGroupingEditModule, RowGroupingModule } from '@libregrid/row-grouping';
 import { PivotModule } from '@libregrid/pivot';
 import { ServerSideRowModelModule } from '@libregrid/server-side-row-model';
 import { ServerSideSelectionModule } from '@libregrid/server-side-selection';
@@ -113,6 +113,8 @@ bootstrapApplication(App, {
       CalculatedColumnsModule,
       // Phase 20 — per-cell spreadsheet formulas (gap-plan A1)
       FormulasModule,
+      // Phase 21 — group row value editing (gap-plan A8)
+      RowGroupingEditModule,
     ),
   ],
 }).catch((err) => console.error(err));

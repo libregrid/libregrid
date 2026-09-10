@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
@@ -42,7 +43,7 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-side-bar-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="side-bar">
       <p>
@@ -53,7 +54,8 @@ function makeRows(n: number): Row[] {
         Filters panels.
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="side-bar-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
@@ -85,7 +87,8 @@ function makeRows(n: number): Row[] {
         <strong>State:</strong> visible={{ isVisible() }}, openPanel={{ openPanelId() ?? 'none' }}
       </p>
 
-      <h2>How it works</h2>
+
+</lgr-docs-demo><h2>How it works</h2>
       <p>
         Register <code>&#64;libregrid/side-bar</code> and list the panel ids in
         <code>sideBar.toolPanels</code>. Feature packages contribute their own panels, so

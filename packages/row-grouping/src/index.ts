@@ -1,7 +1,13 @@
 export { RowGroupingModule } from './rowGroupingModule';
+export { RowGroupingEditModule } from './rowGroupingEditModule';
 export { GroupStage } from './groupStage';
 export { FlattenStage } from './flattenStage';
 export { AggFuncService } from './aggFuncService';
+// Public API surface only — `standards.md` §6.6: beans are not public API. The
+// `RowGroupingEditService`/`AggregatedChildrenService` beans and the
+// `distributeGroupValue.ts` internals stay package-private; only the documented
+// `distributeGroupValue(params, options?)` entry point is exported.
+export { distributeGroupValue } from './distributeGroupValue';
 export { AggregationStage } from './aggregationStage';
 export { FilterAggregateStage } from './filterAggregateStage';
 export { GroupFilterStage } from './groupFilterStage';

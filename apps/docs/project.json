@@ -21,6 +21,11 @@
             "glob": "**/*",
             "input": "apps/docs/src/assets",
             "output": "assets"
+          },
+          {
+            "glob": "**/*",
+            "input": "apps/docs/examples",
+            "output": "examples"
           }
         ],
         "polyfills": [
@@ -58,6 +63,12 @@
         }
       },
       "defaultConfiguration": "development"
+    },
+    "validate-examples": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/docs-examples/validate.mjs"
+      }
     }
   }
 }

@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
@@ -11,11 +12,13 @@ interface Quote { id: string; symbol: string; price: number; updatedAt: string; 
 @Component({
   selector: 'lgr-viewport-row-model-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="viewport">
       <p>The grid only holds the rows on screen; everything else arrives as live updates from your system. Scroll and watch — the feed stays fresh without loading the full dataset.</p>
-      <mat-card appearance="outlined"><mat-card-content><ag-grid-angular style="width:100%;height:520px" [theme]="theme.gridTheme()" [columnDefs]="columnDefs" [gridOptions]="gridOptions" data-testid="viewport-grid" /></mat-card-content></mat-card>
+      <lgr-docs-demo demoId="viewport-grid">
+<mat-card appearance="outlined"><mat-card-content><ag-grid-angular style="width:100%;height:520px" [theme]="theme.gridTheme()" [columnDefs]="columnDefs" [gridOptions]="gridOptions" data-testid="viewport-grid" /></mat-card-content></mat-card>
+</lgr-docs-demo>
     </lgr-docs-feature-page>
   `,
 })

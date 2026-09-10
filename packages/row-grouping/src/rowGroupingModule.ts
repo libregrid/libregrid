@@ -10,6 +10,8 @@ import { VERSION } from './version';
 import { GroupStage } from './groupStage';
 import { FlattenStage } from './flattenStage';
 import { AggFuncService } from './aggFuncService';
+import { AggregatedChildrenService } from './aggregatedChildrenService';
+import { ChangedPathFactory } from './changedPathFactory';
 import { AggregationStage } from './aggregationStage';
 import { FilterAggregateStage } from './filterAggregateStage';
 import { GroupFilterStage } from './groupFilterStage';
@@ -84,6 +86,8 @@ export const RowGroupingModule: _ModuleWithApi<
   version: VERSION,
   beans: [
     AggFuncService,
+    AggregatedChildrenService,
+    ChangedPathFactory,
     ValueColsService,
     RowGroupColsService,
     AutoGenColsService,

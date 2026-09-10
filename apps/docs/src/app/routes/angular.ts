@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
@@ -28,7 +29,7 @@ const ROW_DATA: Row[] = [
 @Component({
   selector: 'lgr-angular-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatFormFieldModule, MatInputModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, MatFormFieldModule, MatInputModule, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="angular">
       <p>
@@ -40,7 +41,8 @@ const ROW_DATA: Row[] = [
         and select. Typing in the filter box calls <code>setFilterModel</code>; the chips reflect
         what the grid reports back.
       </p>
-      <mat-form-field appearance="outline">
+      <lgr-docs-demo demoId="angular-grid">
+<mat-form-field appearance="outline">
         <mat-label>Filter by name</mat-label>
         <input matInput type="text" placeholder="e.g. Ada" (input)="applyFilter($any($event.target).value)" data-testid="angular-filter-input" />
       </mat-form-field>
@@ -61,6 +63,7 @@ const ROW_DATA: Row[] = [
           />
         </mat-card-content>
       </mat-card>
+</lgr-docs-demo>
     </lgr-docs-feature-page>
   `,
 })
