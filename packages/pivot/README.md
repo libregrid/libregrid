@@ -1,15 +1,15 @@
 # @libregrid/pivot
 
-Client-side pivoting on top of `@libregrid/row-grouping`'s aggregation
-pipeline — pivot columns generate result columns deterministically before
-aggregation runs.
+Summarize client-side data in a cross-tab view. Group rows, turn distinct
+values into result columns, and aggregate measures such as sales or quantity.
+For example, compare sales by country across years.
 
-Replaces AG Grid Enterprise's `Pivot` module.
+[Documentation and examples](https://libregrid.dev/pivot)
 
 ## Install
 
 ```bash
-npm install ag-grid-community @libregrid/pivot
+npm install "ag-grid-community@^36.1.0" @libregrid/pivot
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.
@@ -18,13 +18,19 @@ grouping and aggregation stages.
 
 ## Usage
 
+In a browser TypeScript project, add a grid container before running the code:
+
+```html
+<div id="grid" style="height: 400px"></div>
+```
+
 ```ts
 import { ModuleRegistry, AllCommunityModule, createGrid } from 'ag-grid-community';
 import { PivotModule } from '@libregrid/pivot';
 
 ModuleRegistry.registerModules([AllCommunityModule, PivotModule]);
 
-createGrid(document.querySelector('#grid')!, {
+const api = createGrid(document.querySelector<HTMLElement>('#grid')!, {
   columnDefs: [
     { field: 'country', rowGroup: true, enableRowGroup: true },
     { field: 'product', rowGroup: true, enableRowGroup: true },
@@ -57,13 +63,13 @@ Cap generated columns when pivot values have high cardinality with
 
 ## API
 
-| Export | Purpose |
-| --- | --- |
-| `PivotModule` | Registers the feature (`moduleName: 'Pivot'`). |
-| `PivotStage` | Client-side row model pipeline stage that generates result columns — see `docs/reference/api-seams.md` §6. |
-| `PivotColsService` | Tracks which columns are in the pivot drop zone. |
-| `PivotResultColsService`, `createGeneratedPivotDefs`, `generatedPivotColumnId` | Generated result-column management. |
-| `PivotColDefService` | Builds `ColDef`s for generated pivot columns. |
+| Export                                                                         | Purpose                                                                                                    |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `PivotModule`                                                                  | Registers the feature (`moduleName: 'Pivot'`).                                                             |
+| `PivotStage`                                                                   | Client-side row model pipeline stage that generates result columns — see `docs/reference/api-seams.md` §6. |
+| `PivotColsService`                                                             | Tracks which columns are in the pivot drop zone.                                                           |
+| `PivotResultColsService`, `createGeneratedPivotDefs`, `generatedPivotColumnId` | Generated result-column management.                                                                        |
+| `PivotColDefService`                                                           | Builds `ColDef`s for generated pivot columns.                                                              |
 
 ## Learn more
 
@@ -71,8 +77,14 @@ Cap generated columns when pivot values have high cardinality with
 - [`@libregrid/row-grouping`](https://github.com/libregrid/libregrid/blob/main/packages/row-grouping/README.md) — grouping and aggregation this feature builds on
 - [`@libregrid/server-side-row-model`](https://github.com/libregrid/libregrid/blob/main/packages/server-side-row-model/README.md) — server-side pivot for large data sets
 
+## Angular
+
+Use the same column definitions and grid options with `ag-grid-angular`.
+Register the modules shown above through `provideLibreGrid` from
+[`@libregrid/angular`](../angular/README.md). See the
+[Angular setup](https://libregrid.dev/angular) for a complete component and bootstrap example.
+
 ## License
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.

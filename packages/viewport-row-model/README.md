@@ -1,24 +1,29 @@
 # @libregrid/viewport-row-model
 
-The viewport row model: your code pushes exactly the rows currently
-scrolled into view, rather than the grid pulling pages. Well suited to
-live-updating feeds where the server (or a websocket) drives what data
-exists.
+Supply rows for the grid’s visible range and push updates as data changes.
+This row model suits live feeds where your application manages the connection
+and decides when to deliver new values.
 
-Replaces AG Grid Enterprise's `ViewportRowModel` module.
+[Documentation and examples](https://libregrid.dev/viewport)
 
 ## Install
 
 ```bash
-npm install ag-grid-community @libregrid/viewport-row-model
+npm install "ag-grid-community@^36.1.0" @libregrid/viewport-row-model
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.
 
 ## Usage
 
+In a browser TypeScript project, add a grid container before running the code:
+
+```html
+<div id="grid" style="height: 400px"></div>
+```
+
 Set `rowModelType: 'viewport'`. Provide a `viewportDatasource`. The grid
-calls `init` once with the total row count. It calls `setViewportRange`
+calls `init` with callbacks your datasource uses to supply the total row count and rows. It calls `setViewportRange`
 every time the visible row range changes. Respond by pushing exactly those
 rows with `setRowData`:
 
@@ -38,7 +43,7 @@ function quote(index: number): Quote {
 
 let params: Parameters<IViewportDatasource['init']>[0] | undefined;
 
-const datasource: IViewportDatasource<Quote> = {
+const datasource: IViewportDatasource = {
   init(initParams) {
     params = initParams;
     initParams.setRowCount(2_000);
@@ -52,7 +57,7 @@ const datasource: IViewportDatasource<Quote> = {
 
 ModuleRegistry.registerModules([AllCommunityModule, ViewportRowModelModule]);
 
-createGrid<Quote>(document.querySelector('#grid')!, {
+createGrid<Quote>(document.querySelector<HTMLElement>('#grid')!, {
   columnDefs: [{ field: 'id' }, { field: 'price' }],
   rowModelType: 'viewport',
   viewportRowModelPageSize: 20,
@@ -62,24 +67,33 @@ createGrid<Quote>(document.querySelector('#grid')!, {
 });
 ```
 
+This example generates values locally to demonstrate the datasource lifecycle.
+For a live feed, implement the connection and cleanup in your datasource.
+
 Push updates to already-visible rows at any time by calling
 `params.setRowData(...)` again. Call it from a `setInterval`, a websocket
 message handler, or wherever your live data arrives.
 
 ## API
 
-| Export | Purpose |
-| --- | --- |
+| Export                   | Purpose                                                   |
+| ------------------------ | --------------------------------------------------------- |
 | `ViewportRowModelModule` | Registers the feature (`moduleName: 'ViewportRowModel'`). |
-| `ViewportRowModel` | The row model implementation. |
+| `ViewportRowModel`       | The row model implementation.                             |
 
 ## Learn more
 
 - [LibreGrid README](https://github.com/libregrid/libregrid#readme) — full package list and quick start
 - [`@libregrid/server-side-row-model`](https://github.com/libregrid/libregrid/blob/main/packages/server-side-row-model/README.md) — a pull-based alternative for grouping, sorting, and filtering large data sets
 
+## Angular
+
+Use the same column definitions and grid options with `ag-grid-angular`.
+Register the modules shown above through `provideLibreGrid` from
+[`@libregrid/angular`](../angular/README.md). See the
+[Angular setup](https://libregrid.dev/angular) for a complete component and bootstrap example.
+
 ## License
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.

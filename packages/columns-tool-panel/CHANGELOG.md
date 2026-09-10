@@ -1,5 +1,13 @@
 # @libregrid/columns-tool-panel
 
+## 1.3.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @libregrid/core@1.3.4
+  - @libregrid/side-bar@1.3.4
+
 ## 1.3.3
 
 ### Patch Changes

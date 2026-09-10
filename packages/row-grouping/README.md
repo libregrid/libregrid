@@ -1,95 +1,131 @@
 # @libregrid/row-grouping
 
-Client-side row grouping, aggregation, group/grand total rows, and
-show-values-as (percent of total) — the most commonly used LibreGrid
-feature.
+Group client-side rows by one or more columns, aggregate values, and show
+group or grand totals. The same package also includes an opt-in module for
+editing group values and distributing changes to child rows.
 
-Replaces AG Grid Enterprise's `RowGrouping` module.
+[Documentation and examples](https://libregrid.dev/row-grouping) · [Editing group values](https://libregrid.dev/group-editing)
 
 ## Install
 
 ```bash
-npm install ag-grid-community @libregrid/row-grouping
+npm install "ag-grid-community@^36.1.0" @libregrid/row-grouping
 ```
 
-Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.
+Requires `ag-grid-community >=36.1.0 <37`. No additional package is needed
+for group editing: `RowGroupingModule` and `RowGroupingEditModule` are both
+exports of this package.
 
-## Usage
+## Group and aggregate rows
+
+Add a sized container to your page:
+
+```html
+<div id="grid" style="height: 400px"></div>
+```
+
+Register the module and define group and value columns:
 
 ```ts
-import { ModuleRegistry, AllCommunityModule, createGrid } from 'ag-grid-community';
+import { AllCommunityModule, ModuleRegistry, createGrid } from 'ag-grid-community';
 import { RowGroupingModule } from '@libregrid/row-grouping';
 
 ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule]);
 
-createGrid(document.querySelector('#grid')!, {
+const api = createGrid(document.querySelector<HTMLElement>('#grid')!, {
   columnDefs: [
-    { field: 'country', rowGroup: true },
-    { field: 'city', rowGroup: true },
+    { field: 'country', rowGroup: true, hide: true },
     { field: 'product' },
-    { field: 'sales', aggFunc: 'sum', sort: 'desc' },
-  ],
-  rowData: [
-    { country: 'United Kingdom', city: 'London', product: 'Widget', sales: 120 },
-    { country: 'United States', city: 'New York', product: 'Widget', sales: 240 },
-  ],
-});
-```
-
-Group by any column with `rowGroup: true`. Aggregate a value column with
-`aggFunc: 'sum' | 'avg' | 'min' | 'max' | 'count' | 'first' | 'last'`.
-
-### Group and grand total rows
-
-```ts
-createGrid(document.querySelector('#grid')!, {
-  columnDefs: [
-    { field: 'country', rowGroup: true },
     { field: 'sales', aggFunc: 'sum' },
   ],
   rowData: [
-    /* ... */
+    { country: 'Canada', product: 'Notebook', sales: 120 },
+    { country: 'Canada', product: 'Pen', sales: 80 },
+    { country: 'Japan', product: 'Notebook', sales: 240 },
   ],
+  groupDefaultExpanded: 1,
   groupTotalRow: 'bottom',
   grandTotalRow: 'bottom',
 });
 ```
 
-### Show values as % of total
+Use `rowGroup: true` on multiple columns for nested groups. Built-in
+aggregations include `sum`, `avg`, `min`, `max`, `count`, `first`, and `last`.
+Group and grand totals are optional. Set `groupDefaultExpanded: -1` to open
+all levels, or control expansion through `api.expandAll()` and `api.collapseAll()`.
+
+## Edit group values
+
+Register `RowGroupingEditModule` before grid creation and opt value columns
+into group editing. This is a separate example using the same container:
 
 ```ts
-{ field: 'sales', colId: 'salesShare', headerName: '% of Total', showValuesAs: 'percentOfGrandTotal' }
+import { AllCommunityModule, ModuleRegistry, createGrid } from 'ag-grid-community';
+import { RowGroupingEditModule } from '@libregrid/row-grouping';
+
+ModuleRegistry.registerModules([AllCommunityModule, RowGroupingEditModule]);
+
+createGrid(document.querySelector<HTMLElement>('#grid')!, {
+  columnDefs: [
+    { field: 'team', rowGroup: true, hide: true },
+    { field: 'project' },
+    {
+      field: 'budget',
+      aggFunc: 'sum',
+      editable: true,
+      groupRowEditable: true,
+      groupRowValueSetter: { distribution: 'uniform', precision: 2 },
+    },
+  ],
+  rowData: [
+    { id: 'a', team: 'Research', project: 'Survey', budget: 100 },
+    { id: 'b', team: 'Research', project: 'Prototype', budget: 200 },
+  ],
+  getRowId: ({ data }) => data.id,
+  groupDefaultExpanded: -1,
+});
 ```
 
-### Programmatic control
+Edit the Research group budget from 300 to 400; the uniform strategy assigns
+200 to each child. The edit module registers grouping as a dependency.
 
-```ts
-api.setRowGroupColumns(['country']);
-api.addAggFuncs({ median: (params) => /* ... */ 0 });
-api.expandAll();
-api.collapseAll();
-```
+| Distribution | Behavior                                                                                            |
+| ------------ | --------------------------------------------------------------------------------------------------- |
+| `uniform`    | Split a sum equally; for an average, assign the edited value to each child                          |
+| `percentage` | Scale values in proportion to their current total; use uniform distribution when that total is zero |
+| `increment`  | Distribute the change in the aggregate across children                                              |
+| `overwrite`  | Assign the edited value to each child                                                               |
 
-## API
+Use `distributeGroupValue(params, options)` inside a custom
+`groupRowValueSetter` when you need to combine built-in distribution with
+application rules. The [editing guide](https://libregrid.dev/group-editing)
+covers eligible children, callbacks, rounding, and aggregate refresh.
+Application code remains responsible for persisting committed row changes.
 
-| Export | Purpose |
-| --- | --- |
-| `RowGroupingModule` | Registers the feature (`moduleName: 'RowGrouping'`). |
-| `GroupCellRenderer` | Default cell renderer for the auto group column. |
-| `GroupStage`, `AggregationStage`, `FilterAggregateStage`, `GroupFilterStage`, `GroupSortStage`, `FlattenStage` | Client-side row model pipeline stages — see `docs/reference/api-seams.md` §6. |
-| `AggFuncService` | Registered aggregation functions (`addAggFuncs`, etc.). |
-| `FooterService` | Backs `groupTotalRow` / `grandTotalRow`. |
-| `ShowValuesAsService` | Backs `showValuesAs` (percent-of-total family). |
-| `ValueColsService`, `RowGroupColsService`, `AutoGenColsService`, `ShowRowGroupColsService`, `ShowRowGroupColsValueService`, `ExpansionService` | Supporting internal services. |
+## Additional configuration
 
-## Learn more
+- `api.setRowGroupColumns(['country'])` changes grouping at runtime.
+- `api.addAggFuncs(...)` registers custom aggregation functions.
+- `showValuesAs` supports percentage-of-total views; see the
+  [grouping examples](https://libregrid.dev/row-grouping).
+- Add [`@libregrid/columns-tool-panel`](../columns-tool-panel/README.md)
+  for user controls or [`@libregrid/pivot`](../pivot/README.md) for cross-tab reports.
 
-- [LibreGrid README](https://github.com/libregrid/libregrid#readme) — full package list and quick start
-- [`@libregrid/pivot`](https://github.com/libregrid/libregrid/blob/main/packages/pivot/README.md) — pivot on top of this feature's grouping pipeline
-- [`@libregrid/columns-tool-panel`](https://github.com/libregrid/libregrid/blob/main/packages/columns-tool-panel/README.md) — UI for managing row-group and value columns
+## Limitations
+
+Group rows and total rows scroll normally; sticky rows and group-row dragging
+are not implemented. Aggregation refreshes after edits, but recalculation of
+only changed value columns remains an optimization gap. See the
+[grouping compatibility notes](../../docs/parity/row-grouping.md).
+
+## Angular
+
+Use these options with `ag-grid-angular` and register the required modules
+through `provideLibreGrid`. See the [Angular quick start](../angular/README.md)
+and the [group-editing examples](https://libregrid.dev/group-editing), which
+include Angular source.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.

@@ -1,18 +1,29 @@
 # @libregrid/batch-edit
 
-Stage cell edits and write them in one pass — or discard them all.
+Let users review several cell edits before committing or discarding them
+together. Edits are staged in the grid; committing a batch updates row data.
+Saving those changes to a backend remains your application’s responsibility.
 
-Replaces AG Grid Enterprise's `BatchEdit` module.
+[Documentation and examples](https://libregrid.dev/batch-edit)
 
 ## Install
 
 ```bash
-npm install ag-grid-community @libregrid/batch-edit
+npm install "ag-grid-community@^36.1.0" @libregrid/batch-edit
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.
 
 ## Usage
+
+In a browser TypeScript project, add a grid container before running the code:
+
+```html
+<button id="start">Start batch</button>
+<button id="save">Commit edits</button>
+<button id="cancel">Discard edits</button>
+<div id="grid" style="height: 400px"></div>
+```
 
 ```ts
 import { ModuleRegistry, AllCommunityModule, createGrid } from 'ag-grid-community';
@@ -20,17 +31,15 @@ import { BatchEditModule } from '@libregrid/batch-edit';
 
 ModuleRegistry.registerModules([AllCommunityModule, BatchEditModule]);
 
-const api = createGrid(document.querySelector('#grid')!, {
+const api = createGrid(document.querySelector<HTMLElement>('#grid')!, {
   columnDefs: [{ field: 'country', editable: true }],
   rowData: [{ country: 'United Kingdom' }],
 });
 
 // Drive the batch from your own UI:
-api.startBatchEdit();
-// ... user edits cells; edits are staged, not written ...
-api.commitBatchEdit();   // write all staged edits in one pass
-api.cancelBatchEdit();   // discard them
-api.isBatchEditing();    // while a batch is in flight
+document.querySelector('#start')!.addEventListener('click', () => api.startBatchEdit());
+document.querySelector('#save')!.addEventListener('click', () => api.commitBatchEdit());
+document.querySelector('#cancel')!.addEventListener('click', () => api.cancelBatchEdit());
 ```
 
 ## Events
@@ -41,15 +50,22 @@ api.isBatchEditing();    // while a batch is in flight
 
 ## Notes
 
-- Client Row Model only — the enterprise module is CSR-M only as well.
+- Supports the client-side row model only.
 - With `invalidEditValueMode: 'block'`, an invalid edit holds the commit until
   it is corrected or cancelled.
 - Edit validation rules live on `colDef.cellEditorParams.getValidationErrors`
   (the v36 API).
-- Cancel reverts every staged edit, open or closed: the v36.1.0 engine only
-  reverts editors still open, so the module restores closed-editor staged
-  values from the edit model itself and a later batch cannot write them.
+- Cancel discards all staged values, including edits whose cell editor has
+  already closed.
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+## Angular
+
+Use the same column definitions and grid options with `ag-grid-angular`.
+Register the modules shown above through `provideLibreGrid` from
+[`@libregrid/angular`](../angular/README.md). See the
+[Angular setup](https://libregrid.dev/angular) for a complete component and bootstrap example.
+
+## License
+
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.

@@ -1,60 +1,81 @@
 # @libregrid/all
 
-Convenience barrel that re-exports every LibreGrid module and helper from a
-single package. Use it for quick starts, prototypes, and demos. In a real
-application, import individual feature packages instead. Your bundle then
-contains exactly the features you use.
+A convenience entry point for a broad set of LibreGrid modules and helpers.
+Use named imports to register the features you need. Individual packages offer
+a smaller dependency graph and make application dependencies more explicit.
+
+[Documentation and examples](https://libregrid.dev/packages) · [Getting started](https://libregrid.dev/getting-started)
 
 ## Install
 
 ```bash
-npm install ag-grid-community @libregrid/all
+npm install "ag-grid-community@^36.1.0" "ag-charts-community@^14.1.0" @libregrid/all
 ```
 
-Requires `ag-grid-community >=36.1.0 <37` as a peer dependency. Installing
-this one package pulls in every `@libregrid/*` feature package as a regular
-dependency, including `@libregrid/angular` and `@libregrid/material`. If you
-use those two, also install their peer dependencies (`@angular/*`).
+This package declares Angular core, common, CDK, and Material (`>=20`) as peers
+as well as AG Grid (`>=36.1.0 <37`) and AG Charts (`>=14.1.0 <15`). In an Angular
+project, keep the Angular packages aligned with that application's version. In
+a plain TypeScript project, individual feature packages avoid these Angular
+dependencies and are usually a better fit.
 
 ## Usage
 
+Add a container to your page:
+
+```html
+<div id="grid" style="height: 400px"></div>
+```
+
+Register named modules before creating a grid:
+
 ```ts
-import { ModuleRegistry, AllCommunityModule, createGrid } from 'ag-grid-community';
+import { AllCommunityModule, ModuleRegistry, createGrid } from 'ag-grid-community';
 import { RowGroupingModule, SetFilterModule, CellSelectionModule } from '@libregrid/all';
 
-ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule, SetFilterModule, CellSelectionModule]);
+ModuleRegistry.registerModules([
+  AllCommunityModule,
+  RowGroupingModule,
+  SetFilterModule,
+  CellSelectionModule,
+]);
 
-createGrid(document.querySelector('#grid')!, {
+createGrid(document.querySelector<HTMLElement>('#grid')!, {
   columnDefs: [
     { field: 'country', rowGroup: true, hide: true },
-    { field: 'product' },
+    { field: 'product', filter: 'agSetColumnFilter' },
     { field: 'sales', aggFunc: 'sum' },
   ],
   rowData: [
-    { country: 'United Kingdom', product: 'Widget', sales: 120 },
-    { country: 'United States', product: 'Widget', sales: 240 },
+    { country: 'Canada', product: 'Notebook', sales: 120 },
+    { country: 'Canada', product: 'Pen', sales: 80 },
+    { country: 'Japan', product: 'Notebook', sales: 240 },
   ],
+  cellSelection: true,
 });
 ```
 
-Every export from every LibreGrid package is available from this one import.
-See each package's own README for what it exports. See the
-[migration guide](https://github.com/libregrid/libregrid/blob/main/docs/guides/migration-guide.md)
-for the full package list.
+Importing this package does not register modules automatically. In Angular,
+pass the modules to `provideLibreGrid` as shown in the
+[Angular quick start](../angular/README.md).
 
-### Why not use this in production
+## Scope and dependency tradeoffs
 
-Bundlers tree-shake unused named exports. `@libregrid/all` still adds every
-`@libregrid/*` package to your dependency graph, and, transitively,
-`@angular/material` and `@angular/cdk` through `@libregrid/material`. Feature
-packages avoid that entirely. Install only what you use:
+This entry point re-exports selected modules and helpers, including
+`RowGroupingEditModule`; it is not an export of every symbol in the monorepo.
+In particular, install and import the following packages directly:
 
-```bash
-npm install ag-grid-community @libregrid/row-grouping @libregrid/set-filter
-```
+- [`@libregrid/calculated-columns`](../calculated-columns/README.md)
+- [`@libregrid/toolbar`](../toolbar/README.md)
+- [`@libregrid/ai-client`](../ai-client/README.md)
+- [`@libregrid/ai-protocol`](../ai-protocol/README.md)
+- [`@libregrid/ai-gateway`](../ai-gateway/README.md)
+
+Bundlers can remove unused exports, but the installed dependency graph still
+includes the feature packages, Angular integration, and Material bridge. Prefer
+individual packages when you want explicit dependencies or need to control
+bundle size. See the [full package catalog](../../README.md#packages).
 
 ## License
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.

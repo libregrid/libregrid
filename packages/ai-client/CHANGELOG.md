@@ -1,5 +1,11 @@
 # @libregrid/ai-client
 
+## 1.3.4
+
+### Patch Changes
+
+- @libregrid/ai-protocol@1.3.4
+
 ## 1.3.3
 
 ### Patch Changes

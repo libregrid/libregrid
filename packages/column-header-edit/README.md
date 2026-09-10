@@ -1,24 +1,27 @@
 # @libregrid/column-header-edit
 
-Editable column and group header names for AG Grid Community — rename headers
-from the UI ("Edit Column Name" in the column menu) and persist the result in
-column / column-group state.
+Let users rename column and column-group headers. Edited names are stored in
+column state so your application can save and restore a user’s preferred labels.
 
-Replaces AG Grid Enterprise's `ColumnHeaderEditModule`
-(AG Grid 36.1, "Editable Column Header Names").
+[Documentation and examples](https://libregrid.dev/column-header-edit)
 
 ## Install
 
 ```bash
-npm install ag-grid-community @libregrid/column-header-edit
+npm install "ag-grid-community@^36.1.0" @libregrid/column-header-edit
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency. The
 "Edit Column Name" menu entry requires `@libregrid/menu`
-(`ColumnMenuModule`); without it the editor still works programmatically via
-the `colHeaderEditSvc` bean.
+(`ColumnMenuModule`). Register both modules for the UI shown below.
 
 ## Usage
+
+In a browser TypeScript project, add a grid container before running the code:
+
+```html
+<div id="grid" style="height: 400px"></div>
+```
 
 ```ts
 import { ModuleRegistry, AllCommunityModule, createGrid } from 'ag-grid-community';
@@ -27,7 +30,7 @@ import { ColumnHeaderEditModule } from '@libregrid/column-header-edit';
 
 ModuleRegistry.registerModules([AllCommunityModule, ColumnMenuModule, ColumnHeaderEditModule]);
 
-createGrid(document.querySelector('#grid')!, {
+createGrid(document.querySelector<HTMLElement>('#grid')!, {
   columnDefs: [
     { field: 'name', headerNameEditable: true },
     {
@@ -43,43 +46,25 @@ createGrid(document.querySelector('#grid')!, {
 Mark any column or column group `headerNameEditable: true` and its column menu
 gains an **Edit Column Name** item. The editor opens over the header cell.
 
-### Live vs. deferred
+### Apply behavior and saved state
 
-```ts
-// Default: every keystroke is applied immediately (live mode).
-createGrid(el, { /* ... */ });
+The default editor applies header changes as users type. Set
+`columnHeaderEdit: { applyMode: 'deferred' }` in the grid options to show
+Apply and Cancel buttons. Set `suppressColumnHighlighting: true` in that
+object to disable editing highlights.
 
-// Show Apply/Cancel buttons; the name only changes on commit.
-createGrid(el, { columnHeaderEdit: { applyMode: 'deferred' } });
-
-// Do not highlight the header being edited.
-createGrid(el, { columnHeaderEdit: { suppressColumnHighlighting: true } });
-```
-
-### Persisted state
-
-Edited names take priority over `headerValueGetter` and `headerName`, and are
-persisted as part of the column state (`headerName`) and column-group state,
-so they survive `api.getColumnState()` / `api.setColumnState()` round-trips.
-Passing `headerName: null` clears the override and reverts to the definition.
-
-### Programmatic control
-
-The service bean (`colHeaderEditSvc`) implements AG Grid's
-`IColumnHeaderEditService`:
-
-```ts
-const svc = beans.colHeaderEditSvc;
-svc.isEditable(column);
-svc.getEditColumnNameMenuItem(column);
-svc.showHeaderNameEditor(column); // or a column group
-```
+Edited names take priority over `headerValueGetter` and `headerName`.
+Save column state with `api.getColumnState()` and restore it with
+`api.applyColumnState({ state })`. The overridden label is held in the state's
+`headerName` field; setting it to `null` restores the definition's label.
+Group labels are stored in column-group state. See the
+[header editing guide](https://libregrid.dev/column-header-edit) for examples.
 
 ## API
 
-| Export | Purpose |
-| --- | --- |
-| `ColumnHeaderEditModule` | Registers the feature (`moduleName: 'ColumnHeaderEdit'`). |
+| Export                    | Purpose                                                                   |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `ColumnHeaderEditModule`  | Registers the feature (`moduleName: 'ColumnHeaderEdit'`).                 |
 | `ColumnHeaderEditService` | The `colHeaderEditSvc` bean — editor, highlight state, menu contribution. |
 
 ## Learn more
@@ -87,8 +72,14 @@ svc.showHeaderNameEditor(column); // or a column group
 - [LibreGrid README](https://github.com/libregrid/libregrid#readme) — full package list and quick start
 - [`@libregrid/menu`](https://github.com/libregrid/libregrid/blob/main/packages/menu/README.md) — column menu this feature plugs into
 
+## Angular
+
+Use the same column definitions and grid options with `ag-grid-angular`.
+Register the modules shown above through `provideLibreGrid` from
+[`@libregrid/angular`](../angular/README.md). See the
+[Angular setup](https://libregrid.dev/angular) for a complete component and bootstrap example.
+
 ## License
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.

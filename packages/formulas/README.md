@@ -1,21 +1,26 @@
 # @libregrid/formulas
 
-Spreadsheet-style cell formulas: users type `=...` expressions into grid cells —
-A1-notation references, ranges, operators and functions — and values recompute
-automatically when referenced data changes. Includes the tokenising formula cell
-editor, an external `formulaDataSource` store, and custom function registration.
+Evaluate spreadsheet-style formulas stored in cells. Users can reference cells
+and ranges with A1 notation, and calculated values update when referenced data
+changes. An optional external data source stores formulas separately from row data.
 
-Replaces AG Grid Enterprise's `Formula` module.
+[Documentation and examples](https://libregrid.dev/formulas)
 
 ## Install
 
 ```bash
-npm install ag-grid-community @libregrid/formulas
+npm install "ag-grid-community@^36.1.0" @libregrid/formulas
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.
 
 ## Usage
+
+In a browser TypeScript project, add a grid container before running the code:
+
+```html
+<div id="grid" style="height: 400px"></div>
+```
 
 ```ts
 import { ModuleRegistry, AllCommunityModule, createGrid } from 'ag-grid-community';
@@ -23,16 +28,14 @@ import { FormulasModule } from '@libregrid/formulas';
 
 ModuleRegistry.registerModules([AllCommunityModule, FormulasModule]);
 
-const api = createGrid(document.querySelector('#grid')!, {
+const api = createGrid(document.querySelector<HTMLElement>('#grid')!, {
   columnDefs: [
     { field: 'product' },
     { field: 'price' },
     { field: 'quantity' },
-    { field: 'subtotal', allowFormula: true },
+    { field: 'subtotal', allowFormula: true, editable: true },
   ],
-  rowData: [
-    { product: 'Bananas', price: 2.5, quantity: 6, subtotal: '=C2*B2' },
-  ],
+  rowData: [{ product: 'Bananas', price: 2.5, quantity: 6, subtotal: '=B1*C1' }],
   getRowId: (params) => String(params.data.product),
 });
 ```
@@ -44,20 +47,23 @@ function set. `gridOptions.formulaFuncs` registers custom functions.
 
 Columns with `allowFormula: true` use the tokenising `agFormulaCellEditor` by
 default. Formulas require Client-Side Row Model row IDs; tree data, row
-grouping, pivot and server-side row models are not supported (per the AG Grid
-documentation).
+grouping, pivot and server-side row models are not supported by this feature.
 
-## The `formula` bean and `@libregrid/calculated-columns`
+## Combining formulas and calculated columns
 
-This package owns the canonical `formula` bean implementation. When
-`@libregrid/calculated-columns` is installed alongside, both modules declare the
-same service class, so exactly one instance serves both features — calculated
-columns keep their same-row `[colId]` expressions, per-cell formulas gain
-cell/range references.
+Use [`@libregrid/calculated-columns`](../calculated-columns/README.md) for
+read-only expressions applied to every row. Both packages share an expression
+engine: calculated columns use `[colId]` references within a row, while cell
+formulas use cell and range references.
 
-## Attribution
+## Angular
 
-LibreGrid is an independent open-source project and is not affiliated with AG
-Grid Ltd. "AG Grid" is a trademark of AG Grid Ltd. This package implements
-contracts published under MIT in `ag-grid-community`; no AG Grid Enterprise
-code is used or inspected.
+Use the same column definitions and grid options with `ag-grid-angular`.
+Register the modules shown above through `provideLibreGrid` from
+[`@libregrid/angular`](../angular/README.md). See the
+[Angular setup](https://libregrid.dev/angular) for a complete component and bootstrap example.
+
+## License
+
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
+project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
