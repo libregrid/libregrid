@@ -1,26 +1,39 @@
 # @libregrid/ai-gateway
 
-A small provider-neutral HTTP gateway for LibreGrid grid commands. It validates
-the browser request, calls an injected provider through one tiny port, validates
-the provider output against the live grid schema, and returns the versioned
-protocol envelope. No provider credential is accepted from the browser.
+A server-side HTTP handler and command-line service for LibreGrid AI commands.
+It validates requests and provider output against the live grid schema.
+Provider credentials and model selection stay on the server.
 
-## Choose the lowest-burden integration
+[Documentation and examples](https://libregrid.dev/ai-toolkit)
 
-| Your server environment | Integration work |
-| --- | --- |
-| Any language, no AI route desired | Run the included container as a private sidecar/service and reverse-proxy `/v1/grid-command` through your existing authenticated API boundary. |
-| Node or a Node framework with Web `Request`/`Response` support | Mount `createGridCommandHandler()` in one route; provider and validation behavior remain inside this package. |
-| Java, C#, Go, Python, Rust, PHP, Ruby, or another stack | Generate a route stub from the shipped OpenAPI document, or call the sidecar. Run the conformance executable against the result. |
-| Custom model/provider protocol | Implement only the small `GridModelProvider.complete()` port; the browser protocol, limits, validation, errors, and state safety remain unchanged. |
+## Install
 
-This keeps framework and identity policy outside LibreGrid without making each
-consumer rebuild the provider plumbing.
+For the CLI or a Node application (Node.js `>=20.19.0`):
+
+```bash
+npm install @libregrid/ai-gateway
+```
+
+The gateway belongs on the server; do not bundle it in a TypeScript browser or
+Angular application. Use [`@libregrid/ai-client`](../ai-client/README.md) there.
+
+## Integration options
+
+| Your server environment                                        | Integration work                                                                                                                               |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Any language, no AI route desired                              | Run the included container as a private sidecar/service and reverse-proxy `/v1/grid-command` through your existing authenticated API boundary. |
+| Node or a Node framework with Web `Request`/`Response` support | Mount `createGridCommandHandler()` in one route; provider and validation behavior remain inside this package.                                  |
+| Java, C#, Go, Python, Rust, PHP, Ruby, or another stack        | Generate a route stub from the shipped OpenAPI document, or call the sidecar. Run the conformance executable against the result.               |
+| Custom model/provider protocol                                 | Implement the `GridModelProvider.complete()` interface; the browser protocol, limits, validation, errors, and state safety remain unchanged.   |
+
+Choose the handler for an existing Node application, the CLI or container for
+a separate service, or the OpenAPI contract when implementing your own server.
 
 ## Run the included OpenAI gateway
 
 ```bash
-OPENAI_API_KEY=... OPENAI_MODEL=gpt-5.6 npx libregrid-ai-gateway
+# Set OPENAI_API_KEY and OPENAI_MODEL in your server environment first.
+npx --package=@libregrid/ai-gateway libregrid-ai-gateway
 ```
 
 It exposes `POST /v1/grid-command` and `GET /health` on `127.0.0.1:8787` by
@@ -34,29 +47,32 @@ corresponding optional routing headers. These values and `OPENAI_MODEL` are
 server configuration; none are accepted from browser requests.
 
 The included Dockerfile and `docker-compose.example.yml` provide the same
-zero-code deployment. Copy `.env.example`, set the provider key in your secret
+standalone deployment. Copy `.env.example`, set the provider key in your secret
 manager or local environment (never in source control), then build from the
 repository root.
 
 ```ts
-import {
-  createGridCommandHandler,
-  createOpenAiResponsesProvider,
-} from '@libregrid/ai-gateway';
+import { createGridCommandHandler, createOpenAiResponsesProvider } from '@libregrid/ai-gateway';
 
-const handler = createGridCommandHandler({
-  provider: createOpenAiResponsesProvider({
-    apiKey: () => secrets.OPENAI_API_KEY,
-    model: 'gpt-5.6',
-  }),
-  authorize: (request) => verifyYourSession(request),
-});
+export function createApplicationGateway(
+  apiKey: () => string,
+  model: string,
+  authorize: (request: Request) => boolean | Promise<boolean>,
+) {
+  return createGridCommandHandler({
+    provider: createOpenAiResponsesProvider({ apiKey, model }),
+    authorize,
+  });
+}
 ```
 
+Pass your secret reader, configured model, and session authorization function
+to `createApplicationGateway`; mount the returned handler at
+`POST /v1/grid-command` using your server framework’s route adapter.
+
 The OpenAI adapter uses the Responses API strict `text.format` JSON Schema
-contract. There is no OpenAI SDK dependency. Inject another `GridModelProvider`
-for Azure OpenAI, Anthropic, Gemini, Ollama, vLLM, LocalAI, or an internal model
-gateway; the HTTP contract and browser package do not change.
+contract. There is no OpenAI SDK dependency. For other provider protocols, implement `GridModelProvider`. The grid-command
+HTTP contract and browser client can stay the same.
 
 `createMockProvider()` provides a deterministic, network-free adapter for CI,
 local development, and contract tests. A production-oriented Dockerfile is
@@ -76,19 +92,20 @@ OPENAI_MODEL=openrouter/free
 OPENROUTER_REQUIRE_PARAMETERS=true
 ```
 
-Keep `OPENROUTER_REQUIRE_PARAMETERS` on. OpenRouter serves one model through
-more than one provider. Only some of those providers apply a JSON Schema as a
-constraint. The others apply it as a hint. This flag tells OpenRouter to use
-only the providers that apply the constraint.
+The OpenRouter-specific `OPENROUTER_REQUIRE_PARAMETERS` setting requests
+providers that support the supplied parameters. Check that your chosen model
+and endpoint support structured output; provider validation still runs on
+every response.
 
-The gateway validates every provider response, and the browser validates it a
-second time. A weak provider therefore causes a clean `INVALID_PROVIDER_OUTPUT`
-failure, not a bad grid change.
+The gateway validates provider responses, and the browser validates them again.
+Output that fails schema validation produces `INVALID_PROVIDER_OUTPUT`. A
+schema-valid response can still misunderstand user intent; use proposal review
+in the browser when your workflow calls for it.
 
 Verify any implementation—Node or otherwise—with the shipped executable:
 
 ```bash
-libregrid-ai-conformance https://your-api.example/v1/grid-command
+npx --package=@libregrid/ai-gateway libregrid-ai-conformance https://your-api.example/v1/grid-command
 ```
 
 If the endpoint needs a bearer or application token, put the complete value in
@@ -97,8 +114,7 @@ If the endpoint needs a bearer or application token, put the complete value in
 ## Guard the public endpoint with Turnstile
 
 Set `TURNSTILE_SECRET_KEY` and `TURNSTILE_HOSTNAMES` to require a valid
-Cloudflare Turnstile token on every request. Without the secret variable, the
-gateway accepts every request with no check. If the secret is set without an
+Cloudflare Turnstile token on every request. Without that variable, the CLI does not perform a bot check. If the secret is set without an
 approved hostname, the process refuses to start.
 
 Get the secret key from the Turnstile widget settings in the Cloudflare
@@ -111,7 +127,7 @@ put it in browser code. You may commit it to source control.
 ```bash
 TURNSTILE_SECRET_KEY=0x0000000000000000000000000000000AA \
 TURNSTILE_HOSTNAMES=localhost,127.0.0.1 \
-npx libregrid-ai-gateway
+npx --package=@libregrid/ai-gateway libregrid-ai-gateway
 ```
 
 The browser client sends the token in the `x-turnstile-token` header. The
@@ -129,9 +145,8 @@ line before you expose the endpoint publicly.
 
 - Authenticate the caller before invoking the handler. The gateway deliberately
   does not invent an identity system for your application.
-- Set `TURNSTILE_SECRET_KEY` and the public deployment's exact
-  `TURNSTILE_HOSTNAMES` before you expose the endpoint publicly. An unset
-  secret means the endpoint accepts every request with no bot check.
+- If using Turnstile, configure its secret and allowed hostnames. Bot checks
+  supplement application authentication; they do not identify an authorized user.
 - Store `OPENAI_API_KEY` (or another provider credential) only in server-side
   secret storage. The protocol has no credential or model-name request field.
 - Treat the live grid schema, current GridState, command, and context metadata
@@ -151,6 +166,5 @@ line before you expose the endpoint publicly.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.

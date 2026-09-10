@@ -1,5 +1,11 @@
 # @libregrid/core
 
+## 1.3.4
+
+### Patch Changes
+
+- Refresh the project and package documentation with complete TypeScript and Angular setup guidance, feature-specific examples, and links to the live documentation.
+
 ## 1.3.3
 
 ## 1.3.1

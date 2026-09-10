@@ -1,46 +1,52 @@
 # @libregrid/server-side-selection
 
-Persistent, server-side row selection for AG Grid Community **server-side
-row model** grids over very large data sets (~10,000,000 rows). The user
-builds a working selection across filters, groups, pages, and **sessions**;
-the grid only ever holds the compact selection *spec* plus per-row flags for
-the rows currently in the datasource cache.
+Maintain a selection across pages, filters, and groups in a server-side grid.
+The browser holds a compact selection specification and flags for loaded rows.
+Your provider stores and evaluates the selection, including persistence across
+sessions when implemented by your backend.
 
-Works with [`@libregrid/server-side-row-model`](../server-side-row-model).
-This feature has no AG Grid Enterprise counterpart — the spec is defined by
-this package and its [phase document](../../docs/phases/phase-16-server-side-selection.md).
+[Documentation and examples](https://libregrid.dev/server-side-selection)
 
 ## Install
 
 ```bash
-npm install ag-grid-community @libregrid/server-side-selection
+npm install "ag-grid-community@^36.1.0" @libregrid/server-side-selection
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.
 `@libregrid/server-side-row-model` (and `@libregrid/core`) are installed
 automatically.
 
-## Why
-
-Community's `RowSelectionModule` only registers its selection service for
-the `clientSide`/`infinite`/`viewport` row models. A server-side grid boots
-with **no** `selectionSvc` bean, so the checkbox column, the header
-select-all, row clicks, keyboard selection, and the `setNodesSelected` /
-`selectAll` API family are all silent no-ops. This package fills that seam
-for SSRM and adds the durable, spec-based selection layer on top.
-
 ## Usage
 
-Register the module and set the required grid options:
+Supply a `ServerSideSelectionProvider` backed by your application and a
+server-side datasource. This setup function deliberately accepts both: the
+package does not supply a persistence service or a database query endpoint.
+See the [live example](https://libregrid.dev/server-side-selection) for a
+complete browser mock of the provider contract.
+
+```html
+<div id="grid" style="height: 400px"></div>
+<div id="footer"></div>
+```
 
 ```ts
-import { ModuleRegistry, AllCommunityModule, createGrid } from 'ag-grid-community';
+import {
+  AllCommunityModule,
+  ModuleRegistry,
+  createGrid,
+  type IServerSideDatasource,
+} from 'ag-grid-community';
 import { ServerSideRowModelModule } from '@libregrid/server-side-row-model';
-import { ServerSideSelectionModule } from '@libregrid/server-side-selection';
-import type { ServerSideSelectionProvider } from '@libregrid/server-side-selection';
+import {
+  ServerSideSelectionModule,
+  type ServerSideSelectionProvider,
+} from '@libregrid/server-side-selection';
 
-// The app's provider — the Redis/DB seam (see "Provider contract").
-const provider: ServerSideSelectionProvider = { /* getSpec, applyOps, resolveSelected */ };
+interface Trade {
+  id: string;
+  quantity: number;
+}
 
 ModuleRegistry.registerModules([
   AllCommunityModule,
@@ -48,80 +54,81 @@ ModuleRegistry.registerModules([
   ServerSideSelectionModule,
 ]);
 
-createGrid<Trade>(document.querySelector('#grid')!, {
-  rowModelType: 'serverSide',
-  rowSelection: { mode: 'multiRow', selectAll: 'currentPage' }, // required
-  getRowId: ({ data }) => data.id,                             // required — stable ids
-  serverSideDatasource: datasource,
-  ssrmSelection: {
-    provider,
-    tabId: 'devices',        // the app's tab identity → {gridId}:{tabId} isolation
-    // gridId: 'grid-1',      // optional; defaults to the grid's own id
-    // opDebounceMillis: 300, // optional; default 300
-    onReady: (svc) => {
-      // First rows are hydrated — mount the footer panel here.
-      svc.attachFooter(document.querySelector('#footer')!);
+export function createTradeGrid(
+  provider: ServerSideSelectionProvider,
+  datasource: IServerSideDatasource<Trade>,
+  tabId: string,
+) {
+  return createGrid<Trade>(document.querySelector<HTMLElement>('#grid')!, {
+    columnDefs: [{ field: 'id' }, { field: 'quantity' }],
+    rowModelType: 'serverSide',
+    rowSelection: { mode: 'multiRow', selectAll: 'currentPage' },
+    getRowId: ({ data }) => data.id,
+    serverSideDatasource: datasource,
+    ssrmSelection: {
+      provider,
+      gridId: 'trades',
+      tabId,
+      onReady: (service) => {
+        service.attachFooter(document.querySelector<HTMLElement>('#footer')!);
+      },
     },
-  },
-});
+  });
+}
 ```
 
-`ServerSideSelectionModule` reuses the community `RowSelection` module name
-gated to `rowModels: ['serverSide']`, so it coexists with Community's own
-`RowSelectionModule` (which gates the other three row models) — every grid
-type gets exactly one selection service.
+Choose stable `gridId` and `tabId` values if the selection should survive reloads.
+Use distinct tab IDs for independent selections. These identifiers are storage
+keys, not authorization: the backend must scope reads and writes to the caller.
 
-**One checkbox per row.** The row-selection API (`rowSelection: { mode:
-'multiRow' }`) renders the single row checkbox in the first column. Do **not**
-also set `checkboxSelection: true` on a column — the deprecated column property
-renders a *second* checkbox in the same row, two controls for one selection.
-The service warns on boot if it finds one.
+Use the `rowSelection` configuration for checkboxes. Also setting the deprecated
+`checkboxSelection` column property creates duplicate checkbox controls.
 
 ## Provider contract
 
 The provider is the only durable truth. All calls are keyed by
 `{gridId, tabId}` so open tabs own independent selections.
 
-| Method | Purpose |
-| --- | --- |
-| `getSpec({gridId, tabId})` | Return the current spec: `{ terms, selectedCount }`. `terms` is the capture order of `all` (filter) and `group` (route) terms; `selectedCount` is the server-side total. |
-| `applyOps({gridId, tabId, ops})` | Apply a batch of ops atomically (server-side). Ops are small — at most one filter model, one group route, or one cache-sized id batch. |
+| Method                                                  | Purpose                                                                                                                                                                                                                                            |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getSpec({gridId, tabId})`                              | Return the current spec: `{ terms, selectedCount }`. `terms` is the capture order of `all` (filter) and `group` (route) terms; `selectedCount` is the server-side total.                                                                           |
+| `applyOps({gridId, tabId, ops})`                        | Apply a batch of ops atomically (server-side). Ops are small — at most one filter model, one group route, or one cache-sized id batch.                                                                                                             |
 | `resolveSelected({gridId, tabId, rowIds, groupRoutes})` | Evaluate the spec for a batch of **loaded** rows. `rowIds` are `getRowId` values; `groupRoutes` are `getSsrmRoute` arrays serialized as `\|`-joined strings. Return a map of each sent key to its selected state; missing keys default to `false`. |
 
-The package only ever sends cache-sized `rowIds`, so keep the spec hot in
-your backend (Redis/DB) for low-latency `resolveSelected`.
+Resolve membership for the requested loaded rows without materializing the
+entire selected dataset in the browser. Store specifications, additions, and
+exceptions on your backend and apply each operation batch atomically.
 
 ### Ops
 
-| Op | Effect |
-| --- | --- |
-| `selectAll {filter}` | Append the `all` term for `filter`; the server clears the in-scope exceptions first. |
-| `deselectAll` | Clear every term, exception, and addition. |
-| `select {ids}` / `deselect {ids}` | Row-level additions / exceptions. |
-| `selectGroup {route}` | Append the `group` term for `route`; clears the route's exceptions. |
-| `deselectGroup {route}` | A route exception. |
+| Op                                | Effect                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------ |
+| `selectAll {filter}`              | Append the `all` term for `filter`; the server clears the in-scope exceptions first. |
+| `deselectAll`                     | Clear every term, exception, and addition.                                           |
+| `select {ids}` / `deselect {ids}` | Row-level additions / exceptions.                                                    |
+| `selectGroup {route}`             | Append the `group` term for `route`; clears the route's exceptions.                  |
+| `deselectGroup {route}`           | A route exception.                                                                   |
 
-## Selection semantics (R1–R7)
+## Selection behavior
 
-- **R1 — Terms accumulate.** Selecting under one filter, then another, keeps
+- **Terms accumulate.** Selecting under one filter, then another, keeps
   both selections (union of terms).
-- **R2 — Survive filter changes.** Clearing or changing filters never touches
+- **Survive filter changes.** Clearing or changing filters never touches
   the selection; the spec is filter-independent.
-- **R3 — Exceptions override terms.** A deselected row/group stays
+- **Exceptions override terms.** A deselected row/group stays
   deselected even if a later term would match it.
-- **R4 — Select All (filtered).** Clears the in-scope exceptions and appends
+- **Select All (filtered).** Clears the in-scope exceptions and appends
   the `all` term.
-- **R5 — Groups are atomic.** Selecting any row under a group (or the group
+- **Groups are atomic.** Selecting any row under a group (or the group
   itself) selects/deselects the whole group route.
-- **R6 — "Show All Selected".** Toggling the footer's view makes the
-  selection *the dataset* (pagination total = selected count). Filters still
-  apply on top. No filter snapshot/clear/restore — the datasource contract
-  below does it.
-- **R7 — Header checkbox is viewport-only.** With `selectAll: 'currentPage'`
+- **"Show All Selected".** Toggling the footer's view makes the
+  selection _the dataset_ (pagination total = selected count). Filters still
+  apply on top. The datasource must implement the selection-view query described below.
+- **Header checkbox is viewport-only.** With `selectAll: 'currentPage'`
   the header checkbox checks/unchecks the visible viewport; spec-level
   select-all/deselect-all live in the footer.
 
-### The selection-view datasource contract (R6)
+### The selection-view datasource contract
 
 When the user activates **Show All Selected**, the package flips the grid
 option `ssrmSelectionViewActive` to `true` and calls `refreshServerSide()`.
@@ -133,20 +140,27 @@ flips the option back to `false` and refreshes.
 
 ## API
 
-| Export | Purpose |
-| --- | --- |
-| `ServerSideSelectionModule` | Registers the SSRM `selectionSvc` bean and the feature service. |
-| `ServerSideSelectionService` | The row-model-specific selection service (extends community `BaseSelectionService`). |
-| `SsrmSelectionService` | The feature service: op capture, spec lifecycle, hydration, footer, selection view. |
-| `ssrmSelectionCss` | Styles for the service-built footer (also injected by the module). |
-| `getSsrmRoute(node)` | *(from `@libregrid/server-side-row-model`)* A node's group route, or `undefined` for a leaf. |
+| Export                       | Purpose                                                                                      |
+| ---------------------------- | -------------------------------------------------------------------------------------------- |
+| `ServerSideSelectionModule`  | Registers the SSRM `selectionSvc` bean and the feature service.                              |
+| `ServerSideSelectionService` | The row-model-specific selection service (extends community `BaseSelectionService`).         |
+| `SsrmSelectionService`       | The feature service: op capture, spec lifecycle, hydration, footer, selection view.          |
+| `ssrmSelectionCss`           | Styles for the service-built footer (also injected by the module).                           |
+| `getSsrmRoute(node)`         | _(from `@libregrid/server-side-row-model`)_ A node's group route, or `undefined` for a leaf. |
 
 `SsrmSelectionService` methods: `attachFooter`, `detachFooter`,
 `selectAllFiltered`, `deselectAll`, `enterViewMode`, `exitViewMode`,
 `toggleViewMode`, `isViewActive`, `getSpec`, `refresh`. The grid also gains
 `api.refreshSsrmSelection()`.
 
+## Angular
+
+Use the same column definitions and grid options with `ag-grid-angular`.
+Register the modules shown above through `provideLibreGrid` from
+[`@libregrid/angular`](../angular/README.md). See the
+[Angular setup](https://libregrid.dev/angular) for a complete component and bootstrap example.
+
 ## License
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.

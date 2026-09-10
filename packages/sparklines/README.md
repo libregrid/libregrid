@@ -1,21 +1,27 @@
 # @libregrid/sparklines
 
-In-cell mini charts — line, area, column, and bar — rendered directly inside
-grid cells, with optional axis and tooltip support. Built on MIT-licensed
-`ag-charts-community`.
+Render compact line, area, column, or bar charts inside cells. Use arrays of
+values to show trends beside each record, with optional axes and tooltips.
+Rendering uses `ag-charts-community`.
 
-Replaces AG Grid Enterprise's `Sparklines` module.
+[Documentation and examples](https://libregrid.dev/sparklines)
 
 ## Install
 
 ```bash
-npm install ag-grid-community ag-charts-community @libregrid/sparklines
+npm install "ag-grid-community@^36.1.0" "ag-charts-community@^14.1.0" @libregrid/sparklines
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` and `ag-charts-community` as peer
 dependencies.
 
 ## Usage
+
+In a browser TypeScript project, add a grid container before running the code:
+
+```html
+<div id="grid" style="height: 400px"></div>
+```
 
 Set a column's `cellRenderer` to `'agSparklineCellRenderer'`, with the
 per-row series in an array field:
@@ -26,7 +32,7 @@ import { SparklinesModule } from '@libregrid/sparklines';
 
 ModuleRegistry.registerModules([AllCommunityModule, SparklinesModule]);
 
-createGrid(document.querySelector('#grid')!, {
+createGrid(document.querySelector<HTMLElement>('#grid')!, {
   columnDefs: [
     { field: 'country' },
     {
@@ -43,23 +49,28 @@ createGrid(document.querySelector('#grid')!, {
 ```
 
 Switch `sparklineOptions.type` between `'line'`, `'area'`, `'column'`, and
-`'bar'`. Each sparkline is independently virtualized. It stays cheap even
-with thousands of rows.
+`'bar'`. Sparklines are created and destroyed with the grid’s rendered cells.
 
 ## API
 
-| Export | Purpose |
-| --- | --- |
-| `SparklinesModule` | Registers the renderer under the component name `agSparklineCellRenderer` (`moduleName: 'Sparklines'`). |
-| `SparklineCellRenderer` | The cell renderer component. |
+| Export                  | Purpose                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| `SparklinesModule`      | Registers the renderer under the component name `agSparklineCellRenderer` (`moduleName: 'Sparklines'`). |
+| `SparklineCellRenderer` | The cell renderer component.                                                                            |
 
 ## Learn more
 
 - [LibreGrid README](https://github.com/libregrid/libregrid#readme) — full package list and quick start
 - [`@libregrid/integrated-charts`](https://github.com/libregrid/libregrid/blob/main/packages/integrated-charts/README.md) — full-size charts over a selected range
 
+## Angular
+
+Use the same column definitions and grid options with `ag-grid-angular`.
+Register the modules shown above through `provideLibreGrid` from
+[`@libregrid/angular`](../angular/README.md). See the
+[Angular setup](https://libregrid.dev/angular) for a complete component and bootstrap example.
+
 ## License
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.

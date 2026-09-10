@@ -1,67 +1,111 @@
 # @libregrid/angular
 
-Angular integration for LibreGrid. Register modules declaratively before
-your app bootstraps. Mirror grid state into `Signal`s. Get typed identity
-helpers for `GridOptions` and column definitions.
+Register LibreGrid modules during Angular bootstrap, expose grid state as
+signals, and define typed grid options. Use this package alongside
+`ag-grid-angular`, which supplies the grid component.
 
-This package has no AG Grid Enterprise equivalent. It's LibreGrid's own
-Angular ergonomics layer, independent of which feature packages you use.
+[Documentation and examples](https://libregrid.dev/angular)
 
 ## Install
 
+In an existing Angular application:
+
 ```bash
-npm install ag-grid-community ag-grid-angular @angular/core @libregrid/angular
+npm install "ag-grid-community@^36.1.0" "ag-grid-angular@^36.1.0" @libregrid/angular @libregrid/row-grouping
 ```
 
-Requires `ag-grid-community >=36.1.0 <37` and `@angular/core` as peer
-dependencies. Add whichever `@libregrid/*` feature packages you need
-alongside it.
+The integration requires Angular core `>=20` and AG Grid Community
+`>=36.1.0 <37`. Match `ag-grid-angular` to your AG Grid Community version and
+satisfy that wrapper's Angular peer dependencies. The row-grouping package is
+included here for the example; substitute your own feature modules as needed.
 
 ## Usage
 
-### Register modules once, at bootstrap
-
-`provideLibreGrid` registers modules through an `APP_INITIALIZER`. Every
-`ag-grid-angular` grid in your application shares one registration. No
-package may call `registerModules()` itself. Registration is the
-application's job, not the library's.
+Register Community and LibreGrid modules before the application creates grids.
+Add the provider to `app.config.ts`, keeping any other application providers:
 
 ```ts
-import { ApplicationConfig } from '@angular/core';
+import type { ApplicationConfig } from '@angular/core';
 import { AllCommunityModule } from 'ag-grid-community';
 import { provideLibreGrid } from '@libregrid/angular';
 import { RowGroupingModule } from '@libregrid/row-grouping';
-import { SideBarModule } from '@libregrid/side-bar';
 
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideLibreGrid(AllCommunityModule, RowGroupingModule, SideBarModule),
-  ],
+  providers: [provideLibreGrid(AllCommunityModule, RowGroupingModule)],
 };
 ```
 
-`withCommunityModules(...)` saves you the `AllCommunityModule` import if you
-want every Community module available:
+In `app.component.ts`:
 
 ```ts
-import { provideLibreGrid, withCommunityModules } from '@libregrid/angular';
-import { RowGroupingModule } from '@libregrid/row-grouping';
+import { Component } from '@angular/core';
+import { AgGridAngular } from 'ag-grid-angular';
+import { themeQuartz, type ColDef } from 'ag-grid-community';
 
-provideLibreGrid(...withCommunityModules(RowGroupingModule));
+interface Sale {
+  country: string;
+  product: string;
+  sales: number;
+}
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [AgGridAngular],
+  template: `
+    <ag-grid-angular
+      style="display: block; height: 400px"
+      [theme]="theme"
+      [defaultColDef]="defaultColDef"
+      [columnDefs]="columnDefs"
+      [rowData]="rowData"
+      [groupDefaultExpanded]="1"
+    />
+  `,
+})
+export class AppComponent {
+  readonly theme = themeQuartz;
+  readonly defaultColDef: ColDef<Sale> = { flex: 1, minWidth: 120 };
+  readonly columnDefs: ColDef<Sale>[] = [
+    { field: 'country', rowGroup: true, hide: true },
+    { field: 'product' },
+    { field: 'sales', aggFunc: 'sum' },
+  ];
+  readonly rowData: Sale[] = [
+    { country: 'Canada', product: 'Notebook', sales: 120 },
+    { country: 'Canada', product: 'Pen', sales: 80 },
+    { country: 'Japan', product: 'Notebook', sales: 240 },
+  ];
+}
 ```
 
-### Mirror grid state into signals
+In `main.ts`:
 
-`createGridApiSignals` keeps `Signal`s for displayed row count, selected
-rows, and the filter model in sync with the grid. It re-subscribes whenever
-the underlying `GridApi` changes. Call it from a component constructor or
-field initializer. Its listeners clean up automatically when that injection
-context is destroyed.
+```ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { appConfig } from './app/app.config';
+
+bootstrapApplication(AppComponent, appConfig).catch(console.error);
+```
+
+`provideLibreGrid` performs application-wide registration during bootstrap.
+It does not add Community modules automatically. Either pass
+`AllCommunityModule` explicitly, as above, or use
+`provideLibreGrid(...withCommunityModules(RowGroupingModule))`.
+
+## Observe grid state with signals
+
+`createGridApiSignals` exposes displayed row count, selected rows, and the
+filter model. Call it in an Angular injection context; listeners are cleaned up
+when that context is destroyed and updated when the API signal changes.
+
+The following component can be used with the bootstrap configuration above:
 
 ```ts
 import { Component, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
-import type { GridApi, GridReadyEvent } from 'ag-grid-community';
+import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { createGridApiSignals } from '@libregrid/angular';
 
 interface Row {
@@ -69,17 +113,22 @@ interface Row {
 }
 
 @Component({
-  selector: 'app-grid',
+  selector: 'app-grid-summary',
+  standalone: true,
   imports: [AgGridAngular],
   template: `
-    <ag-grid-angular [rowData]="rowData" [columnDefs]="columnDefs" (gridReady)="onGridReady($event)" />
+    <ag-grid-angular
+      style="display: block; height: 400px"
+      [rowData]="rowData"
+      [columnDefs]="columnDefs"
+      (gridReady)="onGridReady($event)"
+    />
     <p>{{ state.displayedRowCount() }} rows displayed</p>
   `,
 })
-export class GridComponent {
-  readonly rowData: Row[] = [{ name: 'Widget' }];
-  readonly columnDefs = [{ field: 'name' }];
-
+export class GridSummaryComponent {
+  readonly rowData: Row[] = [{ name: 'Notebook' }, { name: 'Pen' }];
+  readonly columnDefs: ColDef<Row>[] = [{ field: 'name', filter: true }];
   private readonly api = signal<GridApi<Row> | undefined>(undefined);
   protected readonly state = createGridApiSignals(this.api);
 
@@ -89,47 +138,23 @@ export class GridComponent {
 }
 ```
 
-### Typed `GridOptions` and column-def helpers
-
-`defineGridOptions` and `createColumnDefs` are identity functions that exist
-purely to anchor type inference on a literal. `GridOptions<TData>` and
-`ColDef<TData>[]` type errors then surface where you write the config,
-instead of at the point of use:
-
-```ts
-import { defineGridOptions, createColumnDefs } from '@libregrid/angular';
-
-interface Row {
-  country: string;
-  sales: number;
-}
-
-const columnDefs = createColumnDefs<Row>([
-  { field: 'country', rowGroup: true, hide: true },
-  { field: 'sales', aggFunc: 'sum' },
-]);
-
-const gridOptions = defineGridOptions<Row>({ columnDefs });
-```
-
 ## API
 
-| Export | Purpose |
-| --- | --- |
-| `provideLibreGrid(...modules)` | `EnvironmentProviders` that registers modules via `APP_INITIALIZER`. |
-| `registerLibreGridModules(modules)` | Imperative equivalent — calls `ModuleRegistry.registerModules(modules)` directly. |
-| `withCommunityModules(...modules)` | Prepends `AllCommunityModule` to a module list. |
-| `createGridApiSignals(apiSignal)` | Mirrors displayed row count, selected rows, and filter model into `Signal`s. |
-| `defineGridOptions<TData>(options)` | Typed identity helper for a `GridOptions` literal. |
-| `createColumnDefs<TData>(defs)` | Typed identity helper for a column-definition array literal. |
+| Export                              | Purpose                                                |
+| ----------------------------------- | ------------------------------------------------------ |
+| `provideLibreGrid(...modules)`      | Register modules through Angular environment providers |
+| `registerLibreGridModules(modules)` | Register an array imperatively                         |
+| `withCommunityModules(...modules)`  | Prepend `AllCommunityModule` to the supplied list      |
+| `createGridApiSignals(apiSignal)`   | Observe row count, selection, and filters              |
+| `defineGridOptions<TData>(options)` | Type-check a grid-options literal                      |
+| `createColumnDefs<TData>(defs)`     | Type-check a column-definition array                   |
 
-## Learn more
+The last two helpers return their arguments unchanged. Ordinary
+`GridOptions<TData>` and `ColDef<TData>[]` annotations work equally well.
 
-- [LibreGrid README](https://github.com/libregrid/libregrid#readme) — full package list and quick start
-- [`@libregrid/material`](https://github.com/libregrid/libregrid/blob/main/packages/material/README.md) — Angular Material theme bridge, pairs naturally with this package
+For Angular Material theming, see [`@libregrid/material`](../material/README.md).
 
 ## License
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.

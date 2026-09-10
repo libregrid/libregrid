@@ -1,5 +1,12 @@
 # @libregrid/formulas
 
+## 1.3.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @libregrid/core@1.3.4
+
 ## 1.3.3
 
 ### Patch Changes

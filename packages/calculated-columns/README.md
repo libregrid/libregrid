@@ -1,20 +1,26 @@
 # @libregrid/calculated-columns
 
-Read-only derived data columns: spreadsheet-style expressions that reference other
-columns in the same row (`[revenue] - [cost]`), declared in code or created and
-edited by end users from the column menu.
+Add read-only columns derived from other values in the same row, such as
+`[revenue] - [cost]`. Define expressions in code or let users create and edit
+calculated columns through the column menu.
 
-Replaces AG Grid Enterprise's `CalculatedColumns` module.
+[Documentation and examples](https://libregrid.dev/calculated-columns)
 
 ## Install
 
 ```bash
-npm install ag-grid-community @libregrid/calculated-columns
+npm install "ag-grid-community@^36.1.0" @libregrid/calculated-columns
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.
 
 ## Usage
+
+In a browser TypeScript project, add a grid container before running the code:
+
+```html
+<div id="grid" style="height: 400px"></div>
+```
 
 ```ts
 import { ModuleRegistry, AllCommunityModule, createGrid } from 'ag-grid-community';
@@ -22,7 +28,7 @@ import { CalculatedColumnsModule } from '@libregrid/calculated-columns';
 
 ModuleRegistry.registerModules([AllCommunityModule, CalculatedColumnsModule]);
 
-const api = createGrid(document.querySelector('#grid')!, {
+const api = createGrid(document.querySelector<HTMLElement>('#grid')!, {
   calculatedColumns: true, // or { dataTypes, expressionPickers, applyMode, suppressColumnHighlighting }
   columnDefs: [
     { field: 'revenue' },
@@ -33,13 +39,12 @@ const api = createGrid(document.querySelector('#grid')!, {
 });
 ```
 
-End users add columns from the column menu (**Add Calculated Column** on any
+Register `ColumnMenuModule` from [`@libregrid/menu`](../menu/README.md) to
+expose the editing UI. End users add columns from the column menu (**Add Calculated Column** on any
 column's header menu), edit them via **Calculated Column → Edit Calculated
 Column**, and remove them via the menu or the cell context menu. Calculated
-columns are always read-only — Community's edit/paste paths refuse them — and
-values flow through Community's own formula seam (`formula.resolveValue`), so
-sorting, filtering, grouping (`aggFunc`), and pivoting behave like any other
-column.
+columns are read-only. Their evaluated values can be sorted, filtered, grouped,
+and aggregated when the corresponding modules are registered.
 
 ## Expressions
 
@@ -70,6 +75,14 @@ column.
 - `calculatedColumns: false` (or unset) leaves declared calculated columns
   blank and hides the menu entries.
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+## Angular
+
+Use the same column definitions and grid options with `ag-grid-angular`.
+Register the modules shown above through `provideLibreGrid` from
+[`@libregrid/angular`](../angular/README.md). See the
+[Angular setup](https://libregrid.dev/angular) for a complete component and bootstrap example.
+
+## License
+
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.

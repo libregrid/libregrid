@@ -1,102 +1,115 @@
 # @libregrid/material
 
-Angular Material 3 theme bridge for LibreGrid. It maps your app's Material
-color tokens onto the grid's Quartz theme. It follows light/dark mode
-changes live. It provides Material-styled renderers for the side bar,
-status bar, and rich-select editor.
+Match a LibreGrid grid to an Angular Material 3 application. The theme bridge
+maps Material color tokens to Quartz and follows theme changes. Optional
+renderers provide Material controls for selected grid UI elements.
 
-This package has no AG Grid Enterprise equivalent. LibreGrid's UI shells
-(menus, side bar, tool panels, status bar) are framework-neutral by default.
-This package gives them a Material look.
+[Documentation and examples](https://libregrid.dev/material)
 
 ## Install
 
+In an Angular application with a configured Material 3 theme:
+
 ```bash
-npm install ag-grid-community @angular/core @angular/common @angular/material @angular/cdk @libregrid/material
+npm install "ag-grid-community@^36.1.0" "ag-grid-angular@^36.1.0" @libregrid/angular @libregrid/material
 ```
 
-Requires `ag-grid-community`, `@angular/core`, `@angular/common`,
-`@angular/material`, and `@angular/cdk` as peer dependencies.
+The bridge requires Angular core, common, Material, and CDK `>=20`, plus
+`ag-grid-community >=36.1.0 <37`. Install Material and CDK at versions compatible
+with the rest of your Angular application if they are not already present.
+Match `ag-grid-angular` to the AG Grid Community version.
 
 ## Usage
 
-### Theme bridge
-
-Add `provideLibreGridMaterialTheme()` to your application providers. Then
-bind the grid's `[theme]` input to `LibreGridThemeService.gridTheme()`. The
-service watches your app's Material tokens (including `light-dark()`
-values). It rebuilds the grid theme whenever they change. No manual
-light/dark configuration is needed.
+Add the theme provider and grid module registration to `app.config.ts`:
 
 ```ts
-// app.config.ts
-import { ApplicationConfig } from '@angular/core';
+import type { ApplicationConfig } from '@angular/core';
+import { AllCommunityModule } from 'ag-grid-community';
+import { provideLibreGrid } from '@libregrid/angular';
 import { provideLibreGridMaterialTheme } from '@libregrid/material';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideLibreGridMaterialTheme()],
+  providers: [provideLibreGrid(AllCommunityModule), provideLibreGridMaterialTheme()],
 };
 ```
 
+Bind the grid's theme to the service in a standalone component:
+
 ```ts
-// grid.component.ts
 import { Component, inject } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
+import type { ColDef } from 'ag-grid-community';
 import { LibreGridThemeService } from '@libregrid/material';
 
+interface Row {
+  name: string;
+  quantity: number;
+}
+
 @Component({
-  selector: 'app-grid',
+  selector: 'app-material-grid',
+  standalone: true,
   imports: [AgGridAngular],
-  template: `<ag-grid-angular [theme]="theme.gridTheme()" [rowData]="rowData" [columnDefs]="columnDefs" />`,
+  template: `
+    <ag-grid-angular
+      style="display: block; height: 400px"
+      [theme]="theme.gridTheme()"
+      [rowData]="rowData"
+      [columnDefs]="columnDefs"
+    />
+  `,
 })
-export class GridComponent {
+export class MaterialGridComponent {
   protected readonly theme = inject(LibreGridThemeService);
-  rowData = [{ name: 'Widget' }];
-  columnDefs = [{ field: 'name' }];
+  readonly rowData: Row[] = [{ name: 'Notebook', quantity: 12 }];
+  readonly columnDefs: ColDef<Row>[] = [{ field: 'name' }, { field: 'quantity' }];
 }
 ```
 
-### Material-styled renderers
+Bootstrap your application with that configuration as shown in the
+[Angular quick start](../angular/README.md). Keep your Material theme styles in
+the application stylesheet; the bridge reads the tokens, it does not create the
+application's Material theme. By default it observes the document root. Use
+the provider's `root` option if another element carries your theme tokens.
 
-Each renderer opts in independently. Call the matching installer once
-during setup for the pieces you're using:
+## Theme and renderer behavior
 
-```ts
-import { Component, inject, ApplicationRef, EnvironmentInjector } from '@angular/core';
-import { installMaterialSideBarRenderer, installMaterialRichSelectCellEditor } from '@libregrid/material';
+`gridTheme()` is a signal containing the Quartz theme built from the current
+Material tokens. The service observes changes to the theme root and exposes
+`setMode`, `toggle`, `setAccent`, and `setDensity` controls.
 
-// Side bar tool-panel buttons rendered with mat-button:
-installMaterialSideBarRenderer(inject(ApplicationRef), inject(EnvironmentInjector));
+When instantiated, the service also installs the Material menu renderer,
+side-bar renderer, and columns-panel drag adapter. Register the corresponding
+LibreGrid feature modules to use those surfaces. You do not need to install
+those renderers a second time.
 
-// Rich-select cell editor registered under AG Grid's standard component name:
-const gridOptions: import('ag-grid-community').GridOptions = {};
-installMaterialRichSelectCellEditor(gridOptions);
-```
+The rich-select editor is a separate opt-in. Register `RichSelectModule` from
+[`@libregrid/rich-select`](../rich-select/README.md), then pass your grid options
+to `installMaterialRichSelectCellEditor(options)` before creating the grid.
 
-`MaterialStatusBarComponent` is a ready-made Material status-bar panel you
-register through `@libregrid/status-bar`'s panel API. Use
-`createMaterialColumnsToolPanelDragDropAdapter()` to get Material-styled drag
-handles in the columns tool panel.
+`MaterialStatusBarComponent` is a standalone Angular presentation component
+with a required `text` input. Render it in your own template with
+`<lgr-material-status-bar [text]="summary" />`; it is not an AG Grid status-panel
+implementation. Your component supplies the summary string.
 
 ## API
 
-| Export | Purpose |
-| --- | --- |
-| `LibreGridThemeService` | Injectable service exposing `mode` and `gridTheme` signals. |
-| `provideLibreGridMaterialTheme(options?)` | Registers the theme service as an environment provider. |
-| `buildGridTheme(root?, density?)` | Builds a `Theme` from the current Material tokens without the reactive service. |
-| `installMaterialSideBarRenderer(appRef, envInjector)` | Renders side-bar tool-panel buttons with `mat-button`. |
-| `installMaterialRichSelectCellEditor(options)` | Registers the Material rich-select cell editor under AG Grid's standard component name. |
-| `MaterialStatusBarComponent` | Material-styled status-bar panel component. |
-| `createMaterialColumnsToolPanelDragDropAdapter()` / `installMaterialColumnsToolPanelDragDrop(...)` | Material-styled drag handles for the columns tool panel. |
+| Export                                                       | Purpose                                                             |
+| ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `provideLibreGridMaterialTheme(options?)`                    | Configure the injectable bridge; supports root, density, and accent |
+| `LibreGridThemeService`                                      | Reactive theme and mode, accent, and density controls               |
+| `buildGridTheme(root?, density?)`                            | Build a theme without the reactive service                          |
+| `installMaterialSideBarRenderer(appRef, envInjector)`        | Install the side-bar renderer without using the theme service       |
+| `installMaterialRichSelectCellEditor(options)`               | Add the Material cell editor to grid options                        |
+| `MaterialStatusBarComponent`                                 | Angular status-text component                                       |
+| `createMaterialColumnsToolPanelDragDropAdapter(envInjector)` | Create a custom panel drag adapter                                  |
+| `installMaterialColumnsToolPanelDragDrop(envInjector)`       | Install that adapter outside the theme service                      |
 
-## Learn more
-
-- [LibreGrid README](https://github.com/libregrid/libregrid#readme) — full package list and quick start
-- [`@libregrid/angular`](https://github.com/libregrid/libregrid/blob/main/packages/angular/README.md) — module registration and signal ergonomics
+These integrations use Angular and Material; for a plain TypeScript grid, use
+the standard Quartz theme and framework-independent feature packages.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE). LibreGrid is an independent open-source
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE). LibreGrid is an independent
 project and is not affiliated with, endorsed by, or sponsored by AG Grid Ltd.
-See [NOTICE](./NOTICE) for third-party attribution.
