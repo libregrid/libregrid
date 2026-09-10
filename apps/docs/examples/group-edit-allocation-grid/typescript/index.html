@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Allocation rules</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <button id="action-0" type="button">Reset allocation</button>
+    <label for="input-1">Allocation rule</label
+    ><select id="input-1">
+      <option value="uniform">Equal shares</option>
+      <option value="percentage">Keep proportions</option>
+      <option value="increment">Equal additions</option>
+      <option value="overwrite">Same value per session</option>
+    </select>
+    <div id="grid" style="height: 420px"></div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

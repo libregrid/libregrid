@@ -82,11 +82,13 @@ export {
   GroupSortStage,
   GroupStage,
   RowGroupColsService,
+  RowGroupingEditModule,
   RowGroupingModule,
   ShowRowGroupColsService,
   ShowRowGroupColsValueService,
   ShowValuesAsService,
   ValueColsService,
+  distributeGroupValue,
 } from '@libregrid/row-grouping';
 
 export {

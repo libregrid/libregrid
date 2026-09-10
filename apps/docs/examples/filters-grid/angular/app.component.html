@@ -1,0 +1,14 @@
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [columnDefs]="columnDefs"
+    [rowData]="rowData"
+    [gridOptions]="gridOptions"
+    (gridReady)="onGridReady($event.api)"
+  />
+</div>
+
+<div>
+  <button (click)="openFilters()">Open Filters panel</button>
+</div>

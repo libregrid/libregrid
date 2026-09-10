@@ -1,0 +1,15 @@
+<div>
+  <button (click)="collapseAll()">Collapse all details</button
+  ><button (click)="clearActivity()">Clear activity</button>
+</div>
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [rowData]="rows"
+    [columnDefs]="columnDefs"
+    [gridOptions]="gridOptions"
+    (gridReady)="ready($event.api)"
+  />
+</div>
+<p aria-live="polite">{{ detailActivity() }}</p>

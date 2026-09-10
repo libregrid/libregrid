@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,15 +19,17 @@ const rowData: Sale[] = [
 @Component({
   selector: 'lgr-pivot-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatButtonModule, MatCardModule, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="pivot">
       <p>Country remains a row group while year and quarter become nested result-column headers. Sales is aggregated into each intersection.</p>
-      <mat-card appearance="outlined"><mat-card-content>
+      <lgr-docs-demo demoId="pivot-grid">
+<mat-card appearance="outlined"><mat-card-content>
         <ag-grid-angular style="width:100%;height:500px" [theme]="theme.gridTheme()" [columnDefs]="columnDefs" [rowData]="rowData" [gridOptions]="gridOptions" (gridReady)="ready($event.api)" data-testid="pivot-grid" />
       </mat-card-content></mat-card>
       <p><button matButton="tonal" (click)="toggle()">Toggle pivot mode</button> <button matButton="tonal" (click)="openColumns()">Open Columns panel</button></p>
-      <h2>How it works</h2>
+
+</lgr-docs-demo><h2>How it works</h2>
       <p>
         Register <code>&#64;libregrid/pivot</code>, set <code>pivot: true</code> on a column,
         and enable pivot mode. Result columns are generated deterministically, and you can

@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -36,7 +37,7 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-grid-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, RouterLink, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, RouterLink, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="grid">
       <p>
@@ -45,7 +46,8 @@ function makeRows(n: number): Row[] {
         restyle from the same Material tokens as the rest of the site, with no reload.
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="demo-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
@@ -59,6 +61,7 @@ function makeRows(n: number): Row[] {
           </div>
         </mat-card-content>
       </mat-card>
+</lgr-docs-demo>
 
       <h2>What you're looking at</h2>
       <p>

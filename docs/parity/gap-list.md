@@ -4,7 +4,7 @@ Every ✅/🟡/❌ verdict lives in the per-domain checklists under [`docs/parit
 This page is the honest, prominent summary — read it before adopting LibreGrid, and
 always re-check the domain file for the exact option-level notes.
 
-Audited 2026-08-14; counts refreshed 2026-08-23 against the domain files (1.2.3 baseline). Legend: ✅ done+tested · 🟡 partial (note names the missing part) · ❌ not shipped (rationale in the domain file).
+Audited 2026-08-14; counts refreshed 2026-09-10 against the domain files (1.3.1 baseline, Phase 21). Legend: ✅ done+tested · 🟡 partial (note names the missing part) · ❌ not shipped (rationale in the domain file).
 
 ## The headline gaps
 
@@ -24,13 +24,18 @@ Audited 2026-08-14; counts refreshed 2026-08-23 against the domain files (1.2.3 
 5. **Drag-and-drop long-tail items** in the columns tool panel are post-1.0: dragging
    into the column-header area, custom drag images, and in-panel function-member
    reordering (see [`columns-tool-panel.md`](columns-tool-panel.md)).
-6. **The remaining Class A wave is Formulas, group-value editing and group-row
-   dragging.** Calculated columns, batch editing, cell notes, row numbers,
-   column header editing and show-values-as all shipped in Phases 14–18
+6. **The remaining Class A wave is group-row dragging (A11) alone.** Calculated
+   columns, batch editing, cell notes, row numbers, column header editing,
+   show-values-as, formulas and group-value editing all shipped in Phases 14–21
    (see [`ENTERPRISE-GAP-PLAN.md`](../../ENTERPRISE-GAP-PLAN.md)). The AI Toolkit
    (Phase 19) now uses a pure live-schema module plus a language-neutral BYOM
    protocol/client/gateway architecture (ADR 0007); live-provider egress is the
    remaining validation gate (see [`ai-toolkit.md`](ai-toolkit.md)).
+7. **Incremental aggregation remains an optimisation gap.** The A8 follow-up
+   supplies the changed-path factory, fixing stale group totals after leaf edits
+   and refreshing visible ancestors in Community's deferred pass. Aggregation
+   still recomputes all value columns rather than only changed columns
+   (see [`row-grouping.md`](row-grouping.md) → "Editing Groups").
 
 ## Post-1.0 candidates (phase-13 13A) and remaining Class A items
 
@@ -45,14 +50,13 @@ Documented as optional long-tail work, only shipped if justified after a clean a
 - AI Toolkit live-provider validation (the pure module, protocol, browser
   client, gateway, mock, and local wire tests are implemented in Phase 19;
   [ADR 0007](../adr/0007-pure-ai-schema-and-byom-gateway.md))
-- Group-value editing (`refreshAfterGroupEdit` in `row-grouping`)
 - Group row dragging (parity row first, then the drag surface)
 
 ## Per-domain summary
 
 | Domain | ✅ | 🟡 | ❌ | File |
 | --- | --- | --- | --- | --- |
-| Row grouping | 54 | 4 | 20 | [`row-grouping.md`](row-grouping.md) |
+| Row grouping | 64 | 5 | 19 | [`row-grouping.md`](row-grouping.md) — Phase 21 (A8) adds group-value editing and deferred aggregate refresh; `aggregateOnlyChangedColumns` remains partial |
 | Aggregation | 31 | 7 | 2 | [`aggregation.md`](aggregation.md) |
 | Pivoting | 23 | 2 | 0 | [`pivoting.md`](pivoting.md) |
 | Server-side row model | 55 | 0 | 0 | [`server-side-row-model.md`](server-side-row-model.md) |

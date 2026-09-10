@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -33,7 +34,7 @@ function tradeAt(index: number): Trade {
 @Component({
   selector: 'lgr-server-side-row-model-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, RouterLink, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, RouterLink, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="server-side">
       <p>
@@ -42,7 +43,8 @@ function tradeAt(index: number): Trade {
         matter how large the dataset grows.
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="server-side-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
@@ -55,6 +57,7 @@ function tradeAt(index: number): Trade {
           </div>
         </mat-card-content>
       </mat-card>
+</lgr-docs-demo>
 
       <h2>What's supported</h2>
       <p>

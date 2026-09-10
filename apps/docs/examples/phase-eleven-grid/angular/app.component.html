@@ -1,0 +1,21 @@
+<div>
+  <button (click)="showBuilder()">Open advanced builder</button>
+  <button (click)="clearFilter()">Clear filter</button>
+  <label
+    >Find
+    <input [value]="findText" (input)="setFind($any($event.target).value)" placeholder="Find text"
+  /></label>
+  <button (click)="next()">Next match</button>
+  <span aria-live="polite">{{ matches }} matches</span>
+</div>
+<div #advancedParent></div>
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [columnDefs]="columnDefs"
+    [rowData]="rowData"
+    [gridOptions]="gridOptions"
+    (gridReady)="ready($event.api)"
+  />
+</div>

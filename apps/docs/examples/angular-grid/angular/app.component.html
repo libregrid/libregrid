@@ -1,0 +1,22 @@
+<mat-form-field>
+  <mat-label>Filter by name</mat-label>
+  <input
+    matInput
+    type="text"
+    placeholder="e.g. Ada"
+    (input)="applyFilter($any($event.target).value)"
+  />
+</mat-form-field>
+<ul aria-label="Mirrored grid state">
+  <li>Displayed rows: {{ state.displayedRowCount() }}</li>
+  <li>Selected: {{ state.selectedRows().length }}</li>
+  <li>Filters active: {{ filterCount() }}</li>
+  <li>Revision: {{ state.revision() }}</li>
+</ul>
+
+<ag-grid-angular
+  style="height: 420px; width: 100%"
+  [theme]="theme"
+  [gridOptions]="gridOptions"
+  (gridReady)="api.set($event.api)"
+/>

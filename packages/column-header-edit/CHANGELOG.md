@@ -1,5 +1,12 @@
 # @libregrid/column-header-edit
 
+## 1.3.3
+
+### Patch Changes
+
+- @libregrid/core@1.3.3
+  - @libregrid/menu@1.3.3
+
 ## 1.3.1
 
 ### Patch Changes

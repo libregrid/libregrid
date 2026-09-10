@@ -1,0 +1,13 @@
+<ag-grid-angular style="height: 420px; width: 100%" [theme]="theme" [gridOptions]="gridOptions" />
+<h2>Events</h2>
+@if (log().length === 0) {
+  <ul>
+    <li>No events yet — add or edit a calculated column.</li>
+  </ul>
+} @else {
+  <ul>
+    @for (entry of log(); track $index) {
+      <li>{{ entry }}</li>
+    }
+  </ul>
+}

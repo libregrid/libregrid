@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
@@ -68,7 +69,7 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-menus-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   template: `
     <lgr-docs-feature-page path="menus">
       <p>
@@ -76,7 +77,8 @@ function makeRows(n: number): Row[] {
         Click the menu icon in a column header for the <strong>column menu</strong>.
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="menus-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
@@ -101,7 +103,8 @@ function makeRows(n: number): Row[] {
       </div>
       <p><strong>Last menu action:</strong> {{ lastAction() }}</p>
 
-      <h2>How it works</h2>
+
+</lgr-docs-demo><h2>How it works</h2>
       <p>
         Register <code>ContextMenuModule</code> and <code>ColumnMenuModule</code> from
         <code>&#64;libregrid/menu</code> and the menus appear — right-click for the context

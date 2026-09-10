@@ -1,0 +1,16 @@
+<div>
+  <label for="allocation-rule">Allocation rule</label>
+  <select id="allocation-rule" (change)="changeStrategy($any($event.target).value)">
+    <option value="uniform">Equal shares</option>
+    <option value="percentage">Keep proportions</option>
+    <option value="increment">Equal additions</option>
+    <option value="overwrite">Same value per session</option>
+  </select>
+  <button type="button" (click)="resetAllocation()">Reset allocation</button>
+</div>
+<ag-grid-angular
+  style="height: 420px; width: 100%"
+  [theme]="theme"
+  [gridOptions]="allocationOptions"
+  (gridReady)="allocationApi = $event.api"
+/>

@@ -1,0 +1,24 @@
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [columnDefs]="columnDefs"
+    [rowData]="rowData()"
+    [gridOptions]="gridOptions"
+    (gridReady)="onGridReady($event.api)"
+  />
+</div>
+
+<h2>API</h2>
+<div>
+  <button (click)="toggleSideBar()">Toggle side bar</button>
+  <button (click)="openPanel('columns')">Open columns panel</button>
+  <button (click)="openPanel('filters')">Open filters panel</button>
+  <button (click)="closePanel()">Close panel</button>
+  <button (click)="setPosition('left')">Left</button>
+  <button (click)="setPosition('right')">Right</button>
+  <button (click)="setButtonsHidden(true)">Hide panel buttons</button>
+  <button (click)="setButtonsHidden(false)">Show panel buttons</button>
+</div>
+
+<p><strong>State:</strong> visible={{ isVisible() }}, openPanel={{ openPanelId() ?? 'none' }}</p>

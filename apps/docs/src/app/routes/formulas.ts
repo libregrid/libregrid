@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
@@ -30,7 +31,7 @@ function makeRows(): Row[] {
 @Component({
   selector: 'lgr-formulas-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, DocsFeaturePageComponent],
   styles: `
     .lgr-formula-log {
       margin: 8px 0 24px;
@@ -60,12 +61,14 @@ function makeRows(): Row[] {
         <strong>Discount</strong> column reads its formula from an external
         <code>formulaDataSource</code> store.
       </p>
-      <ag-grid-angular
+      <lgr-docs-demo demoId="formulas-grid">
+<ag-grid-angular
         [theme]="theme.gridTheme()"
         [gridOptions]="gridOptions"
         class="ag-theme-quartz"
         style="height: 360px; width: 100%"
       />
+</lgr-docs-demo>
       <h2>How it works</h2>
       <ul class="lgr-formula-log">
         <li>Columns with <code>allowFormula: true</code> resolve <code>=…</code> cell values through the formula engine.</li>

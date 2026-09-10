@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatCardModule } from '@angular/material/card';
@@ -37,7 +38,7 @@ function makeRows(n: number): Row[] {
 @Component({
   selector: 'lgr-batch-edit-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatCardModule, MatButtonModule, DocsFeaturePageComponent],
   styles: `
     .lgr-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .lgr-batch-status {
@@ -72,7 +73,8 @@ function makeRows(n: number): Row[] {
         or <code>cancelBatchEdit()</code> on the grid API.
       </p>
 
-      <mat-card appearance="outlined">
+      <lgr-docs-demo demoId="batch-edit-grid">
+<mat-card appearance="outlined">
         <mat-card-content>
           <div class="lgr-grid-host">
             <ag-grid-angular
@@ -112,7 +114,8 @@ function makeRows(n: number): Row[] {
         }
       </ul>
 
-      <h2>How it works</h2>
+
+</lgr-docs-demo><h2>How it works</h2>
       <p>
         While a batch is open, cell edits are <em>staged</em>: the row data is
         untouched, staged cells are highlighted, and

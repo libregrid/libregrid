@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
@@ -43,7 +44,7 @@ const DETAIL_EXAMPLES: readonly DocsCodeExample[] = [
 @Component({
   selector: 'lgr-master-detail-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, DocsBackendBoundaryComponent, DocsCodeExampleComponent, DocsDemoGuideComponent, DocsFeaturePageShellComponent, DocsProductionChecklistComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatButtonModule, MatCardModule, DocsBackendBoundaryComponent, DocsCodeExampleComponent, DocsDemoGuideComponent, DocsFeaturePageShellComponent, DocsProductionChecklistComponent],
   styles: `.status { margin:.8rem 0 0; color:var(--mat-sys-on-surface-variant); font-size:.86rem; }`,
   template: `
     <lgr-docs-feature-page-shell
@@ -53,13 +54,15 @@ const DETAIL_EXAMPLES: readonly DocsCodeExample[] = [
       [packages]="['@libregrid/master-detail']"
       [values]="values"
     >
-      <div featureDemo>
+      <div featureDemo><lgr-docs-demo demoId="master-detail-grid">
+
         <mat-card appearance="outlined"><mat-card-content>
           <div class="lgr-actions"><button matButton="tonal" (click)="collapseAll()">Collapse all details</button><button matButton="text" (click)="clearActivity()">Clear activity</button></div>
           <div class="lgr-grid-host"><ag-grid-angular style="height:100%;width:100%" [theme]="theme.gridTheme()" [rowData]="rows" [columnDefs]="columnDefs" [gridOptions]="gridOptions" (gridReady)="ready($event.api)" data-testid="master-detail-grid" /></div>
           <p class="status" aria-live="polite">{{ detailActivity() }}</p>
         </mat-card-content></mat-card>
-      </div>
+
+</lgr-docs-demo></div>
       <lgr-docs-demo-guide featureGuide [steps]="demoSteps" intro="This is intentionally not tree data: each account remains a master row and each expansion mounts a child grid." />
       <div featureImplementation><lgr-docs-code-example heading="Load details only when an account is opened" [examples]="detailExamples" /></div>
       <div featureIntegration><lgr-docs-backend-boundary summary="The summary list and the per-account detail endpoint can evolve independently, keeping the main grid responsive even when child records are large." [clientResponsibilities]="clientResponsibilities" [backendResponsibilities]="backendResponsibilities" [contracts]="contracts" /></div>

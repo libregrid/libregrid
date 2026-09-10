@@ -1,9 +1,9 @@
 # ENTERPRISE-GAP-PLAN — ag-grid.com Enterprise features missing from LibreGrid
 
-**Status:** LIVING DOCUMENT — refreshed for the **1.2.3** baseline (2026-08-23). Each
+**Status:** LIVING DOCUMENT — refreshed for the **1.3.3** baseline (2026-09-10, Phase 21). Each
 Class A item records its current state; shipped items are marked ✅ and moved to
 §4a. Remaining items are the honest "what is left to implement" list.
-**Date:** 2026-08-18 (initial research) · refreshed 2026-08-23 (1.2.3)
+**Date:** 2026-08-18 (initial research) · refreshed 2026-08-23 (1.2.3) · refreshed 2026-09-10 (1.3.3, A8)
 **Companion to:** [`LIBREGRID-PLAN.md`](LIBREGRID-PLAN.md) (master plan) — this is a
 strategic inventory of *what is missing*, not a numbered phase. Per repo convention:
 each item below becomes a phase file only after it is chosen.
@@ -45,19 +45,19 @@ into ~25 feature areas):
 | Bucket | Count | Meaning |
 | --- | --- | --- |
 | **Shipped with gaps** (Class B) | ~16 feature areas | `@libregrid/*` package exists; documented ❌/🟡 parity rows remain |
-| **No counterpart** (Class A) | 3 feature areas | Enterprise on the site, no LibreGrid package and no parity coverage (A8 and A11 remain at the 2026-08-24 refresh) |
+| **No counterpart** (Class A) | 3 feature areas | Enterprise on the site, no LibreGrid package and no parity coverage (**A11 is the last one left** — A8 shipped as Phase 21, 2026-09-10) |
 | **Not gaps — Community on the site** (Class D) | 14 feature areas | Stock `ag-grid-community` provides them; some older docs assumed Enterprise |
 | **Out of scope / declined** (Class C) | 3 | PDF export, commercial chart types, licence key (N/A) |
 
 Headline: the large structural features (row grouping, aggregation, pivoting,
 SSRM, tree data, master/detail, tool panels, menus, clipboard, Excel export,
 charts, sparklines, filters, find, cell selection) are already shipped. The
-**Class A wave is complete except two small items**: calculated columns, batch
+**Class A wave is complete except one item**: calculated columns, batch
 editing, cell notes, row numbers, column header editing, show-values-as, the
-SSRM API verification, **Formulas** (the largest — Phase 20) and the AI toolkit
-all shipped in Phases 14–20. The remaining Class A surface is **group-value
-editing (A8)** and **group-row dragging (A11)**, plus a long tail of
-option-level gaps in shipped packages.
+SSRM API verification, **Formulas** (the largest — Phase 20), the AI toolkit and
+**group-value editing (A8 — Phase 21)** all shipped in Phases 14–21. The last
+Class A surface is **group-row dragging (A11)**, now unblocked, plus a long tail
+of option-level gaps in shipped packages.
 
 ---
 
@@ -139,13 +139,37 @@ Each entry: site evidence (inventory §refs) → current state → proposed acti
   group-header right-click context menu; per-column menu items hide for group
   targets.
 
-### A8. Editing Group Values — `RowGroupingEditModule` ⬜ **remaining**
+### A8. Editing Group Values — `RowGroupingEditModule` ✅ **shipped — Phase 21**
 - **Site:** `grouping-editing` page ("Row Grouping - Editing Groups").
 - **State:** `refreshAfterGroupEdit` still ❌ in `docs/parity/row-grouping.md`
   (rationale now **stale** — cell editing is Community stock, so the blocker no
   longer stands; the option simply has not been implemented).
-- **Proposed:** fold into `@libregrid/row-grouping` (option + re-aggregation
-  timing), no new package.
+- **State:** ✅ **Shipped in Phase 21** (2026-09-10) —
+  [`docs/phases/phase-21-row-grouping-edit.md`](docs/phases/phase-21-row-grouping-edit.md);
+  parity [`docs/parity/row-grouping.md`](docs/parity/row-grouping.md) → "Editing
+  Groups" (63 ✅ / 6 🟡 / 19 ❌ for the domain).
+- **What it turned out to be:** larger than the original "option + re-aggregation
+  timing" note. v36.1.0 declares the whole `RowGroupingEditModule` seam in the
+  Community baseline — two bean slots (`rowGroupingEditValueSvc`, `context.d.ts:275`;
+  `aggChildrenSvc`, `:264`) declared but unfilled, both colDef validations
+  (`groupRowEditable`, `groupRowValueSetter` → module `'RowGroupingEdit'`) already in
+  place, and every contract type publicly exported. Filled both slots and rebuilt the
+  documented `distributeGroupValue` from those public types (guardrail G2 — the real
+  one is an `ag-grid-enterprise` export absent from the community dist).
+- **Packages:** folded into `@libregrid/row-grouping` as planned (no new package):
+  `RowGroupingEditModule` name record, `RowGroupingEditService`,
+  `AggregatedChildrenService`, and `distributeGroupValue`.
+- **Two discoveries recorded** (both now 🟡 rows in `row-grouping.md`):
+  1. `aggChildrenSvc` was unfilled, so the public
+     `rowNode.getAggregatedChildren()` returned `[]` unconditionally — fixed here.
+  2. Re-aggregation is **not** free after all. `ChangeDetectionService.endDeferred`
+     only runs `csrm.doAggregate` when `beans.changedPathFactory` supplied a batched
+     path, and **that slot is also unfilled**, so the pass never ran — meaning an
+     ordinary leaf edit left `aggData` stale too. Phase 21 calls `doAggregate()`
+     after a distribution; implementing `IChangedPathFactory` is the follow-up that
+     fixes leaf edits and retires the workaround.
+- **A11 unblocked:** `refreshAfterGroupEdit` is the flag Community's `RowDragService`
+  reads to permit managed drag-between-groups; it now works.
 
 ### A9. SSRM API module — `ServerSideRowModelApiModule` ✅ **closed**
 - **Site:** flagged Enterprise in API metadata (inventory §7); the `ssrm-api`
@@ -197,7 +221,7 @@ the residual ❌/🟡 rows inside them — included so the plan covers the full
 
 ---
 
-## 4a. Class A items shipped since the original research (Phases 14–20)
+## 4a. Class A items shipped since the original research (Phases 14–21)
 
 | Item | Phase | Package | Parity |
 | --- | --- | --- | --- |
@@ -207,6 +231,7 @@ the residual ❌/🟡 rows inside them — included so the plan covers the full
 | A4 Cell Notes | 15 | `@libregrid/notes` | [`cell-notes.md`](docs/parity/cell-notes.md) |
 | A5 Row Numbers | 14 | `@libregrid/row-numbers` | [`row-numbers.md`](docs/parity/row-numbers.md) |
 | A7 Column Header Editing | 14 | `@libregrid/column-header-edit` | [`column-header-edit.md`](docs/parity/column-header-edit.md) |
+| A8 Group Value Editing | 21 | `@libregrid/row-grouping` | [`row-grouping.md`](docs/parity/row-grouping.md) → Editing Groups |
 | A9 SSRM API verification | 14 | (closed — no new code) | `server-side-row-model.md` |
 | A10 Show Values As completion | 14 | `@libregrid/row-grouping` | [`aggregation.md`](docs/parity/aggregation.md) |
 | §7 doc-hygiene pass | 14 | (docs-only) | `gap-list.md` |
@@ -266,9 +291,18 @@ describes our `showValuesAs` service, not the Enterprise baseline).
 
 **Refresh 2026-08-23 (this document):** the stale rows this refresh corrected are
 the Class A statuses above — A2/A3/A4/A5/A7/A9/A10 were still marked "no package"
-in the original 2026-08-18 plan despite shipping in Phases 14–18. The remaining
-Class A list is now exactly: A8 group-value editing, A11 group-row
-dragging.
+in the original 2026-08-18 plan despite shipping in Phases 14–18.
+
+**Refresh 2026-09-10 (Phase 21):** A8 shipped, so the remaining Class A list is
+exactly **A11 group-row dragging**. This refresh also corrected the document's own
+baseline drift (it still said "refreshed for the 1.2.3 baseline" while the repo
+was on 1.3.1), the two stale "LibreGrid has no cell-editing feature yet"
+rationales that deferred A8 (`docs/parity/row-grouping.md` and
+`docs/phases/phase-02-row-grouping.md` — cell editing is Community stock, Class D
+above), and the `gap-list.md` per-domain counts for Row grouping
+(54/4/20 → 63/6/19). It also recorded two unfilled Community bean slots as
+findings: `aggChildrenSvc` (now filled) and `changedPathFactory` (still open —
+see headline gap 7 in `gap-list.md`).
 
 ---
 
@@ -294,10 +328,17 @@ so the plan is complete on the page the user asked about.
 Ordered by (value ÷ effort) and by unblocking existing stubs first:
 
 **P0 — small, self-contained (candidates for the next release):**
-1. A8 Group value editing — option + re-aggregation timing in `@libregrid/row-grouping`
-   (stale blocker resolved; cell editing is Community stock).
-2. A11 Group row dragging — add the parity row, then the drag surface (pairs with
-   the columns-panel drag long tail).
+1. ~~A8 Group value editing~~ — ✅ **shipped as Phase 21**
+   ([`docs/phases/phase-21-row-grouping-edit.md`](docs/phases/phase-21-row-grouping-edit.md)).
+2. A11 Group row dragging — **the last Class A item.** Add the parity row, then the
+   drag surface (pairs with the columns-panel drag long tail; now unblocked by A8's
+   working `refreshAfterGroupEdit`).
+3. **NEW (surfaced by Phase 21) — implement `IChangedPathFactory`.** Community
+   declares the `changedPathFactory` bean slot and never fills it, so
+   `ChangeDetectionService` skips its aggregation pass and group aggregates stay
+   stale after an ordinary leaf edit (verified). Small, self-contained, and it
+   retires the `doAggregate()` workaround Phase 21 added. Arguably higher value
+   than A11 because it is a correctness fix, not a new feature.
 
 **P1 — self-contained new packages:**
 3. ~~A1 Formulas~~ — ✅ shipped as Phase 20 (`@libregrid/formulas`); the Phase 18

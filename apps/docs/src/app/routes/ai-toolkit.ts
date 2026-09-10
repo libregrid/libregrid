@@ -1,3 +1,4 @@
+import { DocsDemoComponent } from '../docs/docs-demo';
 import { ChangeDetectionStrategy, Component, inject, signal, viewChild, type ElementRef, type Signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
@@ -348,7 +349,7 @@ function loadTurnstile(): Promise<void> {
 @Component({
   selector: 'lgr-ai-toolkit-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [DocsDemoComponent,
     AgGridAngular,
     MatButtonModule,
     MatCardModule,
@@ -477,7 +478,8 @@ function loadTurnstile(): Promise<void> {
           Each request: validated against the live grid → sent to your server → revalidated →
           applied to the grid, or shown as a diff when review is on.
         </p>
-        <div class="lgr-ai-workbench">
+        <lgr-docs-demo demoId="ai-toolkit-grid">
+<div class="lgr-ai-workbench">
           <div class="lgr-ai-controls">
             <div #turnstileHost class="lgr-ai-turnstile-host" data-testid="ai-turnstile"></div>
             <input
@@ -572,7 +574,8 @@ function loadTurnstile(): Promise<void> {
             <button class="lgr-ai-button" type="button" [disabled]="busy()" (click)="applyQuery(suggestion)">{{ suggestion }}</button>
           }
         </div>
-      </div>
+
+</lgr-docs-demo></div>
 
       <lgr-docs-demo-guide featureGuide intro="Every step runs against the real protocol on this page's live grid." [steps]="demoSteps" />
 

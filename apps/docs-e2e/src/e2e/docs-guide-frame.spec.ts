@@ -14,6 +14,7 @@ const FRAMED_ROUTES = [
   'excel-export',
   'filters',
   'grid',
+  'group-editing',
   'menus',
   'notes',
   'pivot',
@@ -31,13 +32,14 @@ const FRAMED_ROUTES = [
 
 test.describe('feature page frame', () => {
   for (const route of FRAMED_ROUTES) {
-    test(`${route} renders one header, a task guide, and setup examples`, async ({ page }) => {
+    test(`${route} renders one header, a task guide, and a demo code viewer`, async ({ page }) => {
       await page.goto(`/${route}`);
       await expect(page.locator('lgr-docs-feature-header')).toBeVisible();
       await expect(page.locator('lgr-docs-demo-guide')).toBeVisible();
-      await expect(
-        page.locator('lgr-docs-code-example').filter({ hasText: 'Add this capability to your application' }),
-      ).toBeVisible();
+      const viewer = page.locator('lgr-docs-demo').first();
+      await expect(viewer).toBeVisible();
+      await viewer.getByRole('button', { name: /^Show code:/ }).click();
+      await expect(viewer.locator('lgr-docs-code-example:visible pre code')).not.toBeEmpty();
       // The title appears exactly once; the route's own h1 is gone.
       await expect(page.locator('h1')).toHaveCount(1);
     });

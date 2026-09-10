@@ -1,0 +1,30 @@
+<div>
+  <button (click)="createSalesChart()">Create sales chart</button
+  ><button (click)="updateFirstMarket()">Add $10k to UK sales</button
+  ><button (click)="saveView()">Save chart state</button
+  ><button (click)="clearChart()">Clear chart</button>
+</div>
+<p aria-live="polite">{{ status() }}</p>
+<div>
+  <div>
+    <ag-grid-angular
+      style="height: 420px; width: 100%"
+      [theme]="theme"
+      [gridOptions]="gridOptions"
+      (gridReady)="ready($event.api)"
+    />
+  </div>
+  <div>
+    <h2>Sales and profit by market</h2>
+    @if (chart()) {
+      <span>Linked to grid</span>
+    }
+  </div>
+  <div #chartContainer>
+    @if (!chart()) {
+      <div>
+        <div><p>Create the chart to start the comparison.</p></div>
+      </div>
+    }
+  </div>
+</div>

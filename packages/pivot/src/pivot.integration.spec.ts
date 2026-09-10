@@ -1,15 +1,44 @@
 /** @vitest-environment jsdom */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AllCommunityModule, createGrid, ModuleRegistry, type GridApi, type GridOptions } from 'ag-grid-community';
-import { RowGroupingModule } from '@libregrid/row-grouping';
+import { RowGroupingModule, RowGroupingEditModule } from '@libregrid/row-grouping';
 import { PivotModule } from './pivotModule';
 
-ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule, PivotModule]);
+ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule, RowGroupingEditModule, PivotModule]);
 
 const grids: GridApi[] = [];
 afterEach(() => { while (grids.length) grids.pop()?.destroy(); document.body.replaceChildren(); });
 
 describe('PivotModule integration', () => {
+  it('distributes a nested pivot edit only to matching leaves', async () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const api = createGrid(host, {
+      pivotMode: true,
+      columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'city', rowGroup: true },
+        { field: 'year', pivot: true },
+        { field: 'sales', aggFunc: 'sum', groupRowEditable: true },
+      ],
+      rowData: [
+        { country: 'US', city: 'NY', year: 2025, sales: 100 },
+        { country: 'US', city: 'SF', year: 2025, sales: 200 },
+        { country: 'US', city: 'LA', year: 2026, sales: 300 },
+      ],
+    });
+    grids.push(api);
+    await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBeGreaterThan(0));
+    const col = api.getPivotResultColumn(['2025'], 'sales')!;
+    expect(col).not.toBeNull();
+    const group = api.getDisplayedRowAtIndex(0)!;
+    expect(group.getAggregatedChildren(col, true)).toHaveLength(2);
+    expect(group.setDataValue(col, 600)).toBe(true);
+    const sales = new Map<string, number>();
+    api.forEachLeafNode((node) => sales.set(node.data.city, node.data.sales));
+    expect(sales).toEqual(new Map([['NY', 300], ['SF', 300], ['LA', 300]]));
+    expect(group.aggData?.[col.getColId()]).toBe(600);
+  });
+
   it('generates nested result columns and aggregates each row group', async () => {
     const host = document.body.appendChild(document.createElement('div'));
     const api = createGrid(host, {

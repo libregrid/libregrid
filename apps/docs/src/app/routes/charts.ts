@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, inject, signal } from '@angular/core';
+import { DocsDemoComponent } from '../docs/docs-demo';
+import type { ElementRef} from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewChild, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -37,7 +39,7 @@ for (const model of savedView.chartModels) {
 @Component({
   selector: 'lgr-charts-demo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AgGridAngular, MatButtonModule, MatCardModule, MatIconModule, DocsCodeExampleComponent, DocsDemoGuideComponent, DocsFeaturePageShellComponent, DocsProductionChecklistComponent],
+  imports: [DocsDemoComponent, AgGridAngular, MatButtonModule, MatCardModule, MatIconModule, DocsCodeExampleComponent, DocsDemoGuideComponent, DocsFeaturePageShellComponent, DocsProductionChecklistComponent],
   styles: `
     .workspace { display:grid; grid-template-columns:minmax(0, 1fr); gap:1rem; }
     .chart-panel { min-height:360px; padding:1rem; } .chart-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
@@ -54,14 +56,16 @@ for (const model of savedView.chartModels) {
       [packages]="['@libregrid/integrated-charts']"
       [values]="values"
     >
-      <div featureDemo>
+      <div featureDemo><lgr-docs-demo demoId="phase-twelve-grid">
+
         <div class="actions"><button matButton="filled" (click)="createSalesChart()"><mat-icon>bar_chart</mat-icon> Create sales chart</button><button matButton="tonal" (click)="updateFirstMarket()"><mat-icon>edit</mat-icon> Add $10k to UK sales</button><button matButton="outlined" (click)="saveView()"><mat-icon>bookmark</mat-icon> Save chart state</button><button matButton="text" (click)="clearChart()">Clear chart</button></div>
         <p class="status" aria-live="polite">{{ status() }}</p>
         <div class="workspace">
           <mat-card appearance="outlined"><mat-card-content><div class="lgr-grid-host"><ag-grid-angular style="width:100%;height:100%" [theme]="theme.gridTheme()" [gridOptions]="gridOptions" (gridReady)="ready($event.api)" data-testid="phase-twelve-grid" /></div></mat-card-content></mat-card>
           <mat-card appearance="outlined" class="chart-panel"><div class="chart-heading"><h2>Sales and profit by market</h2>@if (chart()) { <span class="status">Linked to grid</span> }</div><div #chartContainer class="chart-container" data-testid="phase-twelve-chart-container">@if (!chart()) { <div class="empty"><div><mat-icon>insights</mat-icon><p>Create the chart to start the comparison.</p></div></div> }</div></mat-card>
         </div>
-      </div>
+
+</lgr-docs-demo></div>
       <lgr-docs-demo-guide featureGuide [steps]="demoSteps" intro="The demo starts focused: one meaningful chart, one data update, one persistence path." />
       <div featureImplementation><lgr-docs-code-example heading="Make charts part of a saved workspace" [examples]="chartExamples" /></div>
       <div featureProduction><lgr-docs-production-checklist [items]="checklist" /></div>

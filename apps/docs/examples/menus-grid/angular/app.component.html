@@ -1,0 +1,19 @@
+<div>
+  <ag-grid-angular
+    style="height: 420px; width: 100%"
+    [theme]="theme"
+    [columnDefs]="columnDefs"
+    [rowData]="rowData()"
+    [gridOptions]="gridOptions"
+    (gridReady)="onGridReady($event.api)"
+  />
+</div>
+
+<h2>API</h2>
+<div>
+  <button (click)="showContextMenu()">Show context menu</button>
+  <button (click)="hidePopupMenu()">Hide popup menu</button>
+  <button (click)="setContextMenuSuppressed(true)">Suppress context menu</button>
+  <button (click)="setContextMenuSuppressed(false)">Enable context menu</button>
+</div>
+<p><strong>Last menu action:</strong> {{ lastAction() }}</p>

@@ -1,8 +1,8 @@
 import { DOCUMENT } from '@angular/common';
+import type { OnDestroy } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   Component,
-  OnDestroy,
   inject,
   input,
   signal,
@@ -100,6 +100,11 @@ let nextCodeExampleId = 0;
       color: var(--mat-sys-on-surface-variant);
     }
 
+    :focus-visible {
+      outline: 2px solid var(--mat-sys-primary);
+      outline-offset: -2px;
+    }
+
     .tab.is-active {
       color: var(--mat-sys-on-secondary-container);
       background: var(--mat-sys-secondary-container);
@@ -184,7 +189,7 @@ let nextCodeExampleId = 0;
           <mat-icon aria-hidden="true">{{
             copyState() === 'copied' ? 'check' : 'content_copy'
           }}</mat-icon>
-          {{ copyState() === 'copied' ? 'Copied' : 'Copy code' }}
+          {{ copyState() === 'copied' ? 'Copied' : copyAction() }}
         </button>
       </div>
 
@@ -228,6 +233,8 @@ let nextCodeExampleId = 0;
 })
 export class DocsCodeExampleComponent implements OnDestroy {
   readonly heading = input('Implementation');
+  readonly initialId = input<string>();
+  readonly copyAction = input('Copy code');
   readonly examples = input.required<readonly DocsCodeExample[]>();
 
   protected readonly copyState = signal<CopyState>('idle');
@@ -241,7 +248,10 @@ export class DocsCodeExampleComponent implements OnDestroy {
 
   protected active(): DocsCodeExample | undefined {
     const examples = this.examples();
-    return examples.find((example) => example.id === this.activeId()) ?? examples[0];
+    return (
+      examples.find((example) => example.id === (this.activeId() ?? this.initialId())) ??
+      examples[0]
+    );
   }
 
   protected select(id: string): void {

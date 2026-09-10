@@ -22,7 +22,7 @@ describe('PivotColDefService', () => {
 });
 
 describe('generated pivot definitions', () => {
-  const value = (id: string, headerName?: string) => ({ getColId: () => id, getColDef: () => ({ headerName }) }) as unknown as AgColumn;
+  const value = (id: string, headerName?: string) => ({ getColId: () => id, getAggFunc: () => 'sum', getColDef: () => ({ headerName }) }) as unknown as AgColumn;
   it('handles empty axes and multiple values while keeping nested keys', () => {
     expect(createGeneratedPivotDefs([], [value('sales')])).toEqual([]);
     expect(createGeneratedPivotDefs([['A']], [])).toEqual([]);

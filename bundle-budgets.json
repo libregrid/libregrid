@@ -105,8 +105,8 @@
       "note": "Accessible virtualised rich-select editor. Raised from 8 KB at the Phase 13 audit \u2014 measures 10.2 KB unminified."
     },
     "@libregrid/row-grouping": {
-      "maxSize": "125 KB",
-      "note": "Group/flatten/agg/filterAgg/groupFilter stages + AggFuncService + rowGroup/value cols services + auto group column + expand/collapse + group sorting/totals + group filter/show-values-as/menu contributions. Raised from 95 KB at the Phase 13 audit (steady-state unminified output re-measured at 102.7 KB); raised to 125 KB in Phase 14 for the Show Values As service (modes, def merging, API) and SSRM row grouping \u2014 measures 119.9 KB."
+      "maxSize": "150 KB",
+      "note": "Group/flatten/agg/filterAgg/groupFilter stages + AggFuncService + rowGroup/value cols services + auto group column + expand/collapse + group sorting/totals + group filter/show-values-as/menu contributions + Phase 21 group editing (RowGroupingEditModule, RowGroupingEditService, AggregatedChildrenService, distributeGroupValue). Raised from 95 KB at the Phase 13 audit (steady-state unminified output re-measured at 102.7 KB); raised to 125 KB in Phase 14 for the Show Values As service (modes, def merging, API) and SSRM row grouping \u2014 measured 119.9 KB; raised to 150 KB in Phase 21 for group row value editing (the distribution engine plus two bean implementations) \u2014 measures 143.5 KB."
     },
     "@libregrid/row-numbers": {
       "maxSize": "14 KB",

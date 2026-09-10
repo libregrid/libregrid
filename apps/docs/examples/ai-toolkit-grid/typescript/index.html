@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Grid assistant</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <p>
+      Browser mock. Try “Sort by sales amount, highest first”, “Hide the sales rep column”, “Group
+      by region and total the sales amount”, or “Show sales over $5,000 from North America, hardware
+      only”. Other commands leave the grid unchanged.
+    </p>
+    <label>Request <input id="command" value="Sort by sales amount, highest first" /></label>
+    <label><input id="review" type="checkbox" />Review before applying</label
+    ><button id="run">Apply query</button><button id="reset">Reset grid</button>
+    <div id="grid" style="height: 420px"></div>
+    <p role="status" id="status"></p>
+    <div id="proposal" hidden>
+      <pre id="diff"></pre>
+      <button id="apply">Apply proposal</button><button id="discard">Discard</button>
+    </div>
+    <details>
+      <summary>Request and response</summary>
+      <pre id="traffic"></pre>
+    </details>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
