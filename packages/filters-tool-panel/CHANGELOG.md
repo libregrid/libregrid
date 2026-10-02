@@ -1,5 +1,14 @@
 # @libregrid/filters-tool-panel
 
+## 1.3.5
+
+### Patch Changes
+
+- Updated dependencies [bab329a]
+  - @libregrid/set-filter@1.3.5
+  - @libregrid/core@1.3.5
+  - @libregrid/side-bar@1.3.5
+
 ## 1.3.4
 
 ### Patch Changes

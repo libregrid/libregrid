@@ -1,5 +1,42 @@
 # @libregrid/all
 
+## 1.3.5
+
+### Patch Changes
+
+- Updated dependencies [bab329a]
+  - @libregrid/advanced-filter@1.3.5
+  - @libregrid/find@1.3.5
+  - @libregrid/master-detail@1.3.5
+  - @libregrid/row-grouping@1.3.5
+  - @libregrid/set-filter@1.3.5
+  - @libregrid/ai-toolkit@1.3.5
+  - @libregrid/angular@1.3.5
+  - @libregrid/batch-edit@1.3.5
+  - @libregrid/cell-selection@1.3.5
+  - @libregrid/clipboard@1.3.5
+  - @libregrid/column-header-edit@1.3.5
+  - @libregrid/columns-tool-panel@1.3.5
+  - @libregrid/core@1.3.5
+  - @libregrid/excel-export@1.3.5
+  - @libregrid/filters-tool-panel@1.3.5
+  - @libregrid/formulas@1.3.5
+  - @libregrid/integrated-charts@1.3.5
+  - @libregrid/material@1.3.5
+  - @libregrid/menu@1.3.5
+  - @libregrid/multi-filter@1.3.5
+  - @libregrid/notes@1.3.5
+  - @libregrid/pivot@1.3.5
+  - @libregrid/rich-select@1.3.5
+  - @libregrid/row-numbers@1.3.5
+  - @libregrid/server-side-row-model@1.3.5
+  - @libregrid/server-side-selection@1.3.5
+  - @libregrid/side-bar@1.3.5
+  - @libregrid/sparklines@1.3.5
+  - @libregrid/status-bar@1.3.5
+  - @libregrid/tree-data@1.3.5
+  - @libregrid/viewport-row-model@1.3.5
+
 ## 1.3.4
 
 ### Patch Changes

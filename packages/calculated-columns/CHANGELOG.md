@@ -1,5 +1,13 @@
 # @libregrid/calculated-columns
 
+## 1.3.5
+
+### Patch Changes
+
+- @libregrid/core@1.3.5
+  - @libregrid/formulas@1.3.5
+  - @libregrid/menu@1.3.5
+
 ## 1.3.4
 
 ### Patch Changes
