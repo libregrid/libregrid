@@ -9,7 +9,7 @@ and decides when to deliver new values.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/viewport-row-model
+npm install "ag-grid-community@^36.2.0" @libregrid/viewport-row-model
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

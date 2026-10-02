@@ -24,6 +24,9 @@ packages/excel-export/src/testing/__fixtures__/verification/
 .ag-*-ref.png
 .claude/settings.local.json
 
+# Playwright MCP session scratch (snapshots, console logs, screenshots)
+.playwright-mcp/
+
 # Local product specifications
 specs/
 

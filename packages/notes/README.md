@@ -9,7 +9,7 @@ source controls storage, metadata, and whether a note is editable.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/notes
+npm install "ag-grid-community@^36.2.0" @libregrid/notes
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

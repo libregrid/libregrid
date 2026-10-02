@@ -9,7 +9,7 @@ responses, detects stale proposals, and lets your application control when to ap
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/ai-client @libregrid/ai-toolkit
+npm install "ag-grid-community@^36.2.0" @libregrid/ai-client @libregrid/ai-toolkit
 ```
 
 Requires `ag-grid-community >=36.1.0 <37`. Register `AiToolkitModule` so

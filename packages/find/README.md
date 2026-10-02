@@ -8,7 +8,7 @@ rows from the grid. Use filters when the goal is to narrow the displayed dataset
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/find
+npm install "ag-grid-community@^36.2.0" @libregrid/find
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

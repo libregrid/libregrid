@@ -47,7 +47,7 @@ runtime; it does not require an AG Grid Enterprise package or license key.
 In an existing browser project with TypeScript and a bundler:
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/row-grouping
+npm install "ag-grid-community@^36.2.0" @libregrid/row-grouping
 ```
 
 Add a container with an explicit height to your page. This example assumes the
@@ -104,7 +104,7 @@ In an existing Angular application, install the grid component, integration
 helper, and feature package:
 
 ```bash
-npm install "ag-grid-community@^36.1.0" "ag-grid-angular@^36.1.0" @libregrid/angular @libregrid/row-grouping
+npm install "ag-grid-community@^36.2.0" "ag-grid-angular@^36.2.0" @libregrid/angular @libregrid/row-grouping
 ```
 
 Add the provider to `app.config.ts`, retaining your application's other providers:

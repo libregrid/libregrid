@@ -8,7 +8,7 @@ report total, filtered, or selected rows and aggregate numeric cell ranges.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/status-bar
+npm install "ag-grid-community@^36.2.0" @libregrid/status-bar
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

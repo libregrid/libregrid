@@ -8,7 +8,7 @@ set filter. Choose inline, accordion, or submenu presentation for each child fil
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/multi-filter
+npm install "ag-grid-community@^36.2.0" @libregrid/multi-filter
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

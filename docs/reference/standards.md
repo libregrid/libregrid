@@ -100,7 +100,7 @@ manifest is the source of truth; it may drift forward within the ranges):
 
 ```json
 "devDependencies": {
-  "ag-grid-community": "36.1.0",
+  "ag-grid-community": "36.2.0",
   "nx": "^21.0.0",
   "vitest": "^4.1.10",
   "@vitest/coverage-v8": "^4.1.10",
@@ -113,7 +113,7 @@ manifest is the source of truth; it may drift forward within the ranges):
 }
 ```
 
-`ag-grid-angular` (pinned to `36.1.0`) is a dev dependency of `apps/docs`,
+`ag-grid-angular` (pinned to `36.2.0`) is a dev dependency of `apps/docs`,
 not of the root workspace. Angular packages (`material`, `angular`) declare
 their own `@angular/*` peer dependencies.
 
@@ -171,13 +171,13 @@ exactly that — add the alias when you scaffold the package.
 ```ts
 // tools/version/generate.ts
 import agGridPkg from 'ag-grid-community/package.json' with { type: 'json' };
-export const AG_GRID_VERSION = agGridPkg.version;   // e.g. '36.1.0'
+export const AG_GRID_VERSION = agGridPkg.version;   // e.g. '36.2.0'
 ```
 
 It writes `src/version.ts` into every package:
 
 ```ts
-export const VERSION = '36.1.0';
+export const VERSION = '36.2.0';
 ```
 
 Deriving from the installed package rather than a hand-maintained constant removes drift as a possible failure. Keep a CI check that fails if any generated `version.ts` differs from the installed `ag-grid-community` version.

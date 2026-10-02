@@ -11,7 +11,7 @@ renderers provide Material controls for selected grid UI elements.
 In an Angular application with a configured Material 3 theme:
 
 ```bash
-npm install "ag-grid-community@^36.1.0" "ag-grid-angular@^36.1.0" @libregrid/angular @libregrid/material
+npm install "ag-grid-community@^36.2.0" "ag-grid-angular@^36.2.0" @libregrid/angular @libregrid/material
 ```
 
 The bridge requires Angular core, common, Material, and CDK `>=20`, plus

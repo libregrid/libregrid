@@ -13,7 +13,7 @@ For an application, install a feature package such as
 automatically. Install core directly when building your own integration:
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/core
+npm install "ag-grid-community@^36.2.0" @libregrid/core
 ```
 
 Requires `ag-grid-community >=36.1.0 <37`. Keep LibreGrid packages on the

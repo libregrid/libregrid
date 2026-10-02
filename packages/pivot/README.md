@@ -9,7 +9,7 @@ For example, compare sales by country across years.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/pivot
+npm install "ag-grid-community@^36.2.0" @libregrid/pivot
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

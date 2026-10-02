@@ -9,7 +9,7 @@ changes. An optional external data source stores formulas separately from row da
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/formulas
+npm install "ag-grid-community@^36.2.0" @libregrid/formulas
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

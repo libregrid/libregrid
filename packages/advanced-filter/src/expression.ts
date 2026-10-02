@@ -38,6 +38,13 @@ export function evaluateAdvancedFilterModel(model: AdvancedFilterModel | null, g
   if (type === 'blank') return value == null || value === '';
   if (type === 'notBlank') return value != null && value !== '';
   if (model.filterType === 'boolean') return type === 'true' ? value === true : value === false;
+  // Set Filter conditions (Community 36.2): match the stringified value against
+  // the stored key list. `null` in the list represents the blank/blanks key.
+  if (model.filterType === 'set') {
+    const actual = value == null ? null : String(value);
+    const included = model.values.includes(actual);
+    return type === 'isAnyOf' ? included : !included;
+  }
   const expected = model.filter;
   if (model.filterType === 'number' || model.filterType === 'bigint') {
     const actualNumber = Number(value);
@@ -83,6 +90,12 @@ function serialise(model: AdvancedFilterModel, parentPrecedence: number): string
   if (model.filterType === 'boolean') return `${column} IS ${model.type.toUpperCase()}`;
   if (model.type === 'blank') return `${column} IS BLANK`;
   if (model.type === 'notBlank') return `${column} IS NOT BLANK`;
+  // Set Filter condition (Community 36.2): `IN (...)` / `NOT IN (...)` over the
+  // stored keys, mirroring the operator the Advanced Filter UI shows.
+  if (model.filterType === 'set') {
+    const list = model.values.map((entry) => (entry === null ? 'BLANK' : JSON.stringify(entry))).join(', ');
+    return `${column} ${model.type === 'isAnyOf' ? 'IN' : 'NOT IN'} (${list})`;
+  }
   const operator: Record<string, string> = {
     equals: '=', notEqual: '!=', lessThan: '<', lessThanOrEqual: '<=', greaterThan: '>', greaterThanOrEqual: '>=',
     contains: 'CONTAINS', notContains: 'NOT CONTAINS', startsWith: 'STARTS WITH', endsWith: 'ENDS WITH',

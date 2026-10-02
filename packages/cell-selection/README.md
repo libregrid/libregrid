@@ -9,7 +9,7 @@ spreadsheet-style interaction.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/cell-selection
+npm install "ag-grid-community@^36.2.0" @libregrid/cell-selection
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

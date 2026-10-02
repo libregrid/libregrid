@@ -8,7 +8,7 @@ column state so your application can save and restore a user’s preferred label
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/column-header-edit
+npm install "ag-grid-community@^36.2.0" @libregrid/column-header-edit
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency. The

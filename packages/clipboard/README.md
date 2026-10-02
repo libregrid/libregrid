@@ -9,7 +9,7 @@ data outside the grid.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/clipboard
+npm install "ag-grid-community@^36.2.0" @libregrid/clipboard
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

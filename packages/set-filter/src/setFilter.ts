@@ -550,7 +550,16 @@ export class SetFilter implements ISetFilter {
   }
 
   private formatText(value: string): string {
-    const formatted = this.params?.textFormatter?.(value) ?? value;
+    // Community 36.2 passes a `FilterInputCallbackParams` second argument
+    // (column context + which filter invoked the callback) to `textFormatter`.
+    const callbackParams = {
+      api: this.params?.api,
+      context: this.params?.context,
+      colDef: this.params?.colDef,
+      column: this.params?.column,
+      source: 'columnFilter' as const,
+    };
+    const formatted = this.params?.textFormatter?.(value, callbackParams as never) ?? value;
     return this.params?.caseSensitive ? formatted : formatted.toLocaleLowerCase();
   }
 

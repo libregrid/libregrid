@@ -9,7 +9,7 @@ your backend performs the query and returns rows and counts.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/server-side-row-model
+npm install "ag-grid-community@^36.2.0" @libregrid/server-side-row-model
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

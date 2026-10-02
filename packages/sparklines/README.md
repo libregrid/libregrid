@@ -9,7 +9,7 @@ Rendering uses `ag-charts-community`.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" "ag-charts-community@^14.1.0" @libregrid/sparklines
+npm install "ag-grid-community@^36.2.0" "ag-charts-community@^14.1.0" @libregrid/sparklines
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` and `ag-charts-community` as peer

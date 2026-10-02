@@ -9,7 +9,7 @@ also supply custom menu items.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/menu
+npm install "ag-grid-community@^36.2.0" @libregrid/menu
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

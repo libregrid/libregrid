@@ -9,7 +9,7 @@ visibility and the active panel.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/side-bar @libregrid/columns-tool-panel
+npm install "ag-grid-community@^36.2.0" @libregrid/side-bar @libregrid/columns-tool-panel
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency. Install

@@ -52,6 +52,18 @@ function cellText(index: number): string {
   return rowNumberCell(index).textContent?.trim() ?? '';
 }
 
+/**
+ * jsdom does not implement `TouchEvent`, and Community 36.2's `TouchListener`
+ * reads `event.touches[0]` (it did not in 36.1). Dispatch a plain event carrying
+ * the `touches`/`changedTouches` lists so the listener has what it reads.
+ */
+function dispatchTouchStart(target: HTMLElement, x = 0, y = 0): void {
+  const touch = { identifier: 1, target, clientX: x, clientY: y, pageX: x, pageY: y, screenX: x, screenY: y };
+  const event = new Event('touchstart', { bubbles: true, cancelable: true });
+  Object.assign(event, { touches: [touch], targetTouches: [touch], changedTouches: [touch] });
+  target.dispatchEvent(event);
+}
+
 afterEach(() => {
   api?.destroy();
   api = undefined;
@@ -81,7 +93,7 @@ describe('RowNumbersModule', () => {
     const grid = await makeGrid({ rowNumbers: true, cellSelection: true });
     // jsdom exposes touchstart (not pointerdown/mousedown) to Community's
     // row-container listeners; a primary press carries no button.
-    rowNumberCell(1).dispatchEvent(new Event('touchstart', { bubbles: true }));
+    dispatchTouchStart(rowNumberCell(1));
     await vi.waitFor(() => expect(grid.getCellRanges()).toHaveLength(1));
     const range = grid.getCellRanges()[0];
     expect(range?.startRow?.rowIndex).toBe(1);
@@ -92,7 +104,7 @@ describe('RowNumbersModule', () => {
 
   it('does not extend the selection to the row when suppressed', async () => {
     const grid = await makeGrid({ rowNumbers: { suppressCellSelectionIntegration: true }, cellSelection: true });
-    rowNumberCell(0).dispatchEvent(new Event('touchstart', { bubbles: true }));
+    dispatchTouchStart(rowNumberCell(0));
     await vi.waitFor(() => expect(grid.getCellRanges().length).toBeGreaterThan(0));
     for (const range of grid.getCellRanges()) {
       const ids = range.columns.map((c) => c.getColId());

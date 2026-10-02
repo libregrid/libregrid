@@ -9,7 +9,7 @@ editing group values and distributing changes to child rows.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/row-grouping
+npm install "ag-grid-community@^36.2.0" @libregrid/row-grouping
 ```
 
 Requires `ag-grid-community >=36.1.0 <37`. No additional package is needed

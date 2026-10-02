@@ -9,7 +9,7 @@ demand, and opt into caching to preserve detail-grid state on collapse.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/master-detail
+npm install "ag-grid-community@^36.2.0" @libregrid/master-detail
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

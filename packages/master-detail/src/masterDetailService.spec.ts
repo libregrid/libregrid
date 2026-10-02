@@ -41,4 +41,36 @@ describe('MasterDetailService', () => {
     bean.setMaster(row, true, false);
     expect(row.expanded).toBe(true);
   });
+
+  // Community 36.2 sets `aria-expanded` on every expandable row, including
+  // master rows, while the container stays `role="grid"` unless grouping or tree
+  // data is active. ARIA only allows `aria-expanded` on a row inside a
+  // `treegrid`, so axe reports `aria-conditional-attr`. See ag-grid#12892.
+  it('removes aria-expanded from master rows but leaves grouping rows alone', () => {
+    const makeRowCtrl = (node: RowNode) => {
+      const element = document.createElement('div');
+      element.setAttribute('role', 'row');
+      element.setAttribute('aria-expanded', 'false');
+      return { rowNode: node, getGui: () => ({ element }) , element };
+    };
+
+    const masterRow = master('master', { id: 'master' });
+    masterRow.master = true;
+    const groupRow = master('group', { id: 'group' });
+    groupRow.group = true;
+    groupRow.master = true;
+
+    const masterCtrl = makeRowCtrl(masterRow);
+    const groupCtrl = makeRowCtrl(groupRow);
+    const { bean } = makeBeanHarness(MasterDetailService, {
+      gridOptions: { masterDetail: true },
+      beans: { rowModel: {}, rowRenderer: { getAllRowCtrls: () => [masterCtrl, groupCtrl] } },
+    });
+
+    // postConstruct already ran once; a model pass exercises the same path again.
+    bean.refreshModel({} as never);
+
+    expect(masterCtrl.element.hasAttribute('aria-expanded')).toBe(false);
+    expect(groupCtrl.element.getAttribute('aria-expanded')).toBe('false');
+  });
 });
