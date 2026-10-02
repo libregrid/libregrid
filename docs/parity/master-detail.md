@@ -31,3 +31,17 @@
 | No eligible masters | ✅ | `isRowMaster: false` unit-covered |
 | Tree Data + Master/Detail | ✅ | Docs route runs both modes |
 | Keyboard reachability | ✅ | Labeled detail region hosting an independent grid |
+
+## AG Grid 36.2 compatibility
+
+Community 36.2.0 sets `aria-expanded` on every expandable row, not only on
+grouping rows. A master row is expandable, but the grid keeps `role="grid"`
+unless row grouping or tree data is active, and ARIA allows `aria-expanded` on
+a row only inside a `treegrid`. Axe reported `aria-conditional-attr` on every
+master row, so axe checks no longer passed with 0 violations. The same defect is
+open upstream as [ag-grid#12892](https://github.com/ag-grid/ag-grid/issues/12892)
+for pinned rows.
+
+`MasterDetailService` restores the 36.1 contract: after each model pass it
+removes `aria-expanded` from master rows that are not grouping rows. Group rows
+keep the attribute, so a `treegrid` keeps correct disclosure semantics.
