@@ -21,10 +21,39 @@ export class MasterDetailService extends BeanStub implements IMasterDetailServic
   public readonly store: Record<string, DetailGridInfo | undefined> = Object.create(null);
   private readonly cache = new Map<string, CachedDetail>();
 
+  public postConstruct(): void {
+    // Community 36.2 sets `aria-expanded` on every expandable row, not only on
+    // grouping rows. Master rows are expandable but the container keeps
+    // `role="grid"` unless row grouping or tree data is active, and ARIA allows
+    // `aria-expanded` on a row only inside a `treegrid`. See ag-grid#12892 for
+    // the same defect on pinned rows. Re-assert the 36.1 contract after each
+    // model pass: only rows the grid itself renders as grouping rows keep it.
+    this.addManagedEventListeners({
+      modelUpdated: () => this.clearMasterRowAriaExpanded(),
+      displayedRowsChanged: () => this.clearMasterRowAriaExpanded(),
+    });
+    this.clearMasterRowAriaExpanded();
+  }
+
   public override destroy(): void {
     for (const cached of this.cache.values()) cached.destroy();
     this.cache.clear();
     super.destroy();
+  }
+
+  /**
+   * Removes `aria-expanded` from rendered master rows that are not grouping
+   * rows. Group rows are left untouched so a `treegrid` keeps its correct
+   * disclosure semantics.
+   */
+  private clearMasterRowAriaExpanded(): void {
+    const rowRenderer = this.beans.rowRenderer;
+    if (!rowRenderer) return;
+    for (const rowCtrl of rowRenderer.getAllRowCtrls()) {
+      const node = rowCtrl.rowNode;
+      if (!node.master || node.group) continue;
+      rowCtrl.getGui()?.element?.removeAttribute('aria-expanded');
+    }
   }
 
   public setupDetailRowAutoHeight(_rowCtrl: RowCtrl, eDetailGui: HTMLElement): void {
