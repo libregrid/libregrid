@@ -1,6 +1,6 @@
 # Parity — AI Toolkit
 
-**Audited:** 2026-08-25 against `ag-grid-community@36.1.0`
+**Audited:** 2026-10-02 against `ag-grid-community@36.2.0`
 
 **Phase:** 19 · **Design:** [AI Toolkit](../design/ai-toolkit.md) ·
 **Decision:** [ADR 0007](../adr/0007-pure-ai-schema-and-byom-gateway.md)
@@ -31,7 +31,7 @@ Legend: ✅ done and tested · 🟡 partial · ❌ deliberately omitted
 | Language-neutral `libregrid.ai/v1` protocol | ✅ | TypeScript types, runtime validation, JSON Schemas, conformance fixtures, OpenAPI 3.1 |
 | Browser convenience client | ✅ | request capture, HTTP/custom transport, response revalidation, diff, explicit apply, cancellation, typed errors |
 | Stale-response rejection | ✅ | deterministic schema+state+context revision; unit tests mutate state before apply |
-| Preserve unrelated/excluded state | ✅ | protected baseline covers every AG 36.1 `GridStateKey`; unknown nested state keys are merged back after validation; live-grid tests preserve sort, pagination, order, and filter UI state |
+| Preserve unrelated/excluded state | ✅ | protected baseline covers every AG 36.2 `GridStateKey` (including the 36.2 `find` and `quickFilter` sections); unknown nested state keys are merged back after validation; live-grid tests preserve sort, pagination, order, and filter UI state |
 | Provider-neutral gateway | ✅ | standard `Request → Response` handler, provider port, limits, timeout, auth hook, normalized error and metadata-only log contracts |
 | OpenAI Responses structured-output adapter | ✅ local wire tests + live battery | One of two supported provider adapters. Exact `text.format: { type: "json_schema", strict: true }` payload and response/refusal/rate-limit parsing are unit tested; the eleven-command live battery passed against `gpt-5.6` on 2026-08-25 |
 | OpenAI-compatible chat completions adapter | ✅ | Strict `response_format.json_schema`, OpenRouter provider routing, refusal/rate-limit/truncation mapping; unit tested and covered by an env-guarded live battery |

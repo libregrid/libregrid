@@ -1,6 +1,6 @@
 # Parity — Batch Edit
 
-> Parity-audited 2026-08-20 (behavior verified against the v36.1.0 community engine) — no unresolved ⬜ rows.
+> Parity-audited 2026-10-02 (behavior verified against the 36.1.0 and 36.2.0 community engines) — no unresolved ⬜ rows.
 
 **Source:** https://www.ag-grid.com/angular-data-grid/batch-editing/ · transcribed 2026-08-17
 **Phase:** 17 · **Package:** `@libregrid/batch-edit`
@@ -29,7 +29,7 @@
 | Staged values leave row data untouched until commit | ✅ | |
 | `cancelBatchEdit()` reverts staged values | ✅ | v36.1.0 only reverts **open** editors — values already staged (editor closed) stay in the engine's edit model and would be written by a later commit. `BatchEditModule` closes that gap: it snapshots the edit model before cancel, removes the stale staged entries, and refreshes the cells, so the display and the row data both return to the original values and a later batch cannot resurrect the cancelled edits |
 | `cellValueChanged` deferred until commit | ✅ | Deferred events carry `source: 'edit'` and no `from`/`eventSource` (v36.1.0 engine behavior) |
-| `invalidEditValueMode: 'block'` holds the commit while invalid | ✅ | A corrected edit releases the commit; the held commit writes nothing, fires no event, and leaves batch + editors open |
+| `invalidEditValueMode: 'block'` holds the commit while invalid | ✅ | A corrected edit releases the commit; the held commit writes nothing, fires no event, and leaves batch + editors open. Confirmed on 36.1.0 and 36.2.0. Note: 36.2 reads the editor's internal value, so a spec must dispatch a real `input` event (not a bare `.value =`) for the engine to observe the edit |
 | Edit validation rules | ✅ | The rule lives on `colDef.cellEditorParams.getValidationErrors` (`(params) => string[] \| null`); a top-level colDef rule and the pre-v36 `colDef.validateEditValue` are not honored by v36 |
 | Full-row batch editing marks the row | ✅ | `ag-row-batch-edit` is applied by Community when the grid option `editType: 'fullRow'` is set |
 | Staged cell highlight | ✅ | `ag-cell-batch-edit` styled with the theme tokens |
