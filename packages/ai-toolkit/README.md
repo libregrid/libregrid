@@ -9,7 +9,7 @@ features. This package generates schemas; it does not call a model or apply chan
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/ai-toolkit
+npm install "ag-grid-community@^36.2.0" @libregrid/ai-toolkit
 ```
 
 Requires `ag-grid-community >=36.1.0 <37`. Register any feature modules

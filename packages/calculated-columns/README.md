@@ -9,7 +9,7 @@ calculated columns through the column menu.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/calculated-columns
+npm install "ag-grid-community@^36.2.0" @libregrid/calculated-columns
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

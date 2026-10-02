@@ -21,6 +21,8 @@ export const GRID_STATE_KEYS = [
   'columnVisibility',
   'columnHeaderName',
   'filter',
+  'find',
+  'quickFilter',
   'focusedCell',
   'pagination',
   'rowPinning',

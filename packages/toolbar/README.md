@@ -9,7 +9,7 @@ items require their corresponding modules to be registered.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/toolbar @libregrid/find @libregrid/columns-tool-panel @libregrid/row-grouping
+npm install "ag-grid-community@^36.2.0" @libregrid/toolbar @libregrid/find @libregrid/columns-tool-panel @libregrid/row-grouping
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

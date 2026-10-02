@@ -10,7 +10,7 @@ sessions when implemented by your backend.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/server-side-selection
+npm install "ag-grid-community@^36.2.0" @libregrid/server-side-selection
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

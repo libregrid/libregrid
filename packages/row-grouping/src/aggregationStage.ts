@@ -97,6 +97,43 @@ export class AggregationStage extends BeanStub implements _IRowNodeAggregationSt
     this.aggregateNode(node, valueCols, children);
   }
 
+  /**
+   * Repaints every rendered row whose displayed value can depend on an aggregate
+   * — group rows and, when a total is shown, the root. Community's `RowRenderer`
+   * and `ChangeDetectionService` call this after any path that re-aggregates, so
+   * those rows repaint once their ctrls exist.
+   *
+   * Rows the caller already refreshed are named by `excludeNodes`/`excludePath`
+   * and are skipped. `rowRenderer.refreshCells` refreshes a node in full and
+   * ignores nodes with no rendered ctrl, so newly created rows are naturally
+   * left to the next pass. (`_IRowNodeAggregationStage`, Community 36.2+.)
+   */
+  public refreshAggregateDependentCells(
+    excludeNodes?: Set<RowNode> | null,
+    excludePath?: ChangedPath | null,
+  ): void {
+    const csrm = _getClientSideRowModel(this.beans);
+    const rootNode = csrm?.rootNode;
+    if (!rootNode) return;
+
+    const rows: RowNode[] = [];
+    _forEachChangedGroupDepthFirst(rootNode, csrm.hierarchical ?? true, null, (node) => {
+      if (excludeNodes?.has(node) || excludePath?.hasRow(node)) return;
+      rows.push(node);
+    });
+
+    // The root only displays an aggregate when it is a group node or a grand
+    // total row exists — mirror the `alwaysRoot` rule used by `execute`.
+    const rootShowsAgg =
+      rootNode.group || this.gos.get('alwaysAggregateAtRootLevel') === true || !!_getGrandTotalRow(this.gos);
+    if (rootShowsAgg && !excludeNodes?.has(rootNode) && !excludePath?.hasRow(rootNode)) {
+      rows.push(rootNode);
+    }
+
+    if (rows.length === 0) return;
+    this.beans.rowRenderer?.refreshCells({ rowNodes: rows, force: true });
+  }
+
   private aggregateNode(node: RowNode, valueCols: AgColumn[], children: RowNode[]): void {
     if (!node.aggData) node.aggData = Object.create(null);
     for (const col of valueCols) {

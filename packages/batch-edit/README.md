@@ -9,7 +9,7 @@ Saving those changes to a backend remains your application’s responsibility.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/batch-edit
+npm install "ag-grid-community@^36.2.0" @libregrid/batch-edit
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

@@ -11,7 +11,7 @@ signals, and define typed grid options. Use this package alongside
 In an existing Angular application:
 
 ```bash
-npm install "ag-grid-community@^36.1.0" "ag-grid-angular@^36.1.0" @libregrid/angular @libregrid/row-grouping
+npm install "ag-grid-community@^36.2.0" "ag-grid-angular@^36.2.0" @libregrid/angular @libregrid/row-grouping
 ```
 
 The integration requires Angular core `>=20` and AG Grid Community

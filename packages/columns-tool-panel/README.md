@@ -9,7 +9,7 @@ for applications that do not need the full side panel.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/columns-tool-panel @libregrid/row-grouping @libregrid/pivot
+npm install "ag-grid-community@^36.2.0" @libregrid/columns-tool-panel @libregrid/row-grouping @libregrid/pivot
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

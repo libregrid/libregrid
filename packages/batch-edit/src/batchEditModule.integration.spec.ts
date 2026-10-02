@@ -303,7 +303,14 @@ describe('BatchEditModule (integration)', () => {
     grid.startBatchEdit();
     await grid.startEditingCell({ rowIndex: 0, colKey: 'a' });
     await vi.waitFor(() => expect(cell(0, 'a').querySelector('input')).not.toBeNull());
-    (cell(0, 'a').querySelector('input') as HTMLInputElement).value = '-5';
+    const input = cell(0, 'a').querySelector('input') as HTMLInputElement;
+    // jsdom does not fire `input` on `.value = ...`; the engine only observes the
+    // new value when the DOM input event is dispatched (real browsers do this
+    // while the user types). Community 36.2 reads the editor's internal value
+    // (the seeded-text path in `getValue`), so a bare property write no longer
+    // registers as an edit at all.
+    input.value = '-5';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
     grid.stopEditing();
 
     // Block mode holds: the editor stays open, nothing is staged.

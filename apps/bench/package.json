@@ -9,6 +9,6 @@
     "compare": "node src/compare.mjs"
   },
   "devDependencies": {
-    "ag-grid-community": "36.1.0"
+    "ag-grid-community": "36.2.0"
   }
 }

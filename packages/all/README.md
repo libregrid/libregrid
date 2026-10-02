@@ -9,7 +9,7 @@ a smaller dependency graph and make application dependencies more explicit.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" "ag-charts-community@^14.1.0" @libregrid/all
+npm install "ag-grid-community@^36.2.0" "ag-charts-community@^14.1.0" @libregrid/all
 ```
 
 This package declares Angular core, common, CDK, and Material (`>=20`) as peers

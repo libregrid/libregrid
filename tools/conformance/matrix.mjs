@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 // ag-grid-community versions we explicitly support.
-// 36.1.0 is the only one verified so far. Add after conformance CI passes a new minor.
-const SUPPORTED = ['36.1.0'];
+// 36.1.0 and 36.2.0 are verified. Add after conformance CI passes a new minor.
+const SUPPORTED = ['36.1.0', '36.2.0'];
 
 /** Read the currently installed version from node_modules. */
 function installedVersion() {

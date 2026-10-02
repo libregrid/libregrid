@@ -9,7 +9,7 @@ charts can also filter the grid when users select chart values. Rendering uses
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" "ag-charts-community@^14.1.0" @libregrid/integrated-charts
+npm install "ag-grid-community@^36.2.0" "ag-charts-community@^14.1.0" @libregrid/integrated-charts
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` and `ag-charts-community` as peer

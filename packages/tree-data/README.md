@@ -9,7 +9,7 @@ managed dragging to reparent rows.
 ## Install
 
 ```bash
-npm install "ag-grid-community@^36.1.0" @libregrid/tree-data
+npm install "ag-grid-community@^36.2.0" @libregrid/tree-data
 ```
 
 Requires `ag-grid-community >=36.1.0 <37` as a peer dependency.

@@ -1,4 +1,4 @@
-import { BeanStub, type Column, type FindCellValueParams, type FindMatch, type FindPart, type GridApi, type IFindService, type IRowNode, type NamedBean } from 'ag-grid-community';
+import { BeanStub, type Column, type FindCellValueParams, type FindMatch, type FindPart, type FindState, type GridApi, type IFindService, type IRowNode, type NamedBean } from 'ag-grid-community';
 
 type FindColumn = Column & { getColDef(): { getFindText?: (params: object) => string | null; field?: string }; getId(): string };
 type FindNode = IRowNode & { data?: unknown; rowIndex?: number | null; detailGridInfo?: { api?: GridApi } | null };
@@ -56,6 +56,33 @@ export class FindService extends BeanStub implements IFindService, NamedBean {
   public clearActive(): void { if (!this.activeMatch) return; this.activeIndex = -1; this.activeMatch = undefined; this.changed(); }
   public getNumMatches(node: IRowNode, column: Column | null): number { return this.entries.filter((entry) => entry.match.node === node && entry.match.column === column).length; }
   public registerDetailGrid(_node: IRowNode, _api: GridApi): void { this.refresh(true); }
+  /**
+   * Serialise the Find UI into grid state — `searchValue` from the
+   * `findSearchValue` option and `activeMatch` as the 1-based match number.
+   * Returns `undefined` when no search is active, matching Community's
+   * "absent section" convention. (`IFindService`, Community 36.2+.)
+   */
+  public getState(): FindState | undefined {
+    const searchValue = this.search();
+    if (!searchValue) return undefined;
+    const state: FindState =
+      this.activeIndex >= 0 ? { searchValue, activeMatch: this.activeIndex + 1 } : { searchValue };
+    return state;
+  }
+  /**
+   * Restore state previously produced by {@link getState}: set the search value
+   * option (which re-runs the search) and, when present, activate the 1-based
+   * match. `activeMatch` is applied after the refresh so it indexes the new
+   * entry list. (`IFindService`, Community 36.2+.)
+   */
+  public setState(state: FindState): void {
+    const searchValue = state.searchValue ?? '';
+    const changed = searchValue !== this.search();
+    this.beans.gridApi?.setGridOption('findSearchValue', searchValue);
+    // The option listener refreshes; a same-value set does not, so refresh here.
+    if (!changed) this.refresh(false);
+    if (typeof state.activeMatch === 'number') this.goTo(state.activeMatch, true);
+  }
   public refresh(maintainActive = false): void {
     const previous = maintainActive ? this.activeMatch : undefined;
     this.entries = []; this.totalMatches = 0;
