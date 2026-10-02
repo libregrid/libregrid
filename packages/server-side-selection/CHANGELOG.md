@@ -1,5 +1,12 @@
 # @libregrid/server-side-selection
 
+## 1.3.5
+
+### Patch Changes
+
+- @libregrid/core@1.3.5
+  - @libregrid/server-side-row-model@1.3.5
+
 ## 1.3.4
 
 ### Patch Changes

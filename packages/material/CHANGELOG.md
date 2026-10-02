@@ -1,5 +1,15 @@
 # @libregrid/material
 
+## 1.3.5
+
+### Patch Changes
+
+- @libregrid/columns-tool-panel@1.3.5
+  - @libregrid/core@1.3.5
+  - @libregrid/menu@1.3.5
+  - @libregrid/rich-select@1.3.5
+  - @libregrid/side-bar@1.3.5
+
 ## 1.3.4
 
 ### Patch Changes

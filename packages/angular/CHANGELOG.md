@@ -1,5 +1,11 @@
 # @libregrid/angular
 
+## 1.3.5
+
+### Patch Changes
+
+- @libregrid/core@1.3.5
+
 ## 1.3.4
 
 ### Patch Changes
