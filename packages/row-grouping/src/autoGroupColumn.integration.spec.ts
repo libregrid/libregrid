@@ -235,4 +235,172 @@ describe('Auto group column (PR 2.3)', () => {
 
     api.destroy();
   });
+
+  describe("groupDisplayType: 'multipleColumns'", () => {
+    const multiOptions = (): GridOptions =>
+      ({
+        columnDefs: [
+          { field: 'country', colId: 'country', rowGroup: true },
+          { field: 'city', colId: 'city', rowGroup: true },
+          { field: 'sales' },
+        ],
+        rowData: baseRows,
+        groupDisplayType: 'multipleColumns',
+        groupDefaultExpanded: -1,
+      }) as GridOptions;
+
+    it('creates one auto column per row-group column, each showing only its own level', async () => {
+      const { el, api } = mount(multiOptions());
+      await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBeGreaterThan(0));
+
+      const countryId = `${GROUP_AUTO_COLUMN_ID}-country`;
+      const cityId = `${GROUP_AUTO_COLUMN_ID}-city`;
+      expect(api.getColumn(GROUP_AUTO_COLUMN_ID)).toBeFalsy();
+      expect(api.getColumn(countryId)!.getColDef().showRowGroup).toBe('country');
+      expect(api.getColumn(cityId)!.getColDef().showRowGroup).toBe('city');
+
+      const usGroup = api.getDisplayedRowAtIndex(0)!;
+      expect(usGroup.key).toBe('US');
+      expect(api.getCellValue({ rowNode: usGroup, colKey: countryId })).toBe('US');
+      expect(api.getCellValue({ rowNode: usGroup, colKey: cityId })).toBeNull();
+
+      const nyGroup = api.getDisplayedRowAtIndex(1)!;
+      expect(nyGroup.key).toBe('NY');
+      expect(api.getCellValue({ rowNode: nyGroup, colKey: countryId })).toBeNull();
+      expect(api.getCellValue({ rowNode: nyGroup, colKey: cityId })).toBe('NY');
+
+      el.remove();
+      api.destroy();
+    });
+
+    it('tracks row-group column changes', async () => {
+      const { el, api } = mount(multiOptions());
+      await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBeGreaterThan(0));
+
+      api.setRowGroupColumns(['city']);
+      await vi.waitFor(() => expect(api.getColumn(`${GROUP_AUTO_COLUMN_ID}-country`)).toBeFalsy());
+      expect(api.getColumn(`${GROUP_AUTO_COLUMN_ID}-city`)).toBeTruthy();
+
+      api.setRowGroupColumns([]);
+      await vi.waitFor(() => expect(api.getColumn(`${GROUP_AUTO_COLUMN_ID}-city`)).toBeFalsy());
+
+      el.remove();
+      api.destroy();
+    });
+
+    it('switches between single and multiple columns at runtime', async () => {
+      const { el, api } = mount(multiOptions());
+      await vi.waitFor(() => expect(api.getColumn(`${GROUP_AUTO_COLUMN_ID}-country`)).toBeTruthy());
+
+      api.setGridOption('groupDisplayType', 'singleColumn');
+      await vi.waitFor(() => expect(api.getColumn(GROUP_AUTO_COLUMN_ID)).toBeTruthy());
+      expect(api.getColumn(`${GROUP_AUTO_COLUMN_ID}-country`)).toBeFalsy();
+
+      el.remove();
+      api.destroy();
+    });
+
+    describe('groupHideColumnsUntilExpanded', () => {
+      const hideOptions = (): GridOptions => ({
+        ...multiOptions(),
+        groupDefaultExpanded: 0,
+        groupHideColumnsUntilExpanded: true,
+      });
+      const visibleIds = (api: GridApi) =>
+        api.getAllDisplayedColumns().map((c) => c.getColId());
+
+      it('shows deeper group columns only once the preceding level has an expanded group', async () => {
+        const { el, api } = mount(hideOptions());
+        await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(2));
+
+        const countryId = `${GROUP_AUTO_COLUMN_ID}-country`;
+        const cityId = `${GROUP_AUTO_COLUMN_ID}-city`;
+        expect(visibleIds(api)).toContain(countryId);
+        expect(visibleIds(api)).not.toContain(cityId);
+
+        api.getDisplayedRowAtIndex(0)!.setExpanded(true);
+        await vi.waitFor(() => expect(visibleIds(api)).toContain(cityId));
+
+        api.collapseAll();
+        await vi.waitFor(() => expect(visibleIds(api)).not.toContain(cityId));
+
+        el.remove();
+        api.destroy();
+      });
+
+      it('restores the columns when the option is switched off', async () => {
+        const { el, api } = mount(hideOptions());
+        await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBe(2));
+
+        api.setGridOption('groupHideColumnsUntilExpanded', false);
+        await vi.waitFor(() => expect(visibleIds(api)).toContain(`${GROUP_AUTO_COLUMN_ID}-city`));
+
+        el.remove();
+        api.destroy();
+      });
+    });
+  });
+
+  describe("groupDisplayType: 'groupRows'", () => {
+    it('creates no auto column and renders group rows full width', async () => {
+      const { el, api } = mount({
+        columnDefs: [{ field: 'country', rowGroup: true }, { field: 'city' }],
+        rowData: baseRows,
+        groupDisplayType: 'groupRows',
+        groupDefaultExpanded: -1,
+      } as GridOptions);
+      await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBeGreaterThan(0));
+
+      expect(api.getColumn(GROUP_AUTO_COLUMN_ID)).toBeFalsy();
+      await vi.waitFor(() => {
+        const rows = el.querySelectorAll('.ag-full-width-row');
+        expect(rows.length).toBe(2);
+        expect(rows[0]!.textContent).toContain('US');
+      });
+
+      el.remove();
+      api.destroy();
+    });
+
+    it('switches between single column and group rows at runtime', async () => {
+      const { el, api } = mount({
+        columnDefs: [{ field: 'country', rowGroup: true }, { field: 'city' }],
+        rowData: baseRows,
+        groupDefaultExpanded: -1,
+      } as GridOptions);
+      await vi.waitFor(() => expect(api.getColumn(GROUP_AUTO_COLUMN_ID)).toBeTruthy());
+
+      api.setGridOption('groupDisplayType', 'groupRows');
+      await vi.waitFor(() => expect(api.getColumn(GROUP_AUTO_COLUMN_ID)).toBeFalsy());
+      await vi.waitFor(() => expect(el.querySelectorAll('.ag-full-width-row').length).toBe(2));
+
+      api.setGridOption('groupDisplayType', 'singleColumn');
+      await vi.waitFor(() => expect(api.getColumn(GROUP_AUTO_COLUMN_ID)).toBeTruthy());
+      await vi.waitFor(() => expect(el.querySelectorAll('.ag-full-width-row').length).toBe(0));
+
+      el.remove();
+      api.destroy();
+    });
+  });
+
+  describe("groupDisplayType: 'custom'", () => {
+    it('generates no auto column and routes group values to the application showRowGroup column', async () => {
+      const { el, api } = mount({
+        columnDefs: [
+          { field: 'country', rowGroup: true },
+          { colId: 'mine', headerName: 'Mine', showRowGroup: true, cellRenderer: 'agGroupCellRenderer' },
+        ],
+        rowData: baseRows,
+        groupDisplayType: 'custom',
+      } as GridOptions);
+      await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBeGreaterThan(0));
+
+      expect(api.getColumn(GROUP_AUTO_COLUMN_ID)).toBeFalsy();
+      const usGroup = api.getDisplayedRowAtIndex(0)!;
+      expect(api.getCellValue({ rowNode: usGroup, colKey: 'mine' })).toBe('US');
+
+      el.remove();
+      api.destroy();
+    });
+  });
 });

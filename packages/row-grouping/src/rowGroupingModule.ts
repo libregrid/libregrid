@@ -10,6 +10,7 @@ import { VERSION } from './version';
 import { GroupStage } from './groupStage';
 import { FlattenStage } from './flattenStage';
 import { AggFuncService } from './aggFuncService';
+import { AggColumnNameService } from './aggColumnNameService';
 import { AggregatedChildrenService } from './aggregatedChildrenService';
 import { ChangedPathFactory } from './changedPathFactory';
 import { AggregationStage } from './aggregationStage';
@@ -86,6 +87,7 @@ export const RowGroupingModule: _ModuleWithApi<
   version: VERSION,
   beans: [
     AggFuncService,
+    AggColumnNameService,
     AggregatedChildrenService,
     ChangedPathFactory,
     ValueColsService,
@@ -105,6 +107,9 @@ export const RowGroupingModule: _ModuleWithApi<
   ],
   userComponents: {
     agGroupCellRenderer: GroupCellRenderer,
+    // Full-width group rows (groupDisplayType: 'groupRows') render through the
+    // same component; with no column it simply shows the group key.
+    agGroupRowRenderer: GroupCellRenderer,
   },
   css: [groupCellCss],
   enterprise: true,

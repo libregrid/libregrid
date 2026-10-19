@@ -23,6 +23,7 @@ function setup(gridOptions: Partial<GridOptions> = {}) {
 
 function makeFakeCol() {
   return {
+    getColId: () => GROUP_AUTO_COLUMN_ID,
     setColDef: vi.fn(),
     isAlive: vi.fn(() => true),
     destroy: vi.fn(),
@@ -58,7 +59,11 @@ describe('AutoGenColsService', () => {
 
     it('honours autoGroupColumnDef overrides but forces colId and showRowGroup', () => {
       const { bean, rowGroupColsSvc, destroy } = setup({
-        autoGroupColumnDef: { headerName: 'My Groups', colId: 'user-col', showRowGroup: 'country' } as never,
+        autoGroupColumnDef: {
+          headerName: 'My Groups',
+          colId: 'user-col',
+          showRowGroup: 'country',
+        } as never,
       });
       rowGroupColsSvc.columns.push({});
 
@@ -92,7 +97,11 @@ describe('AutoGenColsService', () => {
       gos.set('autoGroupColumnDef', { headerName: 'New Name' });
 
       expect(col.setColDef).toHaveBeenCalledWith(
-        expect.objectContaining({ headerName: 'New Name', colId: GROUP_AUTO_COLUMN_ID, showRowGroup: true }),
+        expect.objectContaining({
+          headerName: 'New Name',
+          colId: GROUP_AUTO_COLUMN_ID,
+          showRowGroup: true,
+        }),
         null,
         'api',
       );
@@ -121,9 +130,9 @@ describe('AutoGenColsService', () => {
   describe('columnRowGroupChanged listener', () => {
     it('refreshes columns and visible columns, defaulting the source to api', () => {
       const { beans, colModel, visibleCols, destroy } = setup();
-      (
-        beans.eventSvc as unknown as { dispatchEvent: (e: { type: string }) => void }
-      ).dispatchEvent({ type: 'columnRowGroupChanged' });
+      (beans.eventSvc as unknown as { dispatchEvent: (e: { type: string }) => void }).dispatchEvent(
+        { type: 'columnRowGroupChanged' },
+      );
 
       expect(colModel.refreshCols).toHaveBeenCalledWith(false, 'api');
       expect(visibleCols.refresh).toHaveBeenCalledWith('api', false);
@@ -133,7 +142,9 @@ describe('AutoGenColsService', () => {
     it('passes through an explicit event source', () => {
       const { beans, colModel, destroy } = setup();
       (
-        beans.eventSvc as unknown as { dispatchEvent: (e: { type: string; source?: string }) => void }
+        beans.eventSvc as unknown as {
+          dispatchEvent: (e: { type: string; source?: string }) => void;
+        }
       ).dispatchEvent({ type: 'columnRowGroupChanged', source: 'ui' });
 
       expect(colModel.refreshCols).toHaveBeenCalledWith(false, 'ui');

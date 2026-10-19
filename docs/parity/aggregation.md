@@ -13,7 +13,7 @@
 | `aggFuncs` | ✅ | Custom funcs registered at init; covered by integration test |
 | `groupTotalRow` | ✅ | PR 2.4 — see `docs/parity/row-grouping.md` ("Sorting, Ordering & Totals") for the `footerSvc` implementation; integration-tested |
 | `grandTotalRow` | 🟡 | PR 2.4 — inline `'top'`/`'bottom'` only; `'pinnedTop'`/`'pinnedBottom'` deferred (needs the pinned row model). Also required `AggregationStage` to aggregate the root node whenever `grandTotalRow` is set, regardless of `alwaysAggregateAtRootLevel` — there's otherwise nothing for the grand total to show |
-| `suppressAggFuncInHeader` | ❌ | Not implemented — controls value-column header text (e.g. `"sum(Sales)"`), unrelated to the auto group column; not shipped — deferred post-1.0 |
+| `suppressAggFuncInHeader` | ✅ | `AggColumnNameService` (`aggColNameSvc`) prefixes active value columns with their aggregation function, e.g. `sum(Sales)` (function-valued `aggFunc` shows `func(...)`); the option turns it off. Pivot result columns keep the pivot module's own headers. Integration-tested |
 | `aggregateOnlyChangedColumns` | 🟡 | Not implemented — aggStage always does a full traversal; safe but not incremental. The changed-path factory now enables Community's deferred aggregation and visible ancestor refresh after leaf and group edits |
 | `suppressAggFilteredOnly` | ✅ | `filterAggStage` re-aggregates over all children when true; integration-tested |
 | `groupAggFiltering` | 🟡 | Option read by stages; group-value filtering shipped with PR 2.5's `GroupFilterStage` (✅ in `docs/parity/row-grouping.md` "Group Aggregate Filtering"); retained 🟡 here pending this checklist's independent ✅ re-verification |

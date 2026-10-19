@@ -15,7 +15,9 @@ function makeCol(colId: string, colDef: Record<string, unknown> = {}): AgColumn 
 
 function harness(cols: AgColumn[]) {
   return makeBeanHarness(RowGroupColsService, {
-    gridOptions: {},
+    // Visibility side effects need real columns; they're covered by
+    // groupColumnVisibility.integration.spec.ts.
+    gridOptions: { suppressGroupChangesColumnVisibility: true },
     beans: { colModel: { getCols: () => cols } },
   });
 }

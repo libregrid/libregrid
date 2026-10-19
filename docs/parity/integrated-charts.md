@@ -16,7 +16,7 @@
 |---|---|---|
 | `enableCharts` | ✅ | Gates ChartService creation |
 | `getChartToolbarItems` | ✅ | Toolbar callback controls configure/unlink/download actions |
-| `suppressAggFuncInHeader` | 🟡 | Shared aggregation header-formatting gap; tracked in `aggregation.md` |
+| `suppressAggFuncInHeader` | ✅ | Implemented by `aggColNameSvc`; see `aggregation.md` |
 | `chartThemes` | ✅ | First configured theme is used as the default |
 | `customChartThemes` | ✅ | Named custom themes pass through to the provider |
 | `chartThemeOverrides` | ✅ | Grid and per-chart overrides pass through to AG Charts |
