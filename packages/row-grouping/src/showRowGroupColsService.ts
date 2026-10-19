@@ -9,14 +9,19 @@ import type { IShowRowGroupColsService } from 'ag-grid-community';
  * `columnRowGroupChanged`, and Community's core reads it back directly
  * (`agColumn.ts` → `isRowGroupDisplayed`).
  *
- * Single-column mode only: the one auto-group column shows every active
- * row-group source column. `interleaveSortedColumns`,
+ * In single-column mode the one auto-group column shows every active
+ * row-group source column; in `multipleColumns` mode each auto-group column
+ * (its `showRowGroup` is a source column id) shows just that source column.
+ * `interleaveSortedColumns`,
  * `fillCoupledSortIndexMap` and `isGroupSortMixed` back the row-group-panel
  * coupled-sort UI (PR 2.5) — minimal, order-preserving defaults for now.
  *
  * @feature Row Grouping -> Auto Group Column
  */
-export class ShowRowGroupColsService extends BeanStub implements IShowRowGroupColsService, NamedBean {
+export class ShowRowGroupColsService
+  extends BeanStub
+  implements IShowRowGroupColsService, NamedBean
+{
   beanName = 'showRowGroupCols' as const;
 
   public columns: AgColumn[] = [];
@@ -28,16 +33,28 @@ export class ShowRowGroupColsService extends BeanStub implements IShowRowGroupCo
   public refresh(): void {
     const autoCols = this.beans.autoColSvc?.columns ?? [];
     this.columns = autoCols;
-    const displayCol = autoCols[0] ?? null;
     for (const source of this.beans.rowGroupColsSvc?.columns ?? []) {
-      source.showRowGroupCol = displayCol;
+      source.showRowGroupCol =
+        autoCols.find((col) => col.getColDef?.().showRowGroup === source.getColId()) ??
+        autoCols.find((col) => col.getColDef?.().showRowGroup === true) ??
+        autoCols[0] ??
+        null;
     }
+  }
+
+  public getShowRowGroupCol(id: string): AgColumn | undefined {
+    const source = this.beans.rowGroupColsSvc?.columns.find((col) => col.getColId() === id);
+    return source?.showRowGroupCol ?? undefined;
   }
 
   public getSourceColumnsForGroupColumn(groupCol: AgColumn): AgColumn[] | null {
     if (!this.columns.includes(groupCol)) return null;
     const cols = this.beans.rowGroupColsSvc?.columns;
-    return cols && cols.length > 0 ? cols : null;
+    if (!cols || cols.length === 0) return null;
+    const showRowGroup = groupCol.getColDef?.().showRowGroup;
+    if (typeof showRowGroup !== 'string') return cols;
+    const matching = cols.filter((col) => col.getColId() === showRowGroup);
+    return matching.length > 0 ? matching : null;
   }
 
   public isRowGroupDisplayed(column: AgColumn, colId: string): boolean {
