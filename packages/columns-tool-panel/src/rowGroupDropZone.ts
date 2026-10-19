@@ -1,5 +1,6 @@
 import { Component, type ColDef, type Column, type GridApi } from 'ag-grid-community';
 import { iconSvg } from '@libregrid/core';
+import { getLockedGroupCount } from './groupLock';
 import { DROP_ZONE_DRAG_OVER_CLASS, registerDropZone } from './dropZoneRegistry';
 
 type RowGroupApi = Pick<GridApi, 'getColumn'> & Partial<Pick<GridApi,
@@ -82,10 +83,13 @@ export class RowGroupDropZone extends Component {
       return;
     }
 
-    columns.forEach((column, index) => gui.appendChild(this.createColumnMember(column, index, columns.length)));
+    const locked = this.getLockedCount(columns.length);
+    columns.forEach((column, index) =>
+      gui.appendChild(this.createColumnMember(column, index, columns.length, locked)),
+    );
   }
 
-  private createColumnMember(column: Column, index: number, count: number): HTMLElement {
+  private createColumnMember(column: Column, index: number, count: number, locked: number): HTMLElement {
     const member = document.createElement('div');
     member.className = 'lgr-chip lgr-row-group-drop-zone-member';
     const name = this.getColumnName(column);
@@ -99,15 +103,17 @@ export class RowGroupDropZone extends Component {
     label.title = name;
     const remove = this.createIconButton(`Remove ${name} from row groups`, 'close', () => this.removeColumn(column));
     remove.classList.add('lgr-chip-remove');
-    remove.disabled = this.isFunctionsReadOnly();
+    const isLocked = index < locked;
+    remove.disabled = this.isFunctionsReadOnly() || isLocked;
+    member.classList.toggle('lgr-chip-locked', isLocked);
     member.append(order, label);
     if (count > 1 && !this.isFunctionsReadOnly()) {
       const actions = document.createElement('span');
       actions.className = 'lgr-chip-actions';
       const up = this.createIconButton(`Move ${name} up`, 'sortAscending', () => this.moveColumn(index, index - 1));
       const down = this.createIconButton(`Move ${name} down`, 'sortDescending', () => this.moveColumn(index, index + 1));
-      up.disabled = index === 0;
-      down.disabled = index === count - 1;
+      up.disabled = index <= locked;
+      down.disabled = isLocked || index === count - 1;
       actions.append(up, down);
       member.append(actions);
     }
@@ -157,12 +163,20 @@ export class RowGroupDropZone extends Component {
     return column.isAutoRowGroupColumn?.() === true || definition.showRowGroup !== undefined;
   }
 
+  private getLockedCount(total: number): number {
+    return getLockedGroupCount(this.api?.getGridOption?.('groupLockGroupColumns') ?? this.gos?.get('groupLockGroupColumns'), total);
+  }
+
   private removeColumn(column: Column): void {
+    const columns = this.getRowGroupColumns();
+    if (columns.indexOf(column) < this.getLockedCount(columns.length)) return;
     if (!this.isFunctionsReadOnly()) this.api?.removeRowGroupColumns?.([column.getColId()]);
   }
 
   private moveColumn(fromIndex: number, toIndex: number): void {
-    if (!this.isFunctionsReadOnly() && toIndex >= 0 && toIndex < this.getRowGroupColumns().length) {
+    const count = this.getRowGroupColumns().length;
+    const locked = this.getLockedCount(count);
+    if (!this.isFunctionsReadOnly() && fromIndex >= locked && toIndex >= locked && toIndex < count) {
       this.api?.moveRowGroupColumn?.(fromIndex, toIndex);
     }
   }

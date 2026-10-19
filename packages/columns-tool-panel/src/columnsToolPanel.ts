@@ -12,6 +12,7 @@ import type {
   IconName,
 } from 'ag-grid-community';
 import { iconSvg } from '@libregrid/core';
+import { getLockedGroupCount } from './groupLock';
 import {
   attachColumnsToolPanelDragDrop,
   detachColumnsToolPanelDragDrop,
@@ -452,6 +453,10 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     const section = kind === 'group' ? 'row groups' : kind === 'value' ? 'values' : 'pivots';
     const remove = this.createIconButton(`Remove ${name} from ${section}`, 'close', () => this.removeFunctionColumn(column, kind));
     remove.classList.add('lgr-chip-remove');
+    if (this.isGroupLocked(column, kind)) {
+      remove.disabled = true;
+      member.classList.add('lgr-chip-locked');
+    }
     member.append(label, remove);
     return member;
   }
@@ -713,8 +718,15 @@ export class ColumnsToolPanel implements IColumnToolPanel {
     add?.call(this.api, [column]);
   }
 
+  /** `groupLockGroupColumns`: the leading row-group columns can't be removed from the UI. */
+  private isGroupLocked(column: Column, kind: 'group' | 'value' | 'pivot'): boolean {
+    if (kind !== 'group') return false;
+    const columns = this.getFunctionColumns('group');
+    return columns.indexOf(column) < getLockedGroupCount(this.api?.getGridOption?.('groupLockGroupColumns'), columns.length);
+  }
+
   private removeFunctionColumn(column: Column, kind: 'group' | 'value' | 'pivot'): void {
-    if (this.isFunctionsReadOnly()) return;
+    if (this.isFunctionsReadOnly() || this.isGroupLocked(column, kind)) return;
     if (this.isFunctionDeferred(kind)) {
       this.setPendingFunctionColumns(kind, this.getFunctionColumns(kind).filter((current) => current !== column));
       this.render();
