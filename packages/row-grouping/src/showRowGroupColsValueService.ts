@@ -33,6 +33,15 @@ export class ShowRowGroupColsValueService
   ): GroupValueResult | null {
     const displayedNode = column ? this.getDisplayedNode(node, column, false) : node;
     if (!displayedNode?.group) return null;
+    // multipleColumns: each column's showRowGroup is its row-group column id
+    // and shows only the groups of that level.
+    const showRowGroup = column?.getColDef?.().showRowGroup;
+    if (
+      typeof showRowGroup === 'string' &&
+      displayedNode.rowGroupColumn?.getColId() !== showRowGroup
+    ) {
+      return null;
+    }
     return { displayedNode, value: displayedNode.key ?? null };
   }
 

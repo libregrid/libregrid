@@ -89,9 +89,18 @@ export class GroupCellRenderer implements ICellRendererComp {
 
   private render(): void {
     const { node, value, suppressPadding, suppressCount, totalValueGetter } = this.params;
+    // multipleColumns: this column only owns the groups of its own level; for
+    // any other group row (or footer) the cell stays empty.
+    const showRowGroup = this.params.column?.getColDef?.().showRowGroup;
+    const ownsNode =
+      typeof showRowGroup !== 'string' ||
+      !node.group ||
+      node.rowGroupColumn?.getColId() === showRowGroup;
+    const isMultiColumn = typeof showRowGroup === 'string';
     const isExpandable =
-      !!node.master ||
-      (!!node.group && (!!node.childrenAfterGroup?.length || this.isServerSideGroup()));
+      ownsNode &&
+      (!!node.master ||
+        (!!node.group && (!!node.childrenAfterGroup?.length || this.isServerSideGroup())));
 
     this.eGui.classList.toggle('lgr-group-cell-expandable', isExpandable);
     this.eGui.classList.toggle('lgr-group-cell-total', !!node.footer);
@@ -113,20 +122,26 @@ export class GroupCellRenderer implements ICellRendererComp {
     this.eToggle.classList.toggle('ag-group-expanded', isExpandable && !!node.expanded);
     this.eToggle.classList.toggle('ag-group-contracted', isExpandable && !node.expanded);
 
-    this.eGui.style.paddingLeft = suppressPadding ? '' : `${(node.uiLevel ?? 0) * 16}px`;
+    this.eGui.style.paddingLeft =
+      suppressPadding || isMultiColumn ? '' : `${(node.uiLevel ?? 0) * 16}px`;
 
     // A total row's group-column cell shows 'Total' (ag-grid.com documented
     // default), not the group key — overridable via cellRendererParams.
     // totalValueGetter (function form only; string/expression form
     // unsupported).
-    const displayValue = node.footer
-      ? typeof totalValueGetter === 'function'
-        ? totalValueGetter(this.params)
-        : 'Total'
-      : value;
+    const displayValue = !ownsNode
+      ? null
+      : node.footer
+        ? typeof totalValueGetter === 'function'
+          ? totalValueGetter(this.params)
+          : 'Total'
+        : value;
     this.eValue.textContent = displayValue == null ? '' : String(displayValue);
 
-    const count = !node.footer && node.group ? (node.allChildrenCount ?? node.childrenAfterGroup?.length ?? 0) : 0;
+    const count =
+      ownsNode && !node.footer && node.group
+        ? (node.allChildrenCount ?? node.childrenAfterGroup?.length ?? 0)
+        : 0;
     const showCount = !suppressCount && count > 0;
     this.eCount.textContent = showCount ? `(${count})` : '';
     this.eCount.style.display = showCount ? '' : 'none';

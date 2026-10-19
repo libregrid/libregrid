@@ -113,6 +113,7 @@ export class FooterService extends BeanStub implements IFooterService, NamedBean
       node.sibling = footer;
       footer.id = GROUP_TOTAL_ROW_ID_PREFIX + node.id;
       footer.footer = true;
+      footer.rowGroupColumn = node.rowGroupColumn;
       footer.expanded = false;
       footer.childrenAfterGroup = null;
       footer.childrenAfterFilter = null;

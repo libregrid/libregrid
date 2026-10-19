@@ -235,4 +235,69 @@ describe('Auto group column (PR 2.3)', () => {
 
     api.destroy();
   });
+
+  describe("groupDisplayType: 'multipleColumns'", () => {
+    const multiOptions = (): GridOptions =>
+      ({
+        columnDefs: [
+          { field: 'country', colId: 'country', rowGroup: true },
+          { field: 'city', colId: 'city', rowGroup: true },
+          { field: 'sales' },
+        ],
+        rowData: baseRows,
+        groupDisplayType: 'multipleColumns',
+        groupDefaultExpanded: -1,
+      }) as GridOptions;
+
+    it('creates one auto column per row-group column, each showing only its own level', async () => {
+      const { el, api } = mount(multiOptions());
+      await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBeGreaterThan(0));
+
+      const countryId = `${GROUP_AUTO_COLUMN_ID}-country`;
+      const cityId = `${GROUP_AUTO_COLUMN_ID}-city`;
+      expect(api.getColumn(GROUP_AUTO_COLUMN_ID)).toBeFalsy();
+      expect(api.getColumn(countryId)!.getColDef().showRowGroup).toBe('country');
+      expect(api.getColumn(cityId)!.getColDef().showRowGroup).toBe('city');
+
+      const usGroup = api.getDisplayedRowAtIndex(0)!;
+      expect(usGroup.key).toBe('US');
+      expect(api.getCellValue({ rowNode: usGroup, colKey: countryId })).toBe('US');
+      expect(api.getCellValue({ rowNode: usGroup, colKey: cityId })).toBeNull();
+
+      const nyGroup = api.getDisplayedRowAtIndex(1)!;
+      expect(nyGroup.key).toBe('NY');
+      expect(api.getCellValue({ rowNode: nyGroup, colKey: countryId })).toBeNull();
+      expect(api.getCellValue({ rowNode: nyGroup, colKey: cityId })).toBe('NY');
+
+      el.remove();
+      api.destroy();
+    });
+
+    it('tracks row-group column changes', async () => {
+      const { el, api } = mount(multiOptions());
+      await vi.waitFor(() => expect(api.getDisplayedRowCount()).toBeGreaterThan(0));
+
+      api.setRowGroupColumns(['city']);
+      await vi.waitFor(() => expect(api.getColumn(`${GROUP_AUTO_COLUMN_ID}-country`)).toBeFalsy());
+      expect(api.getColumn(`${GROUP_AUTO_COLUMN_ID}-city`)).toBeTruthy();
+
+      api.setRowGroupColumns([]);
+      await vi.waitFor(() => expect(api.getColumn(`${GROUP_AUTO_COLUMN_ID}-city`)).toBeFalsy());
+
+      el.remove();
+      api.destroy();
+    });
+
+    it('switches between single and multiple columns at runtime', async () => {
+      const { el, api } = mount(multiOptions());
+      await vi.waitFor(() => expect(api.getColumn(`${GROUP_AUTO_COLUMN_ID}-country`)).toBeTruthy());
+
+      api.setGridOption('groupDisplayType', 'singleColumn');
+      await vi.waitFor(() => expect(api.getColumn(GROUP_AUTO_COLUMN_ID)).toBeTruthy());
+      expect(api.getColumn(`${GROUP_AUTO_COLUMN_ID}-country`)).toBeFalsy();
+
+      el.remove();
+      api.destroy();
+    });
+  });
 });

@@ -10,7 +10,7 @@
 
 | Option | Status | Notes |
 |---|---|---|
-| `groupDisplayType` | 🟡 | PR 2.3 — only `'singleColumn'` (the default) is implemented; `'multipleColumns'`, `'groupRows'` and `'custom'` are not read at all |
+| `groupDisplayType` | 🟡 | `'singleColumn'` (default) and `'multipleColumns'` (one `ag-Grid-AutoColumn-<colId>` column per row-group column, each showing only its own level; ignored under `treeData`) are implemented; `'groupRows'` and `'custom'` are not read at all. `groupHideOpenParents` still uses a single column |
 | `autoGroupColumnDef` | ✅ | PR 2.3 — merged into the generated colDef by `AutoGenColsService`; `colId`/`showRowGroup` stay non-overridable |
 | `groupRowRenderer` | ❌ | Only meaningful for `groupDisplayType: 'groupRows'` (full-width group rows), which isn't implemented — won't-do until that mode lands |
 | `groupRowRendererParams` | ❌ | Same as `groupRowRenderer` |

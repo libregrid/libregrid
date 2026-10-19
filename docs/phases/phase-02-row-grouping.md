@@ -70,7 +70,7 @@ Performance is a first-class requirement: grouping 100k rows is a normal workloa
 - [x] `expansionSvc` — not in the original draft list, but discovered to be required: `RowNode.setExpanded`/`.expanded`/`.isExpandable()` all delegate to it, and it's absent from `AllCommunityModule`
 - [x] `agGroupCellRenderer` user component with expand/collapse affordance (click, dblclick, Enter)
 - [x] `GROUP_AUTO_COLUMN_ID` handling
-- [x] Options: `groupDisplayType` (🟡 `singleColumn` only), `autoGroupColumnDef`, `showOpenedGroup`, `groupHideOpenParents` (🟡 single hidden-ancestor level), `groupHideParentOfSingleChild`, `groupAllowUnbalanced`
+- [x] Options: `groupDisplayType` (🟡 `singleColumn` and `multipleColumns`; `groupRows`/`custom` not implemented), `autoGroupColumnDef`, `showOpenedGroup`, `groupHideOpenParents` (🟡 single hidden-ancestor level), `groupHideParentOfSingleChild`, `groupAllowUnbalanced`
 - [ ] Options not implemented this PR — see `docs/parity/row-grouping.md` for rationale per option: `groupRowRenderer`/`groupRowRendererParams` (❌ tied to unimplemented `groupRows` display type), `groupHideColumnsUntilExpanded`, `groupLockGroupColumns`, `groupMaintainOrder`, `suppressGroupChangesColumnVisibility`
 - [x] _Acceptance:_ auto group column renders with working expand/collapse; `autoGroupColumnDef` overrides apply — verified by integration tests and manually in the docs app (`/row-grouping`)
 

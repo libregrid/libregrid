@@ -204,7 +204,7 @@ the residual ❌/🟡 rows inside them — included so the plan covers the full
 
 | Package | Gaps (❌ / 🟡) |
 | --- | --- |
-| `row-grouping` | sticky rows ❌ (`stickyRowSvc` never registered); `groupDisplayType` 🟡 (singleColumn only); group row renderer + params ❌; grand total row 🟡 (no `pinnedTop`/`pinnedBottom`); `groupHideColumnsUntilExpanded` ❌; `groupMaintainOrder` ❌; `groupLockGroupColumns` ❌; `groupHierarchyConfig` ❌; `suppressDragLeaveHidesColumns` ❌; `suppressGroupChangesColumnVisibility` ❌; `rowGroupPanelSuppressSort` ❌; `rowGroupOpened`/`expandOrCollapseAll` events ❌; group filter icon ❌; `refreshAfterGroupEdit` ❌ (A8) |
+| `row-grouping` | sticky rows ❌ (`stickyRowSvc` never registered); `groupDisplayType` 🟡 (singleColumn + multipleColumns; groupRows/custom ❌); group row renderer + params ❌; grand total row 🟡 (no `pinnedTop`/`pinnedBottom`); `groupHideColumnsUntilExpanded` ❌; `groupMaintainOrder` ❌; `groupLockGroupColumns` ❌; `groupHierarchyConfig` ❌; `suppressDragLeaveHidesColumns` ❌; `suppressGroupChangesColumnVisibility` ❌; `rowGroupPanelSuppressSort` ❌; `rowGroupOpened`/`expandOrCollapseAll` events ❌; group filter icon ❌; `refreshAfterGroupEdit` ❌ (A8) |
 | `aggregation` (in row-grouping) | `suppressAggFuncInHeader` ❌; `aggregateOnlyChangedColumns` 🟡; show values as ✅ (A10, Phase 14) |
 | `excel-export` | images ❌ (`addImageToCell`); tables ❌ (`exportAsExcelTable`); notes ❌ (`processNoteCallback`, `suppressGridNotesExport`, `suppressPrependAuthorToNotes`) — the 5.9 descoped set |
 | `integrated-charts` | commercial chart types ❌ (polar / statistical / funnel — commercial AG Charts only; on the pricing page they are **Bundle-only**, see Class C) |
