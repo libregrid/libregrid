@@ -221,6 +221,7 @@ export class GroupStage extends BeanStub implements _IRowNodeGroupStage, NamedBe
         groupNode.uiLevel = level;
         groupNode.rowGroupIndex = level;
         groupNode.field = field;
+        groupNode.rowGroupColumn = col;
         groupNode.parent = parentNode;
         groupNode.childrenAfterGroup = buildLevel(children, level + 1, groupNode);
         groupNode.allChildrenCount =

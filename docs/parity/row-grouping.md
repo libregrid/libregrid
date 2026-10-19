@@ -10,13 +10,13 @@
 
 | Option | Status | Notes |
 |---|---|---|
-| `groupDisplayType` | 🟡 | PR 2.3 — only `'singleColumn'` (the default) is implemented; `'multipleColumns'`, `'groupRows'` and `'custom'` are not read at all |
+| `groupDisplayType` | 🟡 | `'singleColumn'` (default) and `'multipleColumns'` (one `ag-Grid-AutoColumn-<colId>` column per row-group column, each showing only its own level; ignored under `treeData`) are implemented; `'groupRows'` and `'custom'` are not read at all. `groupHideOpenParents` still uses a single column |
 | `autoGroupColumnDef` | ✅ | PR 2.3 — merged into the generated colDef by `AutoGenColsService`; `colId`/`showRowGroup` stay non-overridable |
 | `groupRowRenderer` | ❌ | Only meaningful for `groupDisplayType: 'groupRows'` (full-width group rows), which isn't implemented — won't-do until that mode lands |
 | `groupRowRendererParams` | ❌ | Same as `groupRowRenderer` |
 | `showOpenedGroup` | ✅ | PR 2.3 — `ShowRowGroupColsValueService.getDisplayedNode` walks a leaf row up to its nearest group ancestor; integration-tested |
 | `groupHideOpenParents` | 🟡 | PR 2.3 — `FlattenStage` hides an expanded group's own row and `ShowRowGroupColsValueService` substitutes its value onto the first child; only **one** hidden-ancestor level is substituted — a chain of 2+ consecutively-expanded hidden ancestors collapses onto one row but only the nearest one's value shows |
-| `groupHideColumnsUntilExpanded` | ❌ | Not implemented — needs per-row column suppression across the whole row, not just the auto column; no roadmap item — deferred post-1.0 (phase-13 hardening) |
+| `groupHideColumnsUntilExpanded` | 🟡 | With `groupDisplayType: 'multipleColumns'` on the client-side row model: the first group column is always visible, each further one appears once a group at the preceding level is expanded (re-evaluated on every `modelUpdated`). Not applied with `groupHideOpenParents` (single column) |
 | `groupHideParentOfSingleChild` | ✅ | PR 2.3 — `FlattenStage.resolveDisplayNode` elides a group whose only child is itself (or, for `'leafGroupsOnly'`, whose only child is a leaf); integration-tested |
 | `initialGroupOrderComparator` | ✅ | PR 2.4 — applied in `GroupStage` at tree-build time, before filtering/aggregation exist to compare on (matches ag-grid.com: "executes before filtering and aggregation"); integration-tested |
 | `groupAllowUnbalanced` | ✅ | PR 2.3 — `GroupStage` attaches a row with a `null`/`undefined`/`''` value at a level directly under the parent instead of a `(Blanks)` bucket; integration-tested |
@@ -30,7 +30,7 @@
 | `groupLockGroupColumns` | ❌ | Not implemented — column drag-lock pairs with Phase 3's drag-and-drop tool panel; deferred post-1.0 (phase-13 13A lists the columns-panel drag interactions as long tail) |
 | `groupHierarchyConfig` | ❌ | Not implemented — niche `colDef.groupHierarchy` custom-component registry with no consumer; deferred post-1.0 |
 | `suppressDragLeaveHidesColumns` | ❌ | Not implemented — controls whether dragging a column out of the grid hides it; LibreGrid has no drag-out-of-grid hide behaviour (would pair with Phase 3's drag-and-drop tool panel); deferred post-1.0 |
-| `suppressGroupChangesColumnVisibility` | ❌ | Not implemented — no column-auto-hide-on-grouping behaviour exists for this option to suppress; would only matter alongside the tool-panel drag/drop surface (phase-13 13A long tail, post-1.0) |
+| `suppressGroupChangesColumnVisibility` | ✅ | `true`, `'suppressHideOnGroup'` and `'suppressShowOnUngroup'`, plus the deprecated `suppressRowGroupHidesColumns` / `suppressMakeColumnVisibleAfterUnGroup`. `RowGroupColsService` now hides a column when it is grouped and shows it when ungrouped via `addRowGroupColumns` / `removeRowGroupColumns` / `setRowGroupColumns` (the Community default); colDef `rowGroup: true` at creation keeps `hide` as authored. Integration-tested |
 | `ssrmExpandAllAffectsAllRows` | ✅ | Implemented by Phase 9's `@libregrid/server-side-row-model` (✅ in `server-side-row-model.md`): defaults apply to subsequently materialized group nodes; loaded nodes expand/collapse immediately; exercised in `serverSideRowModelModule.spec.ts` |
 | `refreshAfterGroupEdit` | ✅ | Phase 21 (A8) — when `true`, an edit to an active row-group column re-evaluates the hierarchy (`refreshModel({ step: 'group', rowDataUpdated: true })`), moving the row to the correct group while preserving expansion by deterministic ID. Community's `RowDragService` already read this option for managed drag-handle visibility, so the flag also starts enabling managed drag-between-groups (A11). Tree data also honours it (any edit may re-path). Integration-tested |
 | `groupAggFiltering` | ✅ | PR 2.5 — `GroupFilterStage` reuses Community's own `FilterManager.doesRowPassAggregateFilters`; see "Group Aggregate Filtering" below; integration-tested (`true`, callback form, and interaction with normal per-leaf filtering) |
