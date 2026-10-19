@@ -1,6 +1,8 @@
 import {
   BeanStub,
   _dispatchColumnChangedEvent,
+  _setColsVisible,
+  _shouldUpdateColVisibilityAfterGroup,
   type NamedBean,
 } from 'ag-grid-community';
 import type {
@@ -80,40 +82,51 @@ export class RowGroupColsService extends BeanStub implements IRowGroupColsServic
     const wanted = (colKeys ?? [])
       .map((key) => this.resolve(key))
       .filter((col): col is AgColumn => !!col);
+    const ungrouped: AgColumn[] = [];
+    const grouped: AgColumn[] = [];
     for (const col of [...this.columns]) {
       if (!wanted.includes(col)) {
         this.deactivate(col);
         this.markPending(col);
+        ungrouped.push(col);
       }
     }
     for (const col of wanted) {
       if (!col.rowGroupActive) {
         this.activate(col);
         this.markPending(col);
+        grouped.push(col);
       }
     }
     this.sortByIndex(wanted);
     this.dispatchColChange(source);
+    this.updateVisibility(grouped, ungrouped, source);
   }
 
   public addColumns(keys: (ColKey | null | undefined)[] | undefined, source: ColumnEventType): void {
+    const grouped: AgColumn[] = [];
     for (const key of keys ?? []) {
       const col = this.resolve(key);
       if (!col || col.rowGroupActive) continue;
       this.activate(col);
       this.markPending(col);
+      grouped.push(col);
     }
     this.dispatchColChange(source);
+    this.updateVisibility(grouped, [], source);
   }
 
   public removeColumns(keys: (ColKey | null | undefined)[] | undefined, source: ColumnEventType): void {
+    const ungrouped: AgColumn[] = [];
     for (const key of keys ?? []) {
       const col = this.resolve(key);
       if (!col || !col.rowGroupActive) continue;
       this.deactivate(col);
       this.markPending(col);
+      ungrouped.push(col);
     }
     this.dispatchColChange(source);
+    this.updateVisibility([], ungrouped, source);
   }
 
   public moveColumn(fromIndex: number, toIndex: number, source: ColumnEventType): void {
@@ -155,6 +168,22 @@ export class RowGroupColsService extends BeanStub implements IRowGroupColsServic
     this.pending = null;
     if (changed?.length) {
       _dispatchColumnChangedEvent(this.beans.eventSvc, 'columnRowGroupChanged', changed, source);
+    }
+  }
+
+  /**
+   * Grouping a column hides it and ungrouping shows it again, unless
+   * `suppressGroupChangesColumnVisibility` (or its two deprecated
+   * predecessors) says otherwise. Only the API-driven mutators above call
+   * this — columns grouped through colDef `rowGroup` keep their `hide`.
+   */
+  private updateVisibility(grouped: AgColumn[], ungrouped: AgColumn[], source: ColumnEventType): void {
+    const { beans, gos } = this;
+    if (grouped.length && _shouldUpdateColVisibilityAfterGroup(gos, true)) {
+      _setColsVisible(beans, grouped, false, source);
+    }
+    if (ungrouped.length && _shouldUpdateColVisibilityAfterGroup(gos, false)) {
+      _setColsVisible(beans, ungrouped, true, source);
     }
   }
 

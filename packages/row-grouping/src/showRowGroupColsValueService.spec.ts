@@ -37,6 +37,21 @@ describe('ShowRowGroupColsValueService', () => {
     });
   });
 
+  describe('multipleColumns level routing', () => {
+    const levelCol = (id: string) =>
+      ({ getColDef: () => ({ showRowGroup: id }) }) as unknown as AgColumn;
+    const group = node({ group: true, key: 'US', rowGroupColumn: { getColId: () => 'country' } });
+
+    it("returns the group key only in the column of the group's own level", () => {
+      const { bean } = harness();
+      expect(bean.getGroupValue(group, levelCol('country'), false)).toEqual({
+        displayedNode: group,
+        value: 'US',
+      });
+      expect(bean.getGroupValue(group, levelCol('city'), false)).toBeNull();
+    });
+  });
+
   describe('formatAndPrefixGroupColValue', () => {
     it('stringifies values and returns null for nullish ones', () => {
       const { bean } = harness();
@@ -72,7 +87,11 @@ describe('ShowRowGroupColsValueService', () => {
         const { bean } = harness({ groupHideOpenParents: true });
         const first = node();
         const leaf = node();
-        const expandedParent = node({ group: true, expanded: true, childrenAfterGroup: [first, leaf] });
+        const expandedParent = node({
+          group: true,
+          expanded: true,
+          childrenAfterGroup: [first, leaf],
+        });
         leaf.parent = expandedParent;
         expect(bean.getDisplayedNode(leaf, column)).toBeUndefined();
 

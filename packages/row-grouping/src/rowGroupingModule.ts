@@ -105,6 +105,9 @@ export const RowGroupingModule: _ModuleWithApi<
   ],
   userComponents: {
     agGroupCellRenderer: GroupCellRenderer,
+    // Full-width group rows (groupDisplayType: 'groupRows') render through the
+    // same component; with no column it simply shows the group key.
+    agGroupRowRenderer: GroupCellRenderer,
   },
   css: [groupCellCss],
   enterprise: true,

@@ -14,14 +14,15 @@ function createColumn(id: string, enableRowGroup = true, auto = false): Column {
   } as unknown as Column;
 }
 
-function createApi(columns: Column[], functionsReadOnly = false) {
+function createApi(columns: Column[], functionsReadOnly = false, lock = 0) {
   const listeners = new Map<string, () => void>();
   const rowGroups = [...columns];
   return {
     getColumn: vi.fn((id: string) => columns.find((column) => column.getColId() === id) ?? null),
     getRowGroupColumns: vi.fn(() => rowGroups),
     getDisplayNameForColumn: vi.fn((column: Column) => `Display ${column.getColId()}`),
-    getGridOption: vi.fn((key: string) => key === 'functionsReadOnly' ? functionsReadOnly : undefined),
+    getGridOption: vi.fn((key: string) =>
+      key === 'functionsReadOnly' ? functionsReadOnly : key === 'groupLockGroupColumns' ? lock : undefined),
     removeRowGroupColumns: vi.fn(),
     moveRowGroupColumn: vi.fn(),
     addRowGroupColumns: vi.fn(),
@@ -82,5 +83,46 @@ describe('RowGroupingPanel', () => {
     guardedZone.getGui().querySelector<HTMLButtonElement>('[aria-label="Remove Display disabled from row groups"]')!.click();
     expect(guardedApi.addRowGroupColumns).not.toHaveBeenCalled();
     expect(guardedApi.removeRowGroupColumns).not.toHaveBeenCalled();
+  });
+
+  describe('groupLockGroupColumns', () => {
+    function mountLocked(lock: number) {
+      const cols = ['a', 'b', 'c'].map((id) => createColumn(id));
+      const api = createApi(cols, false, lock);
+      const zone = new RowGroupDropZone(true);
+      zone.init(api as unknown as GridApi);
+      document.body.appendChild(zone.getGui());
+      const btn = (label: string) =>
+        zone.getGui().querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!;
+      return { api, btn };
+    }
+
+    it('locks the first N chips: no remove, no move, and nothing moves into their slots', () => {
+      const { api, btn } = mountLocked(1);
+      expect(btn('Remove Display a from row groups').disabled).toBe(true);
+      expect(btn('Move Display a down').disabled).toBe(true);
+      expect(btn('Move Display b up').disabled).toBe(true);
+      expect(btn('Remove Display b from row groups').disabled).toBe(false);
+      expect(btn('Move Display b down').disabled).toBe(false);
+
+      btn('Remove Display a from row groups').click();
+      btn('Move Display b up').click();
+      expect(api.removeRowGroupColumns).not.toHaveBeenCalled();
+      expect(api.moveRowGroupColumn).not.toHaveBeenCalled();
+      btn('Move Display b down').click();
+      expect(api.moveRowGroupColumn).toHaveBeenCalledWith(1, 2);
+    });
+
+    it('-1 locks every chip', () => {
+      const { btn } = mountLocked(-1);
+      for (const id of ['a', 'b', 'c']) {
+        expect(btn(`Remove Display ${id} from row groups`).disabled).toBe(true);
+      }
+    });
+
+    it('0 locks nothing', () => {
+      const { btn } = mountLocked(0);
+      expect(btn('Remove Display a from row groups').disabled).toBe(false);
+    });
   });
 });
